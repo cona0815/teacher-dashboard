@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <style>
+    :root {
+      --paper: #f5f5f1;
+      --white: #ffffff;
+      --ink: #111111;
+      --muted: #5a5a5a;
+      --line: #242424;
+      --soft: #c9c9c4;
+      --gap: clamp(9px, 1.15vh, 18px);
+      --radius: clamp(12px, 1.5vh, 24px);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: var(--paper); color: var(--ink); }
+    body { font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif; }
+    button { font: inherit; }
+
+    .board {
+      width: 100vw; height: 100dvh; min-height: 100vh; display: grid;
+      grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
+      gap: var(--gap); padding: clamp(12px, 1.45vh, 25px) clamp(12px, 2.2vw, 28px);
+      background: var(--paper);
+    }
+
+    .topbar {
+      display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: end;
+      padding-bottom: clamp(8px, .9vh, 14px); border-bottom: clamp(2px, .28vh, 4px) solid var(--ink);
+    }
+    .eyebrow { margin: 0 0 3px; color: var(--muted); font-size: clamp(10px, 1.2vh, 16px); font-weight: 900; letter-spacing: .13em; }
+    h1 { margin: 0; font-size: clamp(25px, 3.65vh, 50px); line-height: 1.05; font-weight: 950; }
+    .date { text-align: right; white-space: nowrap; }
+    .date-main { font-size: clamp(17px, 2.2vh, 29px); font-weight: 950; }
+    .date-sub { margin-top: 4px; color: var(--muted); font-size: clamp(10px, 1.3vh, 16px); font-weight: 850; }
+
+    .focus {
+      display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center;
+      gap: clamp(9px, 1.7vw, 17px); padding: clamp(11px, 1.55vh, 22px);
+      border: 3px solid var(--ink); border-radius: var(--radius); background: var(--ink); color: var(--white);
+    }
+    .focus-number {
+      width: clamp(44px, 6vh, 73px); aspect-ratio: 1; display: grid; place-items: center;
+      border: 3px solid currentColor; border-radius: 50%; font-size: clamp(18px, 2.5vh, 32px); font-weight: 950;
+    }
+    .focus-label { margin: 0 0 3px; font-size: clamp(9px, 1.1vh, 14px); font-weight: 900; letter-spacing: .14em; opacity: .72; }
+    .focus-text {
+      margin: 0; font-size: clamp(17px, 2.25vh, 29px); line-height: 1.25; font-weight: 950;
+      display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+    }
+    .focus-count { min-width: 55px; text-align: center; }
+    .focus-count strong { display: block; font-size: clamp(30px, 4.5vh, 55px); line-height: .9; }
+    .focus-count span { display: block; margin-top: 5px; font-size: clamp(8px, 1.05vh, 13px); font-weight: 900; }
+
+    .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(6px, 1.2vw, 12px); }
+    .kpi {
+      min-height: clamp(58px, 7.5vh, 91px); display: grid; grid-template-columns: 1fr auto; align-items: end;
+      gap: 4px; padding: clamp(8px, 1.1vh, 14px); border: 2px solid var(--line); border-radius: 12px; background: var(--white);
+    }
+    .kpi-label { align-self: start; color: var(--muted); font-size: clamp(9px, 1.2vh, 15px); font-weight: 900; }
+    .kpi-value { font-size: clamp(25px, 3.6vh, 44px); line-height: .85; font-weight: 950; }
+
+    .task-panel {
+      min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr);
+      border: 2px solid var(--line); border-radius: var(--radius); background: var(--white); overflow: hidden;
+    }
+    .panel-header {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding: clamp(8px, 1.1vh, 14px) clamp(11px, 1.8vw, 18px); border-bottom: 2px solid var(--line); background: #ecece8;
+    }
+    .panel-title { margin: 0; font-size: clamp(16px, 2.1vh, 26px); font-weight: 950; }
+    .panel-meta { color: var(--muted); font-size: clamp(9px, 1.1vh, 14px); font-weight: 850; white-space: nowrap; }
+    .task-list { min-height: 0; display: grid; grid-auto-rows: minmax(0, 1fr); padding: 0 clamp(11px, 1.8vw, 18px); overflow: hidden; }
+    .task-row {
+      min-height: 0; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center;
+      gap: clamp(7px, 1.5vw, 14px); padding: clamp(6px, .92vh, 12px) 0; border-bottom: 1px solid var(--soft);
+    }
+    .task-row:last-child { border-bottom: 0; }
+    .rank {
+      width: clamp(33px, 4.6vh, 53px); aspect-ratio: 1; display: grid; place-items: center;
+      border: 2px solid var(--ink); border-radius: 8px; font-size: clamp(14px, 1.95vh, 24px); font-weight: 950;
+    }
+    .task-row.urgent .rank { background: var(--ink); color: white; }
+    .task-main { min-width: 0; }
+    .task-name {
+      margin: 0; font-size: clamp(14px, 1.9vh, 23px); line-height: 1.2; font-weight: 950;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .task-detail {
+      min-width: 0; display: flex; gap: 6px; align-items: center; margin-top: 5px;
+      color: var(--muted); font-size: clamp(9px, 1.2vh, 15px); font-weight: 800; white-space: nowrap; overflow: hidden;
+    }
+    .category { flex: 0 0 auto; padding: 2px 7px; border: 1.5px solid var(--ink); border-radius: 999px; color: var(--ink); font-weight: 950; }
+    .detail-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+    .task-side { max-width: 130px; text-align: right; }
+    .status {
+      display: inline-block; max-width: 100%; padding: 3px 8px; border: 1.7px solid var(--ink); border-radius: 999px;
+      font-size: clamp(8px, 1.1vh, 14px); font-weight: 950; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .status.waiting { border-style: dashed; }
+    .due { margin-top: 5px; color: var(--muted); font-size: clamp(8px, 1.05vh, 13px); font-weight: 850; white-space: nowrap; }
+
+    .timeline {
+      min-height: clamp(100px, 13.5vh, 160px); display: grid; grid-template-columns: auto minmax(0, 1fr);
+      border: 2px solid var(--line); border-radius: var(--radius); background: var(--white); overflow: hidden;
+    }
+    .timeline-label {
+      display: grid; place-items: center; padding: 9px 12px; background: var(--ink); color: white;
+      writing-mode: vertical-rl; font-size: clamp(12px, 1.65vh, 20px); font-weight: 950; letter-spacing: .12em;
+    }
+    .timeline-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .timeline-item { min-width: 0; padding: clamp(9px, 1.2vh, 15px) clamp(8px, 1.3vw, 13px); border-right: 1px solid var(--soft); }
+    .timeline-item:last-child { border-right: 0; }
+    .timeline-time { font-size: clamp(16px, 2.2vh, 27px); font-weight: 950; }
+    .timeline-title {
+      margin-top: 7px; font-size: clamp(11px, 1.42vh, 17px); line-height: 1.25; font-weight: 950;
+      display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+    }
+    .timeline-note { margin-top: 5px; color: var(--muted); font-size: clamp(8px, 1vh, 12px); font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    footer {
+      display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 9px;
+      padding-top: clamp(6px, .75vh, 10px); border-top: 1px solid var(--muted); color: var(--muted);
+      font-size: clamp(8px, 1vh, 13px); font-weight: 800;
+    }
+    .source { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .refresh {
+      min-height: 30px; padding: 4px 10px; border: 1.5px solid var(--ink); border-radius: 999px;
+      background: white; color: var(--ink); font-size: inherit; font-weight: 950;
+    }
+    .empty { height: 100%; display: grid; place-items: center; padding: 20px; text-align: center; color: var(--muted); font-size: clamp(15px, 2vh, 24px); font-weight: 850; }
+
+    @media (max-width: 520px) {
+      .board { padding-left: 9px; padding-right: 9px; }
+      .eyebrow { display: none; }
+      .focus { grid-template-columns: auto minmax(0, 1fr); }
+      .focus-count { display: none; }
+      .kpi { grid-template-columns: 1fr; }
+      .task-side { max-width: 95px; }
+      .timeline-note { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="board">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow" id="eyebrow">SCHOOL ADMINISTRATION DESK</p>
+        <h1 id="title">校務行政・每日任務板</h1>
+      </div>
+      <div class="date">
+        <div class="date-main" id="dateMain">載入中</div>
+        <div class="date-sub" id="dateSub">校務工作日</div>
+      </div>
+    </header>
+
+    <section class="focus">
+      <div class="focus-number">01</div>
+      <div>
+        <p class="focus-label">TODAY'S FOCUS</p>
+        <p class="focus-text" id="focusText">正在整理今日任務……</p>
+      </div>
+      <div class="focus-count"><strong id="focusCount">0</strong><span>件優先顯示</span></div>
+    </section>
+
+    <section class="kpis">
+      <article class="kpi"><span class="kpi-label">急件</span><strong class="kpi-value" id="urgent">0</strong></article>
+      <article class="kpi"><span class="kpi-label">等待</span><strong class="kpi-value" id="waiting">0</strong></article>
+      <article class="kpi"><span class="kpi-label">今日到期</span><strong class="kpi-value" id="dueToday">0</strong></article>
+      <article class="kpi"><span class="kpi-label">今日完成</span><strong class="kpi-value" id="doneToday">0</strong></article>
+    </section>
+
+    <section class="task-panel">
+      <div class="panel-header">
+        <h2 class="panel-title">今日任務</h2>
+        <div class="panel-meta" id="taskMeta">讀取 Sheet 中</div>
+      </div>
+      <div class="task-list" id="taskList"><div class="empty">正在連線任務系統……</div></div>
+    </section>
+
+    <section class="timeline">
+      <div class="timeline-label">今日節點</div>
+      <div class="timeline-list" id="timelineList"><div class="timeline-item"><div class="timeline-title">正在整理時間節點……</div></div></div>
+    </section>
+
+    <footer>
+      <div class="source" id="source">資料來源：Google Sheet / GAS</div>
+      <button class="refresh" type="button" id="refreshButton">重新整理</button>
+    </footer>
+  </main>
+
+  <script>
+    'use strict';
+
+    const $ = id => document.getElementById(id);
+    let refreshTimer = null;
+
+    function escapeHtml(value) {
+      return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+
+    function serverCall(functionName, ...args) {
+      return new Promise((resolve, reject) => {
+        const runner = google.script.run
+          .withSuccessHandler(resolve)
+          .withFailureHandler(error => reject(new Error(error && error.message ? error.message : String(error))));
+        runner[functionName](...args);
+      });
+    }
+
+    function updateClock() {
+      const now = new Date();
+      $('dateMain').textContent = new Intl.DateTimeFormat('zh-TW', { month: 'numeric', day: 'numeric', weekday: 'short' }).format(now);
+      $('dateSub').textContent = `校務工作日｜${new Intl.DateTimeFormat('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false }).format(now)}`;
+    }
+
+    function dueText(task) {
+      if (!task.dueDate) return '未設定期限';
+      const parts = task.dueDate.split('-');
+      const date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 12, 0, 0);
+      const now = new Date();
+      const today = date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() === now.getDate();
+      const time = task.dueTime ? ` ${task.dueTime}` : '';
+      if (today) return `今日${time}`;
+      return `${Number(parts[1])}/${Number(parts[2])}${time}`;
+    }
+
+    function renderTasks(tasks) {
+      if (!tasks.length) {
+        $('taskList').innerHTML = '<div class="empty">今天沒有需要顯示的未完成任務。</div>';
+        return;
+      }
+      $('taskList').innerHTML = tasks.map((task, index) => {
+        const urgentClass = task.priority === '高' ? 'urgent' : '';
+        const waitingClass = ['等待他人', '待確認'].includes(task.status) ? 'waiting' : '';
+        const letter = String.fromCharCode(65 + index);
+        const detail = task.nextAction || task.progress || '尚未填寫下一步行動';
+        return `
+          <article class="task-row ${urgentClass}">
+            <div class="rank">${letter}</div>
+            <div class="task-main">
+              <h3 class="task-name">${escapeHtml(task.name)}</h3>
+              <div class="task-detail">
+                <span class="category">${escapeHtml(task.category)}</span>
+                <span class="detail-text">${escapeHtml(detail)}</span>
+              </div>
+            </div>
+            <div class="task-side">
+              <span class="status ${waitingClass}">${escapeHtml(task.status)}</span>
+              <div class="due">${escapeHtml(dueText(task))}</div>
+            </div>
+          </article>`;
+      }).join('');
+    }
+
+    function renderTimeline(items) {
+      if (!items.length) {
+        $('timelineList').innerHTML = '<article class="timeline-item"><div class="timeline-time">—</div><div class="timeline-title">今天尚無設定明確時間的任務</div><div class="timeline-note">在管理台填入截止時間即可顯示</div></article>';
+        return;
+      }
+      $('timelineList').innerHTML = items.map(task => `
+        <article class="timeline-item">
+          <div class="timeline-time">${escapeHtml(task.dueTime)}</div>
+          <div class="timeline-title">${escapeHtml(task.name)}</div>
+          <div class="timeline-note">${escapeHtml(task.category)}｜${escapeHtml(task.status)}</div>
+        </article>`).join('');
+    }
+
+    function render(data) {
+      const tasks = data.tasks || [];
+      const summary = data.summary || {};
+      const office = data.office || {};
+      const baseTitle = String(data.title || '校務行政').replace(/每日任務系統|任務系統|系統/g, '').replace(/[・｜|]+$/g, '').trim();
+      $('title').textContent = `${baseTitle || '校務行政'}・每日任務板`;
+      $('eyebrow').textContent = [office.schoolName, office.name, office.roleName]
+        .filter(Boolean).join(' / ') || 'SCHOOL ADMINISTRATION DESK';
+      $('urgent').textContent = summary.urgent || 0;
+      $('waiting').textContent = summary.waiting || 0;
+      $('dueToday').textContent = summary.dueToday || 0;
+      $('doneToday').textContent = summary.doneToday || 0;
+      $('focusCount').textContent = tasks.length;
+      $('taskMeta').textContent = `${tasks.length} 件顯示｜共 ${summary.active || 0} 件未完成`;
+      $('focusText').textContent = tasks.length
+        ? `${tasks[0].name}${tasks[0].nextAction ? `｜${tasks[0].nextAction}` : ''}`
+        : '今日沒有待辦任務，適合整理交接與後續工作。';
+      $('source').textContent = `資料來源：Workspace 任務系統｜更新 ${data.serverTime || ''}`;
+      renderTasks(tasks);
+      renderTimeline(data.timeline || []);
+      scheduleRefresh(Number(data.refreshMinutes) || 10);
+      updateClock();
+    }
+
+    function scheduleRefresh(minutes) {
+      window.clearTimeout(refreshTimer);
+      refreshTimer = window.setTimeout(loadBoard, Math.max(minutes, 1) * 60 * 1000);
+    }
+
+    async function loadBoard() {
+      $('source').textContent = '資料來源：正在讀取 Workspace 任務系統……';
+      try {
+        const data = await serverCall('getBoardData');
+        render(data);
+      } catch (error) {
+        $('source').textContent = `讀取失敗：${error.message}`;
+        $('taskList').innerHTML = `<div class="empty">${escapeHtml(error.message)}<br>請確認登入帳號與部署權限。</div>`;
+        scheduleRefresh(3);
+      }
+    }
+
+    $('refreshButton').addEventListener('click', loadBoard);
+    updateClock();
+    window.setInterval(updateClock, 60 * 1000);
+    loadBoard();
+  </script>
+</body>
+</html>

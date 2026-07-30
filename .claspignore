@@ -1,0 +1,12 @@
+.git/**
+.github/**
+tests/**
+node_modules/**
+.DS_Store
+.gitignore
+.claspignore
+AGENTS.md
+LICENSE
+README.md
+package.json
+package-lock.json
