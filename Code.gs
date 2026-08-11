@@ -3,7 +3,7 @@
  * Google Apps Script / V8
  *
  * 安裝方式：從目標 Google Sheet 開啟「擴充功能 → Apps Script」，
- * 貼入本專案檔案後，重新整理試算表並從「校務任務系統」選擇處室。
+ * 貼入本專案檔案後，重新整理試算表並從「校務任務系統」安裝教師工作台。
  */
 
 const APP_CONFIG = Object.freeze({
@@ -257,18 +257,45 @@ const OFFICE_PROFILES = Object.freeze({
   }),
 });
 
+/**
+ * 目前對外使用的單一教師工作台設定。
+ *
+ * 行政仍是正式工作身分與工作主軸，但不再要求使用者先選擇教務處、
+ * 學務處等細部處室。舊版 OFFICE_PROFILES 保留在程式內，僅用於既有
+ * 安裝資料相容與遷移，不再由安裝介面公開。
+ */
+const TEACHER_WORKSPACE_PROFILE = Object.freeze({
+  key: "teacher_workspace",
+  name: "國小教師工作台",
+  description: "以教師日常為核心，保留教學、行政、學年主任與導師四大工作主軸",
+  roles: Object.freeze([
+    ["teacher", "教師"],
+    ["homeroom_teacher", "導師"],
+    ["grade_leader", "學年主任"],
+    ["admin", "行政"],
+  ]),
+  categories: Object.freeze([
+    ...new Set(Object.values(WORK_AXIS_CATEGORY_MAP).flat()),
+  ]),
+  samples: Object.freeze([
+    ["整理今天的教學與評量進度", "課程計畫與教學進度", "未開始", "中", "確認本週節數、進度與下次評量前的複習安排"],
+    ["回覆學校行政通知", "行政交辦", "待確認", "高", "核對期限、承辦窗口與需要回覆的資料"],
+    ["追蹤班級學生與家長事項", "親師溝通與家庭聯繫", "進行中", "中", "整理待回覆訊息並記錄下一步"],
+  ]),
+});
+
 const DEFAULT_SETTINGS = Object.freeze([
-  ["OFFICE_KEY", "sixth_grade", "目前使用的處室代碼"],
-  ["OFFICE_NAME", "六年級學年", "目前使用的處室名稱"],
-  ["ROLE_KEY", "grade_leader", "目前使用的職務代碼"],
-  ["ROLE_NAME", "六年級學年主任兼導師", "目前使用的職務名稱"],
+  ["OFFICE_KEY", "teacher_workspace", "目前使用的教師工作台代碼（保留舊欄位以相容既有資料）"],
+  ["OFFICE_NAME", "國小教師工作台", "目前使用的教師工作台名稱"],
+  ["ROLE_KEY", "teacher", "目前使用的教師工作身分代碼"],
+  ["ROLE_NAME", "教師", "目前使用的教師工作身分"],
   ["SCHOOL_NAME", "", "學校名稱；留空時不顯示"],
-  ["SYSTEM_NAME", "臺南市國小｜六年級學年主任＋導師工作台", "管理台與看板標題"],
+  ["SYSTEM_NAME", "臺南市國小｜教師工作台", "管理台與看板標題"],
   ["ALLOWED_DOMAIN", "", "限制登入網域，例如 school.edu.tw；留空表示不限制"],
   ["BOARD_REFRESH_MINUTES", "10", "電子紙看板自動更新分鐘數"],
   ["BOARD_MAX_TASKS", "6", "看板最多顯示任務數"],
   ["AUTO_SHOW_DAYS", "7", "自動顯示未來幾天內到期任務"],
-  ["DEFAULT_OWNER", "六年級學年主任兼導師", "新增任務預設負責人"],
+  ["DEFAULT_OWNER", "教師", "新增任務預設負責人"],
   ["DEFAULT_OWNER_EMAIL", "", "新增任務預設負責人 Email"],
   ["BOARD_SHOW_DONE_TODAY", "是", "看板統計是否顯示今日完成數"],
 ]);
@@ -303,7 +330,7 @@ const HEADER_ALIASES = Object.freeze({
 function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu("校務任務系統")
-    .addItem("安裝／選擇處室", "installSystem")
+    .addItem("安裝教師工作台", "installSystem")
     .addItem("整理格式與下拉選單", "refreshSheetDesign")
     .addSeparator()
     .addItem("開啟管理台與看板", "showWebAppLinks")
@@ -318,7 +345,7 @@ function installSystem() {
   showInstallDialog();
 }
 
-/** 顯示處室與職務安裝精靈。 */
+/** 顯示教師工作台安裝精靈。 */
 function showInstallDialog() {
   const html = HtmlService.createHtmlOutputFromFile("Installer")
     .setWidth(620)
@@ -331,19 +358,30 @@ function getInstallationOptions() {
   assertSpreadsheetUiContext_();
   const settings = getSettings_();
   return {
-    offices: getOfficeProfileCatalog_(),
+    profile: {
+      key: TEACHER_WORKSPACE_PROFILE.key,
+      name: TEACHER_WORKSPACE_PROFILE.name,
+      description: TEACHER_WORKSPACE_PROFILE.description,
+    },
+    roles: TEACHER_WORKSPACE_PROFILE.roles.map((role) => ({
+      key: role[0],
+      name: role[1],
+    })),
     installToken: issueInstallToken_(),
     current: {
-      officeKey: settings.OFFICE_KEY || "general_affairs",
-      roleKey: settings.ROLE_KEY || "director",
+      roleKey: TEACHER_WORKSPACE_PROFILE.roles.some(
+        (role) => role[0] === settings.ROLE_KEY,
+      )
+        ? settings.ROLE_KEY
+        : "teacher",
       schoolName: settings.SCHOOL_NAME || "",
     },
   };
 }
 
-/** 依安裝精靈選擇，非破壞式安裝或切換處室。 */
+/** 依安裝精靈選擇，非破壞式安裝教師工作台。 */
 function installOfficeSystem(
-  officeKey,
+  _officeKey,
   roleKey,
   schoolName,
   seedSamples,
@@ -352,9 +390,9 @@ function installOfficeSystem(
   assertSpreadsheetUiContext_();
   assertAuthorized_();
   verifyInstallToken_(installToken);
-  const profile = getOfficeProfile_(officeKey);
+  const profile = TEACHER_WORKSPACE_PROFILE;
   const role = profile.roles.find((item) => item[0] === String(roleKey || ""));
-  if (!role) throw new Error("所選職務不屬於此處室。");
+  if (!role) throw new Error("所選工作身分無效，請重新選擇教師、導師、學年主任或行政。");
 
   const lock = LockService.getDocumentLock();
   lock.waitLock(30000);
@@ -370,7 +408,7 @@ function installOfficeSystem(
     migrateTaskSheet_(ss, taskSheet, profile, role[1], seedSamples !== false);
     applyOfficeProfileSettings_(
       ss,
-      String(officeKey),
+      TEACHER_WORKSPACE_PROFILE.key,
       profile,
       role[0],
       role[1],
@@ -389,7 +427,7 @@ function installOfficeSystem(
     SpreadsheetApp.flush();
     return {
       ok: true,
-      message: `${profile.name}／${role[1]}已安裝完成。`,
+      message: `${profile.name}／${role[1]}已安裝完成。行政職務與四大工作主軸已保留。`,
     };
   } finally {
     lock.releaseLock();
@@ -947,11 +985,11 @@ function diagnoseSystem() {
   const ss = getSpreadsheet_();
   const messages = [];
   const settings = getSettings_();
-  const profile = OFFICE_PROFILES[settings.OFFICE_KEY];
+  const context = getActiveOfficeContext_();
   messages.push(
-    profile
-      ? `✓ 處室設定：${profile.name}／${settings.ROLE_NAME || "未指定職務"}`
-      : "✗ 處室設定無效，請重新執行安裝精靈",
+    context
+      ? `✓ 教師工作台：${context.name}／${context.roleName || "未指定工作身分"}`
+      : "✗ 教師工作台設定無效，請重新執行安裝精靈",
   );
   const taskSheet = ss.getSheetByName(APP_CONFIG.TASK_SHEET);
   messages.push(taskSheet ? "✓ 找到任務清單" : "✗ 缺少任務清單");
@@ -1695,30 +1733,29 @@ function isWaitingStatus_(status) {
 
 function getOfficeProfile_(officeKey) {
   const key = String(officeKey || "").trim();
+  if (key === TEACHER_WORKSPACE_PROFILE.key) return TEACHER_WORKSPACE_PROFILE;
   const profile = OFFICE_PROFILES[key];
   if (!profile) throw new Error("無效的處室選擇。");
   return profile;
 }
 
 function getOfficeProfileCatalog_() {
-  return Object.keys(OFFICE_PROFILES).map((key) => {
-    const profile = OFFICE_PROFILES[key];
-    return {
-      key,
-      name: profile.name,
-      description: profile.description,
-      roles: profile.roles.map((role) => ({ key: role[0], name: role[1] })),
-      categories: [...profile.categories],
-    };
-  });
+  return [{
+    key: TEACHER_WORKSPACE_PROFILE.key,
+    name: TEACHER_WORKSPACE_PROFILE.name,
+    description: TEACHER_WORKSPACE_PROFILE.description,
+    roles: TEACHER_WORKSPACE_PROFILE.roles.map((role) => ({
+      key: role[0],
+      name: role[1],
+    })),
+    categories: [...TEACHER_WORKSPACE_PROFILE.categories],
+  }];
 }
 
 function getActiveOfficeContext_() {
   const settings = getSettings_();
-  const key = OFFICE_PROFILES[settings.OFFICE_KEY]
-    ? settings.OFFICE_KEY
-    : "general_affairs";
-  const profile = OFFICE_PROFILES[key];
+  const key = TEACHER_WORKSPACE_PROFILE.key;
+  const profile = TEACHER_WORKSPACE_PROFILE;
   const configuredRole = profile.roles.find(
     (role) => role[0] === settings.ROLE_KEY,
   );
@@ -1728,7 +1765,7 @@ function getActiveOfficeContext_() {
     name: profile.name,
     description: profile.description,
     roleKey: role[0],
-    roleName: settings.ROLE_NAME || role[1],
+    roleName: role[1],
     schoolName: settings.SCHOOL_NAME || "",
     profile,
   };
@@ -1867,7 +1904,7 @@ function createDemoRows_(profile, ownerName) {
   const tomorrowDate = new Date(now);
   tomorrowDate.setDate(tomorrowDate.getDate() + 1);
   const tomorrow = formatDateOnly_(tomorrowDate);
-  const activeProfile = profile || OFFICE_PROFILES.general_affairs;
+  const activeProfile = profile || TEACHER_WORKSPACE_PROFILE;
   const dueTimes = ["11:30", "15:00", "16:30"];
   const base = activeProfile.samples.map((sample, index) => ({
     taskId: createTaskId_(),

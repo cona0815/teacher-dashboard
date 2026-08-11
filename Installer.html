@@ -14,10 +14,8 @@
     .wide { grid-column: 1 / -1; }
     label { font-size: 13px; font-weight: 800; }
     select, input { width: 100%; min-height: 42px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink); font: inherit; }
-    .profile { min-height: 88px; margin-top: 15px; padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--soft); }
-    .profile strong { display: block; margin-bottom: 5px; }
-    .profile p { margin: 0 0 7px; color: var(--muted); font-size: 13px; line-height: 1.5; }
-    .categories { font-size: 12px; line-height: 1.65; }
+    .profile { min-height: 88px; margin-top: 15px; padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--soft); color: var(--muted); font-size: 13px; line-height: 1.6; }
+    .profile strong { display: block; margin-bottom: 5px; color: var(--ink); }
     .check { display: flex; align-items: flex-start; gap: 9px; margin-top: 15px; color: var(--muted); font-size: 13px; line-height: 1.5; }
     .check input { width: 17px; min-height: 17px; margin-top: 1px; }
     .notice { margin-top: 14px; padding: 11px 13px; border-left: 4px solid var(--brand); background: #eef6fb; color: #365064; font-size: 13px; line-height: 1.55; }
@@ -33,7 +31,7 @@
 </head>
 <body>
   <h1>設定你的校務任務系統</h1>
-  <p class="intro">選擇處室與職務後，系統會套用相對應的任務類型、範例與看板名稱。之後仍可從試算表選單切換。</p>
+  <p class="intro">這裡只設定學校名稱與主要工作身分。系統保留「教學、行政、學年主任、導師」四大工作主軸，不再要求先選擇細部處室。</p>
 
   <div class="grid">
     <div class="field wide">
@@ -41,23 +39,19 @@
       <input id="schoolName" maxlength="100" placeholder="例如：○○市立○○國民中學">
     </div>
     <div class="field">
-      <label for="office">處室</label>
-      <select id="office"></select>
-    </div>
-    <div class="field">
-      <label for="role">職務</label>
+      <label for="role">主要工作身分</label>
       <select id="role"></select>
     </div>
   </div>
 
-  <div class="profile" id="profile">正在載入處室設定……</div>
+  <div class="profile" id="profile">正在載入教師工作台設定……</div>
 
   <label class="check">
     <input id="seedSamples" type="checkbox" checked>
-    <span>全新空白工作表加入 3 筆處室範例任務（已有任務時不會覆蓋或重複加入）</span>
+    <span>全新空白工作表加入 3 筆教師工作範例任務（已有任務時不會覆蓋或重複加入）</span>
   </label>
 
-  <div class="notice">切換處室不會刪除既有任務。舊任務使用過的類型會保留在下拉清單，欄位需要遷移時也會先建立隱藏備份。</div>
+  <div class="notice">行政仍可直接作為工作身分與工作主軸使用；舊版若曾設定處室，既有任務與類型會保留，欄位需要遷移時也會先建立隱藏備份。</div>
 
   <div class="actions">
     <button class="secondary" type="button" onclick="google.script.host.close()">取消</button>
@@ -67,7 +61,7 @@
 
   <script>
     'use strict';
-    let offices = [];
+    let roles = [];
     let installToken = '';
     const $ = id => document.getElementById(id);
 
@@ -86,35 +80,25 @@
       });
     }
 
-    function selectedOffice() {
-      return offices.find(item => item.key === $('office').value) || offices[0];
-    }
-
-    function renderOffice() {
-      const office = selectedOffice();
-      if (!office) return;
+    function renderRoles() {
       const previousRole = $('role').value;
-      $('role').innerHTML = office.roles
+      $('role').innerHTML = roles
         .map(role => `<option value="${escapeHtml(role.key)}">${escapeHtml(role.name)}</option>`)
         .join('');
-      if (office.roles.some(role => role.key === previousRole)) $('role').value = previousRole;
-      $('profile').innerHTML = `
-        <strong>${escapeHtml(office.name)}</strong>
-        <p>${escapeHtml(office.description)}</p>
-        <div class="categories">任務類型：${office.categories.map(escapeHtml).join('、')}</div>`;
+      if (roles.some(role => role.key === previousRole)) $('role').value = previousRole;
     }
 
     async function initialize() {
       try {
         const data = await callServer('getInstallationOptions');
-        offices = data.offices || [];
+        roles = data.roles || [];
         installToken = data.installToken || '';
-        $('office').innerHTML = offices
-          .map(office => `<option value="${escapeHtml(office.key)}">${escapeHtml(office.name)}</option>`)
-          .join('');
-        $('office').value = data.current.officeKey || 'general_affairs';
         $('schoolName').value = data.current.schoolName || '';
-        renderOffice();
+        renderRoles();
+        const profile = data.profile || {};
+        $('profile').innerHTML = `
+          <strong>${escapeHtml(profile.name || '國小教師工作台')}</strong>
+          <span>${escapeHtml(profile.description || '教學、行政、學年主任與導師四大工作主軸共用同一個教師工作台。')}</span>`;
         if ([...$('role').options].some(option => option.value === data.current.roleKey)) {
           $('role').value = data.current.roleKey;
         }
@@ -133,7 +117,7 @@
       try {
         const result = await callServer(
           'installOfficeSystem',
-          $('office').value,
+          'teacher_workspace',
           $('role').value,
           $('schoolName').value,
           $('seedSamples').checked,
@@ -148,7 +132,6 @@
       }
     }
 
-    $('office').addEventListener('change', renderOffice);
     $('installButton').addEventListener('click', install);
     initialize();
   </script>

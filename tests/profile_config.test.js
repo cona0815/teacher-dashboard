@@ -17,6 +17,7 @@ globalThis.__exports = {
   WORK_AXIS_CATEGORY_MAP,
   EMERGENCY_CATEGORIES,
   OFFICE_PROFILES,
+  TEACHER_WORKSPACE_PROFILE,
   getOfficeProfile_,
   getOfficeProfileCatalog_,
   getOptionLists_,
@@ -34,6 +35,7 @@ const {
   WORK_AXIS_CATEGORY_MAP,
   EMERGENCY_CATEGORIES,
   OFFICE_PROFILES,
+  TEACHER_WORKSPACE_PROFILE,
   getOfficeProfile_,
   getOfficeProfileCatalog_,
   getOptionLists_,
@@ -48,6 +50,16 @@ assert.deepEqual(
   "專案階層與工作主軸欄位必須附加在既有任務欄位之後",
 );
 assert.equal(Object.keys(OFFICE_PROFILES).length, 7, "應提供六個校務處室與六年級學年 profile");
+assert.equal(
+  JSON.stringify(TEACHER_WORKSPACE_PROFILE.roles.map((role) => role[1])),
+  JSON.stringify(["教師", "導師", "學年主任", "行政"]),
+  "教師工作台應保留四種工作身分，包含行政",
+);
+assert.equal(
+  JSON.stringify(Array.from(TEACHER_WORKSPACE_PROFILE.categories)),
+  JSON.stringify(Array.from(new Set(Object.values(WORK_AXIS_CATEGORY_MAP).flat()))),
+  "教師工作台細項應由四大工作主軸組成",
+);
 assert.ok(OFFICE_PROFILES.sixth_grade.categories.length >= 60, "六年級工作細項應涵蓋常見教師工作");
 for (const category of OFFICE_PROFILES.sixth_grade.categories) {
   const axes = Object.entries(WORK_AXIS_CATEGORY_MAP)
@@ -102,8 +114,12 @@ assert.equal(getOfficeProfile_("academic_affairs").name, "教務處");
 assert.throws(() => getOfficeProfile_("not_an_office"), /無效的處室選擇/);
 
 const catalog = getOfficeProfileCatalog_();
-assert.equal(catalog.length, 7);
-assert.ok(catalog.every((office) => office.roles.every((role) => role.key && role.name)));
+assert.equal(catalog.length, 1, "安裝介面只應公開單一教師工作台，不公開細部處室");
+assert.equal(catalog[0].key, "teacher_workspace");
+assert.equal(
+  JSON.stringify(catalog[0].roles.map((role) => role.name)),
+  JSON.stringify(["教師", "導師", "學年主任", "行政"]),
+);
 
 const fakeTaskSheet = {
   getLastRow: () => 3,
@@ -133,6 +149,10 @@ for (const htmlName of ["Installer.html", "Index.html", "Board.html"]) {
   assert.ok(scripts.length > 0, `${htmlName} 缺少前端程式`);
   scripts.forEach((script) => new Function(script));
 }
+
+const installerHtml = fs.readFileSync(path.join(projectRoot, "Installer.html"), "utf8");
+assert.doesNotMatch(installerHtml, /id="office"|data\.offices|let offices/, "安裝介面不應再要求選擇處室");
+assert.match(installerHtml, /主要工作身分/, "安裝介面應改為選擇教師工作身分");
 
 const indexHtml = fs.readFileSync(path.join(projectRoot, "Index.html"), "utf8");
 assert.match(indexHtml, /body \.deskpet, body \.deskpet-panel \{ display: none !important; \}/, "小綿助是桌面程式，不應顯示在網頁內");
