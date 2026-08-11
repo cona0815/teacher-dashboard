@@ -1501,8 +1501,12 @@
             <p>介面使用部分 Koboyo 圖示，僅作為較大作品的一部分，未重新散布完整圖示庫。<br><a href="https://koboyo.com/icons" target="_blank" rel="noopener noreferrer">圖示原站</a>・<a href="https://koboyo.com/icons/license" target="_blank" rel="noopener noreferrer">圖示授權說明</a></p>
           </article>
           <article class="license-card">
+            <h3>本修改版介面插圖</h3>
+            <p>首頁主視覺與工作標示插圖由本修改版專案擁有者提供或為本專案製作，未取用 Irasutoya、DeskPet、學校吉祥物或其他既有卡通角色；檔案清單與後續替換規則記錄於 THIRD_PARTY_NOTICES.md。</p>
+          </article>
+          <article class="license-card">
             <h3>小綿助角色素材</h3>
-            <p>小羊角色設定與動畫素材由本修改版專案擁有者提供，與 DeskPet 白貓圖像不同。詳細第三方聲明請參閱專案的 THIRD_PARTY_NOTICES.md。</p>
+            <p>小羊角色設定、原始格與動畫素材由本修改版專案擁有者提供或為本專案製作，與 DeskPet 白貓圖像不同；正式環境只會讀取 cona0815/teacher-dashboard 內的小綿助素材。詳細聲明請參閱 THIRD_PARTY_NOTICES.md。</p>
           </article>
         </div>
       </section>
@@ -2137,7 +2141,7 @@
     };
     const deskpetAssetRoot = ['127.0.0.1', 'localhost', ''].includes(window.location.hostname)
       ? 'assets/pet/'
-      : 'https://raw.githubusercontent.com/mihozip/school-admin-daily-dashboard/main/assets/pet/';
+      : 'https://raw.githubusercontent.com/cona0815/teacher-dashboard/main/assets/pet/';
     const deskpetImages = {
       drag: `${deskpetAssetRoot}pet_drag.webp`,
       idle: `${deskpetAssetRoot}pet_idle.webp`,

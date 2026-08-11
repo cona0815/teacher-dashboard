@@ -165,6 +165,28 @@ assert.match(indexHtml, /本專案採 MIT 開源授權/, "授權分頁應清楚�
 assert.match(indexHtml, /github\.com\/mihozip\/school-admin-daily-dashboard/, "授權分頁應連結原始校務系統");
 assert.match(indexHtml, /facebook\.com\/albert\.peng\.56/, "授權分頁應標示原作者 Facebook");
 assert.match(indexHtml, /github\.com\/mihozip\/DeskPet/, "授權分頁應標示 DeskPet 流程參考來源");
+assert.match(indexHtml, /本修改版介面插圖/, "授權分頁應記錄本修改版介面插圖來源");
+assert.match(
+  indexHtml,
+  /raw\.githubusercontent\.com\/cona0815\/teacher-dashboard\/main\/assets\/pet\//,
+  "正式環境的小綿助素材應由本專案 repository 提供",
+);
+assert.doesNotMatch(
+  indexHtml,
+  /raw\.githubusercontent\.com\/mihozip\/school-admin-daily-dashboard\/main\/assets\/pet\//,
+  "不得再從原作者 repository 讀取小綿助素材",
+);
+const thirdPartyNotices = fs.readFileSync(path.join(projectRoot, "THIRD_PARTY_NOTICES.md"), "utf8");
+for (const projectOwnedAsset of [
+  "assets/grade-leader-fun.png",
+  "assets/marker-homeroom.webp",
+  "assets/marker-graduation.webp",
+  "assets/marker-grade-team.webp",
+  "assets/marker-checklist.webp",
+  "assets/pet/",
+]) {
+  assert.match(thirdPartyNotices, new RegExp(projectOwnedAsset.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), `素材聲明缺少 ${projectOwnedAsset}`);
+}
 const desktopSecretary = fs.readFileSync(path.join(projectRoot, "desktop_pet_secretary.py"), "utf8");
 for (const secretaryFeature of ["今日簡報", "今日重要", "已逾期", "待追蹤", "健康管理", "快速交代"]) {
   assert.match(desktopSecretary, new RegExp(secretaryFeature), `桌面小綿助缺少「${secretaryFeature}」`);

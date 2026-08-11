@@ -17,6 +17,18 @@ Koboyo permits its icons to be used and modified in personal and commercial webs
 
 The project includes only the icons used by the interface and does not redistribute the Koboyo collection.
 
+## Project-owned interface illustrations
+
+The following interface illustrations were created or generated specifically for this modified project and were supplied by the project owner. They are not copied from Irasutoya, DeskPet, an existing school mascot, or another known cartoon character:
+
+- `assets/grade-leader-fun.png`
+- `assets/marker-homeroom.webp`
+- `assets/marker-graduation.webp`
+- `assets/marker-grade-team.webp`
+- `assets/marker-checklist.webp`
+
+These files are distributed as part of this application, not as a standalone illustration or stock-image collection. If any file is replaced with third-party artwork in the future, its source and license must be added to this notice before publication.
+
 ## 小綿助
 
-The character design and animation frames under `assets/pet/` were supplied for this project by the project owner. They replace the former DeskPet white-cat artwork. No DeskPet artwork is included or loaded by the current interface.
+The original sheep character design, source frames and animation files under `assets/pet/` were created or generated specifically for this modified project and supplied by the project owner. They replace the former DeskPet white-cat artwork. No DeskPet white-cat artwork is included or loaded by the current interface, and the production fallback URL points only to this project's own `cona0815/teacher-dashboard` repository.

@@ -90,6 +90,6 @@ npm test
 
 ## 授權
 
-本專案是在 [mihozip/school-admin-daily-dashboard](https://github.com/mihozip/school-admin-daily-dashboard) 基礎上修改，原始專案採 MIT 開源授權；本版本亦依 MIT License 發布。原作者與第三方素材的來源說明集中放在系統設定的「授權」分頁及 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+本專案是在 [mihozip/school-admin-daily-dashboard](https://github.com/mihozip/school-admin-daily-dashboard) 基礎上修改，原始專案採 MIT 開源授權；本版本亦依 MIT License 發布。原作者、Koboyo 圖示、本修改版介面插圖及小綿助動畫的來源說明集中放在系統設定的「授權」分頁及 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
 [MIT License](LICENSE)
