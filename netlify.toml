@@ -1,0 +1,4 @@
+[build]
+  publish = "."
+
+# Static preview only. Google Apps Script remains the optional cloud backend.

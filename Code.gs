@@ -38,6 +38,10 @@ const TASK_HEADERS = Object.freeze([
   "更新時間",
   "完成時間",
   "封存",
+  "專案ID",
+  "上層任務ID",
+  "任務層級",
+  "工作主軸",
 ]);
 
 const LOG_HEADERS = Object.freeze([
@@ -57,11 +61,88 @@ const COMMON_OPTION_LISTS = Object.freeze({
   封存: ["否", "是"],
 });
 
+const WORK_AXES = Object.freeze(["教學", "行政", "學年主任", "導師"]);
+const EMERGENCY_CATEGORIES = Object.freeze([
+  "緊急通報", "疑似性平事件通報", "疑似校園霸凌通報",
+  "兒少保護與家暴通報", "自傷自殺風險通報", "學生失蹤與重大傷病通報",
+  "藥物濫用與危險行為通報", "災害事故與疏散通報",
+  "傳染病與群聚事件通報", "食品安全與午餐事件通報",
+]);
+const WORK_AXIS_CATEGORY_MAP = Object.freeze({
+  教學: Object.freeze([
+    "課程計畫與教學進度", "備課與教材設計", "教材教具與數位資源",
+    "差異化教學與學習支持", "作業批改與學習回饋", "平時評量與多元評量",
+    "定期評量與命題審題", "成績登錄與學期評語", "學習扶助與補救教學",
+    "公開授課與專業共備", "教師研習與專業成長", "科任課務與調代課",
+    "學年課程與共備", "教科書與課程計畫", "共同評量與成績", "班級教學與作業",
+  ]),
+  行政: Object.freeze([
+    "行政交辦", "公文通知與期限追蹤", "晨會與校務會議", "表件填報與資料彙整",
+    "校務系統與線上填報", "委員會與校內分工", "值週導護與校園安全",
+    "校內活動支援", "設備借用與修繕回報", "經費申請與核銷",
+    "調查表單與名單統計", "團購與費用統計", "緊急通報",
+    "災害事故與疏散通報", "傳染病與群聚事件通報", "食品安全與午餐事件通報", "其他",
+  ]),
+  學年主任: Object.freeze([
+    "學年會議與決議追蹤", "行政通知與跨班協調", "學年課程進度統整",
+    "學年共備與教學協作", "共同評量分工與審題", "跨班學生事務協調",
+    "學年家長訊息統整", "學年資源與經費協調", "畢業資料與升學轉銜",
+    "學年協調", "學年活動", "戶外教育與畢旅", "畢業紀念冊", "畢業典禮", "畢業成績與獎項",
+  ]),
+  導師: Object.freeze([
+    "班級常規與座位幹部", "學生出缺席與請假追蹤", "生活教育與品格輔導",
+    "個別學生關懷與輔導", "學生衝突與偶發事件", "學生傷病與家長聯繫",
+    "親師溝通與家庭聯繫", "班親會與親職活動", "特教與輔導資源協作",
+    "班級活動與競賽", "環境整潔與資源管理", "午餐午休與生活照顧",
+    "學生日常表現與獎懲", "轉入轉出與學習轉銜",
+    "疑似性平事件通報", "疑似校園霸凌通報", "兒少保護與家暴通報",
+    "自傷自殺風險通報", "學生失蹤與重大傷病通報", "藥物濫用與危險行為通報",
+    "班級經營", "出缺席與生活", "個別學生輔導", "本班親師溝通", "本班畢業事務",
+  ]),
+});
+
 /**
  * 處室差異集中於 profile；Sheet、CRUD、安全與看板流程不需要知道各處室細節。
  * 新增處室時只需補一個 profile，無須複製整套系統。
  */
 const OFFICE_PROFILES = Object.freeze({
+  sixth_grade: Object.freeze({
+    name: "六年級學年",
+    description: "臺南市國小情境：六年級學年主任與班級導師雙軌工作",
+    roles: Object.freeze([
+      ["grade_leader", "六年級學年主任兼導師"],
+      ["homeroom_teacher", "六年級導師"],
+    ]),
+    categories: Object.freeze([
+      "課程計畫與教學進度", "備課與教材設計", "教材教具與數位資源",
+      "差異化教學與學習支持", "作業批改與學習回饋", "平時評量與多元評量",
+      "定期評量與命題審題", "成績登錄與學期評語", "學習扶助與補救教學",
+      "公開授課與專業共備", "教師研習與專業成長", "科任課務與調代課",
+      "學年課程與共備", "教科書與課程計畫", "共同評量與成績", "班級教學與作業",
+      "班級常規與座位幹部", "學生出缺席與請假追蹤", "生活教育與品格輔導",
+      "個別學生關懷與輔導", "學生衝突與偶發事件", "學生傷病與家長聯繫",
+      "親師溝通與家庭聯繫", "班親會與親職活動", "特教與輔導資源協作",
+      "班級活動與競賽", "環境整潔與資源管理", "午餐午休與生活照顧",
+      "學生日常表現與獎懲", "轉入轉出與學習轉銜",
+      "疑似性平事件通報", "疑似校園霸凌通報", "兒少保護與家暴通報",
+      "自傷自殺風險通報", "學生失蹤與重大傷病通報", "藥物濫用與危險行為通報",
+      "班級經營", "出缺席與生活", "個別學生輔導", "本班親師溝通", "本班畢業事務",
+      "學年會議與決議追蹤", "行政通知與跨班協調", "學年課程進度統整",
+      "學年共備與教學協作", "共同評量分工與審題", "跨班學生事務協調",
+      "學年家長訊息統整", "學年資源與經費協調", "畢業資料與升學轉銜",
+      "學年協調", "學年活動", "戶外教育與畢旅", "畢業紀念冊", "畢業典禮", "畢業成績與獎項",
+      "行政交辦", "公文通知與期限追蹤", "晨會與校務會議", "表件填報與資料彙整",
+      "校務系統與線上填報", "委員會與校內分工", "值週導護與校園安全",
+      "校內活動支援", "設備借用與修繕回報", "經費申請與核銷",
+      "調查表單與名單統計", "團購與費用統計", "緊急通報",
+      "災害事故與疏散通報", "傳染病與群聚事件通報", "食品安全與午餐事件通報", "其他",
+    ]),
+    samples: Object.freeze([
+      ["召開本週六年級學年會議", "學年協調", "進行中", "高", "會前彙整各班待決議事項與處室通知"],
+      ["回報定期評量日期與命題分工", "共同評量與成績", "待確認", "高", "依校內行事曆彙整結果並回覆課研組"],
+      ["建立畢旅、畢冊、畢典與市長獎里程碑", "畢業成績與獎項", "未開始", "中", "向課研組、註冊組與學務處確認校內期程及窗口"],
+    ]),
+  }),
   academic_affairs: Object.freeze({
     name: "教務處",
     description: "課程教學、學籍成績、招生編班與教學資源",
@@ -177,17 +258,17 @@ const OFFICE_PROFILES = Object.freeze({
 });
 
 const DEFAULT_SETTINGS = Object.freeze([
-  ["OFFICE_KEY", "general_affairs", "目前使用的處室代碼"],
-  ["OFFICE_NAME", "總務處", "目前使用的處室名稱"],
-  ["ROLE_KEY", "director", "目前使用的職務代碼"],
-  ["ROLE_NAME", "總務主任", "目前使用的職務名稱"],
+  ["OFFICE_KEY", "sixth_grade", "目前使用的處室代碼"],
+  ["OFFICE_NAME", "六年級學年", "目前使用的處室名稱"],
+  ["ROLE_KEY", "grade_leader", "目前使用的職務代碼"],
+  ["ROLE_NAME", "六年級學年主任兼導師", "目前使用的職務名稱"],
   ["SCHOOL_NAME", "", "學校名稱；留空時不顯示"],
-  ["SYSTEM_NAME", "總務處｜總務主任每日任務系統", "管理台與看板標題"],
+  ["SYSTEM_NAME", "臺南市國小｜六年級學年主任＋導師工作台", "管理台與看板標題"],
   ["ALLOWED_DOMAIN", "", "限制登入網域，例如 school.edu.tw；留空表示不限制"],
   ["BOARD_REFRESH_MINUTES", "10", "電子紙看板自動更新分鐘數"],
   ["BOARD_MAX_TASKS", "6", "看板最多顯示任務數"],
   ["AUTO_SHOW_DAYS", "7", "自動顯示未來幾天內到期任務"],
-  ["DEFAULT_OWNER", "總務主任", "新增任務預設負責人"],
+  ["DEFAULT_OWNER", "六年級學年主任兼導師", "新增任務預設負責人"],
   ["DEFAULT_OWNER_EMAIL", "", "新增任務預設負責人 Email"],
   ["BOARD_SHOW_DONE_TODAY", "是", "看板統計是否顯示今日完成數"],
 ]);
@@ -212,6 +293,10 @@ const HEADER_ALIASES = Object.freeze({
   更新時間: ["更新時間", "最後更新"],
   完成時間: ["完成時間", "完成日期"],
   封存: ["封存", "已封存"],
+  專案ID: ["專案ID", "專案 Id", "projectId"],
+  上層任務ID: ["上層任務ID", "父任務ID", "parentTaskId"],
+  任務層級: ["任務層級", "任務類別", "taskType"],
+  工作主軸: ["工作主軸", "主軸", "工作角色"],
 });
 
 /** 試算表開啟時加入自訂選單。 */
@@ -372,6 +457,210 @@ function getTasks() {
   };
 }
 
+/** 經使用者確認後，建立 Google 日曆事件。 */
+function createGoogleCalendarEvent(payload) {
+  const user = assertAuthorized_();
+  verifyCsrfToken_(payload && payload.csrfToken);
+  const title = cleanText_(payload && payload.title, 200);
+  const dueDate = normalizeDateString_(payload && payload.dueDate);
+  const dueTime = normalizeTimeString_(payload && payload.dueTime);
+  const description = cleanText_(payload && payload.description, 1000);
+  if (!title) throw new Error("請填寫日曆事件名稱。");
+  if (!dueDate) throw new Error("Google 日曆事件必須指定日期。");
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const calendar = CalendarApp.getDefaultCalendar();
+    const [year, month, day] = dueDate.split("-").map(Number);
+    let event;
+    if (dueTime) {
+      const [hour, minute] = dueTime.split(":").map(Number);
+      const start = new Date(year, month - 1, day, hour, minute, 0);
+      const end = new Date(start.getTime() + 60 * 60 * 1000);
+      event = calendar.createEvent(title, start, end, { description });
+      event.addPopupReminder(30);
+    } else {
+      event = calendar.createAllDayEvent(title, new Date(year, month - 1, day), { description });
+    }
+    const eventId = event.getId();
+    const ss = getSpreadsheet_();
+    appendLog_(ss, `GCAL-${Utilities.getUuid()}`, "新增 Google 日曆事件", "", {
+      eventId,
+      title,
+      dueDate,
+      dueTime,
+    }, user.email || user.name);
+    return { ok: true, eventId, title, dueDate, dueTime };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/** 將教學進度批次新增或更新到預設 Google 日曆。 */
+function syncTeachingProgressCalendar(payload) {
+  const user = assertAuthorized_();
+  verifyCsrfToken_(payload && payload.csrfToken);
+  const subject = cleanText_(payload && payload.subject, 80) || "未命名科目";
+  const allowedTypes = ["teaching", "manual", "review", "assessment"];
+  const rows = Array.isArray(payload && payload.rows)
+    ? payload.rows.slice(0, 120).map(function (row) {
+        const startDate = normalizeDateString_(row && row.startDate);
+        const endDate = normalizeDateString_(row && row.endDate);
+        const type = allowedTypes.indexOf(String(row && row.type)) >= 0 ? String(row.type) : "teaching";
+        return {
+          rowKey: cleanText_(row && row.rowKey, 100),
+          clientKey: cleanText_(row && row.clientKey, 100),
+          eventId: cleanText_(row && row.eventId, 300),
+          content: cleanText_(row && row.content, 200),
+          week: cleanText_(row && row.week, 80),
+          periods: Math.max(0, Math.min(30, Number(row && row.periods) || 0)),
+          startDate: startDate,
+          endDate: endDate,
+          type: type,
+        };
+      }).filter(function (row) { return row.rowKey && row.clientKey && row.content && row.startDate && row.endDate; })
+    : [];
+  if (!rows.length) throw new Error("沒有可同步的教學進度。");
+  rows.forEach(function (row) {
+    if (row.startDate > row.endDate) throw new Error("教學進度的完成日期不可早於開始日期。");
+  });
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const calendar = CalendarApp.getDefaultCalendar();
+    const events = [];
+    const failures = [];
+    let created = 0;
+    let updated = 0;
+
+    rows.forEach(function (row) {
+      try {
+        const marker = `[school-admin-teaching-progress:${row.clientKey}]`;
+        const prefix = row.type === "assessment"
+          ? `【${subject}｜定期評量】`
+          : row.type === "review"
+            ? `【${subject}｜複習】`
+            : `【${subject}｜教學進度】`;
+        const title = cleanText_(`${prefix}${row.content}`, 200);
+        const description = [
+          row.week || "",
+          row.periods ? `預計 ${row.periods} 節` : "",
+          "由六年級學年主任＋導師工作台同步；修改後可再次同步更新。",
+          marker,
+        ].filter(Boolean).join("\n");
+        const start = new Date(`${row.startDate}T12:00:00`);
+        const endInclusive = new Date(`${row.endDate}T12:00:00`);
+        const endExclusive = new Date(endInclusive);
+        endExclusive.setDate(endExclusive.getDate() + 1);
+
+        let event = null;
+        if (row.eventId) {
+          try {
+            const candidate = calendar.getEventById(row.eventId);
+            if (candidate && String(candidate.getDescription() || "").indexOf(marker) >= 0) event = candidate;
+          } catch (error) {
+            event = null;
+          }
+        }
+        if (event) {
+          event.setTitle(title).setDescription(description);
+          if (row.startDate === row.endDate) event.setAllDayDate(start);
+          else event.setAllDayDates(start, endExclusive);
+          updated += 1;
+        } else {
+          event = row.startDate === row.endDate
+            ? calendar.createAllDayEvent(title, start, { description: description })
+            : calendar.createAllDayEvent(title, start, endExclusive, { description: description });
+          created += 1;
+        }
+        events.push({ rowKey: row.rowKey, clientKey: row.clientKey, eventId: event.getId() });
+      } catch (error) {
+        failures.push({ rowKey: row.rowKey, clientKey: row.clientKey, message: cleanText_(error && error.message, 300) || "同步失敗" });
+      }
+    });
+
+    appendLog_(getSpreadsheet_(), `GCAL-PROGRESS-${Utilities.getUuid()}`, "同步教學進度到 Google 日曆", "", {
+      subject: subject,
+      requested: rows.length,
+      created: created,
+      updated: updated,
+      failed: failures.length,
+    }, user.email || user.name);
+    return { ok: failures.length === 0, subject: subject, created: created, updated: updated, events: events, failures: failures };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/** 經使用者確認後，依可編輯草稿建立 Google 表單。 */
+function createGoogleForm(payload) {
+  const user = assertAuthorized_();
+  verifyCsrfToken_(payload && payload.csrfToken);
+  const title = cleanText_(payload && payload.title, 120);
+  const description = cleanText_(payload && payload.description, 1000);
+  if (!title) throw new Error("請填寫表單名稱。");
+
+  const allowedTypes = ["text", "paragraph", "multipleChoice", "checkboxes", "date"];
+  const questions = Array.isArray(payload && payload.questions)
+    ? payload.questions.slice(0, 40).map(function (question) {
+        const type = allowedTypes.indexOf(String(question && question.type)) >= 0
+          ? String(question.type)
+          : "text";
+        return {
+          type: type,
+          title: cleanText_(question && question.title, 200),
+          required: Boolean(question && question.required),
+          options: Array.isArray(question && question.options)
+            ? question.options.slice(0, 30).map(function (option) { return cleanText_(option, 100); }).filter(Boolean)
+            : [],
+        };
+      }).filter(function (question) { return question.title; })
+    : [];
+  if (!questions.length) throw new Error("表單至少需要一個題目。");
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const form = FormApp.create(title);
+    form.setDescription(description || "請依實際情況填寫。")
+      .setCollectEmail(false)
+      .setConfirmationMessage("已收到您的回覆，謝謝。");
+
+    questions.forEach(function (question) {
+      let item;
+      if (question.type === "paragraph") item = form.addParagraphTextItem();
+      else if (question.type === "multipleChoice") {
+        item = form.addMultipleChoiceItem();
+        item.setChoiceValues(question.options.length >= 2 ? question.options : ["是", "否"]);
+      } else if (question.type === "checkboxes") {
+        item = form.addCheckboxItem();
+        item.setChoiceValues(question.options.length >= 2 ? question.options : ["選項一", "選項二"]);
+      } else if (question.type === "date") item = form.addDateItem();
+      else item = form.addTextItem();
+      item.setTitle(question.title).setRequired(question.required);
+    });
+
+    const result = {
+      ok: true,
+      formId: form.getId(),
+      title: title,
+      editUrl: form.getEditUrl(),
+      publishedUrl: form.getPublishedUrl(),
+      questionCount: questions.length,
+    };
+    appendLog_(getSpreadsheet_(), `GFORM-${Utilities.getUuid()}`, "新增 Google 表單", "", {
+      formId: result.formId,
+      title: title,
+      questionCount: questions.length,
+    }, user.email || user.name);
+    return result;
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 /** 新增或更新任務。 */
 function saveTask(payload) {
   const user = assertAuthorized_();
@@ -402,6 +691,10 @@ function saveTask(payload) {
       rowNumber = Math.max(sheet.getLastRow() + 1, APP_CONFIG.DATA_START_ROW);
       data.taskId = createTaskId_();
       data.createdAt = now;
+    }
+
+    if (data.taskType === "主任務" && !data.projectId) {
+      data.projectId = data.taskId;
     }
 
     const existingCreatedAt =
@@ -828,6 +1121,12 @@ function migrateLegacyRow_(headers, row) {
     taskId,
     name: getAliasedValue_(record, "任務名稱") || "未命名任務",
     category: getAliasedValue_(record, "類型") || "其他",
+    workAxis:
+      getAliasedValue_(record, "工作主軸") ||
+      inferWorkAxis_(
+        getAliasedValue_(record, "類型"),
+        getAliasedValue_(record, "任務名稱"),
+      ),
     status: normalizeStatus_(getAliasedValue_(record, "狀態")),
     priority: normalizePriority_(getAliasedValue_(record, "優先級")),
     dueDate:
@@ -846,6 +1145,9 @@ function migrateLegacyRow_(headers, row) {
     updatedAt: parseDateTime_(getAliasedValue_(record, "更新時間")) || now,
     completedAt: parseDateTime_(getAliasedValue_(record, "完成時間")) || "",
     archived: normalizeArchived_(getAliasedValue_(record, "封存")),
+    projectId: getAliasedValue_(record, "專案ID"),
+    parentTaskId: getAliasedValue_(record, "上層任務ID"),
+    taskType: getAliasedValue_(record, "任務層級") || "一般任務",
   };
 
   const headerMap = {};
@@ -932,7 +1234,7 @@ function applyTaskSheetDesign_(sheet, optionLists) {
 
   const widths = [
     145, 310, 95, 105, 80, 105, 85, 340, 150, 300, 110, 210, 110, 90, 300, 155,
-    155, 155, 75,
+    155, 155, 75, 120, 120, 90, 95,
   ];
   widths.forEach((width, index) => sheet.setColumnWidth(index + 1, width));
 
@@ -1120,6 +1422,10 @@ function rowArrayToTaskObject_(row, headerMap, rowNumber) {
     updatedAt: formatDateTime_(get("更新時間")),
     completedAt: formatDateTime_(get("完成時間")),
     archived: String(get("封存") || "否").trim(),
+    projectId: String(get("專案ID") || "").trim(),
+    parentTaskId: String(get("上層任務ID") || "").trim(),
+    taskType: String(get("任務層級") || "一般任務").trim(),
+    workAxis: String(get("工作主軸") || "").trim(),
   };
 }
 
@@ -1132,7 +1438,7 @@ function taskObjectToRow_(task, headerMap, columnCount) {
 
   set("任務ID", task.taskId || createTaskId_());
   set("任務名稱", task.name || "");
-  set("類型", task.category || "其他");
+  set("類型", task.category || "");
   set("狀態", task.status || "未開始");
   set("優先級", task.priority || "中");
   set("截止日期", task.dueDate ? parseDateOnly_(task.dueDate) : "");
@@ -1149,6 +1455,10 @@ function taskObjectToRow_(task, headerMap, columnCount) {
   set("更新時間", task.updatedAt || new Date());
   set("完成時間", task.completedAt || "");
   set("封存", task.archived || "否");
+  set("專案ID", task.projectId || "");
+  set("上層任務ID", task.parentTaskId || "");
+  set("任務層級", task.taskType || "一般任務");
+  set("工作主軸", task.workAxis || inferWorkAxis_(task.category, task.name));
   return row;
 }
 
@@ -1261,12 +1571,18 @@ function verifyInstallToken_(token) {
 
 function normalizePayload_(payload) {
   const settings = getSettings_();
+  const category = cleanText_(payload.category, 50);
   return {
     taskId: cleanText_(payload.taskId, 80),
     name: cleanText_(payload.name, 200),
-    category: cleanText_(payload.category, 50) || "其他",
+    category,
+    workAxis:
+      cleanText_(payload.workAxis, 20) || inferWorkAxis_(category, payload.name),
     status: cleanText_(payload.status, 30) || "未開始",
-    priority: cleanText_(payload.priority, 20) || "中",
+    priority: priorityForCategory_(
+      category,
+      cleanText_(payload.priority, 20) || "中",
+    ),
     dueDate: normalizeDateString_(payload.dueDate),
     dueTime: normalizeTimeString_(payload.dueTime),
     nextAction: cleanText_(payload.nextAction, 1000),
@@ -1279,13 +1595,18 @@ function normalizePayload_(payload) {
     sortOrder: Number(payload.sortOrder) || 9999,
     detailUrl: sanitizeUrl_(payload.detailUrl),
     archived: cleanText_(payload.archived, 10) || "否",
+    projectId: cleanText_(payload.projectId, 80),
+    parentTaskId: cleanText_(payload.parentTaskId, 80),
+    taskType: cleanText_(payload.taskType, 20) || "一般任務",
   };
 }
 
 function validateTaskPayload_(task) {
   const optionLists = getOptionLists_();
   if (!task.name) throw new Error("請填寫任務名稱。");
-  if (!optionLists.類型.includes(task.category))
+  if (!WORK_AXES.includes(task.workAxis))
+    throw new Error("請選擇教學、行政、學年主任或導師其中一個工作主軸。");
+  if (task.category && !optionLists.類型.includes(task.category))
     throw new Error("任務類型不在允許清單中。");
   if (!optionLists.狀態.includes(task.status))
     throw new Error("任務狀態不在允許清單中。");
@@ -1298,6 +1619,10 @@ function validateTaskPayload_(task) {
   }
   if (task.sortOrder < 0 || task.sortOrder > 999999)
     throw new Error("顯示排序超出允許範圍。");
+  if (!["一般任務", "主任務", "子任務"].includes(task.taskType))
+    throw new Error("任務層級設定無效。");
+  if (task.taskType === "子任務" && !task.parentTaskId)
+    throw new Error("子任務必須指定上層任務。");
 }
 
 /** ---------- 看板與統計 ---------- */
@@ -1438,12 +1763,32 @@ function getOptionLists_(profile, taskSheet) {
   }
 
   return {
+    工作主軸: [...WORK_AXES],
     類型: [...new Set([...activeProfile.categories, ...legacyCategories])],
     狀態: [...COMMON_OPTION_LISTS.狀態],
     優先級: [...COMMON_OPTION_LISTS.優先級],
     看板顯示: [...COMMON_OPTION_LISTS.看板顯示],
     封存: [...COMMON_OPTION_LISTS.封存],
   };
+}
+
+function inferWorkAxis_(category, name) {
+  const normalizedCategory = String(category || "").trim();
+  const normalizedName = String(name || "").trim();
+  if (WORK_AXES.includes(normalizedCategory)) return normalizedCategory;
+  const matchingAxis = WORK_AXES.find((axis) =>
+    WORK_AXIS_CATEGORY_MAP[axis].includes(normalizedCategory),
+  );
+  if (matchingAxis) return matchingAxis;
+  if (/^【導師】/.test(normalizedName)) return "導師";
+  if (/^【學年】/.test(normalizedName)) return "學年主任";
+  return "行政";
+}
+
+function priorityForCategory_(category, priority) {
+  return EMERGENCY_CATEGORIES.includes(String(category || "").trim())
+    ? "高"
+    : priority;
 }
 
 function applyOfficeProfileSettings_(
@@ -1528,6 +1873,7 @@ function createDemoRows_(profile, ownerName) {
     taskId: createTaskId_(),
     name: sample[0],
     category: sample[1],
+    workAxis: inferWorkAxis_(sample[1], sample[0]),
     status: sample[2],
     priority: sample[3],
     dueDate: index < 2 ? today : tomorrow,
@@ -1731,4 +2077,112 @@ function escapeHtmlServer_(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+/** ---------- Google Drive 備份與資料庫 ---------- */
+
+function backupDashboardToDrive(payload) {
+  const user = assertAuthorized_();
+  verifyCsrfToken_(payload && payload.csrfToken);
+  const backup = payload && payload.backup;
+  if (!backup || backup.kind !== "grade6-team-dashboard-backup" || Number(backup.version) !== 1 || !Array.isArray(backup.tasks)) {
+    throw new Error("備份資料格式不正確。");
+  }
+  if (backup.tasks.length > 5000) throw new Error("備份任務數量超過上限。");
+  const text = JSON.stringify(backup, null, 2);
+  if (text.length > 5 * 1024 * 1024) throw new Error("備份資料超過 5 MB。");
+  const lock = LockService.getUserLock();
+  lock.waitLock(10000);
+  try {
+    const folder = getDashboardDriveFolder_("Backups");
+    const stamp = Utilities.formatDate(new Date(), APP_CONFIG.TIMEZONE, "yyyyMMdd-HHmmss");
+    const file = folder.createFile(Utilities.newBlob(text, "application/json", `dashboard-backup-${stamp}.json`));
+    appendLog_(SpreadsheetApp.getActive(), "", "DRIVE_BACKUP_CREATED", "", { fileId: file.getId(), name: file.getName() }, user.email);
+    return { ok: true, id: file.getId(), name: file.getName(), url: file.getUrl(), createdAt: file.getDateCreated().toISOString(), size: file.getSize() };
+  } finally { lock.releaseLock(); }
+}
+
+function listDashboardBackups() {
+  assertAuthorized_();
+  const folder = getDashboardDriveFolder_("Backups");
+  const files = [];
+  const iterator = folder.getFiles();
+  while (iterator.hasNext() && files.length < 60) {
+    const file = iterator.next();
+    if (!/\.json$/i.test(file.getName())) continue;
+    files.push({ id: file.getId(), name: file.getName(), url: file.getUrl(), createdAt: file.getDateCreated().toISOString(), size: file.getSize() });
+  }
+  files.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+  return { ok: true, files: files.slice(0, 30) };
+}
+
+function getDashboardBackup(fileId) {
+  assertAuthorized_();
+  const id = cleanText_(fileId, 200);
+  const folder = getDashboardDriveFolder_("Backups");
+  const iterator = folder.getFiles();
+  while (iterator.hasNext()) {
+    const file = iterator.next();
+    if (file.getId() !== id) continue;
+    if (file.getSize() > 5 * 1024 * 1024) throw new Error("雲端備份超過 5 MB，無法還原。");
+    return { ok: true, name: file.getName(), text: file.getBlob().getDataAsString("UTF-8") };
+  }
+  throw new Error("找不到這份雲端備份，或檔案不在本系統備份資料夾內。");
+}
+
+function uploadWorkspaceFile(payload) {
+  const user = assertAuthorized_();
+  verifyCsrfToken_(payload && payload.csrfToken);
+  const name = cleanDriveFileName_(payload && payload.name);
+  const mimeType = cleanText_(payload && payload.mimeType, 150) || "application/octet-stream";
+  const allowedMimes = [
+    "application/pdf", "application/json", "application/octet-stream", "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-powerpoint", "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  ];
+  if (!/^image\//i.test(mimeType) && !/^text\//i.test(mimeType) && !allowedMimes.includes(mimeType.toLowerCase())) {
+    throw new Error("不支援這個檔案格式。");
+  }
+  const base64 = String((payload && payload.base64) || "");
+  if (!base64 || base64.length > 48 * 1024 * 1024) throw new Error("檔案內容為空或超過單檔 35 MB 上限。");
+  let bytes;
+  try { bytes = Utilities.base64Decode(base64); } catch (error) { throw new Error("檔案編碼不正確。"); }
+  if (bytes.length > 35 * 1024 * 1024) throw new Error("檔案超過單檔 35 MB 上限。");
+  const lock = LockService.getUserLock();
+  lock.waitLock(10000);
+  try {
+    const folder = getDashboardDriveFolder_("Workspace Files");
+    const file = folder.createFile(Utilities.newBlob(bytes, mimeType, name));
+    appendLog_(SpreadsheetApp.getActive(), "", "DRIVE_FILE_UPLOADED", "", { fileId: file.getId(), name: file.getName(), size: file.getSize() }, user.email);
+    return { ok: true, file: driveFileSummary_(file) };
+  } finally { lock.releaseLock(); }
+}
+
+function listWorkspaceFiles() {
+  assertAuthorized_();
+  const folder = getDashboardDriveFolder_("Workspace Files");
+  const files = [];
+  const iterator = folder.getFiles();
+  while (iterator.hasNext() && files.length < 150) files.push(driveFileSummary_(iterator.next()));
+  files.sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
+  return { ok: true, files: files.slice(0, 100) };
+}
+
+function getDashboardDriveFolder_(childName) {
+  const rootName = "School Admin Dashboard";
+  const roots = DriveApp.getFoldersByName(rootName);
+  const root = roots.hasNext() ? roots.next() : DriveApp.createFolder(rootName);
+  const children = root.getFoldersByName(childName);
+  return children.hasNext() ? children.next() : root.createFolder(childName);
+}
+
+function driveFileSummary_(file) {
+  return { id: file.getId(), name: file.getName(), mimeType: file.getMimeType(), size: file.getSize(), url: file.getUrl(), updatedAt: file.getLastUpdated().toISOString() };
+}
+
+function cleanDriveFileName_(value) {
+  const name = String(value || "").replace(/[\\/:*?"<>|\u0000-\u001F]/g, "_").trim().slice(0, 180);
+  if (!name || name === "." || name === "..") throw new Error("檔案名稱不正確。");
+  return name;
 }
