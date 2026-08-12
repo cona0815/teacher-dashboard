@@ -334,6 +334,7 @@ function onOpen() {
     .addItem("整理格式與下拉選單", "refreshSheetDesign")
     .addSeparator()
     .addItem("開啟管理台與看板", "showWebAppLinks")
+    .addItem("設定小綿助同步金鑰", "showDesktopPetSyncKeyDialog")
     .addItem("系統診斷", "showDiagnosis")
     .addToUi();
 }
@@ -493,6 +494,102 @@ function getTasks() {
     summary: summarizeTasks_(tasks),
     serverTime: formatDateTime_(new Date()),
   };
+}
+
+/** 小綿助桌面程式專用 JSON 入口。為避免金鑰出現在網址紀錄，只接受 POST。 */
+function doPost(e) {
+  try {
+    const payload = JSON.parse((e && e.postData && e.postData.contents) || "{}");
+    if (payload.api !== "xiaomianzhu") throw new Error("不支援的 API 請求。");
+    verifyDesktopPetSyncKey_(payload.key);
+    const action = String(payload.action || "ping");
+    if (action === "ping") {
+      return desktopPetJsonResponse_({ ok: true, message: "小綿助 GAS 連線正常", serverTime: new Date().toISOString() });
+    }
+    if (action !== "sync") throw new Error("不支援的小綿助操作。");
+    const pushed = syncDesktopPetTasks_(Array.isArray(payload.tasks) ? payload.tasks : []);
+    return desktopPetJsonResponse_({ ok: true, pushed, tasks: listTasks_({ includeArchived: false }), serverTime: new Date().toISOString() });
+  } catch (error) {
+    return desktopPetJsonResponse_({ ok: false, error: error && error.message ? error.message : String(error) });
+  }
+}
+
+function desktopPetJsonResponse_(value) {
+  return ContentService.createTextOutput(JSON.stringify(value)).setMimeType(ContentService.MimeType.JSON);
+}
+
+/** 從試算表選單建立或更換同步金鑰。金鑰只存 Script Properties。 */
+function showDesktopPetSyncKeyDialog() {
+  assertSpreadsheetUiContext_();
+  const ui = SpreadsheetApp.getUi();
+  const response = ui.prompt(
+    "設定小綿助同步金鑰",
+    "輸入至少 16 個字元的自訂金鑰；留空會自動產生。請把結果填入小綿助，勿傳給不信任的人。",
+    ui.ButtonSet.OK_CANCEL,
+  );
+  if (response.getSelectedButton() !== ui.Button.OK) return;
+  let key = String(response.getResponseText() || "").trim();
+  if (!key) key = Utilities.getUuid().replace(/-/g, "") + Utilities.getUuid().replace(/-/g, "").slice(0, 16);
+  if (key.length < 16) return ui.alert("同步金鑰至少需要 16 個字元。");
+  PropertiesService.getScriptProperties().setProperty("DESKTOP_PET_SYNC_KEY", key);
+  ui.alert(`小綿助同步金鑰已設定：\n\n${key}\n\n請複製到小綿助；關閉後系統不再顯示舊金鑰。`);
+}
+
+function verifyDesktopPetSyncKey_(candidate) {
+  const expected = PropertiesService.getScriptProperties().getProperty("DESKTOP_PET_SYNC_KEY");
+  if (!expected) throw new Error("尚未在試算表設定小綿助同步金鑰。");
+  if (!candidate || String(candidate) !== expected) throw new Error("小綿助同步金鑰不正確。");
+}
+
+function syncDesktopPetTasks_(incoming) {
+  if (incoming.length > 1000) throw new Error("單次同步任務超過 1000 項上限。");
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const ss = getSpreadsheet_();
+    const sheet = getRequiredSheet_(ss, APP_CONFIG.TASK_SHEET);
+    const headerMap = getHeaderMap_(sheet);
+    let pushed = 0;
+    incoming.forEach((item) => {
+      const title = cleanText_(item && item.title, 200);
+      if (!title) return;
+      const requestedId = cleanText_(item && (item.cloud_id || item.id), 200);
+      const taskId = requestedId && (findTaskRowById_(sheet, headerMap, requestedId) || /^PET-[A-Za-z0-9-]{8,}$/i.test(requestedId))
+        ? requestedId
+        : `PET-${Utilities.getUuid()}`;
+      let rowNumber = findTaskRowById_(sheet, headerMap, taskId);
+      const before = rowNumber ? rowToTaskObject_(sheet, rowNumber, headerMap) : null;
+      if (!rowNumber) rowNumber = Math.max(sheet.getLastRow() + 1, APP_CONFIG.DATA_START_ROW);
+      const now = new Date();
+      const requestedStatus = cleanText_(item.status, 30) || "未開始";
+      const requestedPriority = cleanText_(item.priority, 10) || "中";
+      const task = Object.assign({}, before || {}, {
+        taskId,
+        name: title,
+        category: (before && before.category) || "其他",
+        status: COMMON_OPTION_LISTS.狀態.includes(requestedStatus) ? requestedStatus : (requestedStatus === "等待回覆" ? "等待他人" : "未開始"),
+        priority: COMMON_OPTION_LISTS.優先級.includes(requestedPriority) ? requestedPriority : "中",
+        dueDate: normalizeDateString_(item.due_date || item.dueDate),
+        dueTime: normalizeTimeString_(item.due_time || item.dueTime),
+        waitingFor: cleanText_(item.waiting_for || item.waitingFor, 200),
+        nextAction: cleanText_(item.source, 500) || "由小綿助建立",
+        owner: (before && before.owner) || "本機小綿助",
+        boardDisplay: (before && before.boardDisplay) || "自動",
+        archived: "否",
+        updatedAt: now,
+        createdAt: before && before.createdAt ? parseDateTime_(before.createdAt) : now,
+      });
+      if (task.status === "已完成" && !task.completedAt) task.completedAt = now;
+      sheet.getRange(rowNumber, 1, 1, TASK_HEADERS.length).setValues([taskObjectToRow_(task, headerMap, TASK_HEADERS.length)]);
+      applyRowFormats_(sheet, rowNumber, headerMap);
+      appendLog_(ss, taskId, before ? "小綿助同步更新" : "小綿助同步新增", before, task, "desktop-pet");
+      pushed++;
+    });
+    SpreadsheetApp.flush();
+    return pushed;
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 /** 經使用者確認後，建立 Google 日曆事件。 */
@@ -804,7 +901,7 @@ function updateTaskStatus(taskId, status, csrfToken) {
   }
 }
 
-/** 封存任務，不直接刪除資料。 */
+/** 封存任務，不直接刪除資料；封存主任務時連同整個專案子任務處理。 */
 function archiveTask(taskId, csrfToken) {
   const user = assertAuthorized_();
   verifyCsrfToken_(csrfToken);
@@ -818,14 +915,35 @@ function archiveTask(taskId, csrfToken) {
     const rowNumber = findTaskRowById_(sheet, headerMap, taskId);
     if (!rowNumber) throw new Error("找不到指定任務。");
 
-    const before = rowToTaskObject_(sheet, rowNumber, headerMap);
-    sheet.getRange(rowNumber, headerMap["封存"]).setValue("是");
-    sheet.getRange(rowNumber, headerMap["更新時間"]).setValue(new Date());
-    const after = rowToTaskObject_(sheet, rowNumber, headerMap);
-    appendLog_(ss, taskId, "封存任務", before, after, user.email || user.name);
+    const allTasks = listTasks_({ includeArchived: true });
+    const archiveIds = new Set([String(taskId)]);
+    let expanded = true;
+    while (expanded) {
+      expanded = false;
+      allTasks.forEach((task) => {
+        if (task.parentTaskId && archiveIds.has(String(task.parentTaskId)) && !archiveIds.has(String(task.taskId))) {
+          archiveIds.add(String(task.taskId));
+          expanded = true;
+        }
+      });
+    }
+
+    const now = new Date();
+    const archivedTaskIds = [];
+    archiveIds.forEach((archiveId) => {
+      const archiveRowNumber = findTaskRowById_(sheet, headerMap, archiveId);
+      if (!archiveRowNumber) return;
+      const before = rowToTaskObject_(sheet, archiveRowNumber, headerMap);
+      if (before.archived === "是") return;
+      sheet.getRange(archiveRowNumber, headerMap["封存"]).setValue("是");
+      sheet.getRange(archiveRowNumber, headerMap["更新時間"]).setValue(now);
+      const after = rowToTaskObject_(sheet, archiveRowNumber, headerMap);
+      appendLog_(ss, archiveId, archiveId === String(taskId) ? "封存任務" : "隨主任務封存子任務", before, after, user.email || user.name);
+      archivedTaskIds.push(archiveId);
+    });
 
     const tasks = listTasks_({ includeArchived: false });
-    return { ok: true, tasks, summary: summarizeTasks_(tasks) };
+    return { ok: true, tasks, archivedTaskIds, archivedCount: archivedTaskIds.length, summary: summarizeTasks_(tasks) };
   } finally {
     lock.releaseLock();
   }
@@ -1555,6 +1673,12 @@ function getCurrentUser_() {
 function assertAuthorized_() {
   const user = getCurrentUser_();
   const settings = getSettings_();
+  const desktopSyncEnabled = Boolean(
+    PropertiesService.getScriptProperties().getProperty("DESKTOP_PET_SYNC_KEY"),
+  );
+  if (desktopSyncEnabled && !user.email) {
+    throw new Error("此部署只允許小綿助使用同步 API；管理台請使用限制登入的 GAS 部署網址。");
+  }
   const allowedDomain = String(settings.ALLOWED_DOMAIN || "")
     .trim()
     .toLowerCase();

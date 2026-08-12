@@ -171,6 +171,15 @@ assert.match(
   /raw\.githubusercontent\.com\/cona0815\/teacher-dashboard\/main\/assets\/pet\//,
   "正式環境的小綿助素材應由本專案 repository 提供",
 );
+assert.match(indexHtml, /project-child \.task-name\.is-completed/, "完成的子任務應以刪除線標示該項目");
+assert.match(indexHtml, /子任務.*已完成；主任務狀態維持不變/, "完成子任務時應保留主任務狀態");
+assert.match(indexHtml, /主任務與下面的 .*項子任務/, "封存主任務前應明確提示會連同子任務處理");
+assert.match(indexHtml, /data-theme-choice="minimal"/, "介面配色應提供低彩度極簡選項");
+assert.match(indexHtml, /INTERFACE_THEMES = \['forest', 'apricot', 'lavender', 'tech', 'minimal'\]/, "主題清單應包含極簡配色");
+assert.match(indexHtml, /id="teachingProgressBody" hidden/, "教學進度首次進入應預設收合");
+assert.match(indexHtml, /id="taskPanelNewTaskButton">＋ 新增任務/, "任務清單標題旁應提供新增任務入口");
+assert.match(indexHtml, /data-action="archive"/, "已完成任務列應提供直接封存入口");
+assert.match(source, /隨主任務封存子任務/, "GAS 封存主任務時應留下子任務連帶封存紀錄");
 assert.doesNotMatch(
   indexHtml,
   /raw\.githubusercontent\.com\/mihozip\/school-admin-daily-dashboard\/main\/assets\/pet\//,
@@ -192,6 +201,13 @@ for (const secretaryFeature of ["今日簡報", "今日重要", "已逾期", "�
   assert.match(desktopSecretary, new RegExp(secretaryFeature), `桌面小綿助缺少「${secretaryFeature}」`);
 }
 assert.match(desktopSecretary, /ImageGrab\.grabclipboard\(\)/, "桌面小綿助必須支援貼上圖片或檔案");
+assert.match(desktopSecretary, /gas_sync_enabled/, "桌面小綿助應保留可選的 GAS 同步設定");
+assert.match(desktopSecretary, /urllib\.request\.urlopen/, "桌面小綿助應能呼叫 GAS 同步端點");
+assert.match(desktopSecretary, /本機資料不受影響/, "GAS 連線失敗時必須明確保留本機資料");
+assert.match(source, /function doPost\(e\)/, "GAS 應提供小綿助使用的 POST 同步端點");
+assert.match(source, /verifyDesktopPetSyncKey_/, "小綿助同步端點必須驗證專用同步金鑰");
+assert.match(indexHtml, /id="petGasUrl"/, "網頁設定應能輸出小綿助 GAS 網址");
+assert.match(indexHtml, /id="petGasSyncKey"/, "網頁設定應能輸出小綿助同步金鑰");
 
 assert.doesNotMatch(source, /\b1[A-Za-z0-9_-]{30,}\b/, "公開版本不得含固定 Google 資源 ID");
 assert.match(source, /BOUND_SPREADSHEET_ID/, "安裝後應以 Script Properties 定位試算表");

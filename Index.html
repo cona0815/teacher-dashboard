@@ -84,6 +84,27 @@
       --shadow: 0 12px 30px rgba(10, 59, 88, .15);
     }
 
+    /* 低彩度極簡主題：保留狀態色，但降低背景與裝飾干擾。 */
+    :root[data-theme="minimal"] {
+      --bg: #eef1f2;
+      --surface: #ffffff;
+      --ink: #26343a;
+      --muted: #68777d;
+      --line: #d7dfe2;
+      --primary: #4b6570;
+      --primary-strong: #334952;
+      --primary-soft: #e5ecee;
+      --accent: #7b8f98;
+      --accent-soft: #edf1f2;
+      --gold: #9a7b42;
+      --gold-soft: #f5f0e5;
+      --danger: #a65d5d;
+      --warning: #806b39;
+      --success: #5f7f6b;
+      --radius: 14px;
+      --shadow: 0 5px 16px rgba(42, 57, 63, .07);
+    }
+
     * { box-sizing: border-box; }
     html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--ink); }
     body { background-image: radial-gradient(circle at 10% 4%, rgba(196,110,82,.09), transparent 24%), radial-gradient(circle at 92% 12%, rgba(82,115,106,.11), transparent 28%); }
@@ -93,6 +114,9 @@
       background-image: linear-gradient(rgba(8,117,141,.055) 1px, transparent 1px), linear-gradient(90deg, rgba(8,117,141,.055) 1px, transparent 1px), radial-gradient(circle at 88% 5%, rgba(0,166,196,.2), transparent 28%);
       background-size: 32px 32px, 32px 32px, auto;
     }
+    :root[data-theme="minimal"] body { background-image: none; }
+    :root[data-theme="minimal"] .topbar { border-color: var(--line); background: var(--primary-strong); box-shadow: none; }
+    :root[data-theme="minimal"] .topbar::after { display: none; }
     body { font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif; }
     button, input, select, textarea { font: inherit; }
     button { cursor: pointer; }
@@ -142,6 +166,7 @@
     .summary-icon {
       position: absolute; right: 13px; top: 13px; width: 54px; height: 54px; object-fit: contain;
       padding: 5px; border: 0; border-radius: 16px; background: var(--primary-soft);
+      filter: grayscale(.72) saturate(.55); opacity: .88;
     }
     .summary-label { color: var(--muted); font-size: 13px; font-weight: 800; white-space: nowrap; }
     .summary-value { margin-top: 7px; font-size: 31px; line-height: 1; font-weight: 900; }
@@ -156,7 +181,7 @@
       border: 2px solid #cad8d0; border-radius: 999px; background: #fffdf8; color: var(--muted);
       font: inherit; font-size: 12px; font-weight: 900; cursor: pointer; transition: .16s ease;
     }
-    .role-person img { width: 34px; height: 34px; padding: 4px; border-radius: 50%; background: #eef4ef; object-fit: contain; }
+    .role-person img { width: 28px; height: 28px; padding: 4px; border-radius: 50%; background: #eef4ef; object-fit: contain; filter: grayscale(.72) saturate(.55); opacity: .86; }
     .role-person[aria-pressed="true"] { border-color: var(--primary); background: var(--primary-soft); color: var(--primary-strong); box-shadow: 0 3px 0 rgba(48,95,83,.12); }
     .role-person[aria-pressed="true"] img { background: #fff; }
     .role-person .role-check { display: none; color: var(--primary); }
@@ -203,15 +228,72 @@
     .school-holiday-remove { width: 34px; height: 34px; padding: 0; border: 1.5px solid var(--line); border-radius: 9px; background: white; color: var(--danger); font-weight: 900; }
     .school-holiday-empty { padding: 10px; border: 1.5px dashed #c6d5ca; border-radius: 10px; color: var(--muted); font-size: 10px; text-align: center; }
     .progress-schedule-options {
-      display: grid; grid-template-columns: 1fr 130px; gap: 9px; align-items: end;
+      display: grid; grid-template-columns: minmax(220px, 1fr) 120px 120px; gap: 9px; align-items: end;
       padding: 9px 10px; border: 1.5px solid #d8c8b5; border-radius: 13px; background: rgba(255,255,255,.7);
     }
     .progress-schedule-options > strong { grid-column: 1 / -1; color: var(--primary-strong); font-size: 11px; }
     .progress-review-toggle { display: flex !important; align-items: center; gap: 8px; min-height: 42px; padding: 7px 9px; border: 1.5px solid var(--line); border-radius: 10px; background: white; color: var(--ink) !important; }
-    .progress-review-toggle input { width: 18px; height: 18px; accent-color: var(--primary); }
+    .progress-review-toggle input { width: 72px; height: 38px; padding: 6px 9px; }
     .progress-review-toggle span { font-size: 11px; font-weight: 850; }
+    .secondary-button {
+      min-height: 36px; border: 1.5px solid var(--line); border-radius: 10px; padding: 6px 10px;
+      background: #fffdf8; color: var(--primary-strong); font-family: inherit; font-size: 11px; font-weight: 850;
+      line-height: 1.2; transition: border-color .12s ease, background .12s ease, color .12s ease;
+    }
+    .secondary-button:hover { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
+    .progress-course-picker { display: grid; grid-template-columns: auto auto minmax(0, 1fr); gap: 6px; align-items: center; }
+    .progress-course-picker > label { grid-column: 1 / -1; min-width: 0; }
+    .progress-course-picker small { grid-column: 1 / -1; color: var(--muted); font-size: 10px; font-weight: 700; }
+    .progress-course-picker .secondary-button { min-height: 32px; padding: 5px 9px; font-size: 10px; white-space: nowrap; justify-self: start; }
+    .progress-course-picker .course-delete-button { border-color: #e7c8c0; background: #fff9f7; color: #a85a4b; }
+    .progress-course-picker .course-delete-button:hover { border-color: var(--danger); background: #fbe8e3; color: var(--danger); }
+    .teacher-course-manager { display: grid; gap: 9px; padding: 11px; border: 1.5px solid var(--line); border-radius: 14px; background: var(--primary-soft); }
+    .teacher-course-manager p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .teacher-course-add { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+    .teacher-course-list { display: grid; gap: 7px; }
+    .teacher-course-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 7px; align-items: center; }
+    .teacher-course-row .input { min-height: 40px; background: #fff; }
+    .teacher-course-empty { padding: 12px; border: 1.5px dashed var(--line); border-radius: 11px; background: rgba(255,255,255,.65); color: var(--muted); text-align: center; font-size: 11px; }
+    .weekday-periods { grid-column: 1 / -1; padding: 7px 8px; border: 1.5px solid var(--line); border-radius: 12px; background: #fff; }
+    .weekday-periods-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; color: var(--primary-strong); font-size: 11px; font-weight: 900; }
+    .weekday-periods-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; }
+    .weekday-periods-grid label { display: grid; grid-template-columns: auto minmax(38px, 1fr); gap: 5px; align-items: center; color: var(--ink); }
+    .weekday-periods-grid .input { min-height: 34px !important; padding: 4px 6px !important; text-align: center; }
+    .weekly-period-total { color: var(--primary); font-size: 11px; font-weight: 900; white-space: nowrap; }
     .progress-planner-form textarea { min-height: 74px; resize: vertical; }
     .progress-planner-actions { display: flex; flex-wrap: wrap; gap: 8px; grid-column: 1 / -1; }
+    .progress-workspace { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr); gap: 12px; align-items: start; }
+    .progress-planner-column, .progress-results-column { min-width: 0; }
+    .progress-workspace .progress-planner-form { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+    .progress-workspace .assessment-date-setting { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .progress-workspace .assessment-date-setting > strong { grid-column: 1 / -1; }
+    .progress-workspace .progress-schedule-options { grid-column: 1 / -1; }
+    .progress-workspace .assessment-date-setting,
+    .progress-workspace .assessment-scope-setting,
+    .progress-workspace .progress-schedule-options,
+    .progress-workspace .holiday-setting { padding: 7px 8px; gap: 7px; }
+    .progress-workspace .assessment-scope-setting { grid-template-columns: minmax(170px, .48fr) 1fr; }
+    .progress-workspace .assessment-scope-setting p { margin: 0; line-height: 1.35; }
+    .progress-workspace .holiday-setting { grid-template-columns: minmax(180px, .72fr) 1fr; }
+    .progress-workspace .holiday-setting p { margin-top: 2px; line-height: 1.35; }
+    .progress-workspace .holiday-source { padding: 6px; }
+    .progress-workspace .school-holiday-editor { gap: 5px; }
+    .progress-workspace .school-holiday-empty { padding: 7px; }
+    .progress-workspace .progress-planner-form textarea { min-height: 60px; }
+    .progress-workspace .progress-planner-form .input,
+    .progress-workspace .progress-planner-form select { min-height: 38px; padding: 7px 9px; }
+    .progress-workspace .progress-review-toggle { min-height: 38px; padding: 5px 7px; }
+    .progress-workspace .progress-review-toggle input { width: 58px; height: 32px; padding: 4px 7px; }
+    .progress-workspace .progress-planner-actions { gap: 6px; }
+    .progress-workspace .progress-planner-actions .button { min-height: 38px; padding: 8px 11px; }
+    .progress-results-column { padding: 8px; border: 1.5px solid #decfbe; border-radius: 14px; background: rgba(255,255,255,.58); }
+    .progress-results-column .progress-plan-summary { margin-top: 0; padding-bottom: 6px; border-bottom: 1px dashed var(--line); }
+    .progress-results-column .progress-plan-list { max-height: none; overflow: visible; padding-right: 0; }
+    .progress-results-column .progress-plan-row { grid-template-columns: 64px minmax(110px, 1fr) 46px minmax(160px, .72fr) 32px; gap: 5px; padding: 6px; border-radius: 11px; }
+    .progress-results-column .progress-plan-row .input { min-height: 34px; padding: 5px 7px; font-size: 10px; }
+    .progress-results-column .progress-week { font-size: 10px; line-height: 1.25; }
+    .progress-results-column .progress-date { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
+    .progress-results-column .progress-remove { width: 32px; height: 32px; padding: 0; }
     .progress-plan-summary { margin: 12px 0 8px; color: var(--primary-strong); font-size: 12px; font-weight: 850; }
     .progress-plan-list { display: grid; gap: 8px; }
     .progress-plan-row {
@@ -225,12 +307,22 @@
     .progress-plan-row .input { min-height: 38px; padding: 7px 9px; font-size: 11px; }
     .progress-date { display: grid; gap: 4px; }
     .progress-empty { padding: 18px; border: 2px dashed #d8c8b5; border-radius: 13px; color: var(--muted); text-align: center; font-size: 12px; }
+    .progress-empty h3 { margin: 0 0 6px; color: var(--ink); font-size: 15px; }
+    .progress-empty p { margin: 0 0 13px; line-height: 1.6; }
+    .progress-empty-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; }
     @media (max-width: 900px) {
+      .progress-workspace { grid-template-columns: 1fr; }
+      .progress-workspace .progress-planner-form { grid-template-columns: 1fr 1fr; }
+      .progress-workspace .assessment-date-setting { grid-template-columns: 1fr; }
+      .progress-workspace .assessment-scope-setting,
+      .progress-workspace .holiday-setting { grid-template-columns: 1fr; }
+      .progress-results-column .progress-plan-row { grid-template-columns: 68px minmax(120px, 1fr) 50px minmax(210px, .8fr) 32px; }
       .progress-planner-form { grid-template-columns: 1fr 1fr; }
       .assessment-date-setting { grid-template-columns: 1fr; }
       .assessment-scope-setting, .holiday-setting { grid-template-columns: 1fr; }
       .school-holiday-row { grid-template-columns: 132px 1fr 34px; }
       .progress-schedule-options { grid-template-columns: 1fr; }
+      .weekday-periods-grid { grid-template-columns: repeat(5, minmax(54px, 1fr)); overflow-x: auto; }
       .progress-plan-row { grid-template-columns: 76px 1fr 70px; }
       .progress-plan-row .progress-date, .progress-plan-row .progress-remove { grid-column: auto; }
       .form-question-row { grid-template-columns: 1fr; }
@@ -339,13 +431,13 @@
     .ai-attachment-detail { margin-top: 2px; color: var(--muted); font-size: 9px; }
     .ai-attachment-remove { width: 27px; height: 27px; padding: 0; border: 1.5px solid var(--line); border-radius: 8px; background: #fffdf8; color: var(--danger); font-weight: 900; }
     .ai-attachment-privacy { margin: 7px 0 0; color: #7b6742; font-size: 9px; line-height: 1.45; }
-    .settings-tabs { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; padding: 15px 22px 0; }
+    .settings-tabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(126px, 1fr)); gap: 8px; padding: 15px 22px 0; }
     .settings-tab { padding: 9px; border: 2px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); font-weight: 850; }
     .settings-tab.active { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
     .settings-panel { display: none; padding: 20px 22px; }
     .settings-panel.active { display: block; }
     .settings-note { margin: 0 0 15px; padding: 11px 13px; border-left: 4px solid var(--gold); border-radius: 8px; background: var(--gold-soft); color: #66501d; font-size: 12px; line-height: 1.55; }
-    .theme-picker { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
+    .theme-picker { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 9px; }
     .theme-choice {
       min-width: 0; padding: 10px; border: 2px solid var(--line); border-radius: 13px;
       background: var(--surface); color: var(--ink); text-align: left; transition: .15s ease;
@@ -368,6 +460,10 @@
     .theme-choice[data-theme-choice="tech"] .theme-swatches span:nth-child(1) { background: #123e5c; }
     .theme-choice[data-theme-choice="tech"] .theme-swatches span:nth-child(2) { background: #00a6c4; }
     .theme-choice[data-theme-choice="tech"] .theme-swatches span:nth-child(3) { background: #e9f4fa; border: 1px solid #8ccbd9; }
+    .theme-choice[data-theme-choice="minimal"] .theme-swatches span:nth-child(1) { background: #4b6570; }
+    .theme-choice[data-theme-choice="minimal"] .theme-swatches span:nth-child(2) { background: #9aaab0; }
+    .theme-choice[data-theme-choice="minimal"] .theme-swatches span:nth-child(3) { background: #eef1f2; border: 1px solid #d7dfe2; }
+    @media (max-width: 900px) { .theme-picker { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
     @media (max-width: 700px) { .theme-picker { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     .setting-checks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px 14px; margin-bottom: 15px; }
     .check-row { display: flex; align-items: center; gap: 8px; padding: 9px 11px; border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface); font-size: 13px; font-weight: 800; }
@@ -378,6 +474,22 @@
     .local-storage-card.is-warning { border-color: var(--accent); background: var(--accent-soft); }
     .backup-card h3 { margin: 0 0 7px; font-size: 16px; }
     .backup-card p { min-height: 40px; margin: 0 0 12px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .gas-install-card { grid-column: 1 / -1; }
+    .gas-install-card > p { min-height: 0; }
+    .gas-install-grid { display: grid; grid-template-columns: minmax(280px, .85fr) minmax(420px, 1.15fr); gap: 14px; align-items: start; }
+    .gas-steps { margin: 0; padding-left: 22px; color: var(--ink); font-size: 12px; line-height: 1.75; }
+    .gas-steps li + li { margin-top: 5px; }
+    .gas-steps strong { color: var(--primary-strong); }
+    .gas-file-list { display: grid; gap: 7px; margin-top: 12px; }
+    .gas-file-row { display: flex; align-items: center; justify-content: space-between; gap: 9px; padding: 9px 11px; border: 1.5px solid var(--line); border-radius: 11px; background: #fffefb; }
+    .gas-file-row code { color: var(--primary-strong); font-size: 12px; font-weight: 850; }
+    .gas-file-row span { color: var(--muted); font-size: 10px; }
+    .gas-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .gas-code-details { overflow: hidden; border: 1.5px solid var(--line); border-radius: 13px; background: #f7faf8; }
+    .gas-code-details summary { padding: 11px 13px; cursor: pointer; color: var(--primary-strong); font-size: 12px; font-weight: 900; }
+    .gas-code-frame { display: block; width: 100%; height: 430px; border: 0; border-top: 1px solid var(--line); background: #17232b; color-scheme: dark; }
+    .gas-code-fallback { margin: 0 !important; padding: 10px 13px; min-height: 0 !important; }
+    .gas-deploy-note { margin-top: 12px; padding: 11px 13px; border-left: 4px solid var(--primary); border-radius: 9px; background: var(--primary-soft); color: var(--primary-strong); font-size: 11px; line-height: 1.6; }
     .license-list { display: grid; gap: 10px; }
     .license-card { padding: 14px; border: 2px solid var(--line); border-radius: 15px; background: var(--surface); }
     .license-card h3 { margin: 0 0 5px; color: var(--primary-strong); font-size: 14px; }
@@ -389,6 +501,9 @@
     .license-notice strong { display: block; margin-bottom: 4px; font-size: 15px; }
     .license-notice span { display: block; font-size: 11px; line-height: 1.65; }
     .api-secret-note { margin-top: 5px; color: var(--muted); font-size: 11px; }
+    .pet-settings-status { display: grid; gap: 5px; margin-top: 14px; padding: 13px 15px; border: 2px solid var(--line); border-radius: 14px; background: var(--primary-soft); color: var(--primary-strong); font-size: 11px; line-height: 1.55; }
+    .pet-settings-status strong { font-size: 13px; }
+    .pet-settings-actions { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-top: 13px; }
     .settings-link { color: var(--primary); font-weight: 900; }
     .cloud-list { display: grid; gap: 7px; margin-top: 10px; }
     .cloud-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 11px; border: 1.5px solid var(--line); border-radius: 11px; background: #fffefb; }
@@ -401,13 +516,55 @@
     .drive-library-heading h3 { margin: 0 0 4px; font-size: 20px; }
     .drive-library-heading p { margin: 0; color: var(--muted); font-size: 12px; }
 
+    .secretary-notes {
+      margin: 0 0 18px; overflow: hidden; border: 2px solid var(--line); border-radius: 22px;
+      background: var(--surface); box-shadow: var(--shadow);
+    }
+    .secretary-notes-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; }
+    .secretary-notes-title { display: flex; align-items: center; gap: 10px; }
+    .secretary-notes-title img { width: 42px; height: 42px; padding: 6px; border-radius: 13px; background: var(--primary-soft); object-fit: contain; }
+    .secretary-notes-title h2 { margin: 0; font-size: 18px; }
+    .secretary-notes-title p { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
+    .secretary-notes-body { padding: 0 16px 16px; border-top: 1px dashed var(--line); }
+    .secretary-notes-body[hidden] { display: none; }
+    .secretary-note-compose { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 9px; align-items: end; padding-top: 13px; }
+    .secretary-note-compose .textarea { min-height: 68px; }
+    .secretary-note-actions { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 9px; }
+    .secretary-note-list { display: grid; gap: 8px; margin-top: 12px; }
+    .secretary-note-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 13px; background: #fffefb; }
+    .secretary-note-text { color: var(--ink); font-size: 12px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .secretary-note-meta { margin-top: 5px; color: var(--muted); font-size: 9px; }
+    .secretary-note-empty { padding: 15px; border: 1.5px dashed var(--line); border-radius: 13px; color: var(--muted); font-size: 11px; text-align: center; }
+    .secretary-note-count { padding: 3px 8px; border-radius: 999px; background: var(--primary-soft); color: var(--primary); font-size: 10px; font-weight: 900; }
+
+    .teacher-toolbox { margin: 0 0 18px; overflow: hidden; border: 2px solid var(--line); border-radius: 22px; background: var(--surface); box-shadow: var(--shadow); }
+    .teacher-toolbox-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 17px; }
+    .teacher-toolbox-copy { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .teacher-toolbox-copy img { width: 42px; height: 42px; padding: 6px; border-radius: 13px; background: var(--primary-soft); object-fit: contain; }
+    .teacher-toolbox-copy h2 { margin: 0; font-size: 18px; }
+    .teacher-toolbox-copy p { margin: 3px 0 0; color: var(--muted); font-size: 10px; }
+    .teacher-toolbox-actions { display: flex; gap: 7px; flex-wrap: wrap; justify-content: flex-end; }
+    .toolbox-button { min-height: 36px; padding: 7px 12px; border: 2px solid var(--line); border-radius: 11px; background: #fffefb; color: var(--primary-strong); font-size: 11px; font-weight: 900; }
+    .toolbox-button:hover { border-color: var(--primary); background: var(--primary-soft); }
+    .toolbox-button.active { border-color: var(--primary); background: var(--primary); color: white; }
+    .teacher-toolbox-content { padding: 0 12px 12px; border-top: 1px dashed var(--line); }
+    .teacher-toolbox-content[hidden] { display: none; }
+    .teacher-toolbox-content > section { margin: 12px 0 0; box-shadow: none; }
+
     .workspace {
-      display: grid; grid-template-columns: 310px minmax(0, 1fr); gap: 18px; align-items: start;
+      display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 16px; align-items: stretch;
     }
     .panel {
       border: 2px solid var(--line); border-radius: 24px; background: var(--surface); box-shadow: var(--shadow);
     }
-    .filter-panel { position: sticky; top: 16px; padding: 20px; }
+    .filter-panel { position: static; height: 100%; padding: 0; overflow: hidden; }
+    .filter-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 15px; }
+    .filter-toolbar .panel-title { margin: 0; font-size: 15px; }
+    .filter-fields[hidden] { display: none !important; }
+    .filter-panel .filter-fields { display: grid; grid-template-columns: 1fr; gap: 10px; padding: 13px 15px 15px; border-top: 1px dashed var(--line); align-items: end; }
+    .filter-panel .field { margin-bottom: 0; }
+    .filter-panel .filter-buttons { display: grid; grid-template-columns: 1fr 1fr; grid-column: 1 / -1; margin-top: 0; }
+    .filter-panel .filter-buttons .button { min-width: 0; }
     .panel-title { margin: 0 0 17px; font-size: 19px; }
     .title-with-icon { display: flex; align-items: center; gap: 10px; }
     .title-icon { width: 46px; height: 46px; object-fit: contain; padding: 5px; border-radius: 14px; border: 2px solid var(--line); background: var(--gold-soft); }
@@ -470,6 +627,14 @@
     td { font-size: 14px; }
     tbody tr:hover { background: #fff7ed; }
     .task-name { max-width: 310px; font-weight: 850; line-height: 1.4; }
+    /* 子任務完成只標記該項目，避免讓主任務看起來也已完成。 */
+    tr.project-child .task-name.is-completed {
+      color: #6b7b73;
+      text-decoration: line-through;
+      text-decoration-thickness: 2px;
+      text-decoration-color: #5f9270;
+      opacity: .76;
+    }
     .task-next { max-width: 360px; color: var(--muted); line-height: 1.45; }
     .badge {
       display: inline-flex; align-items: center; min-height: 27px; padding: 3px 9px;
@@ -496,6 +661,8 @@
       color: var(--ink); font-size: 12px; font-weight: 800;
     }
     .mini-button:hover { border-color: var(--primary); color: var(--primary); }
+    .mini-button-danger { color: var(--danger); border-color: #e8bcb0; background: #fff8f5; }
+    .mini-button-danger:hover { border-color: var(--danger); color: var(--danger); }
     .empty { padding: 70px 20px; text-align: center; color: var(--muted); font-weight: 700; }
 
     .modal-backdrop {
@@ -641,6 +808,7 @@
       .summary-grid { grid-template-columns: repeat(3, 1fr); }
       .ai-tools { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .ai-example-story { grid-template-columns: 1fr; }
+      .gas-install-grid { grid-template-columns: 1fr; }
       .workspace { grid-template-columns: 1fr; }
       .filter-panel { position: static; }
       .filter-panel .filter-fields { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
@@ -650,6 +818,9 @@
 
     @media (max-width: 700px) {
       .app { padding: 12px; }
+      .teacher-toolbox-head { align-items: flex-start; flex-direction: column; }
+      .teacher-toolbox-actions { width: 100%; justify-content: flex-start; }
+      .toolbox-button { flex: 1 1 120px; }
       .topbar { align-items: flex-start; flex-direction: column; padding: 18px; }
       .top-actions { width: 100%; justify-content: stretch; }
       .top-actions .button { flex: 1; }
@@ -680,6 +851,7 @@
       .deskpet-secretary-card.is-wide { grid-column: auto; }
       .task-toolbar { align-items: flex-start; flex-direction: column; }
       .task-toolbar-actions { width: 100%; justify-content: space-between; }
+      .secretary-note-compose { grid-template-columns: 1fr; }
       .calendar-day { min-height: 82px; padding: 4px; }
       .calendar-task { padding: 4px; font-size: 9px; }
       .calendar-controls { align-items: flex-start; flex-direction: column; }
@@ -737,7 +909,8 @@
     const LOCAL_PREVIEW_STORAGE_KEYS = Object.freeze({
       tasks: 'grade6PreviewTasks',
       backups: 'grade6PreviewBackups',
-      driveFiles: 'grade6PreviewDriveFiles'
+      driveFiles: 'grade6PreviewDriveFiles',
+      secretaryNotes: 'teacherDashboardSecretaryNotes'
     });
     // localStorage quotas vary by browser. Keep a conservative app budget and leave
     // room for the user's other browser data; JSON export remains the full backup.
@@ -877,8 +1050,24 @@
         archiveTask: taskId => {
           const snapshot = previewTasks.map(task => ({ ...task }));
           const task = previewTasks.find(t => t.taskId === taskId);
-          if (task) task.status = '封存';
-          return previewResult();
+          if (!task) return { ...previewResult(), archivedCount: 0 };
+          const archiveIds = new Set([taskId]);
+          let expanded = true;
+          while (expanded) {
+            expanded = false;
+            previewTasks.forEach(item => {
+              if (item.parentTaskId && archiveIds.has(item.parentTaskId) && !archiveIds.has(item.taskId)) {
+                archiveIds.add(item.taskId);
+                expanded = true;
+              }
+            });
+          }
+          previewTasks.forEach(item => {
+            if (archiveIds.has(item.taskId)) item.status = '封存';
+          });
+          try { writeLocalPreviewJson(LOCAL_PREVIEW_STORAGE_KEYS.tasks, previewTasks); }
+          catch (error) { previewTasks = snapshot; throw error; }
+          return { ...previewResult(), archivedCount: archiveIds.size };
         },
         createGoogleCalendarEvent: payload => ({ ok: true, eventId: `preview-${Date.now()}`, title: payload.title, dueDate: payload.dueDate, dueTime: payload.dueTime }),
         syncTeachingProgressCalendar: payload => ({
@@ -959,6 +1148,23 @@
       <span class="role-multi-note">可同時選擇多個身分</span>
     </nav>
 
+    <section class="teacher-toolbox" id="teacherToolbox" aria-labelledby="teacherToolboxTitle">
+      <div class="teacher-toolbox-head">
+        <div class="teacher-toolbox-copy">
+          <img src="assets/koboyo/academic-year-planner.svg" alt="">
+          <div>
+            <h2 id="teacherToolboxTitle">教師工具箱</h2>
+            <p>教學進度、AI 協助與小綿助記事都先收在這裡；需要時再展開，不打擾任務清單。</p>
+          </div>
+        </div>
+        <div class="teacher-toolbox-actions" aria-label="教師工具">
+          <button class="toolbox-button" type="button" data-toolbox-target="teachingProgressPanel" data-role-only="teacher" aria-expanded="false">教學進度</button>
+          <button class="toolbox-button" type="button" data-toolbox-target="aiAssistantSection" data-ai-only aria-expanded="false" hidden>AI 行政助理</button>
+          <button class="toolbox-button" type="button" data-toolbox-target="secretaryNotesSection" aria-expanded="false">小綿助記事</button>
+        </div>
+      </div>
+      <div class="teacher-toolbox-content" id="teacherToolboxContent" hidden>
+
     <section class="teaching-progress-panel" id="teachingProgressPanel" aria-labelledby="teachingProgressTitle" hidden>
       <div class="teaching-progress-head">
         <div class="teaching-progress-title">
@@ -968,9 +1174,19 @@
         <button class="mini-button" type="button" id="toggleTeachingProgressButton">收合</button>
       </div>
       <div id="teachingProgressBody" hidden>
+        <div class="progress-workspace">
+          <div class="progress-planner-column">
         <div class="progress-planner-form">
+          <div class="progress-course-picker">
+            <label>任教課程<select class="select" id="progressSubject"></select></label>
+            <button class="secondary-button" type="button" id="manageProgressCoursesButton">＋ 管理任教課程</button>
+            <button class="secondary-button course-delete-button" type="button" id="removeCurrentProgressCourseButton">刪除課程</button>
+            <small>只顯示「系統設定 → 教師資訊」中已建立的任教課程；每一門課程都有獨立進度。</small>
+          </div>
+          <label>開始日期<input class="input" id="progressStartDate" type="date"></label>
+          <label>完成日期<input class="input" id="progressEndDate" type="date"></label>
           <div class="assessment-date-setting">
-            <strong>先設定定期評量</strong>
+            <strong>定期評量日期</strong>
             <label>第一次定期評量<input class="input" id="assessmentDate1" type="date"></label>
             <label>第二次定期評量<input class="input" id="assessmentDate2" type="date"></label>
             <label>第三次定期評量（選填）<input class="input" id="assessmentDate3" type="date"></label>
@@ -982,20 +1198,23 @@
               <option value="3">只排第三次定期評量</option>
               <option value="all" selected>排全部已設定的定期評量</option>
             </select></label>
-            <p>例如選「只排第一次」，產生的進度只會顯示第一次評量與其複習週；其他日期可先保留，不會納入本次排程。</p>
+            <p>例如選「只排第一次」，產生的進度只會顯示第一次評量與其複習節數；其他日期可先保留，不會納入本次排程。</p>
           </div>
-          <label>科目<select class="select" id="progressSubject">
-            <option value="國語文">國語文</option><option value="英語文">英語文</option><option value="數學" selected>數學</option>
-            <option value="社會">社會</option><option value="自然科學">自然科學</option><option value="健康與體育">健康與體育</option>
-            <option value="藝術">藝術</option><option value="綜合活動">綜合活動</option><option value="科技／資訊">科技／資訊</option>
-            <option value="本土語文">本土語文</option><option value="新住民語文">新住民語文</option><option value="彈性學習課程">彈性學習課程</option>
-          </select></label>
-          <label>開始日期<input class="input" id="progressStartDate" type="date"></label>
-          <label>完成日期<input class="input" id="progressEndDate" type="date"></label>
           <div class="progress-schedule-options">
             <strong>排進度選項</strong>
-            <label class="progress-review-toggle"><input id="reviewBeforeAssessment" type="checkbox" checked><span>定期評量前一週開始複習</span></label>
-            <label>一週幾節<input class="input" id="progressWeeklyPeriods" type="number" min="1" max="20" value="5"></label>
+            <label class="progress-review-toggle"><span>定期評量前保留</span><input class="input" id="reviewPeriodsBeforeAssessment" type="number" min="0" max="30" value="5" aria-label="定期評量前保留複習節數"><span>節複習</span></label>
+            <input id="progressWeeklyPeriods" type="hidden" value="5">
+            <label>每課／單元幾節<input class="input" id="defaultUnitPeriods" type="number" min="1" max="30" value="5"></label>
+            <div class="weekday-periods">
+              <div class="weekday-periods-head"><span>星期幾有幾節課</span><span class="weekly-period-total" id="weeklyPeriodTotal">一星期共 5 節</span></div>
+              <div class="weekday-periods-grid">
+                <label>一<input class="input weekday-period-input" type="number" min="0" max="10" value="1" data-weekday-period="1"></label>
+                <label>二<input class="input weekday-period-input" type="number" min="0" max="10" value="1" data-weekday-period="2"></label>
+                <label>三<input class="input weekday-period-input" type="number" min="0" max="10" value="1" data-weekday-period="3"></label>
+                <label>四<input class="input weekday-period-input" type="number" min="0" max="10" value="1" data-weekday-period="4"></label>
+                <label>五<input class="input weekday-period-input" type="number" min="0" max="10" value="1" data-weekday-period="5"></label>
+              </div>
+            </div>
           </div>
           <div class="holiday-setting">
             <div>
@@ -1013,12 +1232,16 @@
           <div class="progress-planner-actions">
             <button class="button button-dark" type="button" id="aiArrangeProgressButton" data-ai-only hidden>✨ AI 幫我排進度</button>
             <button class="button button-ghost" type="button" id="addProgressRowButton">＋ 手動新增</button>
-            <button class="button button-ghost" type="button" id="saveProgressPlanButton">儲存進度</button>
+            <button class="button button-ghost" type="button" id="saveProgressPlanButton">存檔到日曆</button>
             <button class="button button-primary" type="button" id="syncProgressCalendarButton">同步到 Google 日曆</button>
           </div>
         </div>
+          </div>
+          <div class="progress-results-column">
         <div class="progress-plan-summary" id="progressPlanSummary">尚未建立教學進度。</div>
         <div class="progress-plan-list" id="progressPlanList"><div class="progress-empty">可手動新增進度；開啟 AI 後也能自動安排。</div></div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -1070,7 +1293,7 @@
             </div>
           </div>
         </div>
-      </section>
+      </div>
 
       <div class="ai-workbench">
         <div class="ai-input-pane">
@@ -1159,10 +1382,41 @@
       </div>
     </section>
 
+    <section class="secretary-notes" id="secretaryNotesSection" aria-labelledby="secretaryNotesTitle">
+      <div class="secretary-notes-head">
+        <div class="secretary-notes-title">
+          <img src="assets/pet/pet_idle.webp" alt="">
+          <div>
+            <h2 id="secretaryNotesTitle">小綿助記事 <span class="secretary-note-count" id="secretaryNoteCount">0</span></h2>
+            <p>網頁記事保存在目前瀏覽器；也可以匯入桌面小綿助的 secretary_data.json。</p>
+          </div>
+        </div>
+        <button class="mini-button" type="button" id="toggleSecretaryNotesButton" aria-expanded="false">展開</button>
+      </div>
+      <div class="secretary-notes-body" id="secretaryNotesBody" hidden>
+        <div class="secretary-note-compose">
+          <textarea class="textarea" id="secretaryNoteInput" maxlength="3000" placeholder="先記下臨時交代、等待回覆或稍後要整理的事情……"></textarea>
+          <button class="button button-dark" type="button" id="addSecretaryNoteButton">儲存記事</button>
+        </div>
+        <div class="secretary-note-actions">
+          <button class="button button-light" type="button" id="importSecretaryNotesButton">匯入桌面記事</button>
+          <button class="button button-light" type="button" id="exportSecretaryNotesButton">匯出記事</button>
+          <input id="secretaryNotesFileInput" type="file" accept="application/json,.json" hidden>
+        </div>
+        <div class="secretary-note-list" id="secretaryNoteList"></div>
+      </div>
+    </section>
+
+      </div>
+    </section>
+
     <section class="workspace">
       <aside class="panel filter-panel">
-        <h2 class="panel-title title-with-icon"><img class="title-icon" src="assets/koboyo/teacher-checking-list.svg" alt="">篩選任務</h2>
-        <div class="filter-fields">
+        <div class="filter-toolbar">
+          <h2 class="panel-title title-with-icon"><img class="title-icon" src="assets/koboyo/teacher-checking-list.svg" alt="">篩選任務</h2>
+          <button class="mini-button" type="button" id="toggleFilterPanelButton" aria-expanded="true">收合篩選</button>
+        </div>
+        <div class="filter-fields" id="filterFields">
           <div class="field">
             <label for="keywordFilter">關鍵字</label>
             <input class="input" id="keywordFilter" type="search" placeholder="工作、下一步、教師或行政窗口">
@@ -1199,10 +1453,11 @@
       <section class="panel task-panel">
         <div class="task-toolbar">
           <div>
-            <h2 class="title-with-icon"><img class="title-icon" src="assets/koboyo/graduation-cap-scroll.svg" alt="">學年工作清單</h2>
+            <h2 class="title-with-icon"><img class="title-icon" src="assets/koboyo/graduation-cap-scroll.svg" alt="">任務清單</h2>
             <div class="task-meta" id="taskMeta">0 件任務</div>
           </div>
           <div class="task-toolbar-actions">
+            <button class="button button-dark" type="button" id="taskPanelNewTaskButton">＋ 新增任務</button>
             <div class="view-switch" role="group" aria-label="工作清單顯示模式">
               <button class="view-button active" type="button" id="listViewButton" aria-pressed="true">☷ 清單</button>
               <button class="view-button" type="button" id="calendarViewButton" aria-pressed="false">▦ 日曆</button>
@@ -1338,7 +1593,7 @@
         <div class="field"><label for="progressEditStartDate">開始日期</label><input class="input" id="progressEditStartDate" type="date"></div>
         <div class="field"><label for="progressEditEndDate">完成日期</label><input class="input" id="progressEditEndDate" type="date"></div>
       </div>
-      <div class="modal-actions"><button class="button button-ghost" type="button" id="cancelProgressEditButton">取消</button><button class="button button-dark" type="button" id="saveProgressEditButton">儲存課程</button></div>
+      <div class="modal-actions"><button class="button button-ghost" type="button" id="cancelProgressEditButton">取消</button><button class="button button-dark" type="button" id="saveProgressEditButton">存檔到日曆</button></div>
     </div>
   </div>
 
@@ -1352,6 +1607,7 @@
         <button class="settings-tab active" type="button" role="tab" aria-selected="true" data-settings-tab="teacher">教師資訊</button>
         <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="privacy">敏感資料</button>
         <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="api">AI 設定</button>
+        <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="pet">小綿助</button>
         <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="backup">備份與還原</button>
         <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="drive">Drive 資料庫</button>
         <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="license">授權</button>
@@ -1370,11 +1626,23 @@
               <button class="theme-choice" type="button" data-theme-choice="apricot" aria-pressed="false"><span class="theme-swatches" aria-hidden="true"><span></span><span></span><span></span></span><strong>暖杏橘</strong><small>溫暖活潑・親師友善</small></button>
               <button class="theme-choice" type="button" data-theme-choice="lavender" aria-pressed="false"><span class="theme-swatches" aria-hidden="true"><span></span><span></span><span></span></span><strong>粉霧紫</strong><small>柔和舒適・長時間閱讀</small></button>
               <button class="theme-choice" type="button" data-theme-choice="tech" aria-pressed="false"><span class="theme-swatches" aria-hidden="true"><span></span><span></span><span></span></span><strong>科技深藍</strong><small>網格背景・青藍光感</small></button>
+              <button class="theme-choice" type="button" data-theme-choice="minimal" aria-pressed="false"><span class="theme-swatches" aria-hidden="true"><span></span><span></span><span></span></span><strong>極簡霧灰</strong><small>低彩度・專注閱讀</small></button>
             </div>
           </div>
           <div class="field"><label for="teacherName">姓名</label><input class="input" id="teacherName" placeholder="例如：王老師"></div>
           <div class="field"><label for="teacherTitle">職稱（可填多重身分）</label><input class="input" id="teacherTitle" placeholder="例如：六年級學年主任、六年甲班導師"></div>
-          <div class="field field-wide"><label for="teacherSubjects">任教科目</label><input class="input" id="teacherSubjects" placeholder="例如：數學、自然、彈性課程"></div>
+          <div class="field field-wide">
+            <label for="teacherCourseNameInput">任教課程（先在這裡設定）</label>
+            <div class="teacher-course-manager">
+              <p>可把科目、年級與班級寫在名稱中，例如「六年一班社會」。同一科教不同班時，請分別新增，教學進度會各自保存。</p>
+              <div class="teacher-course-add">
+                <input class="input" id="teacherCourseNameInput" type="text" maxlength="50" placeholder="例如：六年一班社會">
+                <button class="secondary-button" type="button" id="addTeacherCourseButton">＋ 新增課程</button>
+              </div>
+              <div class="teacher-course-list" id="teacherCourseList"></div>
+            </div>
+            <input id="teacherSubjects" type="hidden">
+          </div>
           <div class="field"><label for="teacherGrade">任教年級</label><select class="select" id="teacherGrade"><option value="">未設定</option><option value="1">一年級</option><option value="2">二年級</option><option value="3">三年級</option><option value="4">四年級</option><option value="5">五年級</option><option value="6">六年級</option></select></div>
           <div class="field"><label for="teacherClass">班級</label><input class="input" id="teacherClass" placeholder="例如：甲班、601"></div>
           <div class="field field-wide"><label for="teacherCommittees">參與的會議／委員會（每行一項）</label><textarea class="textarea" id="teacherCommittees" placeholder="學年會議&#10;課程發展委員會&#10;資訊教育推動小組"></textarea></div>
@@ -1415,17 +1683,53 @@
             <label for="apiModel">模型名稱</label>
             <input class="input" id="apiModel" placeholder="例如：由服務商提供的模型名稱">
           </div>
-          <div class="field field-wide">
+          <div class="field field-wide" id="apiEndpointField" hidden>
             <label for="apiEndpoint">API 端點</label>
             <input class="input" id="apiEndpoint" type="url" placeholder="https://…">
           </div>
           <div class="field field-wide">
             <label for="apiKey">API 金鑰</label>
-            <input class="input" id="apiKey" type="password" autocomplete="off" placeholder="只保留到關閉此瀏覽器分頁">
-            <div class="api-secret-note">金鑰不會放進備份檔；目前僅檢查欄位，尚未呼叫外部 API。</div>
+            <input class="input" id="apiKey" type="password" autocomplete="off" placeholder="輸入後可保存在這台電腦的目前瀏覽器">
+            <label class="check-row" style="margin-top:8px"><input type="checkbox" id="rememberApiKey" checked>記住在這台電腦的目前瀏覽器（關閉後不用重打）</label>
+            <div class="api-secret-note">金鑰不會放進備份檔、GAS 或 GitHub。共用電腦請取消勾選，金鑰便只保留到關閉此瀏覽器分頁。</div>
           </div>
         </div>
         <button class="button button-light" type="button" id="checkApiButton">檢查設定</button>
+      </section>
+
+      <section class="settings-panel" data-settings-panel="pet">
+        <p class="settings-note">這裡管理桌面版小綿助的偏好。網頁可以保存設定與控制「小綿助記事」入口；Windows 開機自動執行需下載設定檔，讓桌面版啟動一次後套用。</p>
+        <div class="setting-checks">
+          <label class="check-row"><input type="checkbox" id="petEnabled" checked>開啟小綿助功能</label>
+          <label class="check-row"><input type="checkbox" id="petAutostart">Windows 登入後自動執行</label>
+          <label class="check-row"><input type="checkbox" id="petHealthReminders" checked>開啟喝水、久坐與服藥提醒</label>
+          <label class="check-row"><input type="checkbox" id="petOpeningBrief" checked>啟動時提示今日與逾期任務</label>
+          <label class="check-row"><input type="checkbox" id="petRememberPosition" checked>記住小綿助在桌面的位置</label>
+        </div>
+        <div class="form-grid" style="padding:0">
+          <div class="field"><label for="petName">小綿助名稱</label><input class="input" id="petName" maxlength="12" placeholder="小綿助"></div>
+          <div class="field"><label for="petCheerInterval">自動打氣話間隔</label><select class="select" id="petCheerInterval"><option value="0">關閉自動打氣話</option><option value="5">每 5 分鐘</option><option value="10">每 10 分鐘</option><option value="15">每 15 分鐘</option><option value="30">每 30 分鐘</option><option value="60">每 60 分鐘</option></select></div>
+          <div class="field"><label for="petStartupDelay">開機啟動延遲</label><select class="select" id="petStartupDelay"><option value="0">立即啟動</option><option value="10">延遲 10 秒</option><option value="30">延遲 30 秒</option><option value="60">延遲 1 分鐘</option><option value="120">延遲 2 分鐘</option></select></div>
+          <div class="field"><label for="petQuietStart">安靜時段開始</label><input class="input" id="petQuietStart" type="time" value="18:00"></div>
+          <div class="field"><label for="petQuietEnd">安靜時段結束</label><input class="input" id="petQuietEnd" type="time" value="07:30"></div>
+        </div>
+        <div class="pet-settings-status">
+          <strong>選填：連接 GAS 雲端任務</strong>
+          <label class="check-row"><input type="checkbox" id="petGasSyncEnabled">下載設定檔時啟用 GAS 任務同步</label>
+          <div class="form-grid" style="padding:0">
+            <div class="field"><label for="petGasUrl">GAS /exec 網址</label><input class="input" id="petGasUrl" type="url" placeholder="https://script.google.com/macros/s/…/exec"></div>
+            <div class="field"><label for="petGasSyncKey">小綿助同步金鑰</label><input class="input" id="petGasSyncKey" type="password" autocomplete="off" placeholder="至少 16 個字元"></div>
+          </div>
+          <span>未填寫也能使用全部本機功能。同步金鑰需先從 Google 試算表的「校務任務系統 → 設定小綿助同步金鑰」建立。</span>
+        </div>
+        <div class="pet-settings-status">
+          <strong>桌面版套用方式</strong>
+          <span>下載後把 <code>xiaomianzhu_settings.json</code> 放在「小綿助.exe」旁邊，再啟動一次小綿助。桌面版會匯入設定，並依選項新增或移除目前 Windows 帳號的自動啟動項目，不需要系統管理員權限。</span>
+        </div>
+        <div class="pet-settings-actions">
+          <button class="button button-dark" type="button" id="exportPetSettingsButton">下載桌面設定檔</button>
+          <span class="api-secret-note">設定檔不包含任務、記事、附件或 AI 金鑰；若啟用 GAS 同步，會包含 GAS 網址與小綿助同步金鑰，請勿公開分享該設定檔。</span>
+        </div>
       </section>
 
       <section class="settings-panel" data-settings-panel="backup">
@@ -1455,13 +1759,44 @@
             <button class="button button-light" type="button" id="refreshCloudBackupsButton">重新整理</button>
             <div class="cloud-list" id="cloudBackupList"><div class="cloud-row-meta">按「重新整理」讀取既有備份。</div></div>
           </article>
-          <article class="backup-card">
-            <h3>GAS 安裝教學與程式碼</h3>
-            <p>專案已附完整 Code.gs：部署為 Web App、授權 Google Drive，之後即可使用雲端備份與資料庫。</p>
-            <button class="button button-light" type="button" id="copyGasGuideButton">複製安裝步驟</button>
-          </article>
-        </div>
-      </section>
+           <article class="backup-card gas-install-card">
+             <h3>GAS 雲端版安裝教學與完整程式碼</h3>
+             <p>此功能不是只貼一段金鑰；需要把下列 4 個專案檔放進同一個 Google Apps Script 專案，再部署成網頁應用程式。</p>
+             <div class="gas-install-grid">
+               <div>
+                 <ol class="gas-steps">
+                   <li>在 Google Drive 建立一份<strong>新的 Google 試算表</strong>，名稱可填「教師工作台資料庫」。</li>
+                   <li>開啟試算表後，選擇<strong>擴充功能 → Apps Script</strong>。</li>
+                   <li>將預設指令碼改名為 <strong>Code</strong>，清空內容後貼入本專案的 <strong>Code.gs</strong>。</li>
+                   <li>按「＋」新增 3 個 HTML 檔，名稱依序為 <strong>Index</strong>、<strong>Board</strong>、<strong>Installer</strong>，貼入對應檔案內容。</li>
+                   <li>儲存後回到試算表並重新整理，從「<strong>校務任務系統 → 安裝教師工作台</strong>」完成資料表初始化；若要連動桌面小綿助，再執行「<strong>設定小綿助同步金鑰</strong>」。</li>
+                   <li>回 Apps Script 選擇<strong>部署 → 新增部署 → 網頁應用程式</strong>；執行身分選「我」，存取權依學校帳號政策設定。</li>
+                   <li>按「部署」並完成 Google 授權，複製產生的 <strong>/exec 網址</strong>。</li>
+                   <li>之後請從該 /exec 網址開啟系統；此時雲端備份、Drive 資料庫與跨裝置資料才會真正連到 GAS。</li>
+                 </ol>
+                 <div class="gas-file-list" aria-label="GAS 必要檔案">
+                   <div class="gas-file-row"><code>Code.gs</code><span>後端、試算表與 Drive 功能</span></div>
+                   <div class="gas-file-row"><code>Index.html</code><span>教師工作台主畫面</span></div>
+                   <div class="gas-file-row"><code>Board.html</code><span>電子紙看板</span></div>
+                   <div class="gas-file-row"><code>Installer.html</code><span>安裝精靈</span></div>
+                 </div>
+                 <div class="gas-actions">
+                   <a class="button button-dark" href="Code.gs" target="_blank" rel="noopener">開啟完整 Code.gs</a>
+                   <a class="button button-light" href="Code.gs" download="Code.gs">下載 Code.gs</a>
+                   <a class="button button-light" href="GAS_INSTALL.md" target="_blank" rel="noopener">開啟完整安裝說明</a>
+                   <button class="button button-light" type="button" id="copyGasGuideButton">複製安裝步驟</button>
+                 </div>
+                 <div class="gas-deploy-note"><strong>重要：</strong>直接開啟本機檔案或 Netlify 網址時，資料仍儲存在該瀏覽器。現行 GAS 功能使用 <code>google.script.run</code>，必須從部署後的 Apps Script /exec 網址開啟，才會啟用 Google 雲端資料與同步。</div>
+               </div>
+               <details class="gas-code-details" open>
+                 <summary>在設定畫面直接預覽完整 Code.gs</summary>
+                 <iframe class="gas-code-frame" src="Code.gs" title="完整 Google Apps Script 程式碼"></iframe>
+                 <p class="gas-code-fallback">若瀏覽器沒有顯示程式碼，請按左側「開啟完整 Code.gs」或「下載 Code.gs」。</p>
+               </details>
+             </div>
+           </article>
+         </div>
+       </section>
 
       <section class="settings-panel" data-settings-panel="drive">
         <p class="settings-note">把舊資料、圖片、PDF 或 Office 文件存進自己的 Google Drive。單檔最大 35 MB（保留 Base64 與 GAS 傳輸空間）；檔案不會公開，分享權限仍由你的 Drive 控制。</p>
@@ -1628,7 +1963,9 @@
     const roleWorkspaceState = {
       selectedRoles: new Set(['gradeLead', 'homeroom', 'teacher']),
       progressRows: [],
-      schoolHolidays: []
+      schoolHolidays: [],
+      progressPlans: {},
+      activeProgressSubject: ''
     };
     const ROLE_LABELS = { gradeLead: '學年主任', admin: '行政', homeroom: '導師', teacher: '教師' };
     // Source: government open-data office calendar (2018–2027), filtered to weekday closures
@@ -1664,30 +2001,272 @@
       return `${year}-${month}-${day}`;
     }
 
+    function createEmptyTeachingProgressPlan(subject) {
+      const today = new Date();
+      const target = new Date(today);
+      target.setDate(target.getDate() + 70);
+      return {
+        subject: subject || $('progressSubject').value || '數學',
+        startDate: formatLocalDate(today), endDate: formatLocalDate(target), weeklyPeriods: 5,
+        weekdayPeriods: { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1 },
+        defaultUnitPeriods: 5, reviewPeriodsBeforeAssessment: 5, assessmentScope: 'all',
+        useOfficialHolidays: true, schoolHolidays: [], units: '', assessmentDates: [], rows: []
+      };
+    }
+
+    function normalizeTeachingProgressPlan(plan, subject) {
+      const fallback = createEmptyTeachingProgressPlan(subject);
+      const source = plan && typeof plan === 'object' ? plan : {};
+      const weeklyPeriods = Math.max(1, Number(source.weeklyPeriods) || fallback.weeklyPeriods);
+      const legacyDistribution = [1, 2, 3, 4, 5].reduce((result, day, index) => {
+        result[day] = Math.floor(weeklyPeriods / 5) + (index < weeklyPeriods % 5 ? 1 : 0);
+        return result;
+      }, {});
+      const weekdayPeriods = [1, 2, 3, 4, 5].reduce((result, day) => {
+        result[day] = Math.max(0, Math.min(10, Number(source.weekdayPeriods?.[day] ?? legacyDistribution[day]) || 0));
+        return result;
+      }, {});
+      return {
+        ...fallback, ...source, subject: subject || source.subject || fallback.subject,
+        weeklyPeriods: Object.values(weekdayPeriods).reduce((sum, periods) => sum + periods, 0), weekdayPeriods,
+        defaultUnitPeriods: Math.max(1, Number(source.defaultUnitPeriods) || fallback.defaultUnitPeriods),
+        reviewPeriodsBeforeAssessment: Number.isFinite(Number(source.reviewPeriodsBeforeAssessment))
+          ? Math.max(0, Number(source.reviewPeriodsBeforeAssessment))
+          : source.reviewBeforeAssessment === false ? 0 : fallback.reviewPeriodsBeforeAssessment,
+        assessmentScope: ['1', '2', '3', 'all'].includes(String(source.assessmentScope)) ? String(source.assessmentScope) : 'all',
+        useOfficialHolidays: source.useOfficialHolidays !== false,
+        schoolHolidays: normalizeSchoolHolidayRows(
+          Array.isArray(source.schoolHolidays) ? source.schoolHolidays : parseSchoolHolidayText(source.schoolHolidayDates || '')
+        ),
+        assessmentDates: Array.isArray(source.assessmentDates) ? source.assessmentDates.slice(0, 3) : [],
+        rows: Array.isArray(source.rows) ? source.rows.slice(0, 120).map(row => ({ ...row, subject: subject || source.subject || fallback.subject })) : []
+      };
+    }
+
+    function captureTeachingProgressPlan(subject = roleWorkspaceState.activeProgressSubject || $('progressSubject').value) {
+      const schoolHolidays = normalizeSchoolHolidayRows(roleWorkspaceState.schoolHolidays);
+      return {
+        subject, startDate: $('progressStartDate').value, endDate: $('progressEndDate').value,
+        weeklyPeriods: getWeeklyPeriodTotal(), weekdayPeriods: getWeekdayPeriods(),
+        defaultUnitPeriods: Math.max(1, Number($('defaultUnitPeriods').value) || 5),
+        reviewPeriodsBeforeAssessment: Math.max(0, Number($('reviewPeriodsBeforeAssessment').value) || 0),
+        assessmentScope: $('assessmentScope').value, useOfficialHolidays: $('useOfficialHolidays').checked,
+        schoolHolidays,
+        schoolHolidayDates: schoolHolidays.filter(row => row.date).map(row => `${row.date} | ${row.reason || '學校自訂假日／停課日'}`).join('\n'),
+        units: $('progressUnits').value, assessmentDates: getAllAssessmentDates(),
+        rows: roleWorkspaceState.progressRows.map(row => ({ ...row, subject }))
+      };
+    }
+
+    function applyTeachingProgressPlan(plan, subject) {
+      const normalized = normalizeTeachingProgressPlan(plan, subject);
+      ensureProgressCourseOption(normalized.subject);
+      roleWorkspaceState.activeProgressSubject = normalized.subject;
+      $('progressSubject').value = normalized.subject;
+      $('progressStartDate').value = normalized.startDate || '';
+      $('progressEndDate').value = normalized.endDate || '';
+      $('progressWeeklyPeriods').value = normalized.weeklyPeriods || 5;
+      setWeekdayPeriods(normalized.weekdayPeriods);
+      $('defaultUnitPeriods').value = normalized.defaultUnitPeriods || 5;
+      $('reviewPeriodsBeforeAssessment').value = normalized.reviewPeriodsBeforeAssessment;
+      $('assessmentScope').value = normalized.assessmentScope;
+      $('useOfficialHolidays').checked = normalized.useOfficialHolidays !== false;
+      roleWorkspaceState.schoolHolidays = normalized.schoolHolidays;
+      $('progressUnits').value = normalized.units || '';
+      $('assessmentDate1').value = normalized.assessmentDates[0] || '';
+      $('assessmentDate2').value = normalized.assessmentDates[1] || '';
+      $('assessmentDate3').value = normalized.assessmentDates[2] || '';
+      roleWorkspaceState.progressRows = normalized.rows.map(row => ({ ...row, subject: normalized.subject }));
+      roleWorkspaceState.progressPlans[normalized.subject] = normalized;
+      renderSchoolHolidayRows();
+    }
+
+    function persistTeachingProgressPlans() {
+      const activeSubject = roleWorkspaceState.activeProgressSubject || $('progressSubject').value;
+      if (activeSubject) roleWorkspaceState.progressPlans[activeSubject] = captureTeachingProgressPlan(activeSubject);
+      const payload = { version: 2, activeSubject, plans: roleWorkspaceState.progressPlans };
+      localStorage.setItem('grade6TeachingProgressBySubject', JSON.stringify(payload));
+      if (activeSubject) localStorage.setItem('grade6TeachingProgress', JSON.stringify(payload.plans[activeSubject]));
+      return payload;
+    }
+
+    function switchTeachingProgressSubject(subject, persistCurrent = true) {
+      if (!subject) return;
+      const current = roleWorkspaceState.activeProgressSubject;
+      if (persistCurrent && current) roleWorkspaceState.progressPlans[current] = captureTeachingProgressPlan(current);
+      const nextPlan = roleWorkspaceState.progressPlans[subject] || createEmptyTeachingProgressPlan(subject);
+      applyTeachingProgressPlan(nextPlan, subject);
+      try { persistTeachingProgressPlans(); } catch (error) {}
+      renderTeachingProgress();
+    }
+
+    function ensureProgressCourseOption(subject) {
+      if (!subject) return;
+      const select = $('progressSubject');
+      if (![...select.options].some(option => option.value === subject)) select.add(new Option(subject, subject));
+    }
+
+    function getWeekdayPeriods() {
+      return [...document.querySelectorAll('[data-weekday-period]')].reduce((result, input) => {
+        result[input.dataset.weekdayPeriod] = Math.max(0, Math.min(10, Number(input.value) || 0));
+        return result;
+      }, {});
+    }
+
+    function getWeeklyPeriodTotal() {
+      return Object.values(getWeekdayPeriods()).reduce((sum, periods) => sum + periods, 0);
+    }
+
+    function updateWeeklyPeriodTotal() {
+      const total = getWeeklyPeriodTotal();
+      $('progressWeeklyPeriods').value = total;
+      $('weeklyPeriodTotal').textContent = `一星期共 ${total} 節`;
+      return total;
+    }
+
+    function setWeekdayPeriods(periods = {}) {
+      document.querySelectorAll('[data-weekday-period]').forEach(input => {
+        input.value = Math.max(0, Number(periods[input.dataset.weekdayPeriod]) || 0);
+      });
+      updateWeeklyPeriodTotal();
+    }
+
+    function getConfiguredTeachingCourses() {
+      return Object.keys(roleWorkspaceState.progressPlans).filter(Boolean);
+    }
+
+    function syncProgressCourseOptions(preferredSubject = roleWorkspaceState.activeProgressSubject) {
+      const select = $('progressSubject');
+      if (!select) return;
+      const courses = getConfiguredTeachingCourses();
+      select.innerHTML = '';
+      courses.forEach(course => select.add(new Option(course, course)));
+      if (!courses.length) {
+        select.add(new Option('請先到系統設定新增任教課程', ''));
+        select.disabled = true;
+        if ($('removeCurrentProgressCourseButton')) $('removeCurrentProgressCourseButton').disabled = true;
+        return;
+      }
+      select.disabled = false;
+      if ($('removeCurrentProgressCourseButton')) $('removeCurrentProgressCourseButton').disabled = false;
+      select.value = courses.includes(preferredSubject) ? preferredSubject : courses[0];
+    }
+
+    function renderTeacherCourseManager() {
+      const list = $('teacherCourseList');
+      if (!list) return;
+      const courses = getConfiguredTeachingCourses();
+      $('teacherSubjects').value = courses.join('、');
+      list.innerHTML = courses.length ? courses.map(course => `
+        <div class="teacher-course-row" data-teacher-course="${escapeHtml(course)}">
+          <input class="input" type="text" maxlength="50" value="${escapeHtml(course)}" aria-label="編輯 ${escapeHtml(course)} 課程名稱">
+          <button class="mini-button" type="button" data-save-teacher-course="${escapeHtml(course)}">儲存名稱</button>
+          <button class="mini-button" type="button" data-remove-teacher-course="${escapeHtml(course)}">移除</button>
+        </div>`).join('') : '<div class="teacher-course-empty">尚未設定任教課程。請先新增，之後才能建立教學進度。</div>';
+    }
+
+    function addProgressCourse(subject) {
+      subject = String(subject || '').trim();
+      if (!subject) return showToast('請輸入任教課程名稱。', true);
+      if (roleWorkspaceState.progressPlans[subject] || [...$('progressSubject').options].some(option => option.value === subject)) {
+        return showToast('這個課程名稱已存在，請直接從下拉選單選擇。', true);
+      }
+      const current = roleWorkspaceState.activeProgressSubject;
+      if (current) roleWorkspaceState.progressPlans[current] = captureTeachingProgressPlan(current);
+      roleWorkspaceState.progressPlans[subject] = createEmptyTeachingProgressPlan(subject);
+      if (!current) applyTeachingProgressPlan(roleWorkspaceState.progressPlans[subject], subject);
+      syncProgressCourseOptions(current || subject);
+      renderTeacherCourseManager();
+      try { persistTeachingProgressPlans(); } catch (error) {}
+      $('teacherCourseNameInput').value = '';
+      showToast(`已新增任教課程「${subject}」。`);
+    }
+
+    function renameProgressCourse(oldName, newName) {
+      newName = String(newName || '').trim();
+      if (!newName) return showToast('請輸入任教課程名稱。', true);
+      if (newName === oldName) return showToast('課程名稱沒有變更。');
+      if (roleWorkspaceState.progressPlans[newName]) return showToast('這個課程名稱已存在。', true);
+      const isActive = oldName === roleWorkspaceState.activeProgressSubject;
+      const plan = isActive ? captureTeachingProgressPlan(oldName) : roleWorkspaceState.progressPlans[oldName];
+      if (!plan) return showToast('找不到這門課程。', true);
+      delete roleWorkspaceState.progressPlans[oldName];
+      plan.subject = newName;
+      plan.rows = plan.rows.map(row => ({ ...row, subject: newName, calendarNeedsSync: row.calendarEventId ? true : row.calendarNeedsSync }));
+      roleWorkspaceState.progressPlans[newName] = plan;
+      if (isActive) applyTeachingProgressPlan(plan, newName);
+      syncProgressCourseOptions(isActive ? newName : roleWorkspaceState.activeProgressSubject);
+      try { persistTeachingProgressPlans(); } catch (error) {}
+      renderTeachingProgress();
+      renderTeacherCourseManager();
+      showToast(`課程已更名為「${newName}」。`);
+    }
+
+    function removeProgressCourse(subject) {
+      const plan = roleWorkspaceState.progressPlans[subject];
+      if (!plan) return;
+      const hasProgress = Array.isArray(plan.rows) && plan.rows.length;
+      const message = hasProgress
+        ? `「${subject}」已有 ${plan.rows.length} 筆教學進度，刪除課程時會一併刪除。確定要繼續嗎？`
+        : `確定要刪除任教課程「${subject}」嗎？`;
+      if (!window.confirm(message)) return;
+      delete roleWorkspaceState.progressPlans[subject];
+      const nextSubject = getConfiguredTeachingCourses()[0];
+      if (subject === roleWorkspaceState.activeProgressSubject) {
+        if (nextSubject) applyTeachingProgressPlan(roleWorkspaceState.progressPlans[nextSubject], nextSubject);
+        else {
+          roleWorkspaceState.activeProgressSubject = '';
+          roleWorkspaceState.progressRows = [];
+        }
+      }
+      syncProgressCourseOptions(roleWorkspaceState.activeProgressSubject);
+      try { persistTeachingProgressPlans(); } catch (error) {}
+      renderTeachingProgress();
+      renderTeacherCourseManager();
+      showToast(`已移除任教課程「${subject}」。`);
+    }
+
+    function getAllTeachingProgressRows() {
+      const activeSubject = roleWorkspaceState.activeProgressSubject || $('progressSubject').value;
+      if (activeSubject) roleWorkspaceState.progressPlans[activeSubject] = captureTeachingProgressPlan(activeSubject);
+      return Object.entries(roleWorkspaceState.progressPlans).flatMap(([subject, plan]) =>
+        (Array.isArray(plan.rows) ? plan.rows : []).map(row => ({ ...row, subject: row.subject || subject }))
+      );
+    }
+
+    function activateTeachingProgressRow(progressId) {
+      const activeRow = roleWorkspaceState.progressRows.find(row => row.id === progressId);
+      if (activeRow) return activeRow;
+      const match = Object.entries(roleWorkspaceState.progressPlans).find(([, plan]) =>
+        Array.isArray(plan.rows) && plan.rows.some(row => row.id === progressId)
+      );
+      if (!match) return null;
+      switchTeachingProgressSubject(match[0]);
+      return roleWorkspaceState.progressRows.find(row => row.id === progressId) || null;
+    }
+
     function loadRoleWorkspace() {
       try {
         const savedRoles = JSON.parse(localStorage.getItem('grade6SelectedRoles') || 'null');
         if (Array.isArray(savedRoles) && savedRoles.some(role => ROLE_LABELS[role])) {
           roleWorkspaceState.selectedRoles = new Set(savedRoles.filter(role => ROLE_LABELS[role]));
         }
-        const savedPlan = JSON.parse(localStorage.getItem('grade6TeachingProgress') || 'null');
-        if (savedPlan && typeof savedPlan === 'object') {
-          $('progressSubject').value = savedPlan.subject || '數學';
-          $('progressStartDate').value = savedPlan.startDate || '';
-          $('progressEndDate').value = savedPlan.endDate || '';
-          $('progressWeeklyPeriods').value = savedPlan.weeklyPeriods || 5;
-          $('reviewBeforeAssessment').checked = savedPlan.reviewBeforeAssessment !== false;
-          $('assessmentScope').value = ['1', '2', '3', 'all'].includes(String(savedPlan.assessmentScope)) ? String(savedPlan.assessmentScope) : 'all';
-          $('useOfficialHolidays').checked = savedPlan.useOfficialHolidays !== false;
-          roleWorkspaceState.schoolHolidays = normalizeSchoolHolidayRows(
-            Array.isArray(savedPlan.schoolHolidays) ? savedPlan.schoolHolidays : parseSchoolHolidayText(savedPlan.schoolHolidayDates || '')
-          );
-          $('progressUnits').value = savedPlan.units || '';
-          const assessmentDates = Array.isArray(savedPlan.assessmentDates) ? savedPlan.assessmentDates : [];
-          $('assessmentDate1').value = assessmentDates[0] || '';
-          $('assessmentDate2').value = assessmentDates[1] || '';
-          $('assessmentDate3').value = assessmentDates[2] || '';
-          roleWorkspaceState.progressRows = Array.isArray(savedPlan.rows) ? savedPlan.rows.slice(0, 120) : [];
+        const savedCollection = JSON.parse(localStorage.getItem('grade6TeachingProgressBySubject') || 'null');
+        const legacyPlan = JSON.parse(localStorage.getItem('grade6TeachingProgress') || 'null');
+        if (savedCollection?.plans && typeof savedCollection.plans === 'object') {
+          Object.entries(savedCollection.plans).forEach(([subject, plan]) => {
+            ensureProgressCourseOption(subject);
+            roleWorkspaceState.progressPlans[subject] = normalizeTeachingProgressPlan(plan, subject);
+          });
+          const activeSubject = savedCollection.activeSubject || Object.keys(roleWorkspaceState.progressPlans)[0] || $('progressSubject').value;
+          applyTeachingProgressPlan(roleWorkspaceState.progressPlans[activeSubject], activeSubject);
+        } else if (legacyPlan && typeof legacyPlan === 'object') {
+          const legacySubject = legacyPlan.subject || $('progressSubject').value || '數學';
+          roleWorkspaceState.progressPlans[legacySubject] = normalizeTeachingProgressPlan(legacyPlan, legacySubject);
+          applyTeachingProgressPlan(roleWorkspaceState.progressPlans[legacySubject], legacySubject);
+        } else {
+          const initialSubject = $('progressSubject').value || '數學';
+          applyTeachingProgressPlan(createEmptyTeachingProgressPlan(initialSubject), initialSubject);
         }
       } catch (error) {}
       if (!$('progressStartDate').value) {
@@ -1697,6 +2276,7 @@
         $('progressStartDate').value = formatLocalDate(today);
         $('progressEndDate').value = formatLocalDate(target);
       }
+      syncProgressCourseOptions(roleWorkspaceState.activeProgressSubject);
       renderSchoolHolidayRows();
       renderRoleWorkspace();
       renderTeachingProgress();
@@ -1706,7 +2286,11 @@
       document.querySelectorAll('[data-role]').forEach(button => {
         button.setAttribute('aria-pressed', String(roleWorkspaceState.selectedRoles.has(button.dataset.role)));
       });
-      $('teachingProgressPanel').hidden = !roleWorkspaceState.selectedRoles.has('teacher');
+      const hasTeacherRole = roleWorkspaceState.selectedRoles.has('teacher');
+      $('teachingProgressPanel').hidden = !hasTeacherRole;
+      const teachingToolButton = document.querySelector('[data-toolbox-target="teachingProgressPanel"]');
+      if (teachingToolButton) teachingToolButton.hidden = !hasTeacherRole;
+      if (!hasTeacherRole && teachingToolButton?.classList.contains('active')) setTeacherToolbox('');
     }
 
     function toggleWorkspaceRole(role) {
@@ -1723,10 +2307,11 @@
     }
 
     function parseTeachingUnits() {
+      const defaultPeriods = Math.max(1, Math.min(30, Number($('defaultUnitPeriods').value) || 5));
       return $('progressUnits').value.split(/\r?\n/).map(line => line.trim()).filter(Boolean).map((line, index) => {
         const parts = line.split(/[｜|]/).map(part => part.trim());
         const periods = Number(parts[1]);
-        return { name: parts[0] || `單元 ${index + 1}`, periods: Number.isFinite(periods) && periods > 0 ? Math.round(periods) : 0 };
+        return { name: parts[0] || `單元 ${index + 1}`, periods: Number.isFinite(periods) && periods > 0 ? Math.round(periods) : defaultPeriods };
       });
     }
 
@@ -1800,7 +2385,7 @@
       return startA <= endB && startB <= endA;
     }
 
-    function buildTeachingWeeks(startDate, endDate, weeklyPeriods, holidayMap = {}) {
+    function buildTeachingWeeks(startDate, endDate, weekdayPeriods, holidayMap = {}) {
       const start = new Date(`${startDate}T12:00:00`);
       const end = new Date(`${endDate}T12:00:00`);
       if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start > end) return [];
@@ -1812,20 +2397,18 @@
         const weekEnd = new Date(cursor);
         weekEnd.setDate(weekEnd.getDate() + (7 - ((weekEnd.getDay() || 7))));
         if (weekEnd > end) weekEnd.setTime(end.getTime());
-        let possibleWeekdays = 0;
+        let capacity = 0;
         const holidayNames = [];
         const dayCursor = new Date(weekStart);
         while (dayCursor <= weekEnd) {
           const weekday = dayCursor.getDay();
           const dateKey = formatLocalDate(dayCursor);
           if (weekday >= 1 && weekday <= 5) {
-            possibleWeekdays += 1;
             if (holidayMap[dateKey]) holidayNames.push(`${dateKey} ${holidayMap[dateKey]}`);
+            else capacity += Math.max(0, Number(weekdayPeriods[weekday]) || 0);
           }
           dayCursor.setDate(dayCursor.getDate() + 1);
         }
-        const openWeekdays = Math.max(0, possibleWeekdays - holidayNames.length);
-        const capacity = possibleWeekdays ? Math.max(0, Math.round(weeklyPeriods * openWeekdays / 5)) : 0;
         weeks.push({ index, startDate: formatLocalDate(weekStart), endDate: formatLocalDate(weekEnd), capacity, holidayNames });
         cursor = new Date(weekEnd);
         cursor.setDate(cursor.getDate() + 1);
@@ -1838,39 +2421,57 @@
       const units = parseTeachingUnits();
       const startDate = $('progressStartDate').value;
       const endDate = $('progressEndDate').value;
-      const weeklyPeriods = Math.max(1, Math.min(20, Number($('progressWeeklyPeriods').value) || 0));
+      const weekdayPeriods = getWeekdayPeriods();
+      const weeklyPeriods = updateWeeklyPeriodTotal();
+      if (weeklyPeriods < 1) return showToast('請至少設定一個上課日與節數。', true);
       if (!units.length) return showToast('請先輸入至少一個教學單元。', true);
       const holidayMap = activeHolidayMap();
-      const weeks = buildTeachingWeeks(startDate, endDate, weeklyPeriods, holidayMap);
+      const weeks = buildTeachingWeeks(startDate, endDate, weekdayPeriods, holidayMap);
       if (!weeks.length) return showToast('請確認開始與完成日期。', true);
 
       const selectedAssessments = getSelectedAssessments();
       if (!selectedAssessments.length) return showToast('請先設定所選定期評量的日期。', true);
-      const reviewBeforeAssessment = $('reviewBeforeAssessment').checked;
+      const reviewPeriodsBeforeAssessment = Math.max(0, Math.min(30, Number($('reviewPeriodsBeforeAssessment').value) || 0));
       const scheduleStart = dateAtNoon(startDate);
       const scheduleEnd = dateAtNoon(endDate);
       const assessments = selectedAssessments.map(item => {
         const assessmentDate = dateAtNoon(item.date);
-        const reviewStart = new Date(assessmentDate);
-        reviewStart.setDate(reviewStart.getDate() - 7);
-        const reviewEnd = new Date(assessmentDate);
-        reviewEnd.setDate(reviewEnd.getDate() - 1);
-        return { index: item.index, date: item.date, assessmentDate, reviewStart, reviewEnd };
+        return { index: item.index, date: item.date, assessmentDate };
       });
-      if (assessments.some(item => item.assessmentDate > scheduleEnd || item.assessmentDate < scheduleStart || (reviewBeforeAssessment && item.reviewStart < scheduleStart))) {
-        return showToast(reviewBeforeAssessment
-          ? '每次定期評量須在完成日期前，且評量前必須保留完整 7 天複習時間。'
-          : '每次定期評量都必須落在開始與完成日期之間。', true);
+      if (assessments.some(item => item.assessmentDate > scheduleEnd || item.assessmentDate < scheduleStart)) {
+        return showToast('每次定期評量都必須落在開始與完成日期之間。', true);
       }
-      const teachingWeeks = weeks.filter(week => {
+      const reservedReviewPeriods = new Map();
+      const reviewPlans = assessments.map(item => {
+        let remaining = reviewPeriodsBeforeAssessment;
+        const allocations = [];
+        const candidates = weeks.filter(week => dateAtNoon(week.endDate) < item.assessmentDate).reverse();
+        candidates.forEach(week => {
+          if (remaining <= 0) return;
+          const alreadyReserved = reservedReviewPeriods.get(week.index) || 0;
+          const available = Math.max(0, week.capacity - alreadyReserved);
+          const assigned = Math.min(available, remaining);
+          if (!assigned) return;
+          reservedReviewPeriods.set(week.index, alreadyReserved + assigned);
+          allocations.push({ ...week, periods: assigned });
+          remaining -= assigned;
+        });
+        return { ...item, allocations, missingPeriods: remaining };
+      });
+      if (reviewPlans.some(item => item.missingPeriods > 0)) {
+        return showToast('評量前可用課節不足，請減少複習節數或提早開始日期。', true);
+      }
+      const teachingWeeks = weeks.map(week => ({
+        ...week,
+        capacity: Math.max(0, week.capacity - (reservedReviewPeriods.get(week.index) || 0))
+      })).filter(week => {
         const weekStart = dateAtNoon(week.startDate);
         const weekEnd = dateAtNoon(week.endDate);
         return !assessments.some(item =>
-          (reviewBeforeAssessment && dateRangesOverlap(weekStart, weekEnd, item.reviewStart, item.reviewEnd)) ||
           (item.assessmentDate >= weekStart && item.assessmentDate <= weekEnd)
-        );
+        ) && week.capacity > 0;
       });
-      if (!teachingWeeks.length) return showToast('扣除評量與複習週後，沒有可安排單元的授課週。', true);
+      if (!teachingWeeks.length) return showToast('扣除評量與複習節數後，沒有可安排單元的授課週。', true);
 
       const available = teachingWeeks.reduce((sum, week) => sum + week.capacity, 0);
       const reserve = Math.max(1, Math.round(available * 0.1));
@@ -1909,15 +2510,14 @@
         const week = teachingWeeks[Math.min(weekIndex, teachingWeeks.length - 1)];
         rows.push({ id: `progress-${Date.now()}-buffer`, week: '未分配', content: '尚未指定單元／可安排補充教學與彈性活動', periods: available - used, startDate: week.startDate, endDate: teachingWeeks[teachingWeeks.length - 1].endDate, type: 'buffer' });
       }
-      assessments.forEach(item => {
-        if (reviewBeforeAssessment) {
-          const reviewWeeks = buildTeachingWeeks(formatLocalDate(item.reviewStart), formatLocalDate(item.reviewEnd), weeklyPeriods, holidayMap);
-          const reviewPeriods = reviewWeeks.reduce((sum, week) => sum + week.capacity, 0);
-          const reviewHolidays = reviewWeeks.flatMap(week => week.holidayNames || []);
+      reviewPlans.forEach(item => {
+        if (reviewPeriodsBeforeAssessment > 0) {
+          const chronological = [...item.allocations].sort((a, b) => a.startDate.localeCompare(b.startDate));
+          const reviewHolidays = chronological.flatMap(week => week.holidayNames || []);
           rows.push({
-            id: `progress-${Date.now()}-review-${item.index}`, week: `第 ${item.index} 次評量前一週`,
-            content: `第 ${item.index} 次定期評量複習${reviewHolidays.length ? `（遇 ${reviewHolidays.length} 個休假日）` : ''}`, periods: reviewPeriods,
-            startDate: formatLocalDate(item.reviewStart), endDate: formatLocalDate(item.reviewEnd), type: 'review'
+            id: `progress-${Date.now()}-review-${item.index}`, week: `第 ${item.index} 次評量前 ${reviewPeriodsBeforeAssessment} 節`,
+            content: `第 ${item.index} 次定期評量複習${reviewHolidays.length ? `（遇 ${reviewHolidays.length} 個休假日）` : ''}`, periods: reviewPeriodsBeforeAssessment,
+            startDate: chronological[0].startDate, endDate: chronological[chronological.length - 1].endDate, type: 'review'
           });
         }
         rows.push({
@@ -1934,6 +2534,7 @@
         syncedQueues.get(key).push({ eventId: row.calendarEventId, clientKey: row.calendarClientKey || row.id });
       });
       rows.forEach(row => {
+        row.subject = roleWorkspaceState.activeProgressSubject || $('progressSubject').value;
         const queue = syncedQueues.get(`${row.type || 'teaching'}｜${row.content || ''}`);
         if (queue?.length) {
           const synced = queue.shift();
@@ -1942,17 +2543,20 @@
         }
       });
       roleWorkspaceState.progressRows = rows;
+      saveTeachingProgress({ silent: true });
       renderTeachingProgress();
-      showToast(reviewBeforeAssessment
-        ? `AI 已安排 ${units.length} 個單元，並在每次定期評量前保留一週複習。`
-        : `AI 已安排 ${units.length} 個單元；依設定不另外保留評量前複習週。`);
+      showToast(reviewPeriodsBeforeAssessment > 0
+        ? `AI 已安排 ${units.length} 個單元，並在每次定期評量前保留 ${reviewPeriodsBeforeAssessment} 節複習。`
+        : `AI 已安排 ${units.length} 個單元；依設定不另外保留評量前複習節數。`);
     }
 
     function addTeachingProgressRow() {
       roleWorkspaceState.progressRows.push({
         id: `progress-manual-${Date.now()}`, week: '自訂', content: '', periods: 1,
-        startDate: $('progressStartDate').value, endDate: $('progressStartDate').value, type: 'manual'
+        startDate: $('progressStartDate').value, endDate: $('progressStartDate').value, type: 'manual',
+        subject: roleWorkspaceState.activeProgressSubject || $('progressSubject').value
       });
+      saveTeachingProgress({ silent: true });
       renderTeachingProgress();
     }
 
@@ -1966,7 +2570,7 @@
       const calendarDirtyCount = rows.filter(row => row.calendarNeedsSync).length;
       const overflow = rows.some(row => row.overflow || row.week === '超出期限');
       $('progressPlanSummary').textContent = rows.length
-        ? `${$('progressSubject').value || '科目'}｜已排 ${totalPeriods} 節${unassignedPeriods ? `・尚有 ${unassignedPeriods} 節未分配` : ''}・${assessmentCount} 次定期評量${calendarSyncedCount ? `・📅 已同步 ${calendarSyncedCount} 項` : ''}${calendarDirtyCount ? `・↻ ${calendarDirtyCount} 項待重新同步` : ''}${overflow ? '｜⚠ 有內容超出完成期限' : hasReviewWeeks ? '｜每次評量前保留 1 週複習' : '｜未保留評量前複習週'}`
+        ? `${$('progressSubject').value || '科目'}｜已排 ${totalPeriods} 節${unassignedPeriods ? `・尚有 ${unassignedPeriods} 節未分配` : ''}・${assessmentCount} 次定期評量${calendarSyncedCount ? `・📅 已同步 ${calendarSyncedCount} 項` : ''}${calendarDirtyCount ? `・↻ ${calendarDirtyCount} 項待重新同步` : ''}${overflow ? '｜⚠ 有內容超出完成期限' : hasReviewWeeks ? `｜每次評量前保留 ${Math.max(0, Number($('reviewPeriodsBeforeAssessment').value) || 0)} 節複習` : '｜未保留評量前複習節數'}`
         : '尚未建立教學進度。';
       $('progressPlanList').innerHTML = rows.length ? rows.map(row => {
         const locked = row.type === 'review' || row.type === 'assessment';
@@ -1979,9 +2583,15 @@
           <div class="progress-date"><input class="input" data-progress-field="startDate" type="date" value="${escapeHtml(row.startDate || '')}" aria-label="開始日期" ${locked ? 'disabled' : ''}><input class="input" data-progress-field="endDate" type="date" value="${escapeHtml(row.endDate || '')}" aria-label="完成日期" ${locked ? 'disabled' : ''}></div>
           ${locked ? '<span class="progress-remove" aria-label="系統保留時段">🔒</span>' : `<button class="mini-button progress-remove" type="button" data-remove-progress="${escapeHtml(row.id)}" aria-label="刪除此進度">×</button>`}
         </div>`;
-      }).join('') : '<div class="progress-empty">可按「手動新增」建立課程；開啟 AI 後也能自動安排進度。</div>';
+      }).join('') : `<div class="progress-empty">
+        <h3>「${escapeHtml($('progressSubject').value || '這門課')}」尚未建立進度</h3>
+        <p>這是新建立的獨立課程。你可以先輸入單元內容再排程，或直接新增一筆進度。</p>
+        <div class="progress-empty-actions">
+          <button class="secondary-button" type="button" data-empty-progress-action="units">輸入單元內容</button>
+          <button class="button" type="button" data-empty-progress-action="manual">＋ 新增第一筆進度</button>
+        </div>
+      </div>`;
       if (state.viewMode === 'calendar') renderCalendar();
-      renderDeskpetDashboard();
     }
 
     function progressTypeLabel(type) {
@@ -1989,7 +2599,7 @@
     }
 
     function openProgressEditModal(progressId) {
-      const row = roleWorkspaceState.progressRows.find(item => item.id === progressId);
+      const row = activateTeachingProgressRow(progressId);
       if (!row) return;
       state.progressEditingId = row.id;
       $('progressEditContent').value = row.content || '';
@@ -2033,21 +2643,14 @@
       showToast(`已更新「${row.content}」${row.calendarNeedsSync ? '；請重新同步 Google 日曆。' : '。'}`);
     }
 
-    function saveTeachingProgress() {
-      const schoolHolidays = normalizeSchoolHolidayRows(roleWorkspaceState.schoolHolidays);
-      const payload = {
-        subject: $('progressSubject').value.trim(), startDate: $('progressStartDate').value,
-        endDate: $('progressEndDate').value, weeklyPeriods: Number($('progressWeeklyPeriods').value) || 0,
-        reviewBeforeAssessment: $('reviewBeforeAssessment').checked,
-        assessmentScope: $('assessmentScope').value,
-        useOfficialHolidays: $('useOfficialHolidays').checked,
-        schoolHolidays,
-        schoolHolidayDates: schoolHolidays.filter(row => row.date).map(row => `${row.date}｜${row.reason || '學校自訂假日／停課'}`).join('\n'),
-        units: $('progressUnits').value, assessmentDates: getAllAssessmentDates(), rows: roleWorkspaceState.progressRows
-      };
-      try { localStorage.setItem('grade6TeachingProgress', JSON.stringify(payload)); }
+    function saveTeachingProgress(options = {}) {
+      const subject = roleWorkspaceState.activeProgressSubject || $('progressSubject').value.trim();
+      if (!subject) return showToast('請先新增並選擇任教課程。', true);
+      const payload = captureTeachingProgressPlan(subject);
+      roleWorkspaceState.progressPlans[subject] = payload;
+      try { persistTeachingProgressPlans(); }
       catch (error) { return showToast('瀏覽器無法儲存教學進度。', true); }
-      showToast(`已儲存「${payload.subject || '未命名科目'}」教學進度。`);
+      if (!options.silent) showToast(`已將「${payload.subject || '未命名科目'}」進度存檔到系統日曆。`);
     }
 
     async function syncTeachingProgressCalendar() {
@@ -2637,6 +3240,108 @@
       }
     }
 
+    const secretaryNotesState = { notes: [] };
+
+    function normalizeSecretaryNote(note, source = 'web') {
+      if (!note || typeof note !== 'object') return null;
+      const text = String(note.text || note.attachment_text || '').trim().slice(0, 3000);
+      if (!text) return null;
+      const createdAt = new Date(note.createdAt || note.created_at || Date.now());
+      const attachments = Array.isArray(note.attachments)
+        ? note.attachments.map(name => String(name || '').trim().slice(0, 180)).filter(Boolean).slice(0, 20)
+        : [];
+      return {
+        id: String(note.id || `note-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`).slice(0, 100),
+        text,
+        attachments,
+        createdAt: Number.isNaN(createdAt.getTime()) ? new Date().toISOString() : createdAt.toISOString(),
+        source: note.source === 'desktop' || source === 'desktop' ? 'desktop' : 'web'
+      };
+    }
+
+    function loadSecretaryNotes() {
+      const stored = readLocalPreviewArray(LOCAL_PREVIEW_STORAGE_KEYS.secretaryNotes, []);
+      secretaryNotesState.notes = stored.map(note => normalizeSecretaryNote(note, note?.source)).filter(Boolean).slice(0, 500);
+      renderSecretaryNotes();
+    }
+
+    function saveSecretaryNotes(message = '') {
+      try {
+        writeLocalPreviewJson(LOCAL_PREVIEW_STORAGE_KEYS.secretaryNotes, secretaryNotesState.notes.slice(0, 500));
+        if (message) showToast(message);
+      } catch (error) {
+        showToast(error.message || '記事無法寫入瀏覽器本機空間。', true);
+        throw error;
+      }
+      renderSecretaryNotes();
+      updateLocalStorageStatus();
+    }
+
+    function renderSecretaryNotes() {
+      const host = $('secretaryNoteList');
+      if (!host) return;
+      $('secretaryNoteCount').textContent = secretaryNotesState.notes.length;
+      if (!secretaryNotesState.notes.length) {
+        host.innerHTML = '<div class="secretary-note-empty">目前沒有記事。可直接新增，或匯入桌面小綿助的資料檔。</div>';
+        return;
+      }
+      host.innerHTML = secretaryNotesState.notes.map(note => {
+        const date = new Date(note.createdAt);
+        const time = Number.isNaN(date.getTime()) ? '' : date.toLocaleString('zh-TW');
+        const attachmentText = note.attachments.length ? `・附件 ${note.attachments.map(escapeHtml).join('、')}` : '';
+        const source = note.source === 'desktop' ? '桌面小綿助' : '網頁';
+        return `<article class="secretary-note-item"><div><div class="secretary-note-text">${escapeHtml(note.text)}</div><div class="secretary-note-meta">${escapeHtml(time)}・${source}${attachmentText}</div></div><button class="mini-button" type="button" data-delete-secretary-note="${escapeHtml(note.id)}">刪除</button></article>`;
+      }).join('');
+    }
+
+    function addSecretaryNote() {
+      const text = $('secretaryNoteInput').value.trim();
+      if (!text) return showToast('請先輸入記事內容。', true);
+      const note = normalizeSecretaryNote({ text, createdAt: new Date().toISOString() }, 'web');
+      if (!note) return;
+      secretaryNotesState.notes.unshift(note);
+      try {
+        saveSecretaryNotes('記事已保存在目前瀏覽器。');
+        $('secretaryNoteInput').value = '';
+      } catch (error) {
+        secretaryNotesState.notes = secretaryNotesState.notes.filter(item => item.id !== note.id);
+      }
+    }
+
+    async function importSecretaryNotes(file) {
+      if (!file) return;
+      try {
+        if (file.size > 5 * 1024 * 1024) throw new Error('記事檔超過 5 MB，已停止匯入。');
+        const payload = JSON.parse(await file.text());
+        const sourceNotes = Array.isArray(payload.notes) ? payload.notes : [];
+        if (!sourceNotes.length) throw new Error('找不到可匯入的記事。請選擇桌面小綿助的 secretary_data.json 或網頁記事匯出檔。');
+        const imported = sourceNotes.map(note => normalizeSecretaryNote(note, 'desktop')).filter(Boolean).slice(0, 500);
+        const existing = new Set(secretaryNotesState.notes.map(note => `${note.createdAt}|${note.text}`));
+        const additions = imported.filter(note => !existing.has(`${note.createdAt}|${note.text}`));
+        if (!additions.length) return showToast('記事都已存在，沒有重複匯入。');
+        secretaryNotesState.notes = [...additions, ...secretaryNotesState.notes]
+          .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt))).slice(0, 500);
+        saveSecretaryNotes(`已匯入 ${additions.length} 則桌面記事；本機附件路徑不會帶入網頁。`);
+      } catch (error) {
+        showToast(error.message || '記事檔讀取失敗。', true);
+      } finally {
+        $('secretaryNotesFileInput').value = '';
+      }
+    }
+
+    function exportSecretaryNotes() {
+      const payload = { kind: 'teacher-dashboard-secretary-notes', version: 1, exportedAt: new Date().toISOString(), notes: secretaryNotesState.notes };
+      const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `小綿助記事-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      showToast(`已匯出 ${secretaryNotesState.notes.length} 則記事。`);
+    }
+
     function formatStorageBytes(bytes) {
       const value = Number(bytes) || 0;
       if (value < 1024) return `${value} B`;
@@ -2741,8 +3446,6 @@
       $('sumDueToday').textContent = summary.dueToday || 0;
       $('sumOverdue').textContent = summary.overdue || 0;
       $('sumCompleted').textContent = summary.completed || 0;
-      updateDeskpetAmbient(summary);
-      renderDeskpetDashboard();
     }
 
     function parseDateOnly(value) {
@@ -2825,9 +3528,13 @@
           ? `<a class="mini-button" href="${escapeHtml(task.detailUrl)}" target="_blank" rel="noopener">資料</a>`
           : '';
         const isChild = Boolean(task.parentTaskId);
+        const archiveLink = task.status === '已完成' && !isChild
+          ? `<button class="mini-button mini-button-danger" type="button" data-action="archive" data-id="${escapeHtml(task.taskId)}">封存</button>`
+          : '';
         const projectChildren = state.tasks.filter(item => item.parentTaskId === task.taskId);
         const completedChildren = projectChildren.filter(item => item.status === '已完成').length;
         const rowClass = isChild ? 'project-child' : projectChildren.length || task.taskType === '主任務' ? 'project-parent' : '';
+        const taskNameClass = isChild && task.status === '已完成' ? 'task-name is-completed' : 'task-name';
         const progress = projectChildren.length
           ? `<div class="project-progress">專案進度 ${completedChildren}/${projectChildren.length}</div>`
           : '';
@@ -2839,7 +3546,7 @@
           <tr class="${rowClass}">
             <td><span class="badge ${priorityClass}">${escapeHtml(task.priority)}</span></td>
             <td>
-              <div class="project-task-name">${isChild ? '<span class="project-connector">└</span>' : ''}<div>${levelLabel}<div class="task-name">${escapeHtml(task.name)}</div>${progress}</div></div>
+              <div class="project-task-name">${isChild ? '<span class="project-connector">└</span>' : ''}<div>${levelLabel}<div class="${taskNameClass}">${escapeHtml(task.name)}</div>${progress}</div></div>
               <div style="margin-top:5px;color:#7a8793;font-size:12px">${escapeHtml([taskWorkAxis(task), task.category].filter(Boolean).join('・'))}｜${escapeHtml(task.taskId)}</div>
             </td>
             <td><span class="badge ${statusClass}">${escapeHtml(task.status)}</span></td>
@@ -2850,6 +3557,7 @@
               <div class="row-actions">
                 <button class="mini-button" type="button" data-action="edit" data-id="${escapeHtml(task.taskId)}">編輯</button>
                 <button class="mini-button" type="button" data-action="status" data-status="${escapeHtml(quickStatus)}" data-id="${escapeHtml(task.taskId)}">${task.status === '已完成' ? '重開' : '完成'}</button>
+                ${archiveLink}
                 ${detailLink}
               </div>
             </td>
@@ -2859,7 +3567,7 @@
 
       $('taskTableWrap').innerHTML = `
         <table>
-          <thead><tr><th>優先</th><th>學年工作</th><th>狀態</th><th>期限</th><th>下一步</th><th>主責教師</th><th>操作</th></tr></thead>
+          <thead><tr><th>優先</th><th>任務</th><th>狀態</th><th>期限</th><th>下一步</th><th>主責教師</th><th>操作</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
       `;
@@ -2887,9 +3595,9 @@
       const priority = $('priorityFilter').value;
       const due = $('dueFilter').value;
       const showProgress = !status && !priority && (!category || category === '教學');
-      const progressRows = showProgress ? roleWorkspaceState.progressRows.filter(row => {
+      const progressRows = showProgress ? getAllTeachingProgressRows().filter(row => {
         if (!row.startDate || row.overflow || row.type === 'buffer') return false;
-        const haystack = [$('progressSubject').value, row.content, row.week, '教學進度'].join(' ').toLowerCase();
+        const haystack = [row.subject, row.content, row.week, '教學進度'].join(' ').toLowerCase();
         if (keyword && !haystack.includes(keyword)) return false;
         if (due === 'today' && !isToday(row.startDate)) return false;
         if (due === 'week' && !isWithinWeek(row.startDate)) return false;
@@ -2923,7 +3631,7 @@
             const classes = ['calendar-task', 'progress', row.type || 'teaching'];
             if (row.calendarNeedsSync) classes.push('needs-sync');
             const range = row.endDate && row.endDate !== row.startDate ? `｜至 ${row.endDate.replace(/-/g, '/')}` : '';
-            const subject = $('progressSubject').value || '課程';
+            const subject = row.subject || '課程';
             return `<button class="${classes.join(' ')}" type="button" data-calendar-progress-id="${escapeHtml(row.id)}" title="${escapeHtml(`${subject}｜${row.content}${range}｜可點擊編輯或拖曳改期`)}">${escapeHtml(`📘 ${subject}｜${row.content}${row.periods ? `（${row.periods}節）` : ''}`)}</button>`;
           }
           const task = item.task;
@@ -3070,7 +3778,7 @@
     }
 
     function moveCalendarProgress(progressId, newStartDate) {
-      const row = roleWorkspaceState.progressRows.find(item => item.id === progressId);
+      const row = activateTeachingProgressRow(progressId);
       if (!row || !/^\d{4}-\d{2}-\d{2}$/.test(newStartDate)) return;
       const oldStart = parseDateOnly(row.startDate);
       const oldEnd = parseDateOnly(row.endDate || row.startDate);
@@ -3301,12 +4009,42 @@
     async function quickStatus(taskId, status) {
       setLoading(true, '正在更新任務狀態……');
       try {
+        const targetTask = state.tasks.find(task => task.taskId === taskId);
+        const isChildTask = Boolean(targetTask && targetTask.parentTaskId);
         const result = await serverCall('updateTaskStatus', taskId, status, state.csrfToken);
         state.tasks = result.tasks || [];
         state.filteredTasks = [...state.tasks];
         renderSummary(result.summary || {});
         applyFilters();
-        showToast(status === '已完成' ? '任務已完成。' : '任務已重新開啟。');
+        showToast(status === '已完成'
+          ? `${isChildTask ? '子任務' : '任務'}已完成；主任務狀態維持不變。`
+          : `${isChildTask ? '子任務' : '任務'}已重新開啟。`);
+      } catch (error) {
+        showToast(error.message, true);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    async function archiveTaskById(taskId) {
+      const targetTask = state.tasks.find(task => task.taskId === taskId);
+      const childCount = targetTask && !targetTask.parentTaskId
+        ? state.tasks.filter(task => task.parentTaskId === taskId).length
+        : 0;
+      const confirmMessage = childCount
+        ? `確定要封存主任務與下面的 ${childCount} 項子任務嗎？資料仍會保留在 Sheet 與工作紀錄中。`
+        : '確定要封存這項任務嗎？資料仍會保留在 Sheet 與工作紀錄中。';
+      if (!taskId || !window.confirm(confirmMessage)) return;
+      setLoading(true, '正在封存任務……');
+      try {
+        const result = await serverCall('archiveTask', taskId, state.csrfToken);
+        state.tasks = result.tasks || [];
+        state.filteredTasks = [...state.tasks];
+        renderSummary(result.summary || {});
+        renderTasks();
+        if ($('taskModal').classList.contains('open')) closeTaskModal();
+        const archivedCount = Number(result.archivedCount) || 1;
+        showToast(archivedCount > 1 ? `主任務與 ${archivedCount - 1} 項子任務已封存。` : '任務已封存。');
       } catch (error) {
         showToast(error.message, true);
       } finally {
@@ -3315,22 +4053,7 @@
     }
 
     async function archiveCurrentTask() {
-      const taskId = $('taskId').value;
-      if (!taskId || !window.confirm('確定要封存這項任務嗎？資料仍會保留在 Sheet 與工作紀錄中。')) return;
-      setLoading(true, '正在封存任務……');
-      try {
-        const result = await serverCall('archiveTask', taskId, state.csrfToken);
-        state.tasks = result.tasks || [];
-        state.filteredTasks = [...state.tasks];
-        renderSummary(result.summary || {});
-        renderTasks();
-        closeTaskModal();
-        showToast('任務已封存。');
-      } catch (error) {
-        showToast(error.message, true);
-      } finally {
-        setLoading(false);
-      }
+      return archiveTaskById($('taskId').value);
     }
 
     async function refreshData() {
@@ -3537,7 +4260,8 @@
       workspace: { title: '', subtitle: '', theme: 'forest', driveTitle: '系統資料庫', driveSubtitle: '集中查看本系統上傳至 Google Drive 的所有資料。' },
       teacher: { name: '', title: '', subjects: '', grade: '6', className: '', committees: '' },
       privacy: { phone: true, email: true, id: true, address: true, names: true, auto: true, customTerms: '' },
-      api: { enabled: IS_LOCAL_PREVIEW, provider: 'gemini', model: '', endpoint: 'https://generativelanguage.googleapis.com/v1beta/models' }
+      api: { enabled: IS_LOCAL_PREVIEW, provider: 'gemini', model: '', endpoint: 'https://generativelanguage.googleapis.com/v1beta/models', rememberKey: true },
+      pet: { enabled: true, autostart: false, petName: '小綿助', cheerIntervalMinutes: 5, startupDelaySeconds: 30, healthReminders: true, openingBrief: true, rememberPosition: true, quietStart: '18:00', quietEnd: '07:30', gasSyncEnabled: false, gasUrl: '', gasSyncKey: '' }
     };
     function escapeRegExp(value) {
       return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -4954,6 +5678,7 @@
         if (saved && saved.workspace) Object.assign(assistantSettings.workspace, saved.workspace);
         if (saved && saved.teacher) Object.assign(assistantSettings.teacher, saved.teacher);
         if (saved && saved.privacy) Object.assign(assistantSettings.privacy, saved.privacy);
+        if (saved && saved.pet) Object.assign(assistantSettings.pet, saved.pet);
         if (saved && saved.api) {
           Object.assign(assistantSettings.api, saved.api);
           if (typeof saved.api.enabled !== 'boolean') assistantSettings.api.enabled = saved.api.provider && saved.api.provider !== 'disabled';
@@ -4961,11 +5686,14 @@
       } catch (error) {
         console.warn('無法讀取本機設定', error);
       }
+      // 同步金鑰屬於桌面連線憑證，只保留在目前分頁，不寫入 localStorage 或 JSON 備份。
+      try { assistantSettings.pet.gasSyncKey = sessionStorage.getItem('xiaomianzhuGasSyncKey') || ''; }
+      catch (error) { assistantSettings.pet.gasSyncKey = ''; }
       // 預覽檔固定開啟本機規則模擬；不會呼叫或傳送資料到外部 AI API。
       if (IS_LOCAL_PREVIEW) assistantSettings.api.enabled = true;
     }
 
-    const INTERFACE_THEMES = ['forest', 'apricot', 'lavender', 'tech'];
+    const INTERFACE_THEMES = ['forest', 'apricot', 'lavender', 'tech', 'minimal'];
 
     function applyInterfaceTheme(theme) {
       const safeTheme = INTERFACE_THEMES.includes(theme) ? theme : 'forest';
@@ -4985,6 +5713,63 @@
       $('driveLibrarySubtitleDisplay').textContent = workspace.driveSubtitle || '集中查看本系統上傳至 Google Drive 的所有資料。';
     }
 
+    function applyPetPreferences() {
+      const enabled = assistantSettings.pet.enabled !== false;
+      const button = document.querySelector('[data-toolbox-target="secretaryNotesSection"]');
+      if (button) button.hidden = !enabled;
+      if (!enabled && button?.classList.contains('active')) setTeacherToolbox('');
+    }
+
+    function exportPetSettings() {
+      const pet = readSettingsForm().pet;
+      if (pet.gasSyncEnabled) {
+        if (!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(pet.gasUrl)) {
+          selectSettingsTab('pet');
+          return showToast('請填入正確的 GAS /exec 網址，再下載小綿助設定檔。', true);
+        }
+        if (pet.gasSyncKey.length < 16) {
+          selectSettingsTab('pet');
+          return showToast('小綿助同步金鑰至少需要 16 個字元。', true);
+        }
+      }
+      const payload = {
+        kind: 'xiaomianzhu-desktop-settings',
+        version: 1,
+        exported_at: new Date().toISOString(),
+        settings: {
+          enabled: pet.enabled,
+          autostart: pet.autostart,
+          pet_name: pet.petName,
+          cheer_interval_minutes: pet.cheerIntervalMinutes,
+          startup_delay_seconds: pet.startupDelaySeconds,
+          health_reminders: pet.healthReminders,
+          opening_brief: pet.openingBrief,
+          remember_position: pet.rememberPosition,
+          quiet_start: pet.quietStart,
+          quiet_end: pet.quietEnd,
+          gas_sync_enabled: pet.gasSyncEnabled,
+          gas_url: pet.gasUrl,
+          gas_sync_key: pet.gasSyncKey
+        }
+      };
+      const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'xiaomianzhu_settings.json';
+      link.click();
+      URL.revokeObjectURL(url);
+      showToast('小綿助桌面設定檔已下載；請放到小綿助.exe 旁邊並啟動一次。');
+    }
+
+    function updateApiFieldVisibility() {
+      const provider = $('apiProvider').value;
+      const usesGeminiDefault = provider === 'gemini' || provider === 'disabled';
+      $('apiEndpointField').hidden = usesGeminiDefault;
+      if (provider === 'gemini') {
+        $('apiEndpoint').value = 'https://generativelanguage.googleapis.com/v1beta/models';
+      }
+    }
+
     function applySettingsToForm() {
       $('workspaceTitle').value = assistantSettings.workspace.title || '';
       $('workspaceSubtitle').value = assistantSettings.workspace.subtitle || '';
@@ -4993,7 +5778,8 @@
       $('driveLibrarySubtitle').value = assistantSettings.workspace.driveSubtitle || '';
       $('teacherName').value = assistantSettings.teacher.name || '';
       $('teacherTitle').value = assistantSettings.teacher.title || '';
-      $('teacherSubjects').value = assistantSettings.teacher.subjects || '';
+      $('teacherSubjects').value = getConfiguredTeachingCourses().join('、');
+      renderTeacherCourseManager();
       $('teacherGrade').value = assistantSettings.teacher.grade || '';
       $('teacherClass').value = assistantSettings.teacher.className || '';
       $('teacherCommittees').value = assistantSettings.teacher.committees || '';
@@ -5008,7 +5794,55 @@
       $('apiProvider').value = assistantSettings.api.provider || 'gemini';
       $('apiModel').value = assistantSettings.api.model || '';
       $('apiEndpoint').value = assistantSettings.api.endpoint || '';
-      try { $('apiKey').value = sessionStorage.getItem('grade6AssistantApiKey') || ''; } catch (error) { $('apiKey').value = ''; }
+      updateApiFieldVisibility();
+      $('rememberApiKey').checked = assistantSettings.api.rememberKey !== false;
+      $('petEnabled').checked = assistantSettings.pet.enabled !== false;
+      $('petAutostart').checked = assistantSettings.pet.autostart === true;
+      $('petName').value = assistantSettings.pet.petName || '小綿助';
+      $('petCheerInterval').value = String(assistantSettings.pet.cheerIntervalMinutes ?? 5);
+      $('petStartupDelay').value = String(assistantSettings.pet.startupDelaySeconds ?? 30);
+      $('petHealthReminders').checked = assistantSettings.pet.healthReminders !== false;
+      $('petOpeningBrief').checked = assistantSettings.pet.openingBrief !== false;
+      $('petRememberPosition').checked = assistantSettings.pet.rememberPosition !== false;
+      $('petQuietStart').value = assistantSettings.pet.quietStart || '18:00';
+      $('petQuietEnd').value = assistantSettings.pet.quietEnd || '07:30';
+      $('petGasSyncEnabled').checked = assistantSettings.pet.gasSyncEnabled === true;
+      $('petGasUrl').value = assistantSettings.pet.gasUrl || '';
+      $('petGasSyncKey').value = assistantSettings.pet.gasSyncKey || '';
+      try {
+        $('apiKey').value = localStorage.getItem('grade6AssistantApiKey') || sessionStorage.getItem('grade6AssistantApiKey') || '';
+      } catch (error) { $('apiKey').value = ''; }
+    }
+
+    function setTeacherToolbox(targetId) {
+      const content = $('teacherToolboxContent');
+      const buttons = [...document.querySelectorAll('[data-toolbox-target]')];
+      const panels = ['teachingProgressPanel', 'aiAssistantSection', 'secretaryNotesSection'];
+      const current = buttons.find(button => button.classList.contains('active'))?.dataset.toolboxTarget || '';
+      const shouldCollapse = !targetId || (current === targetId && !content.hidden);
+
+      buttons.forEach(button => {
+        const active = !shouldCollapse && button.dataset.toolboxTarget === targetId;
+        button.classList.toggle('active', active);
+        button.setAttribute('aria-expanded', String(active));
+      });
+      content.hidden = shouldCollapse;
+      panels.forEach(id => {
+        const panel = $(id);
+        if (panel) panel.style.display = !shouldCollapse && id === targetId ? '' : 'none';
+      });
+      if (shouldCollapse) return;
+
+      if (targetId === 'teachingProgressPanel') {
+        $('teachingProgressBody').hidden = false;
+        $('toggleTeachingProgressButton').textContent = '收合';
+      }
+      if (targetId === 'secretaryNotesSection') {
+        $('secretaryNotesBody').hidden = false;
+        $('toggleSecretaryNotesButton').textContent = '收合';
+        $('toggleSecretaryNotesButton').setAttribute('aria-expanded', 'true');
+      }
+      window.setTimeout(() => $(targetId)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 0);
     }
 
     function updateAiConnectionNote() {
@@ -5020,12 +5854,15 @@
       });
       $('aiAssistantSection').hidden = !enabled;
       document.querySelectorAll('[data-ai-only]').forEach(element => { element.hidden = !enabled; });
+      const aiToolButton = document.querySelector('[data-toolbox-target="aiAssistantSection"]');
+      if (!enabled && aiToolButton?.classList.contains('active')) setTeacherToolbox('');
       $('teachingProgressSubtitle').textContent = enabled
         ? '可手動安排，或交由 AI 依期限、節數與複習彈性產生草案。'
         : '可手動新增、編輯進度並同步到 Google 日曆；開啟 AI 後可使用自動排程。';
       if (!state.teachingFoldInitialized) {
-        $('teachingProgressBody').hidden = !enabled;
-        $('toggleTeachingProgressButton').textContent = $('teachingProgressBody').hidden ? '展開' : '收合';
+        // 教學進度資料仍會呈現，但首次進入工作台先收合，避免長表單推開任務清單。
+        $('teachingProgressBody').hidden = true;
+        $('toggleTeachingProgressButton').textContent = '展開';
         state.teachingFoldInitialized = true;
       }
       renderRoleWorkspace();
@@ -5035,6 +5872,7 @@
     function openSettings() {
       applySettingsToForm();
       $('settingsModal').classList.add('open');
+      window.setTimeout(() => renderTeacherCourseManager(), 0);
     }
 
     function closeSettings() {
@@ -5063,7 +5901,7 @@
         teacher: {
           name: $('teacherName').value.trim(),
           title: $('teacherTitle').value.trim(),
-          subjects: $('teacherSubjects').value.trim(),
+          subjects: getConfiguredTeachingCourses().join('、'),
           grade: $('teacherGrade').value,
           className: $('teacherClass').value.trim(),
           committees: $('teacherCommittees').value.trim()
@@ -5081,7 +5919,23 @@
           enabled: $('aiEnabled').checked,
           provider: $('apiProvider').value,
           model: $('apiModel').value.trim(),
-          endpoint: $('apiEndpoint').value.trim()
+          endpoint: $('apiEndpoint').value.trim(),
+          rememberKey: $('rememberApiKey').checked
+        },
+        pet: {
+          enabled: $('petEnabled').checked,
+          autostart: $('petAutostart').checked,
+          petName: $('petName').value.trim().slice(0, 12) || '小綿助',
+          cheerIntervalMinutes: Math.max(0, Number($('petCheerInterval').value) || 0),
+          startupDelaySeconds: Math.max(0, Number($('petStartupDelay').value) || 0),
+          healthReminders: $('petHealthReminders').checked,
+          openingBrief: $('petOpeningBrief').checked,
+          rememberPosition: $('petRememberPosition').checked,
+          quietStart: $('petQuietStart').value || '18:00',
+          quietEnd: $('petQuietEnd').value || '07:30',
+          gasSyncEnabled: $('petGasSyncEnabled').checked,
+          gasUrl: $('petGasUrl').value.trim(),
+          gasSyncKey: $('petGasSyncKey').value.trim()
         }
       };
     }
@@ -5097,20 +5951,36 @@
       Object.assign(assistantSettings.teacher, next.teacher);
       Object.assign(assistantSettings.privacy, next.privacy);
       Object.assign(assistantSettings.api, next.api);
+      Object.assign(assistantSettings.pet, next.pet);
       try {
-        localStorage.setItem('grade6AssistantSettings', JSON.stringify(assistantSettings));
+        const persistedSettings = JSON.parse(JSON.stringify(assistantSettings));
+        persistedSettings.pet.gasSyncKey = '';
+        localStorage.setItem('grade6AssistantSettings', JSON.stringify(persistedSettings));
+        if (next.pet.gasSyncKey) sessionStorage.setItem('xiaomianzhuGasSyncKey', next.pet.gasSyncKey);
+        else sessionStorage.removeItem('xiaomianzhuGasSyncKey');
         const key = $('apiKey').value.trim();
-        if (key) sessionStorage.setItem('grade6AssistantApiKey', key);
-        else sessionStorage.removeItem('grade6AssistantApiKey');
+        if (key && next.api.rememberKey) {
+          localStorage.setItem('grade6AssistantApiKey', key);
+          sessionStorage.removeItem('grade6AssistantApiKey');
+        } else if (key) {
+          sessionStorage.setItem('grade6AssistantApiKey', key);
+          localStorage.removeItem('grade6AssistantApiKey');
+        } else {
+          localStorage.removeItem('grade6AssistantApiKey');
+          sessionStorage.removeItem('grade6AssistantApiKey');
+        }
       } catch (error) {
         showToast('瀏覽器不允許儲存本機設定。', true);
         return;
       }
       $('redactionPreview').hidden = true;
       updateAiConnectionNote();
+      applyPetPreferences();
       applyWorkspaceBranding();
       closeSettings();
-      showToast('設定已儲存；API 金鑰只保留在目前瀏覽器工作階段。');
+      showToast(next.api.rememberKey
+        ? '設定已儲存；API 金鑰會保留在這台電腦的目前瀏覽器。'
+        : '設定已儲存；API 金鑰只保留到關閉此瀏覽器分頁。');
     }
 
     function checkApiSettings() {
@@ -5136,7 +6006,10 @@
 
     function buildBackupPayload() {
       const safeSettings = readSettingsForm();
+      safeSettings.pet.gasSyncKey = '';
       const schoolHolidays = normalizeSchoolHolidayRows(roleWorkspaceState.schoolHolidays);
+      const activeSubject = roleWorkspaceState.activeProgressSubject || $('progressSubject').value;
+      if (activeSubject) roleWorkspaceState.progressPlans[activeSubject] = captureTeachingProgressPlan(activeSubject);
       return {
         kind: 'grade6-team-dashboard-backup',
         version: 1,
@@ -5144,11 +6017,14 @@
         tasks: state.tasks,
         assistantSettings: safeSettings,
         promptTemplates: aiAssistantState.promptTemplates,
+        secretaryNotes: secretaryNotesState.notes,
         selectedRoles: [...roleWorkspaceState.selectedRoles],
+        teachingProgressBySubject: { version: 2, activeSubject, plans: roleWorkspaceState.progressPlans },
         teachingProgress: {
           subject: $('progressSubject').value.trim(), startDate: $('progressStartDate').value,
-          endDate: $('progressEndDate').value, weeklyPeriods: Number($('progressWeeklyPeriods').value) || 0,
-          reviewBeforeAssessment: $('reviewBeforeAssessment').checked,
+          endDate: $('progressEndDate').value, weeklyPeriods: getWeeklyPeriodTotal(), weekdayPeriods: getWeekdayPeriods(),
+          defaultUnitPeriods: Math.max(1, Number($('defaultUnitPeriods').value) || 5),
+          reviewPeriodsBeforeAssessment: Math.max(0, Number($('reviewPeriodsBeforeAssessment').value) || 0),
           assessmentScope: $('assessmentScope').value,
           useOfficialHolidays: $('useOfficialHolidays').checked,
           schoolHolidays,
@@ -5191,6 +6067,7 @@
         if (backup.assistantSettings && backup.assistantSettings.teacher) Object.assign(assistantSettings.teacher, backup.assistantSettings.teacher);
         if (backup.assistantSettings && backup.assistantSettings.privacy) Object.assign(assistantSettings.privacy, backup.assistantSettings.privacy);
         if (backup.assistantSettings && backup.assistantSettings.api) Object.assign(assistantSettings.api, backup.assistantSettings.api);
+        if (backup.assistantSettings && backup.assistantSettings.pet) Object.assign(assistantSettings.pet, backup.assistantSettings.pet);
         if (Array.isArray(backup.promptTemplates) && backup.promptTemplates.length) {
           aiAssistantState.promptTemplates = backup.promptTemplates
             .filter(item => item && item.id && item.name && item.prompt)
@@ -5199,30 +6076,34 @@
           savePromptTemplates();
           renderPromptTemplates();
         }
+        if (Array.isArray(backup.secretaryNotes)) {
+          secretaryNotesState.notes = backup.secretaryNotes
+            .map(note => normalizeSecretaryNote(note, note?.source))
+            .filter(Boolean)
+            .slice(0, 500);
+          saveSecretaryNotes();
+        }
         if (Array.isArray(backup.selectedRoles) && backup.selectedRoles.some(role => ROLE_LABELS[role])) {
           roleWorkspaceState.selectedRoles = new Set(backup.selectedRoles.filter(role => ROLE_LABELS[role]));
           try { localStorage.setItem('grade6SelectedRoles', JSON.stringify([...roleWorkspaceState.selectedRoles])); } catch (error) {}
         }
-        if (backup.teachingProgress && typeof backup.teachingProgress === 'object') {
+        if (backup.teachingProgressBySubject?.plans && typeof backup.teachingProgressBySubject.plans === 'object') {
+          roleWorkspaceState.progressPlans = {};
+          Object.entries(backup.teachingProgressBySubject.plans).forEach(([subject, plan]) => {
+            ensureProgressCourseOption(subject);
+            roleWorkspaceState.progressPlans[subject] = normalizeTeachingProgressPlan(plan, subject);
+          });
+          const activeSubject = backup.teachingProgressBySubject.activeSubject || Object.keys(roleWorkspaceState.progressPlans)[0] || $('progressSubject').value;
+          applyTeachingProgressPlan(roleWorkspaceState.progressPlans[activeSubject], activeSubject);
+          try { persistTeachingProgressPlans(); } catch (error) {}
+          renderRoleWorkspace();
+          renderTeachingProgress();
+        } else if (backup.teachingProgress && typeof backup.teachingProgress === 'object') {
           const plan = backup.teachingProgress;
-          $('progressSubject').value = plan.subject || '';
-          $('progressStartDate').value = plan.startDate || '';
-          $('progressEndDate').value = plan.endDate || '';
-          $('progressWeeklyPeriods').value = plan.weeklyPeriods || 5;
-          $('reviewBeforeAssessment').checked = plan.reviewBeforeAssessment !== false;
-          $('assessmentScope').value = ['1', '2', '3', 'all'].includes(String(plan.assessmentScope)) ? String(plan.assessmentScope) : 'all';
-          $('useOfficialHolidays').checked = plan.useOfficialHolidays !== false;
-          roleWorkspaceState.schoolHolidays = normalizeSchoolHolidayRows(
-            Array.isArray(plan.schoolHolidays) ? plan.schoolHolidays : parseSchoolHolidayText(plan.schoolHolidayDates || '')
-          );
-          renderSchoolHolidayRows();
-          $('progressUnits').value = plan.units || '';
-          const assessmentDates = Array.isArray(plan.assessmentDates) ? plan.assessmentDates : [];
-          $('assessmentDate1').value = assessmentDates[0] || '';
-          $('assessmentDate2').value = assessmentDates[1] || '';
-          $('assessmentDate3').value = assessmentDates[2] || '';
-          roleWorkspaceState.progressRows = Array.isArray(plan.rows) ? plan.rows.slice(0, 120) : [];
-          try { localStorage.setItem('grade6TeachingProgress', JSON.stringify(plan)); } catch (error) {}
+          const subject = plan.subject || $('progressSubject').value || '數學';
+          roleWorkspaceState.progressPlans = { [subject]: normalizeTeachingProgressPlan(plan, subject) };
+          applyTeachingProgressPlan(roleWorkspaceState.progressPlans[subject], subject);
+          try { persistTeachingProgressPlans(); } catch (error) {}
           renderRoleWorkspace();
           renderTeachingProgress();
         }
@@ -5231,6 +6112,7 @@
         renderSummary(summarizeCurrentTasks());
         renderTasks();
         updateAiConnectionNote();
+        applyPetPreferences();
         applyWorkspaceBranding();
         closeSettings();
         showToast(`已從備份還原 ${state.tasks.length} 項任務到目前畫面。`);
@@ -5331,18 +6213,31 @@
     }
 
     async function copyGasGuide() {
-      const guide = `GAS 雲端備份與 Drive 資料庫安裝\n1. 建立 Google 試算表並開啟「擴充功能 → Apps Script」。\n2. 將本專案 Code.gs 全部貼入 Apps Script，並儲存。\n3. 依專案既有安裝流程建立必要工作表。\n4. 按「部署 → 新增部署 → 網頁應用程式」。\n5. 執行身分選「我」，存取權依學校 Workspace 政策設定。\n6. 首次使用雲端備份／上傳時，依畫面授權 Google Drive。\n7. 系統會自動建立 School Admin Dashboard/Backups 與 Workspace Files 資料夾。`;
+      const guide = `教師工作台 GAS 雲端版安裝\n\n必要檔案：Code.gs、Index.html、Board.html、Installer.html\n\n1. 在 Google Drive 建立新的 Google 試算表（例如：教師工作台資料庫）。\n2. 開啟試算表，選擇「擴充功能 → Apps Script」。\n3. 將預設指令碼改名為 Code，清空後貼入 Code.gs 的完整內容。\n4. 按「＋」新增三個 HTML 檔：Index、Board、Installer，分別貼入對應檔案內容。\n5. 儲存，回到試算表重新整理，執行「校務任務系統 → 安裝教師工作台」。\n6. 回 Apps Script，按「部署 → 新增部署 → 網頁應用程式」。執行身分選「我」，存取權依學校政策設定。\n7. 完成 Google 授權後，複製部署產生的 /exec 網址。\n8. 從 /exec 網址開啟系統，雲端備份、Drive 資料庫與跨裝置資料才會啟用。\n\n提醒：本機檔案或 Netlify 版本預設使用瀏覽器本機儲存，不會直接呼叫 google.script.run。`;
       try { await navigator.clipboard.writeText(guide); showToast('GAS 安裝步驟已複製。'); }
       catch (error) { showToast('無法存取剪貼簿，請查看專案說明。', true); }
     }
 
     loadAssistantSettings();
     applyWorkspaceBranding();
+    applyPetPreferences();
     loadPromptTemplates();
     renderPromptTemplates();
     updateAiConnectionNote();
     loadRoleWorkspace();
 
+    $('teacherToolbox').addEventListener('click', event => {
+      const button = event.target.closest('[data-toolbox-target]');
+      if (!button) return;
+      const targetId = button.dataset.toolboxTarget;
+      if (targetId === 'aiAssistantSection' && assistantSettings.api.enabled !== true) {
+        return showToast('請先到「設定 → AI 設定」開啟 AI 功能。', true);
+      }
+      if (targetId === 'teachingProgressPanel' && !roleWorkspaceState.selectedRoles.has('teacher')) {
+        return showToast('請先勾選「教師」身分。', true);
+      }
+      setTeacherToolbox(targetId);
+    });
     $('roleSwitcher').addEventListener('click', event => {
       const button = event.target.closest('[data-role]');
       if (button) toggleWorkspaceRole(button.dataset.role);
@@ -5362,18 +6257,49 @@
       const field = event.target.dataset.schoolHolidayField;
       if (!rowElement || !['date', 'reason'].includes(field)) return;
       const row = roleWorkspaceState.schoolHolidays.find(item => item.id === rowElement.dataset.schoolHolidayId);
-      if (row) row[field] = event.target.value;
+      if (row) { row[field] = event.target.value; saveTeachingProgress({ silent: true }); }
     });
     $('schoolHolidayList').addEventListener('click', event => {
       const button = event.target.closest('[data-remove-school-holiday]');
       if (!button) return;
       roleWorkspaceState.schoolHolidays = roleWorkspaceState.schoolHolidays.filter(row => row.id !== button.dataset.removeSchoolHoliday);
+      saveTeachingProgress({ silent: true });
       renderSchoolHolidayRows();
     });
-    $('progressSubject').addEventListener('input', () => {
-      roleWorkspaceState.progressRows.forEach(row => { if (row.calendarEventId) row.calendarNeedsSync = true; });
-      renderTeachingProgress();
+    $('progressSubject').addEventListener('change', event => {
+      switchTeachingProgressSubject(event.target.value);
     });
+    $('manageProgressCoursesButton').addEventListener('click', () => {
+      openSettings();
+      selectSettingsTab('teacher');
+      window.setTimeout(() => {
+        $('teacherCourseNameInput').scrollIntoView({ block: 'center', behavior: 'smooth' });
+        $('teacherCourseNameInput').focus();
+      }, 80);
+    });
+    $('removeCurrentProgressCourseButton').addEventListener('click', () => {
+      const subject = roleWorkspaceState.activeProgressSubject || $('progressSubject').value;
+      if (subject) removeProgressCourse(subject);
+    });
+    $('addTeacherCourseButton').addEventListener('click', () => addProgressCourse($('teacherCourseNameInput').value));
+    $('teacherCourseNameInput').addEventListener('keydown', event => {
+      if (event.key === 'Enter') { event.preventDefault(); addProgressCourse(event.target.value); }
+    });
+    $('teacherCourseList').addEventListener('click', event => {
+      const removeButton = event.target.closest('[data-remove-teacher-course]');
+      if (removeButton) return removeProgressCourse(removeButton.dataset.removeTeacherCourse);
+      const button = event.target.closest('[data-save-teacher-course]');
+      if (!button) return;
+      const oldName = button.dataset.saveTeacherCourse;
+      const row = button.closest('[data-teacher-course]');
+      renameProgressCourse(oldName, row?.querySelector('input')?.value);
+    });
+    document.querySelectorAll('[data-weekday-period]').forEach(input => {
+      input.addEventListener('input', () => { updateWeeklyPeriodTotal(); saveTeachingProgress({ silent: true }); });
+    });
+    ['progressStartDate', 'progressEndDate', 'reviewPeriodsBeforeAssessment', 'defaultUnitPeriods',
+      'assessmentScope', 'useOfficialHolidays', 'assessmentDate1', 'assessmentDate2', 'assessmentDate3', 'progressUnits']
+      .forEach(id => $(id).addEventListener('change', () => saveTeachingProgress({ silent: true })));
     $('progressPlanList').addEventListener('input', event => {
       const row = event.target.closest('[data-progress-id]');
       const field = event.target.dataset.progressField;
@@ -5383,13 +6309,21 @@
         if (draft[field] !== event.target.value && draft.calendarEventId) draft.calendarNeedsSync = true;
         draft[field] = event.target.value;
         draft.overflow = false;
+        saveTeachingProgress({ silent: true });
         if (state.viewMode === 'calendar') renderCalendar();
       }
     });
     $('progressPlanList').addEventListener('click', event => {
+      const emptyAction = event.target.closest('[data-empty-progress-action]');
+      if (emptyAction) {
+        if (emptyAction.dataset.emptyProgressAction === 'manual') return addTeachingProgressRow();
+        $('progressUnits').scrollIntoView({ block: 'center', behavior: 'smooth' });
+        return $('progressUnits').focus();
+      }
       const button = event.target.closest('[data-remove-progress]');
       if (!button) return;
       roleWorkspaceState.progressRows = roleWorkspaceState.progressRows.filter(row => row.id !== button.dataset.removeProgress);
+      saveTeachingProgress({ silent: true });
       renderTeachingProgress();
     });
 
@@ -5463,6 +6397,7 @@
     $('cancelSettingsButton').addEventListener('click', closeSettings);
     $('saveSettingsButton').addEventListener('click', saveAssistantSettings);
     $('checkApiButton').addEventListener('click', checkApiSettings);
+    $('exportPetSettingsButton').addEventListener('click', exportPetSettings);
     $('themePicker').addEventListener('click', event => {
       const choice = event.target.closest('[data-theme-choice]');
       if (!choice) return;
@@ -5482,10 +6417,13 @@
     $('refreshDriveFilesButton').addEventListener('click', refreshDriveFiles);
     $('aiEnabled').addEventListener('change', event => {
       if (event.target.checked && $('apiProvider').value === 'disabled') $('apiProvider').value = 'gemini';
+      updateApiFieldVisibility();
     });
+    $('apiProvider').addEventListener('change', updateApiFieldVisibility);
     $('settingsModal').addEventListener('click', event => { if (event.target === $('settingsModal')) closeSettings(); });
 
     $('newTaskButton').addEventListener('click', () => openTaskModal(null));
+    $('taskPanelNewTaskButton').addEventListener('click', () => openTaskModal(null));
     $('closeModalButton').addEventListener('click', closeTaskModal);
     $('cancelButton').addEventListener('click', closeTaskModal);
     $('taskModal').addEventListener('click', event => { if (event.target === $('taskModal')) closeTaskModal(); });
@@ -5520,6 +6458,13 @@
       if (button) removeSubtaskDraft(button.dataset.removeSubtask);
     });
     $('archiveButton').addEventListener('click', archiveCurrentTask);
+    $('toggleFilterPanelButton').addEventListener('click', () => {
+      const fields = $('filterFields');
+      fields.hidden = !fields.hidden;
+      $('toggleFilterPanelButton').textContent = fields.hidden ? '展開篩選' : '收合篩選';
+      $('toggleFilterPanelButton').setAttribute('aria-expanded', String(!fields.hidden));
+      if (!fields.hidden) $('keywordFilter').focus();
+    });
     $('applyFilterButton').addEventListener('click', applyFilters);
     $('resetFilterButton').addEventListener('click', resetFilters);
     $('refreshButton').addEventListener('click', refreshData);
@@ -5536,6 +6481,7 @@
       const task = state.tasks.find(item => item.taskId === button.dataset.id);
       if (button.dataset.action === 'edit' && task) openTaskModal(task);
       if (button.dataset.action === 'status') quickStatus(button.dataset.id, button.dataset.status);
+      if (button.dataset.action === 'archive') archiveTaskById(button.dataset.id);
     });
 
     $('calendarGrid').addEventListener('click', event => {
@@ -5602,6 +6548,27 @@
     $('cancelProgressEditButton').addEventListener('click', closeProgressEditModal);
     $('saveProgressEditButton').addEventListener('click', saveProgressEdit);
     $('progressEditModal').addEventListener('click', event => { if (event.target === $('progressEditModal')) closeProgressEditModal(); });
+
+    $('toggleSecretaryNotesButton').addEventListener('click', () => {
+      const body = $('secretaryNotesBody');
+      body.hidden = !body.hidden;
+      $('toggleSecretaryNotesButton').textContent = body.hidden ? '展開' : '收合';
+      $('toggleSecretaryNotesButton').setAttribute('aria-expanded', String(!body.hidden));
+      if (!body.hidden) $('secretaryNoteInput').focus();
+    });
+    $('addSecretaryNoteButton').addEventListener('click', addSecretaryNote);
+    $('secretaryNoteInput').addEventListener('keydown', event => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') addSecretaryNote();
+    });
+    $('importSecretaryNotesButton').addEventListener('click', () => $('secretaryNotesFileInput').click());
+    $('secretaryNotesFileInput').addEventListener('change', event => importSecretaryNotes(event.target.files[0]));
+    $('exportSecretaryNotesButton').addEventListener('click', exportSecretaryNotes);
+    $('secretaryNoteList').addEventListener('click', event => {
+      const button = event.target.closest('[data-delete-secretary-note]');
+      if (!button || !window.confirm('確定刪除這則記事嗎？')) return;
+      secretaryNotesState.notes = secretaryNotesState.notes.filter(note => note.id !== button.dataset.deleteSecretaryNote);
+      saveSecretaryNotes('記事已刪除。');
+    });
 
     $('deskpetButton').addEventListener('click', () => {
       if (deskpetState.suppressClick) { deskpetState.suppressClick = false; return; }
@@ -5712,13 +6679,10 @@
         $('deskpet').style.top = petPosition.top;
       }
     } catch (error) {}
-    loadDeskpetHealth();
-    loadDeskpetInbox();
-    renderDeskpetAttachments();
+    // 網頁版舊桌寵已退役；只保留資料相容函式，不啟動動畫、健康計時器或舊面板。
+    loadSecretaryNotes();
     updateLocalStorageStatus();
     setTaskView(state.viewMode);
-    deskpetState.wander.frameRequest = window.requestAnimationFrame(deskpetWanderFrame);
-    window.setInterval(checkDeskpetHealthReminders, 60 * 1000);
     initialize();
   </script>
 </body>

@@ -1,0 +1,26 @@
+教師工作台＋小綿助｜完整套件
+
+一、系統網頁
+直接開啟 Index.html 可進入本機預覽；Board.html 是電子紙看板。
+若要多人使用，請將本資料夾部署到 Netlify，或依 README.md 將 Code.gs 部署為 Google Apps Script 網頁應用程式。
+
+二、桌面小綿助
+Windows 需要 Python 3.10 以上。先在本資料夾開啟 PowerShell，執行：
+
+   py -m pip install -r requirements.txt
+
+再雙擊「啟動小綿助秘書.bat」。桌寵會常駐在 Windows 桌面，與網頁分開執行。
+
+三、桌寵動畫預覽
+雙擊「開啟小綿助桌面預覽.bat」，可測試走動、待機、聆聽、思考、成功、警告、睡覺與拖曳。
+
+四、資料與同步
+未設定 GAS 時，網頁資料保存在瀏覽器本機；桌寵資料保存在 %APPDATA%\XiaoMianZhuSecretary\。
+設定 GAS 後，網頁才會使用 Google Sheet、Drive 與 Google 日曆等雲端功能。桌寵預設仍是獨立本機模式；可在秘書首頁的「雲端連動（選填）」填入 GAS /exec 網址與同步金鑰，啟用任務同步。
+
+桌寵的健康管理包含喝水水滴累計、可自訂間隔的起身活動進度，以及可新增多筆時間的服藥提醒。
+左鍵點桌寵只會顯示打氣話；右鍵選單開啟秘書首頁。名稱與打氣間隔可在秘書首頁自訂，預設每 5 分鐘顯示一次。
+桌寵記事與附件保存在 %APPDATA%\XiaoMianZhuSecretary\。目前 GAS 自動連動範圍是任務；記事可匯出 JSON 後匯入網頁，原始附件不會自動上傳。圖片使用 Windows OCR 辨識文字，常見文件會先抽取文字再整理。
+
+五、授權
+請保留 LICENSE 與 THIRD_PARTY_NOTICES.md；原作者、圖示、插圖與桌寵素材來源均記錄於其中。

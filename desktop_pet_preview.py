@@ -5,6 +5,7 @@ from __future__ import annotations
 import random
 import sys
 import tkinter as tk
+import traceback
 from pathlib import Path
 from typing import Callable
 
@@ -12,9 +13,12 @@ from PIL import Image, ImageTk
 
 
 TRANSPARENT = "#ff00ff"
-WINDOW_WIDTH = 190
-WINDOW_HEIGHT = 205
+WINDOW_WIDTH = 330
+WINDOW_HEIGHT = 236
 PET_SIZE = 164
+PET_TOP = 68
+BUBBLE_WRAP = 286
+ERROR_LOG = Path.home() / "XiaoMianZhuSecretary" / "desktop_pet.log"
 
 
 class DesktopPetPreview:
@@ -45,6 +49,8 @@ class DesktopPetPreview:
     def __init__(self) -> None:
         self.root = tk.Tk()
         self.root.title("小綿助桌面預覽")
+        # pythonw.exe 沒有主控台；記錄 Tk callback 例外，避免操作時看起來像閃退。
+        self.root.report_callback_exception = self._report_callback_exception
         self.root.overrideredirect(True)
         self.root.attributes("-topmost", True)
         self.root.configure(bg=TRANSPARENT)
@@ -83,11 +89,14 @@ class DesktopPetPreview:
             pady=5,
             relief="solid",
             borderwidth=1,
+            justify="center",
+            anchor="center",
+            wraplength=BUBBLE_WRAP,
         )
-        self.bubble.place(relx=0.5, y=2, anchor="n")
+        self.bubble.place(relx=0.5, y=4, anchor="n")
 
         self.pet_label = tk.Label(self.root, bg=TRANSPARENT, borderwidth=0, highlightthickness=0)
-        self.pet_label.place(x=(WINDOW_WIDTH - PET_SIZE) // 2, y=38, width=PET_SIZE, height=PET_SIZE)
+        self.pet_label.place(x=(WINDOW_WIDTH - PET_SIZE) // 2, y=PET_TOP, width=PET_SIZE, height=PET_SIZE)
 
         for widget in (self.root, self.pet_label):
             widget.bind("<ButtonPress-1>", self._start_drag)
@@ -116,6 +125,20 @@ class DesktopPetPreview:
         self.root.after(30, self._movement_tick)
         self.root.after(2600, self.start_walking)
 
+    def _report_callback_exception(self, exc_type, exc_value, exc_traceback) -> None:
+        """記錄 Tk 事件錯誤，讓桌寵繼續常駐。"""
+        try:
+            ERROR_LOG.parent.mkdir(parents=True, exist_ok=True)
+            detail = "".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+            with ERROR_LOG.open("a", encoding="utf-8") as stream:
+                stream.write(f"\n[{__import__('datetime').datetime.now().isoformat(timespec='seconds')}]\n{detail}")
+        except OSError:
+            pass
+        try:
+            self.show_bubble("剛才的操作沒有完成，桌寵仍在運作。", 2800)
+        except tk.TclError:
+            pass
+
     def _load_frames(self) -> dict[str, list[ImageTk.PhotoImage]]:
         result: dict[str, list[ImageTk.PhotoImage]] = {}
         for state, count in self.FRAME_COUNTS.items():
@@ -129,8 +152,12 @@ class DesktopPetPreview:
                 # Tk's Windows color-key transparency only removes exact magenta.
                 # Remove the very soft alpha fringe before Tk blends it with the
                 # magenta window background, otherwise a pink outline remains.
-                alpha = image.getchannel("A").point(lambda value: 255 if value >= 24 else 0)
-                image.putalpha(alpha)
+                cleaned_pixels = []
+                for red, green, blue, alpha in image.getdata():
+                    # 生成動畫曾使用洋紅底；連同抗鋸齒產生的粉紫殘邊一起移除。
+                    is_magenta_fringe = red >= 190 and blue >= 190 and green <= 165 and abs(red - blue) <= 85
+                    cleaned_pixels.append((red, green, blue, 0 if is_magenta_fringe or alpha < 32 else 255))
+                image.putdata(cleaned_pixels)
                 result[state].append(ImageTk.PhotoImage(image))
         return result
 
@@ -156,7 +183,7 @@ class DesktopPetPreview:
 
     def show_bubble(self, message: str, duration: int = 2200) -> None:
         self.bubble.configure(text=message)
-        self.bubble.place(relx=0.5, y=2, anchor="n")
+        self.bubble.place(relx=0.5, y=4, anchor="n")
         if self.bubble_timer:
             self.root.after_cancel(self.bubble_timer)
         self.bubble_timer = self.root.after(duration, self._hide_bubble)
