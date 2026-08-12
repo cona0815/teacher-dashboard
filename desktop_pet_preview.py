@@ -29,8 +29,10 @@ class DesktopPetPreview:
         "sleep": 290,
         "success": 110,
         "think": 145,
-        "walk_left": 92,
-        "walk_right": 92,
+        # Walking uses a forward-and-back pose cycle.  A slightly slower
+        # cadence reads as a gentle lamb walk instead of a hurried limp.
+        "walk_left": 108,
+        "walk_right": 108,
         "warning": 140,
     }
 
@@ -159,6 +161,14 @@ class DesktopPetPreview:
                     cleaned_pixels.append((red, green, blue, 0 if is_magenta_fringe or alpha < 32 else 255))
                 image.putdata(cleaned_pixels)
                 result[state].append(ImageTk.PhotoImage(image))
+            if state.startswith("walk_") and len(result[state]) >= 3:
+                # The supplied walk drawings progress from an extended pose
+                # into a compressed pose. Jumping directly from the last
+                # drawing back to the first makes the body snap upward and
+                # looks like one injured leg. Ping-pong the poses so the body
+                # returns through the same contact positions smoothly.
+                forward = result[state]
+                result[state] = forward + forward[-2:0:-1]
         return result
 
     def run(self) -> None:
@@ -220,7 +230,9 @@ class DesktopPetPreview:
 
     def _movement_tick(self) -> None:
         if not self.paused and self.walking and not self.drag_origin:
-            self.x += self.walk_direction * 2
+            # Keep screen travel in proportion to the relaxed animation.
+            # One pixel per 30 ms avoids the previous skating/limping effect.
+            self.x += self.walk_direction
             max_x = max(0, self.screen_width - WINDOW_WIDTH)
             if self.x <= 0 or self.x >= max_x:
                 self.x = min(max(self.x, 0), max_x)
