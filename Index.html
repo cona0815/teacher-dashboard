@@ -1729,7 +1729,7 @@
             <div class="pet-download-meta"><span>Windows 可攜版</span><span>免安裝 Python</span><span>免系統管理員權限</span><span>資料只存在本機</span></div>
           </div>
           <div class="pet-download-buttons">
-            <a class="button button-dark" href="https://github.com/cona0815/teacher-dashboard/actions/workflows/build-xiaomianzhu.yml" target="_blank" rel="noopener">下載免 Python 可攜版</a>
+            <a class="button button-dark" href="https://github.com/cona0815/teacher-dashboard/releases/download/xiaomianzhu-v1.2/xiaomianzhu-windows-portable.zip" target="_blank" rel="noopener">下載免 Python 可攜版 v1.2</a>
             <button class="button button-light" type="button" id="checkPetDownloadBridgeButton">檢查是否已連線</button>
           </div>
           <details class="pet-install-guide">
@@ -1741,7 +1741,7 @@
               <li>如需套用下方偏好與自動啟動，再下載桌面設定檔並放在小綿助程式旁。</li>
             </ol>
           </details>
-          <div class="pet-download-hash">可攜版由 GitHub Actions 的乾淨 Windows 主機自動建置；發布後將在 Release 頁提供版本與 SHA-256。</div>
+          <div class="pet-download-hash">可攜版由 GitHub Actions 的乾淨 Windows 主機自動建置（39.3 MB）｜SHA-256：<code>060c9d9ec4819b69be9875bb3bc04182e3d33d098cec11ec5b476ea63888bb80</code></div>
         </article>
         <p class="settings-note">這裡管理桌面版小綿助的偏好。網頁可以保存設定與控制「小綿助記事」入口；Windows 開機自動執行需下載設定檔，讓桌面版啟動一次後套用。</p>
         <div class="setting-checks">
@@ -1866,7 +1866,7 @@
           <article class="backup-card"><h3>AI 與個人資料</h3><p>去識別化在瀏覽器執行，但自動規則可能漏判。送出 AI 前仍要人工檢查；學生姓名、電話、地址、健康、輔導與性平資料不應交給外部 AI。</p></article>
           <article class="backup-card"><h3>Windows 防毒提示</h3><p>測試版 EXE 若尚未使用受信任的程式碼簽章，Windows SmartScreen 可能顯示「無法辨識的應用程式」；這是信譽／簽章警告，不等同判定為病毒。正式分享建議簽章或上架 Microsoft Store，並提供 SHA-256 驗證碼。</p></article>
           <article class="backup-card"><h3>安全使用原則</h3><p>只從本專案正式 GitHub／Netlify 下載；不要要求使用者關閉防毒或建立整個資料夾的排除規則。若遭誤判，應提交檔案給 Microsoft 分析並重新發布，不能承諾所有學校電腦一定允許執行。</p></article>
-          <article class="backup-card"><h3>目前分享版本</h3><p>v1.1 本機安全版以 Python 原始檔與啟動批次檔提供，不含自行編譯的 EXE，也不要求系統管理員權限。部分學校可能依政策封鎖 Python、批次檔或登入自動啟動；這屬校方應用程式管制，需由資訊管理人員核准。</p></article>
+          <article class="backup-card"><h3>目前分享版本</h3><p>v1.2 Windows 可攜版由 GitHub Actions 自動建置，解壓縮後直接開啟 <code>XiaoMianZhu.exe</code>，不必安裝 Python，也不要求系統管理員權限。程式尚未購買商業程式碼簽章，部分防毒軟體仍可能因新程式信譽不足而提示；請只從本專案 Release 下載並核對 SHA-256，不要關閉防毒或設定排除。</p></article>
         </div>
       </section>
 
