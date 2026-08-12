@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' https://generativelanguage.googleapis.com http://127.0.0.1:8767; object-src 'none'; base-uri 'self'; form-action 'self'">
-  <title>六年級學年主任＋導師工作台（模擬）</title>
+  <title>國小教師工作台</title>
   <style>
     :root {
       --bg: #f4efe6;
@@ -911,8 +911,10 @@
       tasks: 'grade6PreviewTasks',
       backups: 'grade6PreviewBackups',
       driveFiles: 'grade6PreviewDriveFiles',
-      secretaryNotes: 'teacherDashboardSecretaryNotes'
+      secretaryNotes: 'teacherDashboardSecretaryNotes',
+      dataVersion: 'teacherDashboardLocalDataVersion'
     });
+    const LOCAL_PREVIEW_DATA_VERSION = 2;
     // localStorage quotas vary by browser. Keep a conservative app budget and leave
     // room for the user's other browser data; JSON export remains the full backup.
     const LOCAL_PREVIEW_STORAGE_BUDGET = 4 * 1024 * 1024;
@@ -966,6 +968,30 @@
       return true;
     }
 
+    function isLegacyPreviewDemoTask(task) {
+      if (!task || typeof task !== 'object') return false;
+      const taskId = String(task.taskId || '');
+      return String(task.ownerEmail || '').toLowerCase() === 'demo@school.edu.tw'
+        && /^G6-\d{3}(?:-\d{2})?$/.test(taskId);
+    }
+
+    function loadLocalPreviewTasks() {
+      const storedTasks = readLocalPreviewArray(LOCAL_PREVIEW_STORAGE_KEYS.tasks, []);
+      const storedVersion = Number(localStorage.getItem(LOCAL_PREVIEW_STORAGE_KEYS.dataVersion) || 0);
+      if (storedVersion >= LOCAL_PREVIEW_DATA_VERSION) return storedTasks;
+
+      // Version 2 removes only the original bundled demo records. User-created
+      // tasks, course schedules, settings and secretary notes remain untouched.
+      const cleanedTasks = storedTasks.filter(task => !isLegacyPreviewDemoTask(task));
+      try {
+        writeLocalPreviewJson(LOCAL_PREVIEW_STORAGE_KEYS.tasks, cleanedTasks);
+        localStorage.setItem(LOCAL_PREVIEW_STORAGE_KEYS.dataVersion, String(LOCAL_PREVIEW_DATA_VERSION));
+      } catch (error) {
+        // Keep the cleaned in-memory view even if this browser rejects a write.
+      }
+      return cleanedTasks;
+    }
+
     window.localPreviewStorage = {
       budgetBytes: LOCAL_PREVIEW_STORAGE_BUDGET,
       getStatus: () => {
@@ -979,25 +1005,9 @@
     };
 
     if (IS_LOCAL_PREVIEW) {
-      const previewToday = '2026-08-02';
-      const previewSeedTasks = [
-        { taskId: 'G6-001', name: '【學年】整理學年會議待決議事項', category: '學年協調', status: '進行中', priority: '高', dueDate: '2026-08-01', dueTime: '16:00', nextAction: '彙整各班需求、處室通知與共同決議題目', waitingFor: '六年級各班導師', progress: '已完成會議議程初稿', owner: '學年主任', ownerEmail: 'demo@school.edu.tw', boardDisplay: '強制顯示', sortOrder: 10, detailUrl: '' },
-        { taskId: 'G6-002', name: '【學年】回報段考日期與共同評量分工', category: '共同評量與成績', status: '等待他人', priority: '高', dueDate: '2026-08-04', dueTime: '12:00', nextAction: '收齊學年討論結果，依校內期限回覆課研組', waitingFor: '六年級導師、課研組', progress: '課程進度表已完成', owner: '學年主任', ownerEmail: 'demo@school.edu.tw', boardDisplay: '自動', sortOrder: 20, detailUrl: '' },
-        { taskId: 'G6-003', name: '【導師】檢視本班出缺席與生活適應', category: '出缺席與生活', status: '進行中', priority: '高', dueDate: '2026-08-02', dueTime: '08:30', nextAction: '關心未到校學生並完成必要聯繫', waitingFor: '家長', progress: '已確認晨間點名', owner: '本班導師', ownerEmail: 'demo@school.edu.tw', boardDisplay: '隱藏', sortOrder: 30, detailUrl: '' },
-        { taskId: 'G6-004', name: '【導師】完成本週教學進度與作業批改', category: '班級教學與作業', status: '未開始', priority: '中', dueDate: '2026-08-03', dueTime: '16:30', nextAction: '標記需補救教學與個別回饋的學生', waitingFor: '', progress: '', owner: '本班導師', ownerEmail: 'demo@school.edu.tw', boardDisplay: '自動', sortOrder: 40, detailUrl: '' },
-        { taskId: 'G6-005', name: '【導師】追蹤本班高關懷學生', category: '個別學生輔導', status: '待確認', priority: '高', dueDate: '2026-08-05', dueTime: '', nextAction: '更新觀察紀錄並與輔導室確認協作方式', waitingFor: '輔導室、家長', progress: '已完成初步晤談', owner: '本班導師', ownerEmail: 'demo@school.edu.tw', boardDisplay: '隱藏', sortOrder: 50, detailUrl: '' },
-        { taskId: 'G6-006', name: '【導師】統整本班親師聯繫事項', category: '本班親師溝通', status: '等待他人', priority: '中', dueDate: '2026-08-06', dueTime: '', nextAction: '回覆家長關於作息、評量與手機規範的問題', waitingFor: '家長', progress: '已整理共同說明', owner: '本班導師', ownerEmail: 'demo@school.edu.tw', boardDisplay: '隱藏', sortOrder: 60, detailUrl: '' },
-        { taskId: 'G6-007', name: '【學年】完成教科書評選與課程計畫彙整', category: '教科書與課程計畫', status: '未開始', priority: '中', dueDate: '2026-08-08', dueTime: '', nextAction: '依課研組表件完成版本意見與學年課程進度', waitingFor: '各科任課教師', progress: '', owner: '學年主任', ownerEmail: 'demo@school.edu.tw', boardDisplay: '自動', sortOrder: 70, detailUrl: '' },
-        { taskId: 'G6-008', name: '【學年】六年級畢業旅行規劃', category: '戶外教育與畢旅', status: '進行中', priority: '高', dueDate: '2026-11-18', dueTime: '', nextAction: '完成行程、安全、家長說明與報名作業', waitingFor: '學務處、總務處', progress: '已確認初步日期，進入方案評估', owner: '學年主任', ownerEmail: 'demo@school.edu.tw', boardDisplay: '自動', sortOrder: 80, detailUrl: '', projectId: 'G6-008', parentTaskId: '', taskType: '主任務' },
-        { taskId: 'G6-008-01', name: '確認畢旅日期、天數與候選地點', category: '戶外教育與畢旅', status: '已完成', priority: '高', dueDate: '2026-08-12', dueTime: '', nextAction: '將三個候選方案交由學年會議確認', waitingFor: '', progress: '已完成各班需求調查', owner: '學年主任', ownerEmail: 'demo@school.edu.tw', boardDisplay: '自動', sortOrder: 81, detailUrl: '', projectId: 'G6-008', parentTaskId: 'G6-008', taskType: '子任務' },
-        { taskId: 'G6-008-02', name: '彙整旅行社方案與交通安全評估', category: '戶外教育與畢旅', status: '進行中', priority: '高', dueDate: '2026-08-26', dueTime: '', nextAction: '比較費用、住宿、車輛與緊急應變方案', waitingFor: '旅行社、學務處', progress: '已收到兩家旅行社初步報價', owner: '學年主任', ownerEmail: 'demo@school.edu.tw', boardDisplay: '自動', sortOrder: 82, detailUrl: '', projectId: 'G6-008', parentTaskId: 'G6-008', taskType: '子任務' },
-        { taskId: 'G6-008-03', name: '召開家長說明會並回收參加意願', category: '戶外教育與畢旅', status: '等待他人', priority: '中', dueDate: '2026-09-10', dueTime: '', nextAction: '完成說明簡報、費用說明及同意書', waitingFor: '各班導師、家長', progress: '等待旅行社方案定案', owner: '六年級導師群', ownerEmail: 'demo@school.edu.tw', boardDisplay: '自動', sortOrder: 83, detailUrl: '', projectId: 'G6-008', parentTaskId: 'G6-008', taskType: '子任務' },
-        { taskId: 'G6-009', name: '【導師】建立本班畢業資料檢核表', category: '本班畢業事務', status: '未開始', priority: '中', dueDate: '2026-08-13', dueTime: '', nextAction: '核對學生基本資料、照片、評語與家長聯絡資訊', waitingFor: '學生、家長', progress: '', owner: '本班導師', ownerEmail: 'demo@school.edu.tw', boardDisplay: '隱藏', sortOrder: 90, detailUrl: '' },
-        { taskId: 'G6-010', name: '【學年】建立畢業成績、市長獎與獎項檢核表', category: '畢業成績與獎項', status: '未開始', priority: '高', dueDate: '2026-08-15', dueTime: '', nextAction: '向註冊組確認國小成績系統、學籍系統及校內遴選期程', waitingFor: '註冊組', progress: '先建立欄位，實際日期依校內公告更新', owner: '學年主任', ownerEmail: 'demo@school.edu.tw', boardDisplay: '自動', sortOrder: 100, detailUrl: '' },
-        { taskId: 'G6-011', name: '【導師】完成班級常規與幹部分工', category: '班級經營', status: '已完成', priority: '中', dueDate: '2026-07-31', dueTime: '', nextAction: '公告值日、打掃、午餐與路隊分工', waitingFor: '', progress: '學生已確認職務', owner: '本班導師', ownerEmail: 'demo@school.edu.tw', boardDisplay: '隱藏', sortOrder: 110, detailUrl: '' }
-      ];
-
-      let previewTasks = readLocalPreviewArray(LOCAL_PREVIEW_STORAGE_KEYS.tasks, previewSeedTasks);
+      const now = new Date();
+      const previewToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      let previewTasks = loadLocalPreviewTasks();
       let previewCloudBackups = readLocalPreviewArray(LOCAL_PREVIEW_STORAGE_KEYS.backups, []);
       let previewDriveFiles = readLocalPreviewArray(LOCAL_PREVIEW_STORAGE_KEYS.driveFiles, []);
       window.localPreviewStorage.replaceTasks = tasks => {
@@ -1016,13 +1026,13 @@
         overdue: previewTasks.filter(t => t.dueDate && t.dueDate < previewToday && !['已完成', '取消'].includes(t.status)).length,
         completed: previewTasks.filter(t => t.status === '已完成').length
       });
-      const previewResult = () => ({ tasks: previewTasks.filter(t => t.status !== '封存'), summary: previewSummary(), serverTime: '2026/08/02 10:30（模擬）' });
+      const previewResult = () => ({ tasks: previewTasks.filter(t => t.status !== '封存'), summary: previewSummary(), serverTime: new Date().toLocaleString('zh-TW', { hour12: false }) });
       const api = {
         getBootstrapData: () => ({
           ...previewResult(), csrfToken: 'local-preview', appUrl: '',
-          settings: { SYSTEM_NAME: '臺南市國小｜六年級學年主任＋導師工作台（模擬）', DEFAULT_OWNER: '六年級學年主任兼導師', DEFAULT_OWNER_EMAIL: 'demo@school.edu.tw' },
-          office: { schoolName: '臺南市○○國民小學', name: '六年級學年', roleName: '學年主任兼導師' },
-          user: { email: 'demo@school.edu.tw' },
+          settings: { SYSTEM_NAME: '教師工作台', DEFAULT_OWNER: '教師', DEFAULT_OWNER_EMAIL: '' },
+          office: { schoolName: '我的學校', name: '教師工作台', roleName: '教師' },
+          user: { email: '' },
           options: { '狀態': ['未開始', '進行中', '等待他人', '待確認', '已完成', '取消'], '類型': [...ALL_WORK_CATEGORIES], '優先級': ['高', '中', '低'], '看板顯示': ['自動', '強制顯示', '隱藏'] }
         }),
         getTasks: previewResult,
@@ -3383,7 +3393,7 @@
 
     function clearLocalPreviewData() {
       if (!IS_LOCAL_PREVIEW || !window.localPreviewStorage) return;
-      if (!window.confirm('確定清理本機離線任務、模擬備份與檔案索引嗎？請先下載 JSON 備份；清理後會重新載入示範資料。')) return;
+      if (!window.confirm('確定清理本機離線任務、備份、檔案索引與小綿助記事嗎？請先下載 JSON 備份；清理後會重新載入空白工作台。')) return;
       try {
         window.localPreviewStorage.removePreviewData();
         window.location.reload();

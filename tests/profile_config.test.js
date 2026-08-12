@@ -155,6 +155,10 @@ assert.doesNotMatch(installerHtml, /id="office"|data\.offices|let offices/, "安
 assert.match(installerHtml, /主要工作身分/, "安裝介面應改為選擇教師工作身分");
 
 const indexHtml = fs.readFileSync(path.join(projectRoot, "Index.html"), "utf8");
+assert.match(indexHtml, /let previewTasks = loadLocalPreviewTasks\(\)/, "公開版第一次開啟應載入空白本機任務，而非示範任務");
+assert.match(indexHtml, /isLegacyPreviewDemoTask/, "更新後應自動辨識並移除舊版內建示範任務");
+assert.match(indexHtml, /tasks, \[\]/, "本機任務找不到已存資料時應使用空陣列");
+assert.doesNotMatch(indexHtml, /readLocalPreviewArray\(LOCAL_PREVIEW_STORAGE_KEYS\.tasks, previewSeedTasks\)/, "不得再將內建示範任務顯示給新使用者");
 assert.match(indexHtml, /body \.deskpet, body \.deskpet-panel \{ display: none !important; \}/, "小綿助是桌面程式，不應顯示在網頁內");
 assert.match(indexHtml, /id="schoolHolidayList"/, "學校自訂假日應使用可新增的列式編輯器");
 assert.match(indexHtml, /type="date" data-school-holiday-field="date"/, "每筆學校自訂假日應使用日期選擇器");
