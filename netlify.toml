@@ -1,6 +1,13 @@
 [build]
   publish = "."
 
+# The repository keeps the original Apps Script filename `Index.html`.
+# Rewrite the site root so Netlify can still serve it as the homepage.
+[[redirects]]
+  from = "/"
+  to = "/Index.html"
+  status = 200
+
 # Teacher-first static app: browser data stays local; the desktop companion
 # communicates only through the loopback address 127.0.0.1.
 
