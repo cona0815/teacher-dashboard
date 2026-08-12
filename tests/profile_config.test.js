@@ -155,6 +155,9 @@ assert.doesNotMatch(installerHtml, /id="office"|data\.offices|let offices/, "安
 assert.match(installerHtml, /主要工作身分/, "安裝介面應改為選擇教師工作身分");
 
 const indexHtml = fs.readFileSync(path.join(projectRoot, "Index.html"), "utf8");
+assert.match(indexHtml, /#apiEndpointField\[hidden\] \{ display: none !important; \}/, "Gemini 預設端點應隱藏，只有自訂服務才顯示端點欄位");
+assert.match(indexHtml, /releases\/download\/xiaomianzhu-v1\.1\/xiaomianzhu-windows-local-v1\.1\.zip/, "小綿助設定頁應提供正式 GitHub Release 下載連結");
+assert.match(indexHtml, /id="checkPetDownloadBridgeButton"/, "小綿助下載卡片應提供本機連線檢查");
 assert.match(indexHtml, /let previewTasks = loadLocalPreviewTasks\(\)/, "公開版第一次開啟應載入空白本機任務，而非示範任務");
 assert.match(indexHtml, /isLegacyPreviewDemoTask/, "更新後應自動辨識並移除舊版內建示範任務");
 assert.match(indexHtml, /tasks, \[\]/, "本機任務找不到已存資料時應使用空陣列");

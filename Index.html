@@ -505,6 +505,17 @@
     .pet-settings-status { display: grid; gap: 5px; margin-top: 14px; padding: 13px 15px; border: 2px solid var(--line); border-radius: 14px; background: var(--primary-soft); color: var(--primary-strong); font-size: 11px; line-height: 1.55; }
     .pet-settings-status strong { font-size: 13px; }
     .pet-settings-actions { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-top: 13px; }
+    .pet-download-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px; align-items: center; margin-bottom: 15px; padding: 17px 18px; border: 2px solid var(--primary); border-radius: 17px; background: linear-gradient(135deg, var(--primary-soft), var(--surface)); box-shadow: 0 10px 24px rgba(35,73,65,.08); }
+    .pet-download-card h3 { margin: 0 0 5px; color: var(--primary-strong); font-size: 17px; }
+    .pet-download-card p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.65; }
+    .pet-download-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 9px; }
+    .pet-download-meta span { padding: 4px 8px; border-radius: 999px; background: var(--surface); color: var(--primary); font-size: 9px; font-weight: 850; }
+    .pet-download-buttons { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .pet-install-guide { grid-column: 1 / -1; border-top: 1px dashed var(--line); padding-top: 10px; }
+    .pet-install-guide summary { width: fit-content; cursor: pointer; color: var(--primary-strong); font-size: 11px; font-weight: 900; }
+    .pet-install-guide ol { margin: 9px 0 0 20px; padding: 0; color: var(--muted); font-size: 10px; line-height: 1.75; }
+    .pet-download-hash { grid-column: 1 / -1; overflow-wrap: anywhere; color: var(--muted); font-size: 8px; }
+    #apiEndpointField[hidden] { display: none !important; }
     .settings-link { color: var(--primary); font-weight: 900; }
     .cloud-list { display: grid; gap: 7px; margin-top: 10px; }
     .cloud-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 11px; border: 1.5px solid var(--line); border-radius: 11px; background: #fffefb; }
@@ -834,6 +845,8 @@
       .prompt-editor-actions { padding: 0; }
       .ai-workbench { grid-template-columns: 1fr; }
       .settings-tabs, .setting-checks, .backup-grid { grid-template-columns: 1fr; }
+      .pet-download-card { grid-template-columns: 1fr; }
+      .pet-download-buttons { justify-content: flex-start; }
       .filter-panel .filter-fields { grid-template-columns: 1fr; }
       .form-grid { grid-template-columns: 1fr; padding: 16px; }
       .field-wide { grid-column: auto; }
@@ -1709,6 +1722,27 @@
       </section>
 
       <section class="settings-panel" data-settings-panel="pet">
+        <article class="pet-download-card">
+          <div>
+            <h3>下載 Windows 桌面版小綿助</h3>
+            <p>安裝後即可常駐桌面，提供今日任務、逾期提醒、快速記事、喝水、久坐與服藥提醒，並透過本機連線與這個工作台交換資料。</p>
+            <div class="pet-download-meta"><span>本機安全版 v1.1</span><span>約 13 MB</span><span>免系統管理員權限</span><span>資料只存在本機</span></div>
+          </div>
+          <div class="pet-download-buttons">
+            <a class="button button-dark" href="https://github.com/cona0815/teacher-dashboard/releases/download/xiaomianzhu-v1.1/xiaomianzhu-windows-local-v1.1.zip">下載 Windows 版</a>
+            <button class="button button-light" type="button" id="checkPetDownloadBridgeButton">檢查是否已連線</button>
+          </div>
+          <details class="pet-install-guide">
+            <summary>查看安裝與啟動步驟</summary>
+            <ol>
+              <li>下載 ZIP 後解壓縮到自己的資料夾，不要直接在壓縮檔內執行。</li>
+              <li>先安裝 Python 3，在解壓縮資料夾執行 <code>py -m pip install -r requirements.txt</code>，再開啟「啟動小綿助秘書.bat」。</li>
+              <li>回到本頁按「檢查是否已連線」；若學校電腦封鎖 Python 或批次檔，請交由資訊管理人員確認。</li>
+              <li>如需套用下方偏好與自動啟動，再下載桌面設定檔並放在小綿助程式旁。</li>
+            </ol>
+          </details>
+          <div class="pet-download-hash">SHA-256：A64B4501085C3038B47D78898C8739524CC9139F216C5E6E4F6BC3EC39BF332D</div>
+        </article>
         <p class="settings-note">這裡管理桌面版小綿助的偏好。網頁可以保存設定與控制「小綿助記事」入口；Windows 開機自動執行需下載設定檔，讓桌面版啟動一次後套用。</p>
         <div class="setting-checks">
           <label class="check-row"><input type="checkbox" id="petEnabled" checked>開啟小綿助功能</label>
@@ -6051,8 +6085,11 @@
       const config = readSettingsForm().api;
       if (!config.enabled) return showToast('請先勾選「開啟 AI 功能」。');
       if (config.provider === 'disabled') return showToast('請選擇 AI 服務。', true);
-      if (!config.endpoint || !config.model || !$('apiKey').value.trim()) return showToast('請填寫 API 端點、模型名稱與金鑰。', true);
-      try { new URL(config.endpoint); } catch (error) { return showToast('API 端點網址格式不正確。', true); }
+      if (!config.model || !$('apiKey').value.trim()) return showToast('請填寫模型名稱與 API 金鑰。', true);
+      if (config.provider !== 'gemini') {
+        if (!config.endpoint) return showToast('自訂服務必須填寫 API 端點。', true);
+        try { new URL(config.endpoint); } catch (error) { return showToast('API 端點網址格式不正確。', true); }
+      }
       showToast('欄位格式檢查通過；目前模擬版不會對外發送請求。');
     }
 
@@ -6461,6 +6498,7 @@
     $('saveSettingsButton').addEventListener('click', saveAssistantSettings);
     $('checkApiButton').addEventListener('click', checkApiSettings);
     $('checkPetBridgeButton').addEventListener('click', () => syncPetBridge({ silent: false }));
+    $('checkPetDownloadBridgeButton').addEventListener('click', () => syncPetBridge({ silent: false }));
     $('exportPetSettingsButton').addEventListener('click', exportPetSettings);
     $('themePicker').addEventListener('click', event => {
       const choice = event.target.closest('[data-theme-choice]');
