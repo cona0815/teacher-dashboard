@@ -504,8 +504,20 @@ class SecretaryPet(DesktopPetPreview):
         ttk.Button(brief_actions, text="準備明天", style="Secretary.TButton", command=lambda: self._render_brief("tomorrow")).pack(side="left", padx=6)
         self.panel_widgets["brief"] = brief_label
 
+        empty_state = tk.Frame(body, bg=c["surface"], padx=18, pady=18, highlightbackground=c["line"], highlightthickness=1)
+        empty_state.pack(fill="x", pady=(9, 0))
+        tk.Label(empty_state, text="目前還沒有任務", bg=c["surface"], fg=c["strong"], font=("Microsoft JhengHei", 12, "bold")).pack(anchor="w")
+        tk.Label(
+            empty_state,
+            text="可以先在教師工作台新增任務，或使用下方「快速交代」建立本機記事；今日、逾期、待追蹤與健康管理仍可正常使用。",
+            bg=c["surface"], fg=c["muted"], justify="left", anchor="w", wraplength=650,
+            font=("Microsoft JhengHei", 9),
+        ).pack(fill="x", pady=(5, 0))
+        self.panel_widgets["empty_state"] = empty_state
+
         task_grid = tk.Frame(body, bg=c["bg"])
         task_grid.pack(fill="x", pady=9)
+        self.panel_widgets["task_grid"] = task_grid
         task_grid.columnconfigure(0, weight=1)
         task_grid.columnconfigure(1, weight=1)
         today_card = self._card(task_grid, "📌 今日重要", c["surface"], pack=False)
@@ -628,7 +640,10 @@ class SecretaryPet(DesktopPetPreview):
             selectforeground=self.COLORS["strong"],
             font=("Microsoft JhengHei", 9),
         )
-        box.pack(fill="both", expand=True)
+        # Keep lists at their requested row height. Expanding them inside the
+        # scrolling canvas can consume the remaining window and look like a
+        # large blank panel on high-DPI Windows displays.
+        box.pack(fill="x", expand=False)
         return box
 
     def _build_health_rows(self, parent: tk.Frame) -> None:
@@ -699,6 +714,12 @@ class SecretaryPet(DesktopPetPreview):
         due_today = [task for task in active if task.get("due_date") == today]
         overdue = [task for task in active if task.get("due_date") and task["due_date"] < today]
         tracking = [task for task in active if task.get("waiting_for") or task.get("status") == "等待回覆"]
+        empty_state = self.panel_widgets.get("empty_state")
+        if isinstance(empty_state, tk.Frame):
+            if self.data["tasks"]:
+                empty_state.pack_forget()
+            elif not empty_state.winfo_manager():
+                empty_state.pack(fill="x", pady=(9, 0), before=self.panel_widgets["task_grid"])
         self._fill_task_list("today", due_today, "今天沒有期限任務")
         self._fill_task_list("overdue", overdue, "目前沒有逾期任務")
         self._fill_task_list("tracking", tracking, "目前沒有等待回覆的事項")

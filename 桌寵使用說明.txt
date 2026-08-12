@@ -1,21 +1,13 @@
-小綿助桌寵｜使用說明
+小綿助 Windows 可攜版使用說明
 
-一、啟動
-雙擊「啟動小綿助秘書.bat」，或在 PowerShell 執行：
+1. 從 GitHub Releases 下載 Windows 可攜版 ZIP，先完整解壓縮。
+2. 開啟解壓縮後資料夾中的 XiaoMianZhu.exe。
+3. 不需要安裝 Python、pip，也不需要系統管理員權限。
+4. 請勿直接在 ZIP 壓縮檔裡執行；整個 XiaoMianZhu 資料夾需一起保留。
 
-   py -m pip install -r requirements.txt
-   py desktop_pet_secretary.py
+小綿助會在本機 127.0.0.1:8767 提供與網頁連動的橋接服務。資料只寫入：
+%APPDATA%\XiaoMianZhuSecretary\
 
-二、操作
-左鍵點一下顯示打氣話，拖曳可移動；右鍵可開啟秘書首頁或結束。
-首頁可管理今日、逾期、待追蹤、記事、附件、喝水、起身與多筆服藥提醒。
+首次下載的未簽章程式可能出現 Windows SmartScreen 或防毒信譽提示。請只從本專案 GitHub Release 下載並核對 SHA-256；不要關閉防毒，也不要設定防毒排除。
 
-三、與網頁連動
-桌寵啟動時會在 127.0.0.1:8767 開啟本機橋接。教師工作台會自動交換任務和記事，不需 GAS、不需帳號，也不需貼同步網址。
-資料保存在 %APPDATA%\XiaoMianZhuSecretary\；附件原始檔不會自動送到網頁。
-
-四、防毒
-正式分享前應用 Microsoft Defender 掃描並公布 SHA-256。未簽章的新 EXE 可能觸發 SmartScreen 信譽警告；不要以關閉防毒或資料夾排除來處理。
-
-五、授權
-請一併保留 LICENSE、THIRD_PARTY_NOTICES.md 與 SECURITY.md。
+授權與來源請參閱 LICENSE、THIRD_PARTY_NOTICES.md 與 SECURITY.md。

@@ -36,7 +36,9 @@
 
 ### 從 Python 原始碼啟動
 
-需要 Windows 10／11、Python 3.10 以上：
+一般老師不需要安裝 Python。請到 GitHub Releases 下載 Windows 可攜版 ZIP，解壓縮後直接開啟 `XiaoMianZhu.exe`。
+
+開發者若要從原始碼執行，才需要 Python 3.10 以上：
 
 ```powershell
 py -m pip install -r requirements.txt

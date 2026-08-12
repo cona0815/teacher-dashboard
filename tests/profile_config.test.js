@@ -156,7 +156,8 @@ assert.match(installerHtml, /主要工作身分/, "安裝介面應改為選擇�
 
 const indexHtml = fs.readFileSync(path.join(projectRoot, "Index.html"), "utf8");
 assert.match(indexHtml, /#apiEndpointField\[hidden\] \{ display: none !important; \}/, "Gemini 預設端點應隱藏，只有自訂服務才顯示端點欄位");
-assert.match(indexHtml, /releases\/download\/xiaomianzhu-v1\.1\/xiaomianzhu-windows-local-v1\.1\.zip/, "小綿助設定頁應提供正式 GitHub Release 下載連結");
+assert.match(indexHtml, /github\.com\/cona0815\/teacher-dashboard\/actions\/workflows\/build-xiaomianzhu\.yml/, "小綿助設定頁應提供免 Python 可攜版下載入口");
+assert.doesNotMatch(indexHtml, /先安裝 Python 3/, "一般老師的小綿助下載說明不應要求安裝 Python");
 assert.match(indexHtml, /id="checkPetDownloadBridgeButton"/, "小綿助下載卡片應提供本機連線檢查");
 assert.match(indexHtml, /let previewTasks = loadLocalPreviewTasks\(\)/, "公開版第一次開啟應載入空白本機任務，而非示範任務");
 assert.match(indexHtml, /isLegacyPreviewDemoTask/, "更新後應自動辨識並移除舊版內建示範任務");
@@ -211,6 +212,8 @@ assert.match(desktopSecretary, /ImageGrab\.grabclipboard\(\)/, "桌面小綿助�
 assert.match(desktopSecretary, /BRIDGE_HOST = "127\.0\.0\.1"/, "桌面小綿助橋接只能綁定本機回環位址");
 assert.match(desktopSecretary, /BRIDGE_MAX_BODY = 5 \* 1024 \* 1024/, "桌面小綿助橋接應限制請求大小");
 assert.match(desktopSecretary, /ThreadingHTTPServer/, "桌面小綿助應提供本機橋接服務");
+assert.match(desktopSecretary, /目前還沒有任務/, "桌面小綿助在空白資料時應顯示清楚的空狀態");
+assert.match(desktopSecretary, /box\.pack\(fill="x", expand=False\)/, "桌面清單不應在高 DPI 畫面撐成大片空白");
 assert.match(desktopSecretary, /bridge_origin_allowed/, "桌面小綿助應限制可存取的網頁來源");
 assert.match(desktopSecretary, /temporary\.replace\(DATA_FILE\)/, "桌面資料應以暫存檔原子替換保存");
 assert.doesNotMatch(desktopSecretary, /urllib\.request\.urlopen/, "桌面小綿助不應再依賴 GAS 網址同步");

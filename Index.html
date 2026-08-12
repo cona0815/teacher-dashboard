@@ -1726,22 +1726,22 @@
           <div>
             <h3>下載 Windows 桌面版小綿助</h3>
             <p>安裝後即可常駐桌面，提供今日任務、逾期提醒、快速記事、喝水、久坐與服藥提醒，並透過本機連線與這個工作台交換資料。</p>
-            <div class="pet-download-meta"><span>本機安全版 v1.1</span><span>約 13 MB</span><span>免系統管理員權限</span><span>資料只存在本機</span></div>
+            <div class="pet-download-meta"><span>Windows 可攜版</span><span>免安裝 Python</span><span>免系統管理員權限</span><span>資料只存在本機</span></div>
           </div>
           <div class="pet-download-buttons">
-            <a class="button button-dark" href="https://github.com/cona0815/teacher-dashboard/releases/download/xiaomianzhu-v1.1/xiaomianzhu-windows-local-v1.1.zip">下載 Windows 版</a>
+            <a class="button button-dark" href="https://github.com/cona0815/teacher-dashboard/actions/workflows/build-xiaomianzhu.yml" target="_blank" rel="noopener">下載免 Python 可攜版</a>
             <button class="button button-light" type="button" id="checkPetDownloadBridgeButton">檢查是否已連線</button>
           </div>
           <details class="pet-install-guide">
             <summary>查看安裝與啟動步驟</summary>
             <ol>
               <li>下載 ZIP 後解壓縮到自己的資料夾，不要直接在壓縮檔內執行。</li>
-              <li>先安裝 Python 3，在解壓縮資料夾執行 <code>py -m pip install -r requirements.txt</code>，再開啟「啟動小綿助秘書.bat」。</li>
-              <li>回到本頁按「檢查是否已連線」；若學校電腦封鎖 Python 或批次檔，請交由資訊管理人員確認。</li>
+              <li>開啟解壓縮資料夾中的 <code>XiaoMianZhu.exe</code>；不必安裝 Python、pip，也不必輸入指令。</li>
+              <li>回到本頁按「檢查是否已連線」。若 Windows 顯示未簽章程式警告，請先核對 GitHub 發布來源；不要關閉防毒或設定排除。</li>
               <li>如需套用下方偏好與自動啟動，再下載桌面設定檔並放在小綿助程式旁。</li>
             </ol>
           </details>
-          <div class="pet-download-hash">SHA-256：A64B4501085C3038B47D78898C8739524CC9139F216C5E6E4F6BC3EC39BF332D</div>
+          <div class="pet-download-hash">可攜版由 GitHub Actions 的乾淨 Windows 主機自動建置；發布後將在 Release 頁提供版本與 SHA-256。</div>
         </article>
         <p class="settings-note">這裡管理桌面版小綿助的偏好。網頁可以保存設定與控制「小綿助記事」入口；Windows 開機自動執行需下載設定檔，讓桌面版啟動一次後套用。</p>
         <div class="setting-checks">
