@@ -1,4 +1,14 @@
 [build]
   publish = "."
 
-# Static preview only. Google Apps Script remains the optional cloud backend.
+# Teacher-first static app: browser data stays local; the desktop companion
+# communicates only through the loopback address 127.0.0.1.
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer"
+    Permissions-Policy = "camera=(), geolocation=(), microphone=(self)"
+    Cross-Origin-Opener-Policy = "same-origin"
+    Content-Security-Policy = "default-src 'self' data: blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' https://generativelanguage.googleapis.com http://127.0.0.1:8767; object-src 'none'; base-uri 'self'; form-action 'self'"

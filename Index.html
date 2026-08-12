@@ -4,6 +4,7 @@
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' https://generativelanguage.googleapis.com http://127.0.0.1:8767; object-src 'none'; base-uri 'self'; form-action 'self'">
   <title>六年級學年主任＋導師工作台（模擬）</title>
   <style>
     :root {
@@ -1609,7 +1610,7 @@
         <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="api">AI 設定</button>
         <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="pet">小綿助</button>
         <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="backup">備份與還原</button>
-        <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="drive">Drive 資料庫</button>
+        <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="security">資料與資安</button>
         <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="license">授權</button>
       </div>
 
@@ -1666,7 +1667,7 @@
       </section>
 
       <section class="settings-panel" data-settings-panel="api">
-        <p class="settings-note">開啟後才會顯示「AI 行政助理」版面。原文不直接送出，只傳送已確認的去識別化內容；正式上線時 API 金鑰應由 GAS 伺服器端保管。</p>
+        <p class="settings-note">開啟後才會顯示「AI 行政助理」版面。送出前請先檢查去識別化預覽；API 金鑰只保存在這台電腦的目前瀏覽器，不會寫入 GitHub 或備份檔。</p>
         <label class="check-row" style="margin-bottom:14px"><input type="checkbox" id="aiEnabled">開啟 AI 功能</label>
         <p style="margin:0 0 14px;font-size:12px">沒有金鑰？前往 <a class="settings-link" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio 申請 Gemini API 金鑰</a>。Google 提供部分模型的免費用量，仍受當時的配額與服務條款限制。</p>
         <div class="form-grid" style="padding:0">
@@ -1691,7 +1692,7 @@
             <label for="apiKey">API 金鑰</label>
             <input class="input" id="apiKey" type="password" autocomplete="off" placeholder="輸入後可保存在這台電腦的目前瀏覽器">
             <label class="check-row" style="margin-top:8px"><input type="checkbox" id="rememberApiKey" checked>記住在這台電腦的目前瀏覽器（關閉後不用重打）</label>
-            <div class="api-secret-note">金鑰不會放進備份檔、GAS 或 GitHub。共用電腦請取消勾選，金鑰便只保留到關閉此瀏覽器分頁。</div>
+            <div class="api-secret-note">金鑰不會放進備份檔或 GitHub。共用電腦請取消勾選，金鑰便只保留到關閉此瀏覽器分頁。</div>
           </div>
         </div>
         <button class="button button-light" type="button" id="checkApiButton">檢查設定</button>
@@ -1714,13 +1715,10 @@
           <div class="field"><label for="petQuietEnd">安靜時段結束</label><input class="input" id="petQuietEnd" type="time" value="07:30"></div>
         </div>
         <div class="pet-settings-status">
-          <strong>選填：連接 GAS 雲端任務</strong>
-          <label class="check-row"><input type="checkbox" id="petGasSyncEnabled">下載設定檔時啟用 GAS 任務同步</label>
-          <div class="form-grid" style="padding:0">
-            <div class="field"><label for="petGasUrl">GAS /exec 網址</label><input class="input" id="petGasUrl" type="url" placeholder="https://script.google.com/macros/s/…/exec"></div>
-            <div class="field"><label for="petGasSyncKey">小綿助同步金鑰</label><input class="input" id="petGasSyncKey" type="password" autocomplete="off" placeholder="至少 16 個字元"></div>
-          </div>
-          <span>未填寫也能使用全部本機功能。同步金鑰需先從 Google 試算表的「校務任務系統 → 設定小綿助同步金鑰」建立。</span>
+          <strong>本機連線狀態</strong>
+          <span id="petBridgeStatus">正在確認桌面小綿助是否開啟……</span>
+          <button class="button button-light" type="button" id="checkPetBridgeButton">重新檢查</button>
+          <span>小綿助只監聽這台電腦的 <code>127.0.0.1:8767</code>。第一次使用正式網站時，請下載一次桌面設定檔並放到小綿助旁邊，以授權目前的網站來源；桌面程式關閉時，網頁仍可完整使用。</span>
         </div>
         <div class="pet-settings-status">
           <strong>桌面版套用方式</strong>
@@ -1728,7 +1726,7 @@
         </div>
         <div class="pet-settings-actions">
           <button class="button button-dark" type="button" id="exportPetSettingsButton">下載桌面設定檔</button>
-          <span class="api-secret-note">設定檔不包含任務、記事、附件或 AI 金鑰；若啟用 GAS 同步，會包含 GAS 網址與小綿助同步金鑰，請勿公開分享該設定檔。</span>
+          <span class="api-secret-note">設定檔只包含小綿助偏好，不包含任務、記事、附件或 AI 金鑰。</span>
         </div>
       </section>
 
@@ -1752,14 +1750,14 @@
             <button class="button button-light" type="button" id="importBackupButton">選擇備份檔</button>
             <input id="backupFileInput" type="file" accept="application/json,.json" hidden>
           </article>
-          <article class="backup-card">
+          <article class="backup-card" style="display:none">
             <h3>備份到 Google Drive（GAS）</h3>
             <p>透過 Apps Script 把同一份 JSON 備份存入「School Admin Dashboard／Backups」。</p>
             <button class="button button-dark" type="button" id="cloudBackupButton">立即雲端備份</button>
             <button class="button button-light" type="button" id="refreshCloudBackupsButton">重新整理</button>
             <div class="cloud-list" id="cloudBackupList"><div class="cloud-row-meta">按「重新整理」讀取既有備份。</div></div>
           </article>
-           <article class="backup-card gas-install-card">
+           <article class="backup-card gas-install-card" style="display:none">
              <h3>GAS 雲端版安裝教學與完整程式碼</h3>
              <p>此功能不是只貼一段金鑰；需要把下列 4 個專案檔放進同一個 Google Apps Script 專案，再部署成網頁應用程式。</p>
              <div class="gas-install-grid">
@@ -1798,7 +1796,7 @@
          </div>
        </section>
 
-      <section class="settings-panel" data-settings-panel="drive">
+      <section class="settings-panel" data-settings-panel="drive" style="display:none">
         <p class="settings-note">把舊資料、圖片、PDF 或 Office 文件存進自己的 Google Drive。單檔最大 35 MB（保留 Base64 與 GAS 傳輸空間）；檔案不會公開，分享權限仍由你的 Drive 控制。</p>
         <div class="drive-library-heading"><h3 id="driveLibraryTitleDisplay">系統資料庫</h3><p id="driveLibrarySubtitleDisplay">集中查看本系統上傳至 Google Drive 的所有資料。</p></div>
         <div class="form-grid" style="padding:0">
@@ -1814,6 +1812,18 @@
           <input id="driveUploadInput" type="file" accept="image/*,.pdf,.json,.txt,.md,.csv,.doc,.docx,.xls,.xlsx,.ppt,.pptx" multiple hidden>
         </div>
         <div class="cloud-list" id="driveFileList"><div class="cloud-row-meta">按「重新整理」讀取 Drive 資料。</div></div>
+      </section>
+
+      <section class="settings-panel" data-settings-panel="security">
+        <p class="settings-note">本系統採本機優先：不需登入、不需 GAS。任務與設定預設留在目前瀏覽器；桌面小綿助資料留在目前 Windows 帳號的 AppData。</p>
+        <div class="backup-grid">
+          <article class="backup-card"><h3>網頁資料</h3><p>任務、教學進度、記事與偏好以瀏覽器本機儲存保存。不同瀏覽器、不同 Windows 帳號或不同網站網域各自獨立；清除網站資料前請先下載 JSON 備份。</p></article>
+          <article class="backup-card"><h3>小綿助本機橋接</h3><p>桌面程式只綁定 <code>127.0.0.1:8767</code>，不接受區域網路或外網直接連入；限制請求來源、方法與 5 MB 大小，且不提供任意檔案路徑讀取。</p></article>
+          <article class="backup-card"><h3>AI 與個人資料</h3><p>去識別化在瀏覽器執行，但自動規則可能漏判。送出 AI 前仍要人工檢查；學生姓名、電話、地址、健康、輔導與性平資料不應交給外部 AI。</p></article>
+          <article class="backup-card"><h3>Windows 防毒提示</h3><p>測試版 EXE 若尚未使用受信任的程式碼簽章，Windows SmartScreen 可能顯示「無法辨識的應用程式」；這是信譽／簽章警告，不等同判定為病毒。正式分享建議簽章或上架 Microsoft Store，並提供 SHA-256 驗證碼。</p></article>
+          <article class="backup-card"><h3>安全使用原則</h3><p>只從本專案正式 GitHub／Netlify 下載；不要要求使用者關閉防毒或建立整個資料夾的排除規則。若遭誤判，應提交檔案給 Microsoft 分析並重新發布，不能承諾所有學校電腦一定允許執行。</p></article>
+          <article class="backup-card"><h3>目前分享版本</h3><p>v1.1 本機安全版以 Python 原始檔與啟動批次檔提供，不含自行編譯的 EXE，也不要求系統管理員權限。部分學校可能依政策封鎖 Python、批次檔或登入自動啟動；這屬校方應用程式管制，需由資訊管理人員核准。</p></article>
+        </div>
       </section>
 
       <section class="settings-panel" data-settings-panel="license">
@@ -3396,6 +3406,73 @@
       });
     }
 
+    const PET_BRIDGE_URL = 'http://127.0.0.1:8767';
+    const petBridgeState = { inFlight: false, timer: 0, connected: false, lastSync: '' };
+
+    function setPetBridgeStatus(message, connected = false) {
+      petBridgeState.connected = connected;
+      const host = $('petBridgeStatus');
+      if (host) host.textContent = message;
+    }
+
+    function schedulePetBridgeSync(delay = 700) {
+      if (petBridgeState.timer) window.clearTimeout(petBridgeState.timer);
+      petBridgeState.timer = window.setTimeout(() => syncPetBridge({ silent: true }), delay);
+    }
+
+    async function syncPetBridge({ silent = false } = {}) {
+      if (petBridgeState.inFlight) return false;
+      petBridgeState.inFlight = true;
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 2500);
+      try {
+        const response = await fetch(`${PET_BRIDGE_URL}/sync`, {
+          method: 'POST',
+          mode: 'cors',
+          cache: 'no-store',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ version: 1, tasks: state.tasks.slice(0, 5000), notes: secretaryNotesState.notes.slice(0, 500) }),
+          signal: controller.signal
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const payload = await response.json();
+        if (!payload.ok) throw new Error(payload.error || '本機橋接未回應');
+
+        const existingTaskIds = new Set(state.tasks.map(task => String(task.taskId || '')));
+        const desktopTasks = (Array.isArray(payload.tasks) ? payload.tasks : [])
+          .filter(task => task && task.source === 'desktop' && task.taskId && task.name && !existingTaskIds.has(String(task.taskId)));
+        if (desktopTasks.length && IS_LOCAL_PREVIEW && window.localPreviewStorage) {
+          state.tasks = [...desktopTasks, ...state.tasks].slice(0, 5000);
+          state.filteredTasks = [...state.tasks];
+          window.localPreviewStorage.replaceTasks(state.tasks);
+          renderSummary(summarizeCurrentTasks());
+          applyFilters();
+        }
+
+        const noteKeys = new Set(secretaryNotesState.notes.map(note => `${note.createdAt}|${note.text}`));
+        const desktopNotes = (Array.isArray(payload.notes) ? payload.notes : [])
+          .map(note => normalizeSecretaryNote(note, note?.source))
+          .filter(note => note && note.source === 'desktop' && !noteKeys.has(`${note.createdAt}|${note.text}`));
+        if (desktopNotes.length) {
+          secretaryNotesState.notes = [...desktopNotes, ...secretaryNotesState.notes]
+            .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt))).slice(0, 500);
+          writeLocalPreviewJson(LOCAL_PREVIEW_STORAGE_KEYS.secretaryNotes, secretaryNotesState.notes);
+          renderSecretaryNotes();
+        }
+        petBridgeState.lastSync = payload.syncedAt || new Date().toISOString();
+        setPetBridgeStatus(`已連接桌面小綿助｜最後交換 ${new Date(petBridgeState.lastSync).toLocaleTimeString('zh-TW')}`, true);
+        if (!silent) showToast(`已連接小綿助${desktopTasks.length || desktopNotes.length ? `，帶入 ${desktopTasks.length} 項任務、${desktopNotes.length} 則記事` : ''}。`);
+        return true;
+      } catch (error) {
+        setPetBridgeStatus('桌面小綿助目前未開啟；網頁仍以本機模式正常使用。', false);
+        if (!silent) showToast('找不到桌面小綿助。請先啟動小綿助，再按一次重新檢查。', true);
+        return false;
+      } finally {
+        window.clearTimeout(timeout);
+        petBridgeState.inFlight = false;
+      }
+    }
+
     function addOptions(selectId, values, includeBlank, blankText) {
       const select = $(selectId);
       const current = select.value;
@@ -4261,7 +4338,7 @@
       teacher: { name: '', title: '', subjects: '', grade: '6', className: '', committees: '' },
       privacy: { phone: true, email: true, id: true, address: true, names: true, auto: true, customTerms: '' },
       api: { enabled: IS_LOCAL_PREVIEW, provider: 'gemini', model: '', endpoint: 'https://generativelanguage.googleapis.com/v1beta/models', rememberKey: true },
-      pet: { enabled: true, autostart: false, petName: '小綿助', cheerIntervalMinutes: 5, startupDelaySeconds: 30, healthReminders: true, openingBrief: true, rememberPosition: true, quietStart: '18:00', quietEnd: '07:30', gasSyncEnabled: false, gasUrl: '', gasSyncKey: '' }
+      pet: { enabled: true, autostart: false, petName: '小綿助', cheerIntervalMinutes: 5, startupDelaySeconds: 30, healthReminders: true, openingBrief: true, rememberPosition: true, quietStart: '18:00', quietEnd: '07:30' }
     };
     function escapeRegExp(value) {
       return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -5686,9 +5763,6 @@
       } catch (error) {
         console.warn('無法讀取本機設定', error);
       }
-      // 同步金鑰屬於桌面連線憑證，只保留在目前分頁，不寫入 localStorage 或 JSON 備份。
-      try { assistantSettings.pet.gasSyncKey = sessionStorage.getItem('xiaomianzhuGasSyncKey') || ''; }
-      catch (error) { assistantSettings.pet.gasSyncKey = ''; }
       // 預覽檔固定開啟本機規則模擬；不會呼叫或傳送資料到外部 AI API。
       if (IS_LOCAL_PREVIEW) assistantSettings.api.enabled = true;
     }
@@ -5722,16 +5796,6 @@
 
     function exportPetSettings() {
       const pet = readSettingsForm().pet;
-      if (pet.gasSyncEnabled) {
-        if (!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(pet.gasUrl)) {
-          selectSettingsTab('pet');
-          return showToast('請填入正確的 GAS /exec 網址，再下載小綿助設定檔。', true);
-        }
-        if (pet.gasSyncKey.length < 16) {
-          selectSettingsTab('pet');
-          return showToast('小綿助同步金鑰至少需要 16 個字元。', true);
-        }
-      }
       const payload = {
         kind: 'xiaomianzhu-desktop-settings',
         version: 1,
@@ -5747,9 +5811,8 @@
           remember_position: pet.rememberPosition,
           quiet_start: pet.quietStart,
           quiet_end: pet.quietEnd,
-          gas_sync_enabled: pet.gasSyncEnabled,
-          gas_url: pet.gasUrl,
-          gas_sync_key: pet.gasSyncKey
+          bridge_enabled: true,
+          allowed_web_origin: location.origin === 'null' ? '' : location.origin
         }
       };
       const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }));
@@ -5806,9 +5869,6 @@
       $('petRememberPosition').checked = assistantSettings.pet.rememberPosition !== false;
       $('petQuietStart').value = assistantSettings.pet.quietStart || '18:00';
       $('petQuietEnd').value = assistantSettings.pet.quietEnd || '07:30';
-      $('petGasSyncEnabled').checked = assistantSettings.pet.gasSyncEnabled === true;
-      $('petGasUrl').value = assistantSettings.pet.gasUrl || '';
-      $('petGasSyncKey').value = assistantSettings.pet.gasSyncKey || '';
       try {
         $('apiKey').value = localStorage.getItem('grade6AssistantApiKey') || sessionStorage.getItem('grade6AssistantApiKey') || '';
       } catch (error) { $('apiKey').value = ''; }
@@ -5932,10 +5992,7 @@
           openingBrief: $('petOpeningBrief').checked,
           rememberPosition: $('petRememberPosition').checked,
           quietStart: $('petQuietStart').value || '18:00',
-          quietEnd: $('petQuietEnd').value || '07:30',
-          gasSyncEnabled: $('petGasSyncEnabled').checked,
-          gasUrl: $('petGasUrl').value.trim(),
-          gasSyncKey: $('petGasSyncKey').value.trim()
+          quietEnd: $('petQuietEnd').value || '07:30'
         }
       };
     }
@@ -5954,10 +6011,7 @@
       Object.assign(assistantSettings.pet, next.pet);
       try {
         const persistedSettings = JSON.parse(JSON.stringify(assistantSettings));
-        persistedSettings.pet.gasSyncKey = '';
         localStorage.setItem('grade6AssistantSettings', JSON.stringify(persistedSettings));
-        if (next.pet.gasSyncKey) sessionStorage.setItem('xiaomianzhuGasSyncKey', next.pet.gasSyncKey);
-        else sessionStorage.removeItem('xiaomianzhuGasSyncKey');
         const key = $('apiKey').value.trim();
         if (key && next.api.rememberKey) {
           localStorage.setItem('grade6AssistantApiKey', key);
@@ -6006,7 +6060,6 @@
 
     function buildBackupPayload() {
       const safeSettings = readSettingsForm();
-      safeSettings.pet.gasSyncKey = '';
       const schoolHolidays = normalizeSchoolHolidayRows(roleWorkspaceState.schoolHolidays);
       const activeSubject = roleWorkspaceState.activeProgressSubject || $('progressSubject').value;
       if (activeSubject) roleWorkspaceState.progressPlans[activeSubject] = captureTeachingProgressPlan(activeSubject);
@@ -6397,6 +6450,7 @@
     $('cancelSettingsButton').addEventListener('click', closeSettings);
     $('saveSettingsButton').addEventListener('click', saveAssistantSettings);
     $('checkApiButton').addEventListener('click', checkApiSettings);
+    $('checkPetBridgeButton').addEventListener('click', () => syncPetBridge({ silent: false }));
     $('exportPetSettingsButton').addEventListener('click', exportPetSettings);
     $('themePicker').addEventListener('click', event => {
       const choice = event.target.closest('[data-theme-choice]');
@@ -6408,7 +6462,13 @@
     $('importBackupButton').addEventListener('click', () => $('backupFileInput').click());
     $('backupFileInput').addEventListener('change', event => importBackup(event.target.files[0]));
     $('clearLocalPreviewDataButton').addEventListener('click', clearLocalPreviewData);
-    window.addEventListener('local-preview-storage-change', updateLocalStorageStatus);
+    window.addEventListener('local-preview-storage-change', () => {
+      updateLocalStorageStatus();
+      schedulePetBridgeSync();
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) schedulePetBridgeSync(150);
+    });
     $('cloudBackupButton').addEventListener('click', createCloudBackup);
     $('refreshCloudBackupsButton').addEventListener('click', refreshCloudBackups);
     $('copyGasGuideButton').addEventListener('click', copyGasGuide);
@@ -6683,7 +6743,8 @@
     loadSecretaryNotes();
     updateLocalStorageStatus();
     setTaskView(state.viewMode);
-    initialize();
+    initialize().then(() => schedulePetBridgeSync(300));
+    window.setInterval(() => schedulePetBridgeSync(50), 60000);
   </script>
 </body>
 </html>

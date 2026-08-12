@@ -1,10 +1,10 @@
 {
-  "name": "school-administration-gas-task-board",
-  "version": "1.0.0",
+  "name": "teacher-dashboard",
+  "version": "1.1.0",
   "private": true,
-  "description": "可依處室安裝的 Google Apps Script 校務行政任務管理與看板系統",
+  "description": "本機優先的國小教師任務、教學進度與桌面秘書工作台",
   "scripts": {
-    "test": "node tests/profile_config.test.js"
+    "test": "node tests/profile_config.test.js && python -m unittest tests.local_bridge_test"
   },
   "license": "MIT",
   "engines": {

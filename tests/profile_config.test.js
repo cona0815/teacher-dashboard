@@ -201,13 +201,21 @@ for (const secretaryFeature of ["今日簡報", "今日重要", "已逾期", "�
   assert.match(desktopSecretary, new RegExp(secretaryFeature), `桌面小綿助缺少「${secretaryFeature}」`);
 }
 assert.match(desktopSecretary, /ImageGrab\.grabclipboard\(\)/, "桌面小綿助必須支援貼上圖片或檔案");
-assert.match(desktopSecretary, /gas_sync_enabled/, "桌面小綿助應保留可選的 GAS 同步設定");
-assert.match(desktopSecretary, /urllib\.request\.urlopen/, "桌面小綿助應能呼叫 GAS 同步端點");
-assert.match(desktopSecretary, /本機資料不受影響/, "GAS 連線失敗時必須明確保留本機資料");
-assert.match(source, /function doPost\(e\)/, "GAS 應提供小綿助使用的 POST 同步端點");
-assert.match(source, /verifyDesktopPetSyncKey_/, "小綿助同步端點必須驗證專用同步金鑰");
-assert.match(indexHtml, /id="petGasUrl"/, "網頁設定應能輸出小綿助 GAS 網址");
-assert.match(indexHtml, /id="petGasSyncKey"/, "網頁設定應能輸出小綿助同步金鑰");
+assert.match(desktopSecretary, /BRIDGE_HOST = "127\.0\.0\.1"/, "桌面小綿助橋接只能綁定本機回環位址");
+assert.match(desktopSecretary, /BRIDGE_MAX_BODY = 5 \* 1024 \* 1024/, "桌面小綿助橋接應限制請求大小");
+assert.match(desktopSecretary, /ThreadingHTTPServer/, "桌面小綿助應提供本機橋接服務");
+assert.match(desktopSecretary, /bridge_origin_allowed/, "桌面小綿助應限制可存取的網頁來源");
+assert.match(desktopSecretary, /temporary\.replace\(DATA_FILE\)/, "桌面資料應以暫存檔原子替換保存");
+assert.doesNotMatch(desktopSecretary, /urllib\.request\.urlopen/, "桌面小綿助不應再依賴 GAS 網址同步");
+assert.doesNotMatch(desktopSecretary, /GAS \/exec|同步金鑰/, "桌面小綿助不應再顯示 GAS 同步欄位");
+assert.match(indexHtml, /const PET_BRIDGE_URL = 'http:\/\/127\.0\.0\.1:8767'/, "網頁應自動連接本機小綿助");
+assert.match(indexHtml, /data-settings-panel="security"/, "網頁應提供資料與資安說明");
+assert.match(indexHtml, /Content-Security-Policy/, "網頁應宣告內容安全政策");
+
+const netlifyConfig = fs.readFileSync(path.join(projectRoot, "netlify.toml"), "utf8");
+for (const header of ["Content-Security-Policy", "X-Content-Type-Options", "Referrer-Policy", "Permissions-Policy"]) {
+  assert.match(netlifyConfig, new RegExp(header), `Netlify 應設定 ${header}`);
+}
 
 assert.doesNotMatch(source, /\b1[A-Za-z0-9_-]{30,}\b/, "公開版本不得含固定 Google 資源 ID");
 assert.match(source, /BOUND_SPREADSHEET_ID/, "安裝後應以 Script Properties 定位試算表");

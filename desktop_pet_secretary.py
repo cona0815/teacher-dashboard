@@ -14,11 +14,11 @@ import shutil
 import subprocess
 import sys
 import threading
-import urllib.error
-import urllib.request
 import uuid
 from datetime import date, datetime, timedelta
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from urllib.parse import urlparse
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
@@ -33,6 +33,91 @@ DATA_FILE = DATA_ROOT / "secretary_data.json"
 ATTACHMENT_ROOT = DATA_ROOT / "attachments"
 DESKTOP_SETTINGS_NAME = "xiaomianzhu_settings.json"
 AUTOSTART_VALUE_NAME = "XiaoMianZhuSecretary"
+BRIDGE_HOST = "127.0.0.1"
+BRIDGE_PORT = 8767
+BRIDGE_MAX_BODY = 5 * 1024 * 1024
+
+
+def bridge_origin_allowed(origin: str, allowed_web_origin: str = "") -> bool:
+    """只接受本機預覽與本專案的公開網頁，避免其他網站讀取教師資料。"""
+    if not origin or origin == "null":
+        return True
+    try:
+        parsed = urlparse(origin)
+        host = (parsed.hostname or "").lower()
+    except ValueError:
+        return False
+    if host in {"127.0.0.1", "localhost"}:
+        return True
+    if parsed.scheme != "https":
+        return False
+    configured = str(allowed_web_origin or "").strip().rstrip("/")
+    return host == "cona0815.github.io" or bool(configured and origin.rstrip("/") == configured)
+
+
+class LocalBridgeServer(ThreadingHTTPServer):
+    daemon_threads = True
+    allow_reuse_address = True
+
+
+def make_bridge_handler(secretary: "SecretaryPet") -> type[BaseHTTPRequestHandler]:
+    class BridgeHandler(BaseHTTPRequestHandler):
+        server_version = "XiaoMianZhuLocalBridge/1.0"
+
+        def log_message(self, _format: str, *_args: object) -> None:
+            return
+
+        def _origin(self) -> str:
+            return str(self.headers.get("Origin") or "")
+
+        def _headers(self, status: int = 200) -> bool:
+            origin = self._origin()
+            if not bridge_origin_allowed(origin, secretary._bridge_allowed_origin()):
+                self.send_response(403)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.end_headers()
+                return False
+            self.send_response(status)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("Access-Control-Allow-Origin", origin or "null")
+            self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type")
+            self.send_header("Access-Control-Allow-Private-Network", "true")
+            self.send_header("Vary", "Origin")
+            self.end_headers()
+            return True
+
+        def _write_json(self, payload: dict, status: int = 200) -> None:
+            if self._headers(status):
+                self.wfile.write(json.dumps(payload, ensure_ascii=False).encode("utf-8"))
+
+        def do_OPTIONS(self) -> None:  # noqa: N802 - BaseHTTPRequestHandler API
+            self._headers(204)
+
+        def do_GET(self) -> None:  # noqa: N802 - BaseHTTPRequestHandler API
+            if self.path != "/health":
+                self._write_json({"ok": False, "error": "not found"}, 404)
+                return
+            self._write_json(secretary._bridge_health())
+
+        def do_POST(self) -> None:  # noqa: N802 - BaseHTTPRequestHandler API
+            if self.path != "/sync":
+                self._write_json({"ok": False, "error": "not found"}, 404)
+                return
+            try:
+                length = int(self.headers.get("Content-Length") or "0")
+                if length <= 0 or length > BRIDGE_MAX_BODY:
+                    raise ValueError("資料大小不正確")
+                payload = json.loads(self.rfile.read(length).decode("utf-8"))
+                if not isinstance(payload, dict):
+                    raise ValueError("資料格式不正確")
+                result = secretary._bridge_sync(payload)
+                self._write_json(result)
+            except (ValueError, json.JSONDecodeError, UnicodeDecodeError) as error:
+                self._write_json({"ok": False, "error": str(error)}, 400)
+
+    return BridgeHandler
 
 
 def now_iso() -> str:
@@ -104,10 +189,9 @@ def default_data() -> dict:
             "remember_position": True,
             "quiet_start": "18:00",
             "quiet_end": "07:30",
-            "gas_url": "",
-            "gas_sync_key": "",
-            "gas_sync_enabled": False,
-            "gas_last_sync": "",
+            "bridge_enabled": True,
+            "bridge_last_sync": "",
+            "allowed_web_origin": "",
             "device_id": str(uuid.uuid4()),
         },
         "health": {
@@ -179,6 +263,10 @@ class SecretaryPet(DesktopPetPreview):
         self.panel_widgets: dict[str, object] = {}
         self.health_alerted = {"water": False, "move": False, "medicine": False}
         self.cheer_timer: str | None = None
+        self.data_lock = threading.RLock()
+        self.bridge_server: LocalBridgeServer | None = None
+        self.bridge_thread: threading.Thread | None = None
+        self.bridge_error = ""
 
         self.menu.insert_command(0, label=f"開啟{self._pet_name()}秘書首頁", command=self.toggle_secretary)
         self.menu.insert_command(1, label="整理今日簡報", command=lambda: self.open_secretary("today"))
@@ -188,6 +276,7 @@ class SecretaryPet(DesktopPetPreview):
         if settings.get("opening_brief", True):
             self.root.after(1200, self._opening_brief)
         self._schedule_cheer()
+        self._start_local_bridge()
         if "--startup-launch" in sys.argv and settings.get("startup_delay_seconds", 0):
             self.root.withdraw()
             self.root.after(int(settings["startup_delay_seconds"]) * 1000, self.root.deiconify)
@@ -236,10 +325,12 @@ class SecretaryPet(DesktopPetPreview):
             settings["startup_delay_seconds"] = 30
         for field in ("enabled", "autostart", "health_reminders", "opening_brief", "remember_position"):
             settings[field] = bool(settings.get(field, default_data()["settings"][field]))
-        settings["gas_sync_enabled"] = bool(settings.get("gas_sync_enabled", False))
-        settings["gas_url"] = str(settings.get("gas_url") or "").strip()
-        settings["gas_sync_key"] = str(settings.get("gas_sync_key") or "").strip()
-        settings["gas_last_sync"] = str(settings.get("gas_last_sync") or "").strip()
+        settings["bridge_enabled"] = bool(settings.get("bridge_enabled", True))
+        settings["bridge_last_sync"] = str(settings.get("bridge_last_sync") or "").strip()
+        allowed_origin = str(settings.get("allowed_web_origin") or "").strip().rstrip("/")
+        settings["allowed_web_origin"] = allowed_origin if allowed_origin.startswith("https://") else ""
+        for legacy_key in ("gas_sync_enabled", "gas_url", "gas_sync_key", "gas_last_sync"):
+            settings.pop(legacy_key, None)
         settings["device_id"] = str(settings.get("device_id") or uuid.uuid4()).strip()
         for field, fallback in (("quiet_start", "18:00"), ("quiet_end", "07:30")):
             value = str(settings.get(field) or fallback)
@@ -274,8 +365,11 @@ class SecretaryPet(DesktopPetPreview):
         return base
 
     def _save_data(self) -> None:
-        DATA_ROOT.mkdir(parents=True, exist_ok=True)
-        DATA_FILE.write_text(json.dumps(self.data, ensure_ascii=False, indent=2), encoding="utf-8")
+        with getattr(self, "data_lock", threading.RLock()):
+            DATA_ROOT.mkdir(parents=True, exist_ok=True)
+            temporary = DATA_FILE.with_suffix(".tmp")
+            temporary.write_text(json.dumps(self.data, ensure_ascii=False, indent=2), encoding="utf-8")
+            temporary.replace(DATA_FILE)
 
     def _finish_drag(self, _event: tk.Event) -> None:
         moved = self.drag_moved
@@ -447,37 +541,18 @@ class SecretaryPet(DesktopPetPreview):
         self.panel_widgets["pet_name_var"] = pet_name_var
         self.panel_widgets["cheer_interval_var"] = cheer_interval_var
 
-        cloud = self._card(body, "☁ 雲端連動（選填）", c["surface"])
-        cloud.pack(fill="x", pady=(0, 9))
+        bridge = self._card(body, "🔗 教師工作台本機連線", c["surface"])
+        bridge.pack(fill="x", pady=(0, 9))
         tk.Label(
-            cloud,
-            text="未設定仍可完整使用本機記事、任務與健康提醒；填入 GAS /exec 網址與同步金鑰後，才會和教師工作台交換任務。",
+            bridge,
+            text="小綿助開啟時，Netlify 或本機教師工作台會透過這台電腦的 127.0.0.1 自動交換任務與記事；資料不會經過第三方伺服器。",
             bg=c["surface"], fg=c["muted"], justify="left", anchor="w", wraplength=650,
             font=("Microsoft JhengHei", 8),
         ).pack(fill="x", pady=(0, 8))
-        cloud_grid = tk.Frame(cloud, bg=c["surface"])
-        cloud_grid.pack(fill="x")
-        cloud_grid.columnconfigure(1, weight=1)
-        gas_enabled_var = tk.BooleanVar(value=bool(self.data["settings"].get("gas_sync_enabled", False)))
-        gas_url_var = tk.StringVar(value=str(self.data["settings"].get("gas_url") or ""))
-        gas_key_var = tk.StringVar(value=str(self.data["settings"].get("gas_sync_key") or ""))
-        ttk.Checkbutton(cloud_grid, text="啟用 GAS 同步", variable=gas_enabled_var).grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 6))
-        tk.Label(cloud_grid, text="GAS /exec 網址", bg=c["surface"], fg=c["ink"], font=("Microsoft JhengHei", 9, "bold")).grid(row=1, column=0, sticky="w", pady=3)
-        ttk.Entry(cloud_grid, textvariable=gas_url_var).grid(row=1, column=1, sticky="ew", padx=(9, 0), pady=3)
-        tk.Label(cloud_grid, text="同步金鑰", bg=c["surface"], fg=c["ink"], font=("Microsoft JhengHei", 9, "bold")).grid(row=2, column=0, sticky="w", pady=3)
-        ttk.Entry(cloud_grid, textvariable=gas_key_var, show="●").grid(row=2, column=1, sticky="ew", padx=(9, 0), pady=3)
-        cloud_actions = tk.Frame(cloud, bg=c["surface"])
-        cloud_actions.pack(fill="x", pady=(9, 0))
-        ttk.Button(cloud_actions, text="儲存連線設定", style="Secretary.TButton", command=self._save_gas_settings).pack(side="left")
-        ttk.Button(cloud_actions, text="測試連線", style="Secretary.TButton", command=lambda: self._start_gas_request("ping")).pack(side="left", padx=6)
-        ttk.Button(cloud_actions, text="立即同步", style="SecretaryPrimary.TButton", command=lambda: self._start_gas_request("sync")).pack(side="left")
-        gas_status = tk.Label(cloud, text="尚未設定 GAS，現在使用本機模式。", bg=c["surface"], fg=c["muted"], justify="left", anchor="w", font=("Microsoft JhengHei", 8))
-        gas_status.pack(fill="x", pady=(8, 0))
-        self.panel_widgets.update({
-            "gas_enabled_var": gas_enabled_var, "gas_url_var": gas_url_var,
-            "gas_key_var": gas_key_var, "gas_status": gas_status,
-        })
-        self._update_gas_status()
+        bridge_status = tk.Label(bridge, bg=c["surface"], fg=c["muted"], justify="left", anchor="w", font=("Microsoft JhengHei", 8, "bold"))
+        bridge_status.pack(fill="x")
+        self.panel_widgets["bridge_status"] = bridge_status
+        self._update_bridge_status()
 
         quick = self._card(body, "💬 快速交代", c["surface"])
         quick.pack(fill="x")
@@ -503,7 +578,7 @@ class SecretaryPet(DesktopPetPreview):
 
         notes = self._card(body, "📝 本機記事", c["surface"])
         notes.pack(fill="x", pady=(9, 0))
-        tk.Label(notes, text="記事先保存在這台電腦；可匯出 JSON 後帶入教師工作台。", bg=c["surface"], fg=c["muted"], font=("Microsoft JhengHei", 8)).pack(anchor="w", pady=(0, 4))
+        tk.Label(notes, text="記事保存在這台電腦；教師工作台開啟時會透過本機連線自動帶入。", bg=c["surface"], fg=c["muted"], font=("Microsoft JhengHei", 8)).pack(anchor="w", pady=(0, 4))
         notes_list = self._listbox(notes, height=4)
         note_actions = tk.Frame(notes, bg=c["surface"])
         note_actions.pack(fill="x", pady=(5, 0))
@@ -652,102 +727,148 @@ class SecretaryPet(DesktopPetPreview):
         self._schedule_cheer()
         self.play("success", 2, "idle", f"好！以後可以叫我{name}。")
 
-    def _save_gas_settings(self) -> bool:
-        enabled_var: tk.BooleanVar = self.panel_widgets["gas_enabled_var"]  # type: ignore[assignment]
-        url_var: tk.StringVar = self.panel_widgets["gas_url_var"]  # type: ignore[assignment]
-        key_var: tk.StringVar = self.panel_widgets["gas_key_var"]  # type: ignore[assignment]
-        url = url_var.get().strip()
-        key = key_var.get().strip()
-        enabled = bool(enabled_var.get())
-        if enabled and (not re.fullmatch(r"https://script\.google\.com/macros/s/[^/]+/exec", url) or not key):
-            messagebox.showwarning(APP_NAME, "啟用同步前，請填入正確的 GAS /exec 網址與同步金鑰。", parent=self.panel)
-            return False
-        self.data["settings"].update({"gas_sync_enabled": enabled, "gas_url": url, "gas_sync_key": key})
-        self._save_data()
-        self._update_gas_status("連線設定已儲存。" if enabled else "GAS 同步未啟用，繼續使用本機模式。")
-        return True
+    def _start_local_bridge(self) -> None:
+        if not self.data.get("settings", {}).get("bridge_enabled", True):
+            return
+        try:
+            self.bridge_server = LocalBridgeServer((BRIDGE_HOST, BRIDGE_PORT), make_bridge_handler(self))
+            self.bridge_thread = threading.Thread(target=self.bridge_server.serve_forever, name="xiaomianzhu-local-bridge", daemon=True)
+            self.bridge_thread.start()
+        except OSError as error:
+            self.bridge_error = str(error)
 
-    def _update_gas_status(self, message: str | None = None, error: bool = False) -> None:
-        settings = self.data.get("settings", {})
-        enabled = bool(settings.get("gas_sync_enabled") and settings.get("gas_url") and settings.get("gas_sync_key"))
+    def _update_bridge_status(self) -> None:
         badge = self.panel_widgets.get("mode_badge")
         if isinstance(badge, tk.Label):
-            badge.configure(text="GAS 雲端＋本機" if enabled else "本機模式", bg="#fff1c9" if enabled else "#dcece7")
-        status = self.panel_widgets.get("gas_status")
+            badge.configure(text="本機連線模式", bg="#dcece7")
+        status = self.panel_widgets.get("bridge_status")
         if isinstance(status, tk.Label):
-            last_sync = str(settings.get("gas_last_sync") or "").replace("T", " ")
-            default = (f"已啟用 GAS；最後同步：{last_sync}" if last_sync else "已啟用 GAS，尚未完成第一次同步。") if enabled else "尚未設定 GAS，現在使用本機模式。"
-            status.configure(text=message or default, fg=self.COLORS["danger"] if error else self.COLORS["muted"])
+            if self.bridge_error:
+                status.configure(text=f"本機連線未啟動：{self.bridge_error}", fg=self.COLORS["danger"])
+                return
+            last_sync = str(self.data.get("settings", {}).get("bridge_last_sync") or "").replace("T", " ")
+            suffix = f"｜最後交換：{last_sync}" if last_sync else "｜等待教師工作台連線"
+            status.configure(text=f"已在 http://{BRIDGE_HOST}:{BRIDGE_PORT} 啟動{suffix}", fg=self.COLORS["muted"])
 
-    def _start_gas_request(self, action: str) -> None:
-        if not self._save_gas_settings():
-            return
-        if not self.data["settings"].get("gas_sync_enabled"):
-            messagebox.showinfo(APP_NAME, "目前是本機模式。請先勾選「啟用 GAS 同步」。", parent=self.panel)
-            return
-        if action == "sync":
-            # 第一次上傳前先建立穩定雲端 ID，避免後續同步重複新增同一筆任務。
-            for task in self.data.get("tasks", []):
-                if not task.get("id"):
-                    task["id"] = str(uuid.uuid4())
-                if not task.get("cloud_id"):
-                    task["cloud_id"] = f"PET-{task['id']}"
-            self._save_data()
-        self._update_gas_status("正在連接 GAS，請稍候……")
-        threading.Thread(target=self._gas_worker, args=(action,), daemon=True).start()
-
-    def _gas_worker(self, action: str) -> None:
-        settings = self.data["settings"]
-        payload: dict = {
-            "api": "xiaomianzhu", "action": action, "key": settings.get("gas_sync_key"),
-            "deviceId": settings.get("device_id"),
+    def _bridge_health(self) -> dict:
+        return {
+            "ok": True,
+            "service": "xiaomianzhu-local-bridge",
+            "version": 1,
+            "petName": self._pet_name(),
+            "lastSync": self.data.get("settings", {}).get("bridge_last_sync", ""),
         }
-        if action == "sync":
-            # 從 GAS 拉回的任務由雲端版本為準；只把小綿助本機建立、尚未拉回確認的任務送上去。
-            payload["tasks"] = [task for task in self.data.get("tasks", []) if task.get("source") != "gas"][:1000]
+
+    def _bridge_allowed_origin(self) -> str:
+        return str(self.data.get("settings", {}).get("allowed_web_origin") or "")
+
+    @staticmethod
+    def _web_task_to_local(item: dict) -> dict:
+        cloud_id = str(item.get("taskId") or "").strip()
+        return {
+            "id": cloud_id,
+            "cloud_id": cloud_id,
+            "title": str(item.get("name") or "未命名任務")[:160],
+            "kind": "行程" if item.get("dueTime") else "任務",
+            "due_date": str(item.get("dueDate") or ""),
+            "due_time": str(item.get("dueTime") or ""),
+            "priority": str(item.get("priority") or "中"),
+            "status": str(item.get("status") or "未開始"),
+            "waiting_for": str(item.get("waitingFor") or ""),
+            "source": "web",
+            "created_at": str(item.get("createdAt") or now_iso()),
+            "web_task": dict(item),
+        }
+
+    @staticmethod
+    def _local_task_to_web(task: dict) -> dict:
+        raw = task.get("web_task") if isinstance(task.get("web_task"), dict) else {}
+        task_id = str(task.get("cloud_id") or raw.get("taskId") or f"PET-{task.get('id') or uuid.uuid4()}")
         try:
-            request = urllib.request.Request(
-                str(settings.get("gas_url")), data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
-                headers={"Content-Type": "application/json; charset=utf-8"}, method="POST",
-            )
-            with urllib.request.urlopen(request, timeout=20) as response:
-                result = json.loads(response.read().decode("utf-8"))
-            if not result.get("ok"):
-                raise RuntimeError(str(result.get("error") or "GAS 回傳未知錯誤"))
-            self.root.after(0, lambda r=result, a=action: self._finish_gas_request(a, r))
-        except (urllib.error.URLError, TimeoutError, ValueError, RuntimeError, OSError) as error:
-            self.root.after(0, lambda text=str(error): self._update_gas_status(f"連線失敗：{text}｜本機資料不受影響。", True))
+            sort_order = int(raw.get("sortOrder") or 999)
+        except (TypeError, ValueError):
+            sort_order = 999
+        return {
+            **raw,
+            "taskId": task_id,
+            "name": str(task.get("title") or raw.get("name") or "未命名任務")[:160],
+            "category": str(raw.get("category") or "其他"),
+            "status": str(task.get("status") or raw.get("status") or "未開始"),
+            "priority": str(task.get("priority") or raw.get("priority") or "中"),
+            "dueDate": str(task.get("due_date") or raw.get("dueDate") or ""),
+            "dueTime": str(task.get("due_time") or raw.get("dueTime") or ""),
+            "nextAction": str(raw.get("nextAction") or task.get("title") or ""),
+            "waitingFor": str(task.get("waiting_for") or raw.get("waitingFor") or ""),
+            "owner": str(raw.get("owner") or "桌面小綿助"),
+            "boardDisplay": str(raw.get("boardDisplay") or "自動"),
+            "sortOrder": sort_order,
+            "source": "desktop" if task.get("source") != "web" else "web",
+        }
 
-    def _finish_gas_request(self, action: str, result: dict) -> None:
-        if action == "sync":
-            self._merge_gas_tasks(result.get("tasks") or [])
-            self.data["settings"]["gas_last_sync"] = now_iso()
+    def _bridge_sync(self, payload: dict) -> dict:
+        incoming_tasks = payload.get("tasks") if isinstance(payload.get("tasks"), list) else []
+        incoming_notes = payload.get("notes") if isinstance(payload.get("notes"), list) else []
+        with self.data_lock:
+            local_tasks = self.data.get("tasks", [])
+            by_cloud = {str(task.get("cloud_id") or ""): task for task in local_tasks if task.get("cloud_id")}
+            for item in incoming_tasks[:5000]:
+                if not isinstance(item, dict) or not item.get("taskId"):
+                    continue
+                converted = self._web_task_to_local(item)
+                existing = by_cloud.get(converted["cloud_id"])
+                if existing:
+                    existing.update(converted)
+                else:
+                    local_tasks.append(converted)
+                    by_cloud[converted["cloud_id"]] = converted
+
+            local_notes = self.data.get("notes", [])
+            note_keys = {f"{note.get('created_at', '')}|{note.get('text', '')}" for note in local_notes}
+            for note in incoming_notes[:500]:
+                if not isinstance(note, dict):
+                    continue
+                text = str(note.get("text") or "").strip()[:3000]
+                created_at = str(note.get("createdAt") or note.get("created_at") or now_iso())
+                key = f"{created_at}|{text}"
+                if text and key not in note_keys:
+                    attachments = note.get("attachments") if isinstance(note.get("attachments"), list) else []
+                    local_notes.append({
+                        "id": str(note.get("id") or uuid.uuid4()),
+                        "text": text,
+                        "attachments": [str(value)[:180] for value in attachments[:20]],
+                        "created_at": created_at,
+                        "source": "web",
+                    })
+                    note_keys.add(key)
+            local_notes.sort(key=lambda note: str(note.get("created_at") or ""), reverse=True)
+            self.data["notes"] = local_notes[:500]
+            self.data["settings"]["bridge_last_sync"] = now_iso()
             self._save_data()
-            self._render_dashboard()
-            self._update_gas_status(f"同步完成：雲端共有 {len(result.get('tasks') or [])} 項任務。")
-            self.play("success", 2, "idle", "雲端任務同步完成！")
-        else:
-            self._update_gas_status(f"連線成功：{result.get('message') or 'GAS 已就緒'}")
+            response_tasks = [self._local_task_to_web(task) for task in self.data.get("tasks", [])[:5000]]
+            response_notes = []
+            for note in self.data.get("notes", []):
+                if not note.get("text") and not note.get("attachment_text"):
+                    continue
+                note_id = str(note.get("id") or uuid.uuid4())
+                note["id"] = note_id
+                attachments = note.get("attachments") if isinstance(note.get("attachments"), list) else []
+                response_notes.append({
+                    "id": note_id,
+                    "text": str(note.get("text") or note.get("attachment_text") or "")[:3000],
+                    "attachments": [str(value)[:180] for value in attachments[:20]],
+                    "createdAt": str(note.get("created_at") or now_iso()),
+                    "source": "desktop" if note.get("source") != "web" else "web",
+                })
+        try:
+            self.root.after(0, self._bridge_ui_refresh)
+        except tk.TclError:
+            pass
+        return {"ok": True, "tasks": response_tasks, "notes": response_notes, "syncedAt": now_iso()}
 
-    def _merge_gas_tasks(self, cloud_tasks: list[dict]) -> None:
-        local_by_cloud = {str(task.get("cloud_id") or ""): task for task in self.data.get("tasks", []) if task.get("cloud_id")}
-        for item in cloud_tasks:
-            cloud_id = str(item.get("taskId") or "").strip()
-            if not cloud_id:
-                continue
-            task = local_by_cloud.get(cloud_id)
-            converted = {
-                "cloud_id": cloud_id, "title": str(item.get("name") or "未命名任務"),
-                "kind": "任務", "due_date": str(item.get("dueDate") or ""), "due_time": str(item.get("dueTime") or ""),
-                "priority": str(item.get("priority") or "中"), "status": str(item.get("status") or "未開始"),
-                "waiting_for": str(item.get("waitingFor") or ""), "source": "gas",
-                "created_at": str(item.get("createdAt") or now_iso()),
-            }
-            if task:
-                task.update(converted)
-            else:
-                converted["id"] = cloud_id
-                self.data["tasks"].append(converted)
+    def _bridge_ui_refresh(self) -> None:
+        self._render_dashboard()
+        self._render_notes()
+        self._update_bridge_status()
 
     def _render_notes(self) -> None:
         box = self.panel_widgets.get("notes")
@@ -1153,7 +1274,7 @@ class SecretaryPet(DesktopPetPreview):
         creation_flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
         try:
             result = subprocess.run(
-                ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script), str(path.resolve())],
+                ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", str(script), str(path.resolve())],
                 capture_output=True,
                 text=True,
                 encoding="utf-8",
