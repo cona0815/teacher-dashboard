@@ -2551,6 +2551,24 @@
       return weeks;
     }
 
+    function buildTeachingDays(weeks, weekdayPeriods, holidayMap = {}) {
+      return weeks.flatMap(week => {
+        const days = [];
+        const cursor = dateAtNoon(week.startDate);
+        const end = dateAtNoon(week.endDate);
+        while (cursor <= end) {
+          const weekday = cursor.getDay();
+          const date = formatLocalDate(cursor);
+          const capacity = weekday >= 1 && weekday <= 5 && !holidayMap[date]
+            ? Math.max(0, Number(weekdayPeriods[weekday]) || 0)
+            : 0;
+          if (capacity > 0) days.push({ date, weekday, capacity, weekIndex: week.index });
+          cursor.setDate(cursor.getDate() + 1);
+        }
+        return days;
+      });
+    }
+
     function arrangeTeachingProgress() {
       const units = parseTeachingUnits();
       const startDate = $('progressStartDate').value;
@@ -2575,19 +2593,23 @@
       if (assessments.some(item => item.assessmentDate > scheduleEnd || item.assessmentDate < scheduleStart)) {
         return showToast('每次定期評量都必須落在開始與完成日期之間。', true);
       }
+      const assessmentDateSet = new Set(assessments.map(item => item.date));
+      const allTeachingDays = buildTeachingDays(weeks, weekdayPeriods, holidayMap);
       const reservedReviewPeriods = new Map();
       const reviewPlans = assessments.map(item => {
         let remaining = reviewPeriodsBeforeAssessment;
         const allocations = [];
-        const candidates = weeks.filter(week => dateAtNoon(week.endDate) < item.assessmentDate).reverse();
-        candidates.forEach(week => {
+        const candidates = allTeachingDays
+          .filter(day => dateAtNoon(day.date) < item.assessmentDate && !assessmentDateSet.has(day.date))
+          .reverse();
+        candidates.forEach(day => {
           if (remaining <= 0) return;
-          const alreadyReserved = reservedReviewPeriods.get(week.index) || 0;
-          const available = Math.max(0, week.capacity - alreadyReserved);
+          const alreadyReserved = reservedReviewPeriods.get(day.date) || 0;
+          const available = Math.max(0, day.capacity - alreadyReserved);
           const assigned = Math.min(available, remaining);
           if (!assigned) return;
-          reservedReviewPeriods.set(week.index, alreadyReserved + assigned);
-          allocations.push({ ...week, periods: assigned });
+          reservedReviewPeriods.set(day.date, alreadyReserved + assigned);
+          allocations.push({ ...day, periods: assigned });
           remaining -= assigned;
         });
         return { ...item, allocations, missingPeriods: remaining };
@@ -2595,19 +2617,13 @@
       if (reviewPlans.some(item => item.missingPeriods > 0)) {
         return showToast('評量前可用課節不足，請減少複習節數或提早開始日期。', true);
       }
-      const teachingWeeks = weeks.map(week => ({
-        ...week,
-        capacity: Math.max(0, week.capacity - (reservedReviewPeriods.get(week.index) || 0))
-      })).filter(week => {
-        const weekStart = dateAtNoon(week.startDate);
-        const weekEnd = dateAtNoon(week.endDate);
-        return !assessments.some(item =>
-          (item.assessmentDate >= weekStart && item.assessmentDate <= weekEnd)
-        ) && week.capacity > 0;
-      });
-      if (!teachingWeeks.length) return showToast('扣除評量與複習節數後，沒有可安排單元的授課週。', true);
+      const teachingDays = allTeachingDays.map(day => ({
+        ...day,
+        capacity: Math.max(0, day.capacity - (reservedReviewPeriods.get(day.date) || 0))
+      })).filter(day => !assessmentDateSet.has(day.date) && day.capacity > 0);
+      if (!teachingDays.length) return showToast('扣除評量與複習節數後，沒有可安排單元的授課日。', true);
 
-      const available = teachingWeeks.reduce((sum, week) => sum + week.capacity, 0);
+      const available = teachingDays.reduce((sum, day) => sum + day.capacity, 0);
       const reserve = Math.max(1, Math.round(available * 0.1));
       const explicit = units.reduce((sum, unit) => sum + unit.periods, 0);
       const unspecified = units.filter(unit => !unit.periods);
@@ -2616,43 +2632,42 @@
       units.forEach(unit => { if (!unit.periods) unit.periods = suggested; });
 
       const rows = [];
-      let weekIndex = 0;
-      let usedInWeek = 0;
+      let dayIndex = 0;
+      let usedInDay = 0;
       units.forEach(unit => {
         let remainingPeriods = unit.periods;
-        while (remainingPeriods > 0 && weekIndex < teachingWeeks.length) {
-          const week = teachingWeeks[weekIndex];
-          const capacity = Math.max(0, week.capacity - usedInWeek);
-          if (!capacity) { weekIndex += 1; usedInWeek = 0; continue; }
+        while (remainingPeriods > 0 && dayIndex < teachingDays.length) {
+          const day = teachingDays[dayIndex];
+          const capacity = Math.max(0, day.capacity - usedInDay);
+          if (!capacity) { dayIndex += 1; usedInDay = 0; continue; }
           const assigned = Math.min(capacity, remainingPeriods);
           rows.push({
             id: `progress-${Date.now()}-${rows.length}`,
-            week: `第 ${week.index} 週${week.holidayNames.length ? `（少 ${week.holidayNames.length} 日）` : ''}`, content: unit.name, periods: assigned,
-            startDate: week.startDate, endDate: week.endDate, type: 'teaching'
+            week: `第 ${day.weekIndex} 週`, content: unit.name, periods: assigned,
+            startDate: day.date, endDate: day.date, type: 'teaching'
           });
           remainingPeriods -= assigned;
-          usedInWeek += assigned;
-          if (usedInWeek >= week.capacity) { weekIndex += 1; usedInWeek = 0; }
+          usedInDay += assigned;
+          if (usedInDay >= day.capacity) { dayIndex += 1; usedInDay = 0; }
         }
         if (remainingPeriods > 0) {
-          const lastWeek = teachingWeeks[teachingWeeks.length - 1];
-          rows.push({ id: `progress-${Date.now()}-${rows.length}`, week: '超出期限', content: unit.name, periods: remainingPeriods, startDate: lastWeek.endDate, endDate: lastWeek.endDate, overflow: true, type: 'teaching' });
+          const lastDay = teachingDays[teachingDays.length - 1];
+          rows.push({ id: `progress-${Date.now()}-${rows.length}`, week: '超出期限', content: unit.name, periods: remainingPeriods, startDate: lastDay.date, endDate: lastDay.date, overflow: true, type: 'teaching' });
         }
       });
       const used = rows.filter(row => !row.overflow).reduce((sum, row) => sum + Number(row.periods || 0), 0);
       if (available - used > 0) {
-        const week = teachingWeeks[Math.min(weekIndex, teachingWeeks.length - 1)];
-        rows.push({ id: `progress-${Date.now()}-buffer`, week: '未分配', content: '尚未指定單元／可安排補充教學與彈性活動', periods: available - used, startDate: week.startDate, endDate: teachingWeeks[teachingWeeks.length - 1].endDate, type: 'buffer' });
+        const day = teachingDays[Math.min(dayIndex, teachingDays.length - 1)];
+        rows.push({ id: `progress-${Date.now()}-buffer`, week: '未分配', content: '尚未指定單元／可安排補充教學與彈性活動', periods: available - used, startDate: day.date, endDate: teachingDays[teachingDays.length - 1].date, type: 'buffer' });
       }
       reviewPlans.forEach(item => {
         if (reviewPeriodsBeforeAssessment > 0) {
-          const chronological = [...item.allocations].sort((a, b) => a.startDate.localeCompare(b.startDate));
-          const reviewHolidays = chronological.flatMap(week => week.holidayNames || []);
-          rows.push({
-            id: `progress-${Date.now()}-review-${item.index}`, week: `第 ${item.index} 次評量前 ${reviewPeriodsBeforeAssessment} 節`,
-            content: `第 ${item.index} 次定期評量複習${reviewHolidays.length ? `（遇 ${reviewHolidays.length} 個休假日）` : ''}`, periods: reviewPeriodsBeforeAssessment,
-            startDate: chronological[0].startDate, endDate: chronological[chronological.length - 1].endDate, type: 'review'
-          });
+          const chronological = [...item.allocations].sort((a, b) => a.date.localeCompare(b.date));
+          chronological.forEach((allocation, allocationIndex) => rows.push({
+            id: `progress-${Date.now()}-review-${item.index}-${allocationIndex}`,
+            week: `第 ${item.index} 次評量前複習`, content: `第 ${item.index} 次定期評量複習`, periods: allocation.periods,
+            startDate: allocation.date, endDate: allocation.date, type: 'review'
+          }));
         }
         rows.push({
           id: `progress-${Date.now()}-assessment-${item.index}`, week: `第 ${item.index} 次評量`,

@@ -190,6 +190,10 @@ assert.match(indexHtml, /data-unit-step="1"/, "每個單元應可單獨增加教
 assert.match(indexHtml, /data-unit-step="-1"/, "每個單元應可單獨減少教學節數");
 assert.match(indexHtml, /Math\.ceil\(totalPeriods \/ weeklyPeriods\)/, "單元總節數應依每週實際節數估算所需週數");
 assert.match(indexHtml, /updateTeachingUnitCapacity\(\)/, "調整每週節數後應同步更新單元容量提示");
+assert.match(indexHtml, /function buildTeachingDays\(/, "排程應把每週容量拆成實際上課日");
+assert.match(indexHtml, /startDate: day\.date, endDate: day\.date, type: 'teaching'/, "一般課程應寫入實際授課日而非整週日期範圍");
+assert.match(indexHtml, /reservedReviewPeriods\.get\(day\.date\)/, "評量複習也應依每日課量保留節數");
+assert.match(indexHtml, /startDate: allocation\.date, endDate: allocation\.date, type: 'review'/, "評量複習應分散到實際上課日");
 assert.match(indexHtml, /id="taskPanelNewTaskButton">＋ 新增任務/, "任務清單標題旁應提供新增任務入口");
 assert.match(indexHtml, /data-action="archive"/, "已完成任務列應提供直接封存入口");
 assert.match(source, /隨主任務封存子任務/, "GAS 封存主任務時應留下子任務連帶封存紀錄");
