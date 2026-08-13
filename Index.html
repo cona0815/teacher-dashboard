@@ -262,6 +262,18 @@
     .weekday-periods-grid .input { min-height: 34px !important; padding: 4px 6px !important; text-align: center; }
     .weekly-period-total { color: var(--primary); font-size: 11px; font-weight: 900; white-space: nowrap; }
     .progress-planner-form textarea { min-height: 74px; resize: vertical; }
+    .progress-unit-editor { display: grid; gap: 7px; grid-column: 1 / -1; padding: 9px; border: 1.5px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.62); }
+    .progress-unit-editor-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .progress-unit-editor-head strong { color: var(--primary-strong); font-size: 11px; }
+    .progress-unit-capacity { color: var(--muted); font-size: 10px; font-weight: 800; text-align: right; }
+    .progress-unit-list { display: grid; gap: 6px; }
+    .progress-unit-row { display: grid; grid-template-columns: 28px minmax(120px, 1fr) 32px 58px 32px 30px; gap: 5px; align-items: center; }
+    .progress-unit-row .input { min-height: 34px !important; padding: 5px 7px !important; }
+    .progress-unit-number { color: var(--muted); font-size: 10px; font-weight: 900; text-align: center; }
+    .progress-unit-step, .progress-unit-remove { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 1.5px solid var(--line); border-radius: 9px; background: white; color: var(--primary-strong); font-weight: 900; cursor: pointer; }
+    .progress-unit-remove { color: var(--danger); }
+    .progress-unit-empty { padding: 12px; border: 1.5px dashed var(--line); border-radius: 10px; color: var(--muted); font-size: 11px; text-align: center; }
+    .progress-unit-help { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.45; }
     .progress-planner-actions { display: flex; flex-wrap: wrap; gap: 8px; grid-column: 1 / -1; }
     .progress-workspace { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr); gap: 12px; align-items: start; }
     .progress-planner-column, .progress-results-column { min-width: 0; }
@@ -326,6 +338,7 @@
       .weekday-periods-grid { grid-template-columns: repeat(5, minmax(54px, 1fr)); overflow-x: auto; }
       .progress-plan-row { grid-template-columns: 76px 1fr 70px; }
       .progress-plan-row .progress-date, .progress-plan-row .progress-remove { grid-column: auto; }
+      .progress-unit-row { grid-template-columns: 24px minmax(100px, 1fr) 30px 52px 30px 30px; }
       .form-question-row { grid-template-columns: 1fr; }
     }
 
@@ -1228,7 +1241,7 @@
             <strong>排進度選項</strong>
             <label class="progress-review-toggle"><span>定期評量前保留</span><input class="input" id="reviewPeriodsBeforeAssessment" type="number" min="0" max="30" value="5" aria-label="定期評量前保留複習節數"><span>節複習</span></label>
             <input id="progressWeeklyPeriods" type="hidden" value="5">
-            <label>每課／單元幾節<input class="input" id="defaultUnitPeriods" type="number" min="1" max="30" value="5"></label>
+            <label>新增單元預設節數<input class="input" id="defaultUnitPeriods" type="number" min="1" max="30" value="5"></label>
             <div class="weekday-periods">
               <div class="weekday-periods-head"><span>星期幾有幾節課</span><span class="weekly-period-total" id="weeklyPeriodTotal">一星期共 5 節</span></div>
               <div class="weekday-periods-grid">
@@ -1252,7 +1265,16 @@
               <button class="mini-button" type="button" id="addSchoolHolidayButton">＋ 新增日期</button>
             </div>
           </div>
-          <label class="progress-units-field">單元與預估節數（每行一個；可寫「第一單元 分數除法｜6」）<textarea class="textarea" id="progressUnits" placeholder="第一單元 分數除法｜6&#10;第二單元 小數除法｜7&#10;第一次評量複習｜3"></textarea></label>
+          <div class="progress-unit-editor">
+            <div class="progress-unit-editor-head">
+              <strong>單元與個別教學節數</strong>
+              <span class="progress-unit-capacity" id="progressUnitCapacity">尚未新增單元</span>
+            </div>
+            <div class="progress-unit-list" id="progressUnitList"></div>
+            <button class="mini-button" type="button" id="addTeachingUnitButton">＋ 新增單元</button>
+            <p class="progress-unit-help">新增時會套用上方「新增單元預設節數」；之後可逐一加減。系統會依星期一到五的實際節數與休假日安排週次。</p>
+            <textarea id="progressUnits" hidden aria-hidden="true"></textarea>
+          </div>
           <div class="progress-planner-actions">
             <button class="button button-dark" type="button" id="aiArrangeProgressButton" data-ai-only hidden>✨ AI 幫我排進度</button>
             <button class="button button-ghost" type="button" id="addProgressRowButton">＋ 手動新增</button>
@@ -2127,6 +2149,7 @@
       $('useOfficialHolidays').checked = normalized.useOfficialHolidays !== false;
       roleWorkspaceState.schoolHolidays = normalized.schoolHolidays;
       $('progressUnits').value = normalized.units || '';
+      renderTeachingUnitEditor();
       $('assessmentDate1').value = normalized.assessmentDates[0] || '';
       $('assessmentDate2').value = normalized.assessmentDates[1] || '';
       $('assessmentDate3').value = normalized.assessmentDates[2] || '';
@@ -2175,6 +2198,7 @@
       const total = getWeeklyPeriodTotal();
       $('progressWeeklyPeriods').value = total;
       $('weeklyPeriodTotal').textContent = `一星期共 ${total} 節`;
+      updateTeachingUnitCapacity();
       return total;
     }
 
@@ -2364,9 +2388,65 @@
       const defaultPeriods = Math.max(1, Math.min(30, Number($('defaultUnitPeriods').value) || 5));
       return $('progressUnits').value.split(/\r?\n/).map(line => line.trim()).filter(Boolean).map((line, index) => {
         const parts = line.split(/[｜|]/).map(part => part.trim());
-        const periods = Number(parts[1]);
-        return { name: parts[0] || `單元 ${index + 1}`, periods: Number.isFinite(periods) && periods > 0 ? Math.round(periods) : defaultPeriods };
+        const periods = Number(parts.pop());
+        const hasExplicitPeriods = Number.isFinite(periods) && periods > 0 && parts.length > 0;
+        return {
+          name: (hasExplicitPeriods ? parts.join('｜') : line).trim() || `單元 ${index + 1}`,
+          periods: hasExplicitPeriods ? Math.max(1, Math.min(30, Math.round(periods))) : defaultPeriods
+        };
       });
+    }
+
+    function serializeTeachingUnits(units) {
+      return units.map(unit => `${String(unit.name || '').trim()}｜${Math.max(1, Math.min(30, Number(unit.periods) || 1))}`).join('\n');
+    }
+
+    function getTeachingUnitDrafts() {
+      return [...$('progressUnitList').querySelectorAll('[data-teaching-unit]')].map((row, index) => ({
+        name: row.querySelector('[data-unit-field="name"]')?.value.trim() || `單元 ${index + 1}`,
+        periods: Math.max(1, Math.min(30, Number(row.querySelector('[data-unit-field="periods"]')?.value) || 1))
+      }));
+    }
+
+    function updateTeachingUnitCapacity(units = getTeachingUnitDrafts()) {
+      const totalPeriods = units.reduce((sum, unit) => sum + Math.max(1, Number(unit.periods) || 1), 0);
+      const weeklyPeriods = getWeeklyPeriodTotal();
+      const estimatedWeeks = weeklyPeriods > 0 && totalPeriods > 0 ? Math.ceil(totalPeriods / weeklyPeriods) : 0;
+      $('progressUnitCapacity').textContent = units.length
+        ? `${units.length} 個單元・共 ${totalPeriods} 節${weeklyPeriods ? `・每週 ${weeklyPeriods} 節，至少約 ${estimatedWeeks} 週` : '・尚未設定每週節數'}`
+        : '尚未新增單元';
+    }
+
+    function syncTeachingUnitsFromEditor({ persist = true } = {}) {
+      const units = getTeachingUnitDrafts();
+      $('progressUnits').value = serializeTeachingUnits(units);
+      updateTeachingUnitCapacity(units);
+      if (persist) saveTeachingProgress({ silent: true });
+      return units;
+    }
+
+    function renderTeachingUnitEditor(units = parseTeachingUnits()) {
+      const list = $('progressUnitList');
+      list.innerHTML = units.length ? units.map((unit, index) => `
+        <div class="progress-unit-row" data-teaching-unit="${index}">
+          <span class="progress-unit-number">${index + 1}</span>
+          <input class="input" data-unit-field="name" maxlength="100" value="${escapeHtml(unit.name)}" aria-label="第 ${index + 1} 個單元名稱">
+          <button class="progress-unit-step" type="button" data-unit-step="-1" aria-label="減少一節">−</button>
+          <input class="input" data-unit-field="periods" type="number" min="1" max="30" value="${Math.max(1, Number(unit.periods) || 1)}" aria-label="第 ${index + 1} 個單元節數">
+          <button class="progress-unit-step" type="button" data-unit-step="1" aria-label="增加一節">＋</button>
+          <button class="progress-unit-remove" type="button" data-remove-unit aria-label="刪除此單元">×</button>
+        </div>`).join('') : '<div class="progress-unit-empty">尚未新增單元。按「新增單元」後，可為每個單元分別設定節數。</div>';
+      updateTeachingUnitCapacity(units);
+    }
+
+    function addTeachingUnit() {
+      const units = getTeachingUnitDrafts();
+      const periods = Math.max(1, Math.min(30, Number($('defaultUnitPeriods').value) || 5));
+      units.push({ name: `第 ${units.length + 1} 單元`, periods });
+      $('progressUnits').value = serializeTeachingUnits(units);
+      renderTeachingUnitEditor(units);
+      syncTeachingUnitsFromEditor();
+      $('progressUnitList').querySelector('.progress-unit-row:last-child [data-unit-field="name"]')?.select();
     }
 
     function getAllAssessmentDates() {
@@ -6349,6 +6429,27 @@
     });
     $('aiArrangeProgressButton').addEventListener('click', arrangeTeachingProgress);
     $('addProgressRowButton').addEventListener('click', addTeachingProgressRow);
+    $('addTeachingUnitButton').addEventListener('click', addTeachingUnit);
+    $('progressUnitList').addEventListener('input', event => {
+      if (!event.target.matches('[data-unit-field]')) return;
+      if (event.target.dataset.unitField === 'periods') {
+        event.target.value = Math.max(1, Math.min(30, Number(event.target.value) || 1));
+      }
+      syncTeachingUnitsFromEditor();
+    });
+    $('progressUnitList').addEventListener('click', event => {
+      const row = event.target.closest('[data-teaching-unit]');
+      if (!row) return;
+      const units = getTeachingUnitDrafts();
+      const index = Number(row.dataset.teachingUnit);
+      const stepButton = event.target.closest('[data-unit-step]');
+      if (stepButton) units[index].periods = Math.max(1, Math.min(30, units[index].periods + Number(stepButton.dataset.unitStep)));
+      else if (event.target.closest('[data-remove-unit]')) units.splice(index, 1);
+      else return;
+      $('progressUnits').value = serializeTeachingUnits(units);
+      renderTeachingUnitEditor(units);
+      syncTeachingUnitsFromEditor();
+    });
     $('saveProgressPlanButton').addEventListener('click', saveTeachingProgress);
     $('syncProgressCalendarButton').addEventListener('click', syncTeachingProgressCalendar);
     $('addSchoolHolidayButton').addEventListener('click', addSchoolHolidayRow);
@@ -6417,8 +6518,8 @@
       const emptyAction = event.target.closest('[data-empty-progress-action]');
       if (emptyAction) {
         if (emptyAction.dataset.emptyProgressAction === 'manual') return addTeachingProgressRow();
-        $('progressUnits').scrollIntoView({ block: 'center', behavior: 'smooth' });
-        return $('progressUnits').focus();
+        $('progressUnitList').scrollIntoView({ block: 'center', behavior: 'smooth' });
+        return addTeachingUnit();
       }
       const button = event.target.closest('[data-remove-progress]');
       if (!button) return;

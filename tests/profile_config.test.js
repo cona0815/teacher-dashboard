@@ -185,6 +185,11 @@ assert.match(indexHtml, /主任務與下面的 .*項子任務/, "封存主任務
 assert.match(indexHtml, /data-theme-choice="minimal"/, "介面配色應提供低彩度極簡選項");
 assert.match(indexHtml, /INTERFACE_THEMES = \['forest', 'apricot', 'lavender', 'tech', 'minimal'\]/, "主題清單應包含極簡配色");
 assert.match(indexHtml, /id="teachingProgressBody" hidden/, "教學進度首次進入應預設收合");
+assert.match(indexHtml, /id="progressUnitList"/, "教學進度應提供逐單元編輯清單");
+assert.match(indexHtml, /data-unit-step="1"/, "每個單元應可單獨增加教學節數");
+assert.match(indexHtml, /data-unit-step="-1"/, "每個單元應可單獨減少教學節數");
+assert.match(indexHtml, /Math\.ceil\(totalPeriods \/ weeklyPeriods\)/, "單元總節數應依每週實際節數估算所需週數");
+assert.match(indexHtml, /updateTeachingUnitCapacity\(\)/, "調整每週節數後應同步更新單元容量提示");
 assert.match(indexHtml, /id="taskPanelNewTaskButton">＋ 新增任務/, "任務清單標題旁應提供新增任務入口");
 assert.match(indexHtml, /data-action="archive"/, "已完成任務列應提供直接封存入口");
 assert.match(source, /隨主任務封存子任務/, "GAS 封存主任務時應留下子任務連帶封存紀錄");
