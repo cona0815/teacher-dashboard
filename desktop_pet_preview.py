@@ -43,8 +43,8 @@ class DesktopPetPreview:
         "sleep": 6,
         "success": 8,
         "think": 8,
-        "walk_left": 8,
-        "walk_right": 8,
+        "walk_left": 16,
+        "walk_right": 16,
         "warning": 8,
     }
 
@@ -61,8 +61,12 @@ class DesktopPetPreview:
 
         self.screen_width = self.root.winfo_screenwidth()
         self.screen_height = self.root.winfo_screenheight()
-        self.x = max(12, self.screen_width - WINDOW_WIDTH - 34)
-        self.y = max(12, self.screen_height - WINDOW_HEIGHT - 58)
+        # Start in a clearly visible position for local testing. The real
+        # secretary remembers its saved location; this preview should never
+        # appear to be missing because it started behind a taskbar or off the
+        # right edge of a multi-monitor desktop.
+        self.x = max(12, (self.screen_width - WINDOW_WIDTH) // 2)
+        self.y = max(12, (self.screen_height - WINDOW_HEIGHT) // 2)
         self.root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}+{self.x}+{self.y}")
 
         self.assets_root = Path(__file__).resolve().parent / "assets" / "pet" / "frames"
