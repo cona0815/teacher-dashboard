@@ -29,10 +29,10 @@ class DesktopPetPreview:
         "sleep": 290,
         "success": 110,
         "think": 145,
-        # Walking uses a forward-and-back pose cycle.  A slightly slower
-        # cadence reads as a gentle lamb walk instead of a hurried limp.
-        "walk_left": 125,
-        "walk_right": 125,
+        # Use the complete 16-frame gait cycle.  Keeping the cadence in sync
+        # with the web animation prevents the lamb from appearing to limp.
+        "walk_left": 75,
+        "walk_right": 75,
         "warning": 140,
     }
 
