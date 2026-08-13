@@ -31,8 +31,8 @@ class DesktopPetPreview:
         "think": 145,
         # Walking uses a forward-and-back pose cycle.  A slightly slower
         # cadence reads as a gentle lamb walk instead of a hurried limp.
-        "walk_left": 108,
-        "walk_right": 108,
+        "walk_left": 125,
+        "walk_right": 125,
         "warning": 140,
     }
 
@@ -161,14 +161,11 @@ class DesktopPetPreview:
                     cleaned_pixels.append((red, green, blue, 0 if is_magenta_fringe or alpha < 32 else 255))
                 image.putdata(cleaned_pixels)
                 result[state].append(ImageTk.PhotoImage(image))
-            if state.startswith("walk_") and len(result[state]) >= 3:
-                # The supplied walk drawings progress from an extended pose
-                # into a compressed pose. Jumping directly from the last
-                # drawing back to the first makes the body snap upward and
-                # looks like one injured leg. Ping-pong the poses so the body
-                # returns through the same contact positions smoothly.
-                forward = result[state]
-                result[state] = forward + forward[-2:0:-1]
+            # Walk assets are authored as a complete, ordered gait cycle.
+            # Keep that order instead of mirroring it at runtime: the
+            # generated frames already alternate weight-bearing legs and
+            # include the return-to-contact pose. Mirroring here made the
+            # rear hoof appear to snap backwards and read as an injury.
         return result
 
     def run(self) -> None:
