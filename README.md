@@ -21,6 +21,16 @@
 - 本機 AI 輔助介面與去識別化提醒（需自行設定 Gemini API 金鑰）
 - Windows 桌面小綿助：今日、逾期、待追蹤、記事、附件整理、喝水、起身與服藥提醒
 - JSON 備份與還原
+- LINE 小幫手（選用）：在 LINE 傳文字、語音或照片，經工作台「LINE 收件匣」確認後建立任務或記事；可查今日進度、產生聯絡簿公告、接收晨間簡報。安裝方式見 [LINE_BOT_INSTALL.md](LINE_BOT_INSTALL.md)
+- 晨間大屏（選用）：`Morning.html` 教室觸控頁，以座號完成點名（病假／事假／遲到／未到）與各科作業繳交登記（已交綠／缺交紅／補交藍），送出即推播老師 LINE，並提供分科天數統計查詢；工作台日曆同步顯示每日出缺與缺交摘要
+
+## 設計參考聲明
+
+本專案的 LINE 整合與晨間大屏為獨立設計與實作。開發過程中曾參考網路上多篇 LINE＋GAS＋Gemini 的公開教學與產品介紹作為市場調研——包含 [ijun-ai 教師智慧管家的功能介紹頁](https://www.ijun-ai.com/tutor/line-bot/) 與 [黃暐鑫老師的 LINE 班級小幫手介紹頁](https://sites.google.com/view/weishinhuang/%E8%87%AA%E6%88%91%E9%96%8B%E7%99%BC%E7%9A%84%E9%9B%9C%E4%B8%83%E9%9B%9C%E5%85%AB/line%E7%8F%AD%E7%B4%9A%E5%B0%8F%E5%B9%AB%E6%89%8B)——未使用任何第三方程式碼；功能取捨與資料架構（localStorage 本機優先、收件匣確認制、晨間大屏班級經營）均為本專案原創決策，過程記錄於 `LINE_BOT_SPEC.md`。
+
+## LINE 小幫手（選用）
+
+由老師自行部署 `LineBot.gs` 到自己的 Google Apps Script，搭配自己的 LINE 官方帳號與試算表；試算表只是「轉運信箱」，訊息被工作台收下後正本仍在瀏覽器 `localStorage`。未啟用時，工作台與小綿助完全不受影響。金鑰與網址不會寫入 JSON 備份或 GitHub。桌面小綿助以唯讀方式顯示「LINE 待整理」清單（經本機橋接由網頁轉入，桌寵本身不連網）。
 
 ## 網頁與小綿助連動
 

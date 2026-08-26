@@ -17,6 +17,17 @@ Koboyo permits its icons to be used and modified in personal and commercial webs
 
 The project includes only the icons used by the interface and does not redistribute the Koboyo collection.
 
+## IP as Logo mascot icons
+
+The webp mascot icons under `assets/ipas/` were downloaded from [IP as Logo Skill](https://ipaslogo.com/) (open-source project: [s1dashu/ip-as-logo-skill](https://github.com/s1dashu/ip-as-logo-skill), MIT License). The site states every logo is free to download and free for commercial use; no attribution is required, but the source is credited here as a courtesy.
+
+- Icons used: classic brown owl, logic owl mech, compass, pencil, mailbox, open book, abacus, star forge, hourglass, timely alarm clock, handbell, rocket, kindness bot
+- The project includes only the icons used by the interface and does not redistribute the collection.
+
+## BpmfIansui zhuyin font
+
+`assets/fonts/BpmfIansui-Regular.ttf` is the 芫荽注音 (Bpmf Iansui) font from [ButTaiwan/bpmfvs](https://github.com/ButTaiwan/bpmfvs) (v1.500), derived from [Iansui](https://github.com/ButTaiwan/iansui) / Klee One. Licensed under the SIL Open Font License 1.1; commercial use and bundling with software are permitted. The license files (`LICENSE-Iansui.txt`, `LICENSE-2.0.txt`, `NOTICE.txt`) are included alongside the font. Used as the optional 注音 display font for the morning-board contact book (low-grade classes).
+
 ## Project-owned interface illustrations
 
 The following interface illustrations were created or generated specifically for this modified project and were supplied by the project owner. They are not copied from Irasutoya, DeskPet, an existing school mascot, or another known cartoon character:

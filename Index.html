@@ -4,7 +4,7 @@
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' https://generativelanguage.googleapis.com http://127.0.0.1:8767; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' https://generativelanguage.googleapis.com https://script.google.com https://script.googleusercontent.com http://127.0.0.1:8767; object-src 'none'; base-uri 'self'; form-action 'self'">
   <title>國小教師工作台</title>
   <style>
     :root {
@@ -559,6 +559,29 @@
     .secretary-note-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 13px; background: #fffefb; }
     .secretary-note-text { color: var(--ink); font-size: 12px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
     .secretary-note-meta { margin-top: 5px; color: var(--muted); font-size: 9px; }
+    .toolbox-badge { display: inline-block; min-width: 17px; margin-left: 6px; padding: 1px 5px; border-radius: 9px; background: #a34339; color: #fff; font-size: 10px; text-align: center; }
+    .line-inbox-item { border: 1.5px solid var(--line); border-radius: 13px; background: #fffefb; padding: 10px 12px; display: grid; gap: 8px; }
+    .line-inbox-chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .line-chip { padding: 2px 8px; border-radius: 9px; background: var(--soft, #e8f2ee); color: var(--primary-strong); font-size: 10px; font-weight: 800; }
+    .line-chip-task { background: #fff7e6; color: #8a5a10; }
+    .line-inbox-title { font-size: 12px; font-weight: 800; }
+    .line-inbox-original { color: var(--muted); font-size: 11px; white-space: pre-wrap; word-break: break-word; }
+    .line-inbox-controls { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .line-inbox-controls .select, .line-inbox-controls .input { max-width: 160px; min-height: 32px; padding: 4px 8px; font-size: 11px; }
+    .calendar-rollcall { display: block; width: 100%; margin: 2px 0; padding: 2px 5px; border: 0; border-radius: 7px; background: #fdeee9; color: #8a3d31; font-size: 10px; font-weight: 800; text-align: left; cursor: pointer; }
+    .calendar-rollcall.all-clear { background: #e3f6ec; color: #1c6b45; }
+    /* 摘要卡改用清楚的 emoji 圖示 */
+    .summary-emoji { font-size: 30px; line-height: 1; display: inline-block; }
+    /* 身分切換列隱藏：預設四種身分全開，不需手動切換 */
+    .role-switcher { display: none !important; }
+    /* 教學進度表單字級放大，投影與久看更清楚 */
+    #teachingProgressBody, #teachingProgressBody label, #teachingProgressBody small, #teachingProgressBody p { font-size: 14px; }
+    #teachingProgressBody .input, #teachingProgressBody .select, #teachingProgressBody .textarea { font-size: 15px; }
+    #teachingProgressBody strong, #teachingProgressBody h3 { font-size: 15px; }
+    /* 記事勾選完成：刪除線 */
+    .secretary-note-item .note-done-check { width: 18px; height: 18px; flex: 0 0 auto; cursor: pointer; margin-top: 2px; }
+    .secretary-note-item.done .secretary-note-text { text-decoration: line-through; color: var(--muted); }
+    .secretary-note-main { display: flex; gap: 8px; align-items: flex-start; min-width: 0; }
     .secretary-note-empty { padding: 15px; border: 1.5px dashed var(--line); border-radius: 13px; color: var(--muted); font-size: 11px; text-align: center; }
     .secretary-note-count { padding: 3px 8px; border-radius: 999px; background: var(--primary-soft); color: var(--primary); font-size: 10px; font-weight: 900; }
 
@@ -1168,12 +1191,12 @@
     </header>
 
     <section class="summary-grid" aria-label="任務摘要">
-      <article class="summary-card"><img class="summary-icon" src="assets/koboyo/teacher-checking-list.svg" alt="待辦"><div class="summary-label">待辦總數</div><div class="summary-value" id="sumActive">0</div></article>
-      <article class="summary-card"><img class="summary-icon" src="assets/koboyo/academic-year-planner.svg" alt="學年行事"><div class="summary-label">本週重點</div><div class="summary-value" id="sumUrgent">0</div></article>
-      <article class="summary-card"><img class="summary-icon" src="assets/koboyo/parent-teacher-association.svg" alt="親師協作"><div class="summary-label">等待回覆</div><div class="summary-value" id="sumWaiting">0</div></article>
-      <article class="summary-card"><img class="summary-icon" src="assets/koboyo/academic-year-planner.svg" alt="今日期限"><div class="summary-label">今日截止</div><div class="summary-value" id="sumDueToday">0</div></article>
-      <article class="summary-card"><img class="summary-icon" src="assets/koboyo/teacher-checking-list.svg" alt="逾期追蹤"><div class="summary-label">逾期追蹤</div><div class="summary-value" id="sumOverdue">0</div></article>
-      <article class="summary-card"><img class="summary-icon" src="assets/koboyo/graduation-cap-scroll.svg" alt="完成與畢業"><div class="summary-label">本期完成</div><div class="summary-value" id="sumCompleted">0</div></article>
+      <article class="summary-card"><img class="summary-icon" src="assets/ipas/abacus-todo.webp" alt="待辦"><div class="summary-label">待辦總數</div><div class="summary-value" id="sumActive">0</div></article>
+      <article class="summary-card"><img class="summary-icon" src="assets/ipas/star-weekly.webp" alt="本週重點"><div class="summary-label">本週重點</div><div class="summary-value" id="sumUrgent">0</div></article>
+      <article class="summary-card"><img class="summary-icon" src="assets/ipas/hourglass-waiting.webp" alt="等待回覆"><div class="summary-label">等待回覆</div><div class="summary-value" id="sumWaiting">0</div></article>
+      <article class="summary-card"><img class="summary-icon" src="assets/ipas/clock-duetoday.webp" alt="今日截止"><div class="summary-label">今日截止</div><div class="summary-value" id="sumDueToday">0</div></article>
+      <article class="summary-card"><img class="summary-icon" src="assets/ipas/bell-overdue.webp" alt="逾期追蹤"><div class="summary-label">逾期追蹤</div><div class="summary-value" id="sumOverdue">0</div></article>
+      <article class="summary-card"><img class="summary-icon" src="assets/ipas/rocket-done.webp" alt="本期完成"><div class="summary-label">本期完成</div><div class="summary-value" id="sumCompleted">0</div></article>
     </section>
 
     <nav class="role-switcher" id="roleSwitcher" aria-label="選擇目前身分，可複選">
@@ -1188,16 +1211,18 @@
     <section class="teacher-toolbox" id="teacherToolbox" aria-labelledby="teacherToolboxTitle">
       <div class="teacher-toolbox-head">
         <div class="teacher-toolbox-copy">
-          <img src="assets/koboyo/academic-year-planner.svg" alt="">
+          <img src="assets/ipas/owl-toolbox.webp" alt="">
           <div>
             <h2 id="teacherToolboxTitle">教師工具箱</h2>
             <p>教學進度、AI 協助與小綿助記事都先收在這裡；需要時再展開，不打擾任務清單。</p>
           </div>
         </div>
         <div class="teacher-toolbox-actions" aria-label="教師工具">
-          <button class="toolbox-button" type="button" data-toolbox-target="teachingProgressPanel" data-role-only="teacher" aria-expanded="false">教學進度</button>
-          <button class="toolbox-button" type="button" data-toolbox-target="aiAssistantSection" data-ai-only aria-expanded="false" hidden>AI 行政助理</button>
+          <button class="toolbox-button" type="button" data-toolbox-target="contactBookSection" data-line-only aria-expanded="false" hidden>聯絡本</button>
+          <button class="toolbox-button" type="button" data-toolbox-target="lineInboxSection" data-line-only aria-expanded="false" hidden>LINE 收件匣<span class="toolbox-badge" id="lineInboxBadge" hidden>0</span></button>
           <button class="toolbox-button" type="button" data-toolbox-target="secretaryNotesSection" aria-expanded="false">小綿助記事</button>
+          <button class="toolbox-button" type="button" data-toolbox-target="aiAssistantSection" data-ai-only aria-expanded="false" hidden>AI 行政助理</button>
+          <button class="toolbox-button" type="button" data-toolbox-target="teachingProgressPanel" data-role-only="teacher" aria-expanded="false">教學進度</button>
         </div>
       </div>
       <div class="teacher-toolbox-content" id="teacherToolboxContent" hidden>
@@ -1205,7 +1230,7 @@
     <section class="teaching-progress-panel" id="teachingProgressPanel" aria-labelledby="teachingProgressTitle" hidden>
       <div class="teaching-progress-head">
         <div class="teaching-progress-title">
-          <img src="assets/koboyo/academic-year-planner.svg" alt="">
+          <img src="assets/ipas/compass-progress.webp" alt="">
           <div><h2 id="teachingProgressTitle">教師｜教學與評量進度</h2><p id="teachingProgressSubtitle">可手動安排；開啟 AI 後，也能依期限、節數與複習彈性產生草案。</p></div>
         </div>
         <button class="mini-button" type="button" id="toggleTeachingProgressButton">收合</button>
@@ -1294,7 +1319,7 @@
     <section class="ai-assistant" id="aiAssistantSection" aria-labelledby="aiAssistantTitle" hidden>
       <div class="ai-header">
         <div class="ai-heading">
-          <img src="assets/koboyo/teacher-checking-list.svg" alt="AI 行政助理">
+          <img src="assets/ipas/robot-ai.webp" alt="AI 行政助理">
           <div>
             <h2 id="aiAssistantTitle">AI 行政助理</h2>
             <p>描述情境，AI 會先分析與建議；若屬任務，再由老師確認是否建立主任務與子任務。</p>
@@ -1446,10 +1471,64 @@
         </div>
         <div class="secretary-note-actions">
           <button class="button button-light" type="button" id="importSecretaryNotesButton">匯入桌面記事</button>
-          <button class="button button-light" type="button" id="exportSecretaryNotesButton">匯出記事</button>
+          <button class="button button-light" type="button" id="toggleDoneNotesButton">顯示已完成</button>
           <input id="secretaryNotesFileInput" type="file" accept="application/json,.json" hidden>
         </div>
         <div class="secretary-note-list" id="secretaryNoteList"></div>
+      </div>
+    </section>
+
+    <section class="secretary-notes line-inbox" id="lineInboxSection" aria-labelledby="lineInboxTitle">
+      <div class="secretary-notes-head">
+        <div class="secretary-notes-title">
+          <img src="assets/ipas/mailbox-line.webp" alt="">
+          <div>
+            <h2 id="lineInboxTitle">LINE 收件匣 <span class="secretary-note-count" id="lineInboxCount">0</span></h2>
+            <p>從 LINE 傳來的訊息先收在這裡；按「轉為任務」或「轉為記事」確認後才會正式建立。</p>
+          </div>
+        </div>
+        <div class="secretary-note-actions">
+          <button class="mini-button" type="button" id="syncLineInboxButton">立即同步</button>
+        </div>
+      </div>
+      <div class="secretary-notes-body">
+        <div class="secretary-note-meta" id="lineInboxStatus">尚未同步。</div>
+        <div class="secretary-note-list" id="lineInboxList"></div>
+      </div>
+    </section>
+
+    <section class="secretary-notes contact-book" id="contactBookSection" aria-labelledby="contactBookTitle">
+      <div class="secretary-notes-head">
+        <div class="secretary-notes-title">
+          <img src="assets/ipas/book-contact.webp" alt="">
+          <div>
+            <h2 id="contactBookTitle">聯絡本</h2>
+            <p>在這裡預先輸入每天的聯絡本；晨間大屏開啟時會自動顯示在點名畫面旁的黑板上。同一天以最後儲存者為準。</p>
+          </div>
+        </div>
+      </div>
+      <div class="secretary-notes-body">
+        <div class="secretary-note-actions" style="align-items:center;flex-wrap:wrap">
+          <input class="input" id="contactBookDate" type="date" style="max-width:170px">
+          <button class="mini-button" type="button" id="contactBookLoadButton">讀取</button>
+          <button class="mini-button" type="button" id="contactBookSaveButton">儲存到雲端</button>
+          <span class="secretary-note-meta" id="contactBookMeta">選日期後按「讀取」。儲存後大屏一分鐘內自動更新。</span>
+        </div>
+        <div class="secretary-note-actions contact-quick-add" style="align-items:center;flex-wrap:wrap;margin-top:8px">
+          <select class="select" id="contactCategorySelect" style="max-width:120px"></select>
+          <select class="select" id="contactPresetSelect" style="max-width:220px"></select>
+          <input class="input" id="contactExtraInput" maxlength="60" placeholder="補充（頁數、範圍、金額…）" style="max-width:220px">
+          <button class="mini-button" type="button" id="contactAddLineButton">＋ 加入</button>
+          <button class="mini-button" type="button" id="contactRenumberButton">重新編號</button>
+        </div>
+        <textarea class="textarea" id="contactBookInput" maxlength="5000" rows="7" placeholder="今日聯絡本：&#10;1. 數習 p.20&#10;2. 帶直笛&#10;3. 明天校外教學穿運動服"></textarea>
+        <div class="secretary-note-actions" style="align-items:center;flex-wrap:wrap;margin-top:10px">
+          <strong style="font-size:12px;color:var(--primary-strong)">📚 歷史清單</strong>
+          <button class="mini-button" type="button" id="contactBookListButton">載入清單</button>
+          <button class="mini-button" type="button" id="contactBookCopyPrevButton">複製最近一筆到目前日期</button>
+          <span class="secretary-note-meta" id="contactBookListMeta"></span>
+        </div>
+        <div class="secretary-note-list" id="contactBookHistoryList"></div>
       </div>
     </section>
 
@@ -1459,7 +1538,7 @@
     <section class="workspace">
       <aside class="panel filter-panel">
         <div class="filter-toolbar">
-          <h2 class="panel-title title-with-icon"><img class="title-icon" src="assets/koboyo/teacher-checking-list.svg" alt="">篩選任務</h2>
+          <h2 class="panel-title title-with-icon"><img class="title-icon" src="assets/ipas/owl-filter.webp" alt="">篩選任務</h2>
           <button class="mini-button" type="button" id="toggleFilterPanelButton" aria-expanded="true">收合篩選</button>
         </div>
         <div class="filter-fields" id="filterFields">
@@ -1499,7 +1578,7 @@
       <section class="panel task-panel">
         <div class="task-toolbar">
           <div>
-            <h2 class="title-with-icon"><img class="title-icon" src="assets/koboyo/graduation-cap-scroll.svg" alt="">任務清單</h2>
+            <h2 class="title-with-icon"><img class="title-icon" src="assets/ipas/pencil-tasks.webp" alt="">任務清單</h2>
             <div class="task-meta" id="taskMeta">0 件任務</div>
           </div>
           <div class="task-toolbar-actions">
@@ -1654,6 +1733,7 @@
         <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="privacy">敏感資料</button>
         <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="api">AI 設定</button>
         <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="pet">小綿助</button>
+        <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="linebot">LINE 小幫手</button>
         <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="backup">備份與還原</button>
         <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="security">資料與資安</button>
         <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="license">授權</button>
@@ -1796,6 +1876,50 @@
         </div>
       </section>
 
+      <section class="settings-panel" data-settings-panel="linebot">
+        <p class="settings-note">LINE 小幫手是選用功能：在 LINE 隨手傳文字、語音或照片，訊息會先進工作台的「LINE 收件匣」，由你確認後才建立任務或記事。不設定時，工作台與桌面小綿助完全不受影響。需要自行部署一份 Google Apps Script（免費），資料留在你自己的 Google 帳號。</p>
+        <label class="check-row" style="margin-bottom:14px"><input type="checkbox" id="lineBridgeEnabled">啟用 LINE 小幫手同步</label>
+        <div class="form-grid" style="padding:0">
+          <div class="field field-wide">
+            <label for="lineGasUrl">Apps Script 部署網址（/exec 結尾）</label>
+            <input class="input" id="lineGasUrl" type="url" autocomplete="off" placeholder="https://script.google.com/macros/s/……/exec">
+          </div>
+          <div class="field field-wide">
+            <label for="lineSyncToken">同步金鑰（執行 setupLineBot 後取得）</label>
+            <input class="input" id="lineSyncToken" type="password" autocomplete="off" placeholder="貼上 LINE_SYNC_TOKEN">
+            <label class="check-row" style="margin-top:8px"><input type="checkbox" id="rememberLineSyncToken" checked>記住在這台電腦的目前瀏覽器</label>
+            <div class="api-secret-note">同步金鑰與網址不會放進 JSON 備份或 GitHub。共用電腦請取消勾選，金鑰便只保留到關閉此瀏覽器分頁。</div>
+          </div>
+        </div>
+        <div class="pet-settings-status">
+          <strong>連線狀態</strong>
+          <span id="lineBridgeStatus">尚未設定。</span>
+          <span>
+            <button class="button button-light" type="button" id="testLineBridgeButton">測試連線</button>
+            <button class="button button-dark" type="button" id="syncLineBridgeButton">立即同步</button>
+          </span>
+          <span>同步會做兩件事：拉回 LINE 收件匣的新訊息，並把「今日任務與課程進度摘要」推上雲端，供 LINE 查詢與晨間簡報使用（摘要不含學生個資與附件）。</span>
+        </div>
+        <div class="field field-wide" style="margin-top:14px">
+          <label>聯絡本常用項目（可自訂；每行一項，改完自動儲存）</label>
+          <div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap">
+            <select class="select" id="contactPresetEditCategory" style="max-width:130px"></select>
+            <textarea class="textarea" id="contactPresetEditTextarea" rows="6" style="flex:1;min-width:240px" placeholder="每行一個常用項目，例如：&#10;國習 P.&#10;甲本一課"></textarea>
+          </div>
+          <div class="api-secret-note">這些項目會出現在「教師工具箱 → 聯絡本」的快速輸入下拉選單；以「P.」結尾的項目，加入時會自動接上補充欄的頁數。清空全部內容可還原該分類的預設清單。</div>
+        </div>
+        <article class="backup-card gas-install-card">
+          <h3>安裝教學與完整程式碼</h3>
+          <p>需要：LINE 官方帳號（免費）＋一份自己的 Google 試算表＋部署 <code>LineBot.gs</code>。完整步驟請看安裝說明；在 LINE 輸入「我的ID」可查自己的 userId。</p>
+          <div class="gas-actions">
+            <a class="button button-light" href="LINE_BOT_INSTALL.md" target="_blank" rel="noopener">開啟安裝說明</a>
+            <a class="button button-dark" href="LineBot.gs" target="_blank" rel="noopener">開啟完整 LineBot.gs</a>
+            <a class="button button-light" href="LineBot.gs" download="LineBot.gs">下載 LineBot.gs</a>
+          </div>
+          <div class="gas-deploy-note"><strong>額度提醒：</strong>你先傳訊息、小幫手回覆＝免費不限量；主動推播（晨間簡報）計入 LINE 免費額度（目前每月 200 則，每日 1 則簡報約用 30 則）。語音與照片辨識需另設定 Gemini 金鑰。</div>
+        </article>
+      </section>
+
       <section class="settings-panel" data-settings-panel="backup">
         <p class="settings-note">備份包含目前任務、介面設定與去識別規則，但不包含 API 金鑰。還原前會先檢查檔案格式。</p>
         <article class="backup-card local-storage-card" data-local-preview-only hidden>
@@ -1899,6 +2023,10 @@
         </div>
         <p class="settings-note">以下分別列出原始校務系統、流程參考、圖示與小綿助素材來源；原作者連結不代表原作者為本修改版背書。</p>
         <div class="license-list">
+          <article class="license-card">
+            <h3>介面吉祥物圖示</h3>
+            <p>工作台的吉祥物風格圖示（貓頭鷹、羅盤、信箱等）來自「IP as Logo Skill」開源圖庫，可免費下載並免費商用（MIT License）。<br><a href="https://ipaslogo.com/" target="_blank" rel="noopener noreferrer">IP as Logo Skill 圖庫</a>・<a href="https://github.com/s1dashu/ip-as-logo-skill" target="_blank" rel="noopener noreferrer">開源專案</a></p>
+          </article>
           <article class="license-card">
             <h3>原始校務系統</h3>
             <p>本工作台改作自 mihozip 的開源專案「school-admin-daily-dashboard」，原專案採 MIT License。<br><a href="https://github.com/mihozip/school-admin-daily-dashboard" target="_blank" rel="noopener noreferrer">開啟原作者 GitHub 專案</a>・<a href="https://www.facebook.com/albert.peng.56" target="_blank" rel="noopener noreferrer">原作者 Facebook</a>・<a href="https://github.com/mihozip/school-admin-daily-dashboard/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">查看原始授權</a></p>
@@ -3389,7 +3517,7 @@
       }
     }
 
-    const secretaryNotesState = { notes: [] };
+    const secretaryNotesState = { notes: [], showDone: false };
 
     function normalizeSecretaryNote(note, source = 'web') {
       if (!note || typeof note !== 'object') return null;
@@ -3404,7 +3532,9 @@
         text,
         attachments,
         createdAt: Number.isNaN(createdAt.getTime()) ? new Date().toISOString() : createdAt.toISOString(),
-        source: note.source === 'desktop' || source === 'desktop' ? 'desktop' : 'web'
+        source: note.source === 'desktop' || source === 'desktop' ? 'desktop'
+          : note.source === 'line' || source === 'line' ? 'line' : 'web',
+        done: note.done === true
       };
     }
 
@@ -3426,21 +3556,38 @@
       updateLocalStorageStatus();
     }
 
+    function secretaryNoteRowHtml(note) {
+      const date = new Date(note.createdAt);
+      const time = Number.isNaN(date.getTime()) ? '' : date.toLocaleString('zh-TW');
+      const attachmentText = note.attachments.length ? `・附件 ${note.attachments.map(escapeHtml).join('、')}` : '';
+      const source = note.source === 'desktop' ? '桌面小綿助' : note.source === 'line' ? 'LINE' : '網頁';
+      const actions = note.done
+        ? `<button class="mini-button" type="button" data-delete-secretary-note="${escapeHtml(note.id)}">刪除</button>`
+        : `<button class="mini-button" type="button" data-note-to-task="${escapeHtml(note.id)}">轉為任務</button>`;
+      return `<article class="secretary-note-item${note.done ? ' done' : ''}">
+        <div class="secretary-note-main">
+          <input type="checkbox" class="note-done-check" data-note-toggle="${escapeHtml(note.id)}" ${note.done ? 'checked' : ''} title="${note.done ? '取消完成' : '勾選完成'}">
+          <div><div class="secretary-note-text">${escapeHtml(note.text)}</div><div class="secretary-note-meta">${escapeHtml(time)}・${source}${attachmentText}</div></div>
+        </div>${actions}</article>`;
+    }
+
     function renderSecretaryNotes() {
       const host = $('secretaryNoteList');
       if (!host) return;
-      $('secretaryNoteCount').textContent = secretaryNotesState.notes.length;
-      if (!secretaryNotesState.notes.length) {
-        host.innerHTML = '<div class="secretary-note-empty">目前沒有記事。可直接新增，或匯入桌面小綿助的資料檔。</div>';
-        return;
+      const activeNotes = secretaryNotesState.notes.filter(note => !note.done);
+      const doneNotes = secretaryNotesState.notes.filter(note => note.done);
+      $('secretaryNoteCount').textContent = activeNotes.length;
+      const toggleButton = $('toggleDoneNotesButton');
+      if (toggleButton) {
+        toggleButton.textContent = secretaryNotesState.showDone ? '隱藏已完成' : `顯示已完成（${doneNotes.length}）`;
+        toggleButton.hidden = !doneNotes.length && !secretaryNotesState.showDone;
       }
-      host.innerHTML = secretaryNotesState.notes.map(note => {
-        const date = new Date(note.createdAt);
-        const time = Number.isNaN(date.getTime()) ? '' : date.toLocaleString('zh-TW');
-        const attachmentText = note.attachments.length ? `・附件 ${note.attachments.map(escapeHtml).join('、')}` : '';
-        const source = note.source === 'desktop' ? '桌面小綿助' : '網頁';
-        return `<article class="secretary-note-item"><div><div class="secretary-note-text">${escapeHtml(note.text)}</div><div class="secretary-note-meta">${escapeHtml(time)}・${source}${attachmentText}</div></div><button class="mini-button" type="button" data-delete-secretary-note="${escapeHtml(note.id)}">刪除</button></article>`;
-      }).join('');
+      let html = activeNotes.map(secretaryNoteRowHtml).join('')
+        || '<div class="secretary-note-empty">目前沒有待處理的記事。可直接新增，或匯入桌面小綿助的資料檔。</div>';
+      if (secretaryNotesState.showDone && doneNotes.length) {
+        html += `<div class="secretary-note-meta" style="margin-top:8px">已完成（${doneNotes.length}）</div>` + doneNotes.map(secretaryNoteRowHtml).join('');
+      }
+      host.innerHTML = html;
     }
 
     function addSecretaryNote() {
@@ -3570,7 +3717,7 @@
           mode: 'cors',
           cache: 'no-store',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ version: 1, tasks: state.tasks.slice(0, 5000), notes: secretaryNotesState.notes.slice(0, 500) }),
+          body: JSON.stringify({ version: 1, tasks: state.tasks.slice(0, 5000), notes: secretaryNotesState.notes.slice(0, 500), lineInbox: lineInboxItemsForPet() }),
           signal: controller.signal
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -3610,6 +3757,562 @@
         window.clearTimeout(timeout);
         petBridgeState.inFlight = false;
       }
+    }
+
+    // ------------------------------------------------------------------
+    // LINE 小幫手（選用）：與老師自己部署的 GAS 雲端轉運信箱同步。
+    // localStorage 仍是唯一主資料庫；未啟用時本段所有功能不執行。
+    // ------------------------------------------------------------------
+    const LINE_BRIDGE_SETTINGS_KEY = 'grade6LineBridgeSettings';
+    const LINE_SYNC_TOKEN_KEY = 'grade6LineSyncToken';
+    const LINE_INBOX_KEY = 'grade6LineInbox';
+    const lineBridgeState = { settings: { enabled: false, gasUrl: '', remember: true }, inbox: [], inFlight: false, lastSync: '' };
+
+    function loadLineBridgeSettings() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(LINE_BRIDGE_SETTINGS_KEY) || 'null');
+        if (saved && typeof saved === 'object') {
+          lineBridgeState.settings.enabled = saved.enabled === true;
+          lineBridgeState.settings.gasUrl = String(saved.gasUrl || '');
+          lineBridgeState.settings.remember = saved.remember !== false;
+        }
+      } catch (error) {}
+      lineBridgeState.inbox = readLocalPreviewArray(LINE_INBOX_KEY, [])
+        .filter(item => item && item.id && item.text).slice(0, 200);
+    }
+
+    function lineSyncToken() {
+      return localStorage.getItem(LINE_SYNC_TOKEN_KEY) || sessionStorage.getItem(LINE_SYNC_TOKEN_KEY) || '';
+    }
+
+    function saveLineBridgeSettings() {
+      try { localStorage.setItem(LINE_BRIDGE_SETTINGS_KEY, JSON.stringify(lineBridgeState.settings)); } catch (error) {}
+    }
+
+    function persistLineSyncToken(token) {
+      try {
+        if (lineBridgeState.settings.remember && token) {
+          localStorage.setItem(LINE_SYNC_TOKEN_KEY, token);
+          sessionStorage.removeItem(LINE_SYNC_TOKEN_KEY);
+        } else if (token) {
+          sessionStorage.setItem(LINE_SYNC_TOKEN_KEY, token);
+          localStorage.removeItem(LINE_SYNC_TOKEN_KEY);
+        } else {
+          localStorage.removeItem(LINE_SYNC_TOKEN_KEY);
+          sessionStorage.removeItem(LINE_SYNC_TOKEN_KEY);
+        }
+      } catch (error) {}
+    }
+
+    function saveLineInbox() {
+      writeLocalPreviewJson(LINE_INBOX_KEY, lineBridgeState.inbox.slice(0, 200));
+    }
+
+    function lineInboxItemsForPet() {
+      return lineBridgeState.inbox.slice(0, 50).map(item => ({
+        id: item.id,
+        title: item.title || String(item.text || '').slice(0, 60),
+        type: item.type === 'task' ? 'task' : 'note',
+        tag: item.tag || '',
+        medium: item.medium || '',
+        createdAt: item.createdAt || ''
+      }));
+    }
+
+    function setLineBridgeStatus(message) {
+      const settingsHost = $('lineBridgeStatus');
+      if (settingsHost) settingsHost.textContent = message;
+      const inboxHost = $('lineInboxStatus');
+      if (inboxHost) inboxHost.textContent = message;
+    }
+
+    function updateLineToolboxVisibility() {
+      const enabled = lineBridgeState.settings.enabled === true;
+      document.querySelectorAll('[data-line-only]').forEach(element => { element.hidden = !enabled; });
+      const badge = $('lineInboxBadge');
+      if (badge) {
+        badge.textContent = String(lineBridgeState.inbox.length);
+        badge.hidden = !enabled || !lineBridgeState.inbox.length;
+      }
+      if (!enabled) {
+        const lineButton = document.querySelector('[data-toolbox-target="lineInboxSection"]');
+        if (lineButton?.classList.contains('active')) setTeacherToolbox('');
+      }
+    }
+
+    async function callLineBridge(action, extra = {}) {
+      const gasUrl = lineBridgeState.settings.gasUrl.trim();
+      const token = lineSyncToken();
+      if (!gasUrl || !token) throw new Error('請先在「系統設定 → LINE 小幫手」填入 GAS 網址與同步金鑰。');
+      if (!/^https:\/\/script\.google\.com\/macros\//.test(gasUrl)) throw new Error('GAS 網址格式不正確，應為 https://script.google.com/macros/…/exec');
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 20000);
+      try {
+        const response = await fetch(gasUrl, {
+          method: 'POST',
+          cache: 'no-store',
+          redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action, token, ...extra }),
+          signal: controller.signal
+        });
+        if (!response.ok) throw new Error(`雲端回應 HTTP ${response.status}`);
+        const payload = await response.json();
+        if (!payload.ok) throw new Error(payload.error || '雲端回應異常');
+        return payload;
+      } finally {
+        window.clearTimeout(timeout);
+      }
+    }
+
+    function buildLineSnapshot() {
+      const today = calendarDateKey(new Date());
+      const activeTasks = state.tasks.filter(task => !['已完成', '取消', '封存'].includes(task.status));
+      const todayTasks = activeTasks
+        .filter(task => task.dueDate === today)
+        .slice(0, 20)
+        .map(task => ({ name: String(task.name || '').slice(0, 60), dueTime: task.dueTime || '', axis: taskWorkAxis(task) }));
+      const overdueTasksAll = activeTasks.filter(task => task.dueDate && task.dueDate < today);
+      const overdueCount = overdueTasksAll.length;
+      const overdueTasks = overdueTasksAll
+        .sort((a, b) => String(a.dueDate).localeCompare(String(b.dueDate)))
+        .slice(0, 10)
+        .map(task => ({ name: String(task.name || '').slice(0, 60), dueDate: task.dueDate }));
+      let todayCourses = [];
+      try {
+        todayCourses = getAllTeachingProgressRows()
+          .filter(row => row.startDate && !row.overflow && row.type !== 'buffer'
+            && row.startDate <= today && today <= (row.endDate || row.startDate))
+          .slice(0, 12)
+          .map(row => ({ subject: String(row.subject || ''), content: String(row.content || row.week || '課程進度').slice(0, 80) }));
+      } catch (error) {}
+      return { generatedAt: new Date().toISOString(), todayTasks, overdueCount, overdueTasks, todayCourses };
+    }
+
+    async function syncLineBridge({ silent = false } = {}) {
+      if (!lineBridgeState.settings.enabled) {
+        if (!silent) showToast('請先在「系統設定 → LINE 小幫手」啟用同步。', true);
+        return false;
+      }
+      if (lineBridgeState.inFlight) return false;
+      lineBridgeState.inFlight = true;
+      try {
+        const pull = await callLineBridge('pull');
+        const known = new Set(lineBridgeState.inbox.map(item => String(item.id)));
+        const fresh = (Array.isArray(pull.items) ? pull.items : [])
+          .filter(item => item && item.id && item.text && !known.has(String(item.id)))
+          .map(item => ({
+            id: String(item.id),
+            createdAt: String(item.createdAt || new Date().toISOString()),
+            type: item.type === 'task' ? 'task' : 'note',
+            text: String(item.text).slice(0, 3000),
+            title: String(item.title || '').slice(0, 120),
+            dueDate: /^\d{4}-\d{2}-\d{2}$/.test(String(item.dueDate || '')) ? String(item.dueDate) : '',
+            axis: SIMPLE_WORK_AXES.includes(String(item.axis || '')) ? String(item.axis) : '',
+            tag: String(item.tag || '').slice(0, 20),
+            medium: item.medium === 'voice' || item.medium === 'photo' ? item.medium : ''
+          }));
+        if (fresh.length) {
+          lineBridgeState.inbox = [...fresh, ...lineBridgeState.inbox].slice(0, 200);
+          saveLineInbox();
+        }
+        try { await callLineBridge('snapshot', { snapshot: buildLineSnapshot() }); } catch (error) {}
+        try { await syncRollcallStats(); } catch (error) {}
+        lineBridgeState.lastSync = new Date().toISOString();
+        renderLineInbox();
+        setLineBridgeStatus(`已連線｜最後同步 ${new Date(lineBridgeState.lastSync).toLocaleTimeString('zh-TW')}｜待處理 ${lineBridgeState.inbox.length} 則`);
+        if (!silent) showToast(fresh.length ? `LINE 同步完成，帶回 ${fresh.length} 則新訊息。` : 'LINE 同步完成，沒有新訊息。');
+        schedulePetBridgeSync();
+        return true;
+      } catch (error) {
+        setLineBridgeStatus(`同步失敗：${error.message || error}`);
+        if (!silent) showToast(error.message || 'LINE 同步失敗。', true);
+        return false;
+      } finally {
+        lineBridgeState.inFlight = false;
+      }
+    }
+
+    async function testLineBridge() {
+      try {
+        await callLineBridge('ping');
+        setLineBridgeStatus('連線成功！可以按「立即同步」。');
+        showToast('LINE 小幫手連線成功。');
+      } catch (error) {
+        setLineBridgeStatus(`連線失敗：${error.message || error}`);
+        showToast(error.message || '連線失敗。', true);
+      }
+    }
+
+    async function ackLineItem(id, status) {
+      try { await callLineBridge('ack', { ids: [id], status }); } catch (error) {}
+    }
+
+    function removeLineItem(id) {
+      lineBridgeState.inbox = lineBridgeState.inbox.filter(item => String(item.id) !== String(id));
+      try { saveLineInbox(); } catch (error) {}
+      renderLineInbox();
+      schedulePetBridgeSync();
+    }
+
+    function lineCategoryOptionsHtml(axis, selected) {
+      const categories = axis ? (state.options['類型'] || []).filter(category => taskWorkAxis({ category }) === axis) : [];
+      return ['<option value="">細項不選</option>', ...categories.map(category =>
+        `<option value="${escapeHtml(category)}"${category === selected ? ' selected' : ''}>${escapeHtml(category)}</option>`)].join('');
+    }
+
+    function renderLineInbox() {
+      const host = $('lineInboxList');
+      if (!host) return;
+      const count = $('lineInboxCount');
+      if (count) count.textContent = lineBridgeState.inbox.length;
+      updateLineToolboxVisibility();
+      if (!lineBridgeState.inbox.length) {
+        host.innerHTML = '<div class="secretary-note-empty">目前沒有待處理的 LINE 訊息。到 LINE 傳訊息給小幫手後，按「立即同步」。</div>';
+        return;
+      }
+      host.innerHTML = lineBridgeState.inbox.map(item => {
+        const time = new Date(item.createdAt);
+        const timeText = Number.isNaN(time.getTime()) ? '' : time.toLocaleString('zh-TW');
+        const chips = [
+          `<span class="line-chip${item.type === 'task' ? ' line-chip-task' : ''}">${item.type === 'task' ? '任務草稿' : '記事草稿'}</span>`,
+          item.tag ? `<span class="line-chip">${escapeHtml(item.tag)}</span>` : '',
+          item.medium === 'voice' ? '<span class="line-chip">🎤 語音</span>' : '',
+          item.medium === 'photo' ? '<span class="line-chip">📷 照片</span>' : '',
+          `<span class="secretary-note-meta">${escapeHtml(timeText)}</span>`
+        ].filter(Boolean).join('');
+        const axis = item.axis || '';
+        return `<article class="line-inbox-item" data-line-id="${escapeHtml(item.id)}">
+          <div class="line-inbox-chips">${chips}</div>
+          <div class="line-inbox-title">${escapeHtml(item.title || item.text.slice(0, 60))}</div>
+          <div class="line-inbox-original">${escapeHtml(item.text)}</div>
+          <div class="line-inbox-controls">
+            <select class="select" data-line-field="axis">${['<option value="">選工作主軸</option>', ...SIMPLE_WORK_AXES.map(value =>
+              `<option value="${value}"${value === axis ? ' selected' : ''}>${value}</option>`)].join('')}</select>
+            <select class="select" data-line-field="category">${lineCategoryOptionsHtml(axis, '')}</select>
+            <input class="input" type="date" data-line-field="dueDate" value="${escapeHtml(item.dueDate || '')}">
+            <button class="mini-button" type="button" data-line-action="task">轉為任務</button>
+            <button class="mini-button" type="button" data-line-action="note">轉為記事</button>
+            <button class="mini-button" type="button" data-line-action="ignore">忽略</button>
+          </div>
+        </article>`;
+      }).join('');
+    }
+
+    async function convertLineItemToTask(item, host) {
+      const axis = host.querySelector('[data-line-field="axis"]')?.value || item.axis || '行政';
+      const category = host.querySelector('[data-line-field="category"]')?.value || '';
+      const dueDate = host.querySelector('[data-line-field="dueDate"]')?.value || item.dueDate || '';
+      setLoading(true, '正在建立任務……');
+      try {
+        const result = await serverCall('saveTask', {
+          taskId: '', name: item.title || item.text.slice(0, 60), category, status: '未開始', priority: '中',
+          dueDate, dueTime: '', nextAction: item.text, waitingFor: '',
+          progress: `由 LINE 小幫手${item.medium === 'voice' ? '（語音）' : item.medium === 'photo' ? '（照片）' : ''}傳入；已經使用者確認`,
+          owner: state.settings.DEFAULT_OWNER || '', ownerEmail: state.settings.DEFAULT_OWNER_EMAIL || '',
+          boardDisplay: '自動', sortOrder: 100, detailUrl: '', taskType: '一般任務',
+          parentTaskId: '', projectId: '', workAxis: SIMPLE_WORK_AXES.includes(axis) ? axis : '行政',
+          csrfToken: state.csrfToken
+        });
+        state.tasks = result.tasks || state.tasks;
+        state.filteredTasks = [...state.tasks];
+        renderSummary(result.summary || summarizeCurrentTasks());
+        applyFilters();
+        removeLineItem(item.id);
+        ackLineItem(item.id, 'imported');
+        showToast('已依 LINE 訊息建立任務。');
+      } catch (error) {
+        showToast(error.message || '任務建立失敗。', true);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    function convertLineItemToNote(item) {
+      const text = (item.tag ? `【${item.tag}】` : '') + item.text;
+      const note = normalizeSecretaryNote({ text, createdAt: item.createdAt }, 'line');
+      if (!note) return showToast('這則訊息沒有可保存的內容。', true);
+      secretaryNotesState.notes.unshift(note);
+      try {
+        saveSecretaryNotes('已把 LINE 訊息存成記事。');
+        removeLineItem(item.id);
+        ackLineItem(item.id, 'imported');
+      } catch (error) {
+        secretaryNotesState.notes.shift();
+      }
+    }
+
+    // ---- 晨間大屏統計：拉回近 60 天出缺與作業紀錄，顯示在工作台日曆 ----
+    const ROLLCALL_STATS_KEY = 'grade6RollcallStats';
+    let rollcallStatsByDate = {};
+
+    function loadRollcallStats() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(ROLLCALL_STATS_KEY) || 'null');
+        rollcallStatsByDate = saved && typeof saved === 'object' ? saved : {};
+      } catch (error) {
+        rollcallStatsByDate = {};
+      }
+    }
+
+    function rollcallBadgeFor(dateKey) {
+      const stats = rollcallStatsByDate[dateKey];
+      if (!stats || !stats.summary) return '';
+      const allClear = stats.summary.startsWith('✅');
+      return `<button class="calendar-rollcall${allClear ? ' all-clear' : ''}" type="button" data-rollcall-date="${escapeHtml(dateKey)}" title="${escapeHtml(stats.detail || '')}">${escapeHtml(stats.summary)}</button>`;
+    }
+
+    async function syncRollcallStats() {
+      const toDate = new Date();
+      const fromDate = new Date();
+      fromDate.setDate(fromDate.getDate() - 60);
+      const result = await callLineBridge('rollcall_query', {
+        from: calendarDateKey(fromDate), to: calendarDateKey(toDate), className: ''
+      });
+      const byDate = {};
+      (Array.isArray(result.attendance) ? result.attendance : []).forEach(row => {
+        if (!byDate[row.date]) byDate[row.date] = { absent: [], missing: {} };
+        byDate[row.date].absent.push(`${row.seat}號${row.status}`);
+      });
+      (Array.isArray(result.homework) ? result.homework : []).forEach(row => {
+        if (row.status !== '缺交') return;
+        if (!byDate[row.date]) byDate[row.date] = { absent: [], missing: {} };
+        if (!byDate[row.date].missing[row.subject]) byDate[row.date].missing[row.subject] = [];
+        byDate[row.date].missing[row.subject].push(row.seat);
+      });
+      rollcallStatsByDate = {};
+      Object.entries(byDate).forEach(([date, day]) => {
+        const missingCount = Object.values(day.missing).reduce((total, seats) => total + seats.length, 0);
+        const parts = [];
+        if (day.absent.length) parts.push(`🙋缺${day.absent.length}`);
+        if (missingCount) parts.push(`✏缺交${missingCount}`);
+        const detailLines = [];
+        if (day.absent.length) detailLines.push(`出缺：${day.absent.join('、')}`);
+        Object.entries(day.missing).forEach(([subject, seats]) => detailLines.push(`${subject}缺交：${seats.map(seat => `${seat}號`).join('、')}`));
+        rollcallStatsByDate[date] = {
+          summary: parts.length ? parts.join('｜') : '✅到齊全交',
+          detail: detailLines.join('\n') || '全班到齊、作業全交'
+        };
+      });
+      try { localStorage.setItem(ROLLCALL_STATS_KEY, JSON.stringify(rollcallStatsByDate)); } catch (error) {}
+      if (state.viewMode === 'calendar') renderCalendar();
+    }
+
+    // ---- 聯絡本管理：依日期讀寫雲端聯絡本（晨間大屏黑板同步顯示）----
+    // 常用內容取材自台灣國小聯絡簿慣用寫法（國習、甲乙本、圈詞等縮寫）。
+    const CONTACT_BOOK_PRESETS = {
+      '作業': ['國習 P.', '數習 P.', '甲本一課', '乙本一課', '圈詞一遍', '造句', '寫作文', '閱讀 20 分鐘', '預習課文', '訂正考卷', '學習單一張', '數學卷一張', '英語唸讀'],
+      '考試': ['明天國語聽寫', '明天數學小考', '明天英語考試', '明天社會小考', '明天自然小考', '考卷訂正並請家長簽名'],
+      '攜帶物品': ['帶直笛', '帶水壺', '帶彩色筆', '帶美勞用品', '穿體育服裝', '帶抹布、衛生紙', '帶圖書館借書歸還', '帶健保卡'],
+      '通知': ['回條請家長簽名', '繳交費用', '校外教學通知請詳閱', '明天朝會請準時到校', '天氣變化請添加衣物', '請檢查並修剪指甲'],
+      '其他': []
+    };
+
+    const CONTACT_PRESETS_KEY = 'grade6ContactBookPresets';
+
+    /** 取得合併後的常用項目：使用者自訂優先，某分類清空時退回預設。 */
+    function getContactPresets() {
+      let custom = {};
+      try { custom = JSON.parse(localStorage.getItem(CONTACT_PRESETS_KEY) || '{}') || {}; } catch (error) { custom = {}; }
+      const merged = {};
+      Object.keys(CONTACT_BOOK_PRESETS).forEach(category => {
+        const items = Array.isArray(custom[category]) ? custom[category].map(String).map(item => item.trim()).filter(Boolean) : null;
+        merged[category] = items && items.length ? items.slice(0, 40) : CONTACT_BOOK_PRESETS[category];
+      });
+      return merged;
+    }
+
+    function saveContactPresets(category, lines) {
+      let custom = {};
+      try { custom = JSON.parse(localStorage.getItem(CONTACT_PRESETS_KEY) || '{}') || {}; } catch (error) { custom = {}; }
+      const items = lines.map(line => line.trim()).filter(Boolean).slice(0, 40);
+      if (items.length) custom[category] = items;
+      else delete custom[category];
+      try { localStorage.setItem(CONTACT_PRESETS_KEY, JSON.stringify(custom)); } catch (error) {}
+    }
+
+    function renderContactPresetOptions() {
+      const categorySelect = $('contactCategorySelect');
+      const presetSelect = $('contactPresetSelect');
+      if (!categorySelect || !presetSelect) return;
+      const presetsByCategory = getContactPresets();
+      if (!categorySelect.options.length) {
+        categorySelect.innerHTML = Object.keys(presetsByCategory).map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');
+      }
+      const presets = presetsByCategory[categorySelect.value] || [];
+      presetSelect.innerHTML = [
+        ...presets.map(text => `<option value="${escapeHtml(text)}">${escapeHtml(text)}</option>`),
+        '<option value="__custom__">✏️ 自行輸入…</option>'
+      ].join('');
+    }
+
+    function renderContactPresetEditor() {
+      const categorySelect = $('contactPresetEditCategory');
+      const textarea = $('contactPresetEditTextarea');
+      if (!categorySelect || !textarea) return;
+      if (!categorySelect.options.length) {
+        categorySelect.innerHTML = Object.keys(CONTACT_BOOK_PRESETS).map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');
+      }
+      textarea.value = (getContactPresets()[categorySelect.value] || []).join('\n');
+    }
+
+    function appendContactBookLine() {
+      const presetValue = $('contactPresetSelect')?.value || '';
+      // 「自行輸入」不會出現在成品，成品只有補充欄打的文字。
+      const preset = presetValue === '__custom__' ? '' : presetValue;
+      const extra = $('contactExtraInput')?.value.trim() || '';
+      const text = (preset + (extra ? (preset.endsWith('P.') ? '' : preset ? ' ' : '') + extra : '')).trim();
+      if (!text) return showToast(presetValue === '__custom__' ? '請在補充欄輸入內容。' : '請選擇常用項目或輸入內容。', true);
+      const input = $('contactBookInput');
+      const lines = input.value.split('\n').filter(line => line.trim());
+      lines.push(`${lines.length + 1}. ${text}`);
+      input.value = lines.join('\n');
+      $('contactExtraInput').value = '';
+    }
+
+    function renumberContactBookLines() {
+      const input = $('contactBookInput');
+      const lines = input.value.split('\n').map(line => line.replace(/^\s*\d+[\.、]\s*/, '').trim()).filter(Boolean);
+      input.value = lines.map((line, index) => `${index + 1}. ${line}`).join('\n');
+    }
+    async function loadContactBookEntry() {
+      const date = $('contactBookDate')?.value;
+      if (!date) return showToast('請先選日期。', true);
+      $('contactBookMeta').textContent = '讀取中……';
+      try {
+        const result = await callLineBridge('contactbook_get', { date });
+        $('contactBookInput').value = result.text || '';
+        const sourceLabel = result.source === 'teacher' ? '工作台' : result.source === 'classroom' ? '教室大屏' : result.source === 'line' ? 'LINE' : '';
+        $('contactBookMeta').textContent = result.updatedAt
+          ? `最後更新 ${new Date(result.updatedAt).toLocaleString('zh-TW')}（${sourceLabel}）`
+          : '這一天還沒有聯絡本內容。';
+      } catch (error) {
+        $('contactBookMeta').textContent = `讀取失敗：${error.message}`;
+      }
+    }
+    async function saveContactBookEntry() {
+      const date = $('contactBookDate')?.value;
+      if (!date) return showToast('請先選日期。', true);
+      const text = $('contactBookInput').value.trim().slice(0, 5000);
+      $('contactBookMeta').textContent = '儲存中……';
+      try {
+        await callLineBridge('contactbook_save', { date, text });
+        $('contactBookMeta').textContent = `已儲存 ${date} 的聯絡本；大屏當天開啟或按重新整理就會顯示。`;
+        showToast('聯絡本已儲存到雲端。');
+      } catch (error) {
+        $('contactBookMeta').textContent = `儲存失敗：${error.message}`;
+        showToast(error.message || '聯絡本儲存失敗。', true);
+      }
+    }
+
+    let contactBookHistory = [];
+    async function loadContactBookList() {
+      $('contactBookListMeta').textContent = '載入中……';
+      try {
+        const result = await callLineBridge('contactbook_list', { limit: 30 });
+        contactBookHistory = Array.isArray(result.entries) ? result.entries : [];
+        $('contactBookListMeta').textContent = contactBookHistory.length ? `共 ${contactBookHistory.length} 筆，點日期可載入編輯。` : '還沒有任何聯絡本紀錄。';
+        renderContactBookHistory();
+      } catch (error) {
+        $('contactBookListMeta').textContent = `載入失敗：${error.message}`;
+      }
+    }
+    function renderContactBookHistory() {
+      const host = $('contactBookHistoryList');
+      if (!host) return;
+      host.innerHTML = contactBookHistory.filter(entry => !entry.empty).map(entry => {
+        const sourceLabel = entry.source === 'teacher' ? '工作台' : entry.source === 'classroom' ? '教室' : '';
+        return `<article class="secretary-note-item" data-contact-history-date="${escapeHtml(entry.date)}" style="cursor:pointer">
+          <div><div class="secretary-note-text"><strong>${escapeHtml(entry.date)}</strong>｜${escapeHtml(entry.preview)}${entry.preview.length >= 50 ? '…' : ''}</div>
+          <div class="secretary-note-meta">${sourceLabel}輸入・${entry.updatedAt ? new Date(entry.updatedAt).toLocaleString('zh-TW') : ''}</div></div>
+          <button class="mini-button" type="button">載入</button>
+        </article>`;
+      }).join('') || '';
+    }
+    async function copyLatestContactBookEntry() {
+      const target = contactBookHistory.find(entry => !entry.empty);
+      if (!target) return showToast('請先按「載入清單」，且需有至少一筆紀錄。', true);
+      try {
+        const result = await callLineBridge('contactbook_get', { date: target.date });
+        $('contactBookInput').value = result.text || '';
+        showToast(`已把 ${target.date} 的內容複製到編輯區（日期 ${$('contactBookDate').value}），修改後記得儲存。`);
+      } catch (error) {
+        showToast(error.message || '複製失敗', true);
+      }
+    }
+
+    function wireLineBridgeUi() {
+      const contactDate = $('contactBookDate');
+      if (contactDate && !contactDate.value) contactDate.value = calendarDateKey(new Date());
+      renderContactPresetOptions();
+      renderContactPresetEditor();
+      $('contactCategorySelect')?.addEventListener('change', renderContactPresetOptions);
+      $('contactAddLineButton')?.addEventListener('click', appendContactBookLine);
+      $('contactRenumberButton')?.addEventListener('click', renumberContactBookLines);
+      $('contactPresetEditCategory')?.addEventListener('change', renderContactPresetEditor);
+      $('contactPresetEditTextarea')?.addEventListener('input', () => {
+        saveContactPresets($('contactPresetEditCategory').value, $('contactPresetEditTextarea').value.split('\n'));
+        renderContactPresetOptions();
+      });
+      $('contactBookLoadButton')?.addEventListener('click', loadContactBookEntry);
+      $('contactBookSaveButton')?.addEventListener('click', async () => { await saveContactBookEntry(); if (contactBookHistory.length) loadContactBookList(); });
+      $('contactBookListButton')?.addEventListener('click', loadContactBookList);
+      $('contactBookCopyPrevButton')?.addEventListener('click', copyLatestContactBookEntry);
+      $('contactBookHistoryList')?.addEventListener('click', event => {
+        const row = event.target.closest('[data-contact-history-date]');
+        if (!row) return;
+        $('contactBookDate').value = row.dataset.contactHistoryDate;
+        loadContactBookEntry();
+      });
+      $('calendarGrid')?.addEventListener('click', event => {
+        const chip = event.target.closest('[data-rollcall-date]');
+        if (!chip) return;
+        const stats = rollcallStatsByDate[chip.dataset.rollcallDate];
+        if (stats) showToast(`${chip.dataset.rollcallDate}｜${(stats.detail || '').replace(/\n/g, '｜')}`);
+      });
+      const enabledInput = $('lineBridgeEnabled');
+      const urlInput = $('lineGasUrl');
+      const tokenInput = $('lineSyncToken');
+      const rememberInput = $('rememberLineSyncToken');
+      if (!enabledInput || !urlInput || !tokenInput || !rememberInput) return;
+      enabledInput.checked = lineBridgeState.settings.enabled;
+      urlInput.value = lineBridgeState.settings.gasUrl;
+      tokenInput.value = lineSyncToken();
+      rememberInput.checked = lineBridgeState.settings.remember;
+      const persistForm = () => {
+        lineBridgeState.settings.enabled = enabledInput.checked;
+        lineBridgeState.settings.gasUrl = urlInput.value.trim();
+        lineBridgeState.settings.remember = rememberInput.checked;
+        saveLineBridgeSettings();
+        persistLineSyncToken(tokenInput.value.trim());
+        updateLineToolboxVisibility();
+      };
+      [enabledInput, urlInput, tokenInput, rememberInput].forEach(input => input.addEventListener('change', persistForm));
+      $('testLineBridgeButton')?.addEventListener('click', () => { persistForm(); testLineBridge(); });
+      $('syncLineBridgeButton')?.addEventListener('click', () => { persistForm(); syncLineBridge(); });
+      $('syncLineInboxButton')?.addEventListener('click', () => syncLineBridge());
+      const list = $('lineInboxList');
+      list?.addEventListener('change', event => {
+        const axisSelect = event.target.closest('[data-line-field="axis"]');
+        if (!axisSelect) return;
+        const itemHost = event.target.closest('.line-inbox-item');
+        const categorySelect = itemHost?.querySelector('[data-line-field="category"]');
+        if (categorySelect) categorySelect.innerHTML = lineCategoryOptionsHtml(axisSelect.value, '');
+      });
+      list?.addEventListener('click', event => {
+        const button = event.target.closest('[data-line-action]');
+        if (!button) return;
+        const itemHost = button.closest('.line-inbox-item');
+        const item = lineBridgeState.inbox.find(entry => String(entry.id) === itemHost?.dataset.lineId);
+        if (!item) return;
+        if (button.dataset.lineAction === 'task') convertLineItemToTask(item, itemHost);
+        else if (button.dataset.lineAction === 'note') convertLineItemToNote(item);
+        else if (button.dataset.lineAction === 'ignore') {
+          removeLineItem(item.id);
+          ackLineItem(item.id, 'ignored');
+          showToast('已忽略這則 LINE 訊息。');
+        }
+      });
     }
 
     function addOptions(selectId, values, includeBlank, blankText) {
@@ -3860,7 +4563,7 @@
         cells.push(`
           <div class="calendar-day ${date.getMonth() === month ? '' : 'other-month'} ${key === todayKey ? 'today' : ''}" data-date="${key}">
             <div class="calendar-date"><span>${date.getDate()}</span>${key === todayKey ? '<span class="today-label">今天</span>' : ''}</div>
-            ${visibleTasks}
+            ${rollcallBadgeFor(key)}${visibleTasks}
           </div>`);
       }
       $('calendarGrid').innerHTML = cells.join('');
@@ -6016,7 +6719,7 @@
     function setTeacherToolbox(targetId) {
       const content = $('teacherToolboxContent');
       const buttons = [...document.querySelectorAll('[data-toolbox-target]')];
-      const panels = ['teachingProgressPanel', 'aiAssistantSection', 'secretaryNotesSection'];
+      const panels = ['teachingProgressPanel', 'aiAssistantSection', 'secretaryNotesSection', 'lineInboxSection', 'contactBookSection'];
       const current = buttons.find(button => button.classList.contains('active'))?.dataset.toolboxTarget || '';
       const shouldCollapse = !targetId || (current === targetId && !content.hidden);
 
@@ -6786,10 +7489,47 @@
     });
     $('importSecretaryNotesButton').addEventListener('click', () => $('secretaryNotesFileInput').click());
     $('secretaryNotesFileInput').addEventListener('change', event => importSecretaryNotes(event.target.files[0]));
-    $('exportSecretaryNotesButton').addEventListener('click', exportSecretaryNotes);
-    $('secretaryNoteList').addEventListener('click', event => {
+    $('toggleDoneNotesButton').addEventListener('click', () => {
+      secretaryNotesState.showDone = !secretaryNotesState.showDone;
+      renderSecretaryNotes();
+    });
+    $('secretaryNoteList').addEventListener('change', event => {
+      const checkbox = event.target.closest('[data-note-toggle]');
+      if (!checkbox) return;
+      const note = secretaryNotesState.notes.find(item => item.id === checkbox.dataset.noteToggle);
+      if (!note) return;
+      note.done = checkbox.checked;
+      try { saveSecretaryNotes(note.done ? '已完成，收進「已完成」清單。' : '已恢復為待處理記事。'); } catch (error) {}
+    });
+    $('secretaryNoteList').addEventListener('click', async event => {
+      const taskButton = event.target.closest('[data-note-to-task]');
+      if (taskButton) {
+        const note = secretaryNotesState.notes.find(item => item.id === taskButton.dataset.noteToTask);
+        if (!note) return;
+        setLoading(true, '正在把記事建立為任務……');
+        try {
+          const result = await serverCall('saveTask', {
+            taskId: '', name: note.text.replace(/^【[^】]{1,10}】/, '').slice(0, 60), category: '', status: '未開始', priority: '中',
+            dueDate: '', dueTime: '', nextAction: note.text, waitingFor: '',
+            progress: '由小綿助記事轉為任務', owner: state.settings.DEFAULT_OWNER || '', ownerEmail: state.settings.DEFAULT_OWNER_EMAIL || '',
+            boardDisplay: '自動', sortOrder: 100, detailUrl: '', taskType: '一般任務',
+            parentTaskId: '', projectId: '', workAxis: '行政', csrfToken: state.csrfToken
+          });
+          state.tasks = result.tasks || state.tasks;
+          state.filteredTasks = [...state.tasks];
+          renderSummary(result.summary || summarizeCurrentTasks());
+          applyFilters();
+          note.done = true;
+          try { saveSecretaryNotes('已建立任務，記事標記完成。'); } catch (error) {}
+        } catch (error) {
+          showToast(error.message || '任務建立失敗。', true);
+        } finally {
+          setLoading(false);
+        }
+        return;
+      }
       const button = event.target.closest('[data-delete-secretary-note]');
-      if (!button || !window.confirm('確定刪除這則記事嗎？')) return;
+      if (!button || !window.confirm('確定永久刪除這則記事嗎？')) return;
       secretaryNotesState.notes = secretaryNotesState.notes.filter(note => note.id !== button.dataset.deleteSecretaryNote);
       saveSecretaryNotes('記事已刪除。');
     });
@@ -6856,7 +7596,7 @@
       $('deskpetDraft').hidden = true;
       setDeskpetStep('capture');
     });
-    $('deskpetImage').addEventListener('error', () => { $('deskpetImage').src = 'assets/koboyo/teacher-checking-list.svg'; }, { once: true });
+    $('deskpetImage').addEventListener('error', () => { $('deskpetImage').src = 'assets/ipas/pencil-tasks.webp'; }, { once: true });
 
     $('deskpetButton').addEventListener('pointerdown', event => {
       const rect = $('deskpet').getBoundingClientRect();
@@ -6905,9 +7645,16 @@
     } catch (error) {}
     // 網頁版舊桌寵已退役；只保留資料相容函式，不啟動動畫、健康計時器或舊面板。
     loadSecretaryNotes();
+    loadLineBridgeSettings();
+    loadRollcallStats();
+    wireLineBridgeUi();
+    renderLineInbox();
     updateLocalStorageStatus();
     setTaskView(state.viewMode);
-    initialize().then(() => schedulePetBridgeSync(300));
+    initialize().then(() => {
+      schedulePetBridgeSync(300);
+      if (lineBridgeState.settings.enabled) syncLineBridge({ silent: true });
+    });
     window.setInterval(() => schedulePetBridgeSync(50), 60000);
   </script>
 </body>

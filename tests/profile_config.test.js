@@ -143,7 +143,7 @@ assert.deepEqual(
 assert.ok(options.類型.includes("舊制自訂類型"), "切換處室時應保留既有任務類型");
 assert.equal(options.類型.filter((value) => value === "課程教學").length, 1);
 
-for (const htmlName of ["Installer.html", "Index.html", "Board.html"]) {
+for (const htmlName of ["Installer.html", "Index.html", "Board.html", "Morning.html"]) {
   const html = fs.readFileSync(path.join(projectRoot, htmlName), "utf8");
   const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((match) => match[1]);
   assert.ok(scripts.length > 0, `${htmlName} 缺少前端程式`);
@@ -231,10 +231,85 @@ assert.match(indexHtml, /const PET_BRIDGE_URL = 'http:\/\/127\.0\.0\.1:8767'/, "
 assert.match(indexHtml, /data-settings-panel="security"/, "網頁應提供資料與資安說明");
 assert.match(indexHtml, /Content-Security-Policy/, "網頁應宣告內容安全政策");
 
+// LINE 小幫手（選用雲端模組）契約
+const lineBotSource = fs.readFileSync(path.join(projectRoot, "LineBot.gs"), "utf8");
+new Function(lineBotSource);
+assert.match(lineBotSource, /function setupLineBot\(\)/, "LineBot.gs 應提供一鍵初始化");
+assert.match(lineBotSource, /LINE_WEBHOOK_TOKEN/, "LINE Webhook 必須以亂數參數驗證");
+assert.match(lineBotSource, /LINE_SYNC_TOKEN/, "工作台同步必須驗證同步金鑰");
+assert.match(lineBotSource, /LINE_ALLOWED_USER_IDS/, "應支援鎖定只回應老師本人的 userId");
+assert.doesNotMatch(lineBotSource, /\b1[A-Za-z0-9_-]{30,}\b/, "LineBot.gs 不得含固定 Google 資源 ID");
+assert.match(indexHtml, /data-settings-tab="linebot"/, "系統設定應提供 LINE 小幫手分頁");
+assert.match(indexHtml, /id="lineInboxSection"/, "工作台應提供 LINE 收件匣");
+assert.match(indexHtml, /grade6LineInbox/, "LINE 收件匣應保存於瀏覽器本機");
+assert.match(indexHtml, /https:\/\/script\.google\.com/, "CSP 應允許連線老師自己的 Apps Script");
+assert.match(indexHtml, /lineInbox: lineInboxItemsForPet\(\)/, "本機橋接應把 LINE 待整理清單帶給桌面小綿助");
+assert.doesNotMatch(
+  JSON.stringify(indexHtml.match(/function buildBackupPayload\(\) \{[\s\S]*?\n    \}/)?.[0] || ""),
+  /grade6LineSyncToken|lineSyncToken|lineGasUrl/,
+  "JSON 備份不得包含 LINE 同步金鑰或 GAS 網址",
+);
+assert.match(desktopSecretary, /line_inbox/, "桌面小綿助應保存 LINE 待整理鏡像");
+assert.match(desktopSecretary, /LINE 待整理/, "桌面小綿助面板應顯示 LINE 待整理");
+assert.match(desktopSecretary, /sanitize_line_inbox/, "LINE 清單必須經過欄位淨化");
+
+// 晨間大屏（模組 B）契約
+assert.match(lineBotSource, /CLASSROOM_TOKEN/, "大屏應使用獨立教室金鑰");
+assert.match(lineBotSource, /rollcall_submit/, "GAS 應提供點名回報動作");
+assert.match(lineBotSource, /rollcall_query/, "GAS 應提供歷史區間查詢（老師金鑰限定）");
+assert.match(lineBotSource, /date !== lineBotToday_\(\)/, "教室金鑰只能回報今天的紀錄");
+assert.match(lineBotSource, /點名紀錄/, "GAS 應建立點名紀錄表");
+assert.match(lineBotSource, /作業紀錄/, "GAS 應建立作業紀錄表");
+const morningHtml = fs.readFileSync(path.join(projectRoot, "Morning.html"), "utf8");
+for (const feature of ["病假", "事假", "遲到", "未到", "補交", "缺交", "全班繳交", "聯絡簿", "倒數", "座號"]) {
+  assert.match(morningHtml, new RegExp(feature), `晨間大屏缺少「${feature}」`);
+}
+assert.match(morningHtml, /https:\/\/script\.google\.com/, "晨間大屏 CSP 應允許連線 Apps Script");
+assert.match(morningHtml, /rollcall_submit/, "晨間大屏應以教室金鑰回報");
+// 大屏 v2 契約
+assert.match(morningHtml, /空號/, "設定應支援空號");
+assert.match(morningHtml, /作業補交/, "應有作業補交分頁");
+assert.match(morningHtml, /classroom_missing/, "補交分頁應讀取近期缺交清單");
+assert.match(morningHtml, /homework_resubmit/, "補交完成應回寫雲端");
+assert.match(morningHtml, /作業名稱/, "收件版面應含作業名稱");
+assert.match(morningHtml, /未填/, "點名預設應為未填空白");
+assert.match(morningHtml, /遲到只有老師/, "遲到只給老師看，大屏不顯示");
+assert.match(lineBotSource, /classroom_missing/, "GAS 應提供近期缺交查詢（教室金鑰）");
+assert.match(lineBotSource, /markHomeworkResubmitted_/, "GAS 應提供缺交轉補交（僅此一種歷史寫入）");
+assert.match(lineBotSource, /sendRollcallReminder/, "GAS 應提供未點名雲端提醒備援");
+assert.match(lineBotSource, /作業名稱/, "作業紀錄表應含作業名稱欄");
+assert.match(lineBotSource, /sendWeeklyHomeworkAlerts/, "GAS 應提供每週缺交達門檻的家長訊息草稿");
+assert.match(lineBotSource, /WEEKLY_ALERT_THRESHOLD/, "每週關懷門檻應可由指令碼屬性調整");
+assert.match(lineBotSource, /家長聯繫/, "家長訊息草稿應帶家長聯繫標籤進工作台收件匣");
+// 聯絡本（大屏黑板 ⇄ 工作台管理）契約
+assert.match(lineBotSource, /contactbook_get/, "GAS 應提供聯絡本讀取");
+assert.match(lineBotSource, /contactbook_save/, "GAS 應提供聯絡本儲存");
+assert.match(lineBotSource, /教室端只能編輯今天的聯絡本/, "教室金鑰只能讀寫今天的聯絡本");
+assert.match(morningHtml, /chalkboard/, "大屏應提供黑板風聯絡本");
+assert.match(morningHtml, /contactbook_get/, "大屏開啟應載入今日聯絡本");
+assert.match(morningHtml, /投影模式/, "大屏應提供聯絡本投影模式");
+assert.match(morningHtml, /exportQueryCsv/, "查詢統計應可匯出 Excel（CSV）");
+assert.match(lineBotSource, /function setupTriggers\(\)/, "GAS 應提供一鍵設定觸發器");
+assert.match(indexHtml, /assets\/ipas\//, "介面圖示應使用本地化的 IP as Logo 素材");
+assert.match(thirdPartyNotices, /ipaslogo\.com/, "素材聲明應記錄 IP as Logo 來源與授權");
+assert.match(morningHtml, /data:image\/webp;base64,/, "大屏圖示應內嵌以維持單檔可攜");
+assert.match(morningHtml, /BpmfIansui/, "大屏聯絡本應提供注音體選項");
+assert.match(thirdPartyNotices, /bpmfvs/, "素材聲明應記錄注音字型來源與 OFL 授權");
+assert.ok(fs.existsSync(path.join(projectRoot, "assets", "fonts", "BpmfIansui-Regular.ttf")), "注音字型檔應存在於 assets/fonts");
+assert.match(lineBotSource, /writeContactBookFromLine_/, "LINE 應可直接寫入當天聯絡本");
+assert.match(lineBotSource, /contactbook/, "分類應支援聯絡本類型");
+assert.match(indexHtml, /id="contactBookSection"/, "工作台應提供聯絡本管理版面");
+assert.match(indexHtml, /contactbook_save/, "工作台應可依日期儲存聯絡本");
+assert.match(morningHtml, /只使用座號/, "晨間大屏應聲明只使用座號");
+assert.doesNotMatch(morningHtml, /placeholder="[^"]*姓名/, "晨間大屏不得出現要求輸入姓名的欄位");
+assert.match(indexHtml, /grade6RollcallStats/, "工作台應保存大屏統計快取");
+assert.match(indexHtml, /rollcallBadgeFor\(key\)/, "工作台日曆應顯示出缺與缺交摘要");
+
 const netlifyConfig = fs.readFileSync(path.join(projectRoot, "netlify.toml"), "utf8");
 for (const header of ["Content-Security-Policy", "X-Content-Type-Options", "Referrer-Policy", "Permissions-Policy"]) {
   assert.match(netlifyConfig, new RegExp(header), `Netlify 應設定 ${header}`);
 }
+assert.match(netlifyConfig, /https:\/\/script\.google\.com https:\/\/script\.googleusercontent\.com/, "Netlify CSP 也要允許 Apps Script 同步");
 
 assert.doesNotMatch(source, /\b1[A-Za-z0-9_-]{30,}\b/, "公開版本不得含固定 Google 資源 ID");
 assert.match(source, /BOUND_SPREADSHEET_ID/, "安裝後應以 Script Properties 定位試算表");

@@ -4,7 +4,12 @@ import unittest
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
-from desktop_pet_secretary import LocalBridgeServer, bridge_origin_allowed, make_bridge_handler
+from desktop_pet_secretary import (
+    LocalBridgeServer,
+    bridge_origin_allowed,
+    make_bridge_handler,
+    sanitize_line_inbox,
+)
 
 
 class DummySecretary:
@@ -57,6 +62,23 @@ class LocalBridgeTest(unittest.TestCase):
         status, result = self.request("/sync", payload={"tasks": [], "notes": []})
         self.assertEqual(status, 200)
         self.assertEqual(result["echo"], {"tasks": [], "notes": []})
+
+    def test_sanitize_line_inbox(self):
+        self.assertEqual(sanitize_line_inbox(None), [])
+        self.assertEqual(sanitize_line_inbox("not-a-list"), [])
+        items = sanitize_line_inbox([
+            {"id": "L-1", "title": "收回條", "type": "task", "tag": "作業缺交", "medium": "voice", "createdAt": "2026-08-25T08:00:00"},
+            {"id": "L-2", "title": "", "type": "note"},
+            "garbage",
+            {"id": "L-3", "title": "T" * 200, "type": "weird", "medium": "hack"},
+        ])
+        self.assertEqual(len(items), 2)
+        self.assertEqual(items[0]["type"], "task")
+        self.assertEqual(items[0]["medium"], "voice")
+        self.assertEqual(items[0]["created_at"], "2026-08-25T08:00:00")
+        self.assertEqual(items[1]["type"], "note")
+        self.assertEqual(items[1]["medium"], "")
+        self.assertEqual(len(items[1]["title"]), 80)
 
     def test_rejects_foreign_origin(self):
         with self.assertRaises(HTTPError) as context:

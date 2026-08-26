@@ -173,11 +173,35 @@ def configure_windows_autostart(enabled: bool) -> None:
         pass
 
 
+def sanitize_line_inbox(items: object) -> list[dict]:
+    """整理網頁橋接傳來的 LINE 待整理清單；桌面端唯讀顯示，欄位全部截長補短。"""
+    if not isinstance(items, list):
+        return []
+    sanitized: list[dict] = []
+    for item in items[:50]:
+        if not isinstance(item, dict):
+            continue
+        title = str(item.get("title") or "").strip()[:80]
+        if not title:
+            continue
+        sanitized.append({
+            "id": str(item.get("id") or "")[:60],
+            "title": title,
+            "type": "task" if item.get("type") == "task" else "note",
+            "tag": str(item.get("tag") or "")[:20],
+            "medium": item.get("medium") if item.get("medium") in ("voice", "photo") else "",
+            "created_at": str(item.get("createdAt") or "")[:40],
+        })
+    return sanitized
+
+
 def default_data() -> dict:
     now = now_iso()
     return {
         "tasks": [],
         "notes": [],
+        # LINE 待整理清單：由教師工作台網頁經本機橋接同步進來，桌面端唯讀顯示。
+        "line_inbox": [],
         "settings": {
             "enabled": True,
             "autostart": False,
@@ -311,6 +335,8 @@ class SecretaryPet(DesktopPetPreview):
             base["tasks"] = []
         if not isinstance(base.get("notes"), list):
             base["notes"] = []
+        if not isinstance(base.get("line_inbox"), list):
+            base["line_inbox"] = []
         settings = default_data()["settings"]
         settings.update(base.get("settings") or {})
         settings.update(load_external_settings())
@@ -588,6 +614,12 @@ class SecretaryPet(DesktopPetPreview):
         ttk.Button(primary_actions, text="先存為記事", style="Secretary.TButton", command=self._save_note).pack(side="right", padx=7)
         self.panel_widgets["organize_button"] = organize_button
 
+        line_card = self._card(body, "📱 LINE 待整理", c["surface"])
+        line_card.pack(fill="x", pady=(9, 0))
+        tk.Label(line_card, text="從 LINE 傳給小幫手的訊息；請到教師工作台的「LINE 收件匣」確認後建立。", bg=c["surface"], fg=c["muted"], font=("Microsoft JhengHei", 8)).pack(anchor="w", pady=(0, 4))
+        line_list = self._listbox(line_card, height=3)
+        self.panel_widgets["line_inbox"] = line_list
+
         notes = self._card(body, "📝 本機記事", c["surface"])
         notes.pack(fill="x", pady=(9, 0))
         tk.Label(notes, text="記事保存在這台電腦；教師工作台開啟時會透過本機連線自動帶入。", bg=c["surface"], fg=c["muted"], font=("Microsoft JhengHei", 8)).pack(anchor="w", pady=(0, 4))
@@ -611,6 +643,7 @@ class SecretaryPet(DesktopPetPreview):
         panel.bind("<Escape>", lambda _e: panel.withdraw())
         self._render_brief("tomorrow" if datetime.now().hour >= 15 else "today")
         self._render_health()
+        self._render_line_inbox()
 
     def _panel_geometry(self, width: int, height: int) -> str:
         max_x = max(10, self.screen_width - width - 14)
@@ -829,7 +862,11 @@ class SecretaryPet(DesktopPetPreview):
     def _bridge_sync(self, payload: dict) -> dict:
         incoming_tasks = payload.get("tasks") if isinstance(payload.get("tasks"), list) else []
         incoming_notes = payload.get("notes") if isinstance(payload.get("notes"), list) else []
+        incoming_line = payload.get("lineInbox") if isinstance(payload.get("lineInbox"), list) else None
         with self.data_lock:
+            if incoming_line is not None:
+                # 網頁是 LINE 收件匣的處理者；桌面端只保存唯讀鏡像供顯示與簡報。
+                self.data["line_inbox"] = sanitize_line_inbox(incoming_line)
             local_tasks = self.data.get("tasks", [])
             by_cloud = {str(task.get("cloud_id") or ""): task for task in local_tasks if task.get("cloud_id")}
             for item in incoming_tasks[:5000]:
@@ -889,7 +926,23 @@ class SecretaryPet(DesktopPetPreview):
     def _bridge_ui_refresh(self) -> None:
         self._render_dashboard()
         self._render_notes()
+        self._render_line_inbox()
         self._update_bridge_status()
+
+    def _render_line_inbox(self) -> None:
+        box = self.panel_widgets.get("line_inbox")
+        if not isinstance(box, tk.Listbox):
+            return
+        box.delete(0, "end")
+        items = [item for item in self.data.get("line_inbox", []) if isinstance(item, dict)]
+        if not items:
+            box.insert("end", "目前沒有 LINE 待整理的訊息")
+            return
+        for item in items[:6]:
+            kind = "任務" if item.get("type") == "task" else "記事"
+            medium = "🎤" if item.get("medium") == "voice" else "📷" if item.get("medium") == "photo" else ""
+            tag = f"（{item.get('tag')}）" if item.get("tag") else ""
+            box.insert("end", f"{kind}{medium}｜{item.get('title', '')}{tag}")
 
     def _render_notes(self) -> None:
         box = self.panel_widgets.get("notes")
@@ -969,11 +1022,14 @@ class SecretaryPet(DesktopPetPreview):
         due = [task for task in active if task.get("due_date") == target.isoformat()]
         overdue = [task for task in active if task.get("due_date") and task["due_date"] < date.today().isoformat()] if mode == "today" else []
         tracking = [task for task in active if task.get("waiting_for") or task.get("status") == "等待回覆"]
+        line_pending = len([item for item in self.data.get("line_inbox", []) if isinstance(item, dict)])
         if mode == "tomorrow":
             text = f"明天有 {len(due)} 件期限任務。\n" + (f"建議先準備：{due[0]['title']}" if due else "目前沒有需要提前準備的期限事項。")
         else:
             text = f"今天有 {len(due)} 件期限任務、{len(overdue)} 件逾期、{len(tracking)} 件等待回覆。\n"
             text += f"建議優先處理：{overdue[0]['title']}" if overdue else f"今天先完成：{due[0]['title']}" if due else "今天的期限工作已整理完成。"
+        if line_pending:
+            text += f"\n另有 {line_pending} 則 LINE 訊息待到工作台整理。"
         label: tk.Label = self.panel_widgets["brief"]  # type: ignore[assignment]
         label.configure(text=text)
 
