@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <title>安裝教學｜教師工作台</title>
+  <style>
+    :root { --bg:#f3f6f4; --surface:#fff; --ink:#1c302d; --muted:#657570; --line:#d5e1dc; --primary:#1f514a; --primary-strong:#173f3a; --soft:#e8f2ee; --warn-bg:#fff7e6; --warn-line:#d9c58e; --danger:#a34339; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:"Microsoft JhengHei","Noto Sans TC",sans-serif; background:var(--bg); color:var(--ink); line-height:1.9; font-size:16px; }
+    header { background:var(--primary-strong); color:#fff; padding:28px 20px; }
+    .wrap { max-width:860px; margin:0 auto; padding:0 16px; }
+    header h1 { font-size:26px; }
+    header p { opacity:.9; margin-top:6px; font-size:15px; }
+    nav.toc { background:var(--surface); border-bottom:2px solid var(--line); padding:10px 0; position:sticky; top:0; z-index:10; }
+    nav.toc .wrap { display:flex; gap:8px; flex-wrap:wrap; }
+    nav.toc a { text-decoration:none; color:var(--primary-strong); font-weight:800; font-size:13px; background:var(--soft); border-radius:999px; padding:5px 13px; }
+    main { padding:26px 0 80px; }
+    section { background:var(--surface); border:2px solid var(--line); border-radius:16px; padding:22px 24px; margin:0 16px 22px; }
+    @media (min-width:900px){ section{ margin-left:auto; margin-right:auto; max-width:860px; } }
+    h2 { color:var(--primary-strong); font-size:22px; margin-bottom:6px; }
+    h3 { color:var(--primary-strong); font-size:17px; margin:18px 0 6px; }
+    .lead { color:var(--muted); font-size:14px; margin-bottom:10px; }
+    .step { display:flex; gap:12px; margin:14px 0; }
+    .step-no { flex:0 0 34px; height:34px; border-radius:50%; background:var(--primary); color:#fff; font-weight:900; font-size:17px; display:flex; align-items:center; justify-content:center; margin-top:3px; }
+    .step-body { min-width:0; flex:1; }
+    .step-body strong.t { font-size:16px; }
+    .box { background:#fbfaf6; border:1.5px solid var(--line); border-radius:12px; padding:10px 14px; margin:8px 0; font-size:15px; }
+    .copyrow { display:flex; gap:8px; align-items:center; background:#f0f4f2; border:1.5px solid var(--line); border-radius:10px; padding:8px 12px; margin:8px 0; flex-wrap:wrap; }
+    .copyrow code { font-family:Consolas,monospace; font-size:14px; word-break:break-all; flex:1; min-width:200px; }
+    .copy-btn { border:0; background:var(--primary); color:#fff; border-radius:8px; padding:6px 16px; font-size:13px; font-weight:900; cursor:pointer; font-family:inherit; }
+    .warn { background:var(--warn-bg); border:1.5px solid var(--warn-line); border-radius:12px; padding:10px 14px; margin:10px 0; font-size:14px; }
+    .ok { background:#e3f6ec; border:1.5px solid #9fd4b8; border-radius:12px; padding:10px 14px; margin:10px 0; font-size:14px; }
+    table { width:100%; border-collapse:collapse; font-size:14px; margin:10px 0; }
+    th,td { border:1px solid var(--line); padding:8px 10px; text-align:left; vertical-align:top; }
+    th { background:var(--soft); white-space:nowrap; }
+    .kbd { display:inline-block; border:1.5px solid var(--line); border-bottom-width:3px; border-radius:6px; background:#fff; padding:0 7px; font-family:Consolas,monospace; font-size:13px; }
+    .toast { position:fixed; top:14px; left:50%; transform:translateX(-50%); background:var(--primary-strong); color:#fff; border-radius:12px; padding:10px 20px; font-weight:800; z-index:50; opacity:0; pointer-events:none; transition:opacity .25s; }
+    .toast.show { opacity:1; }
+    a { color:var(--primary-strong); }
+    ul,ol { padding-left:22px; }
+    li { margin:4px 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>📖 安裝教學（新手版）</h1>
+      <p>從零開始，一步一步把「教師工作台＋LINE 小幫手＋晨間大屏」全部設定好。照著做就會，不需要任何程式基礎。</p>
+    </div>
+  </header>
+
+  <nav class="toc"><div class="wrap">
+    <a href="#part0">先看這裡</a>
+    <a href="#part1">A. 工作台</a>
+    <a href="#part2">B. LINE 小幫手</a>
+    <a href="#part3">C. 晨間大屏</a>
+    <a href="#part4">D. 每天怎麼用</a>
+    <a href="#part5">E. 疑難排解</a>
+    <a href="#part6">F. 備份與安全</a>
+  </div></nav>
+
+  <main>
+    <section id="part0">
+      <h2>🧭 先看這裡：整套系統有三層，用多少裝多少</h2>
+      <table>
+        <tr><th>層級</th><th>要裝什麼</th><th>能做什麼</th></tr>
+        <tr><td>① 工作台網頁</td><td><strong>什麼都不用裝</strong>，開網址就能用</td><td>任務清單、日曆、教學進度排課、記事、JSON 備份</td></tr>
+        <tr><td>② 晨間大屏</td><td>需要先完成 B（因為要雲端同步）</td><td>教室電腦點名、收作業、黑板聯絡本、統計報表</td></tr>
+        <tr><td>③ LINE 小幫手</td><td>照本頁 B 部分部署一次（約 40–60 分鐘，只做一次）</td><td>LINE 傳文字／語音／照片建任務、寫聯絡本、每日簡報、家長訊息草稿</td></tr>
+      </table>
+      <div class="box">
+        <strong>會用到的名詞（先有個印象就好）：</strong><br>
+        ・<strong>Google 試算表</strong>＝像 Excel 的雲端表格，當作 LINE 訊息的「轉運倉庫」。<br>
+        ・<strong>Apps Script（GAS）</strong>＝Google 提供的免費小程式空間，我們把「機器人的大腦」貼進去。<br>
+        ・<strong>金鑰</strong>＝一長串亂碼，功能像鑰匙：拿到鑰匙的人才能開門。本系統共有 4 把，後面會逐一說明。
+      </div>
+      <div class="warn">💰 <strong>費用：全部免費。</strong>LINE 官方帳號免費方案＋Google 免費額度就夠用。唯一的量限制：LINE「主動推播」每月 200 則（每日簡報一天 1 則，一個月才用 30 則，很夠）。</div>
+    </section>
+
+    <section id="part1">
+      <h2>🅰 Part A：開始使用工作台（3 分鐘）</h2>
+      <div class="step"><div class="step-no">1</div><div class="step-body">
+        <strong class="t">打開工作台網址，加入書籤</strong>
+        <div class="copyrow"><code id="urlIndex">（載入中…）</code><button class="copy-btn" data-copy="#urlIndex">複製</button></div>
+        <p>開啟後按 <span class="kbd">Ctrl</span>＋<span class="kbd">D</span> 加入書籤，以後一鍵開啟。</p>
+      </div></div>
+      <div class="step"><div class="step-no">2</div><div class="step-body">
+        <strong class="t">填基本資料</strong>
+        <p>右上「⚙ 設定 → 教師資訊」：填姓名職稱、按「＋新增課程」把任教課程一門一門加進去（例如「六年一班社會」）。</p>
+      </div></div>
+      <div class="step"><div class="step-no">3</div><div class="step-body">
+        <strong class="t">重要觀念：資料存在「這台電腦的這個瀏覽器」</strong>
+        <p>不用登入、資料不上雲端；但換電腦或換瀏覽器就看不到資料。所以：<strong>定期到「設定 → 備份與還原 → 下載 JSON 備份」</strong>，換電腦時用備份檔還原。</p>
+      </div></div>
+      <div class="ok">✅ 到這裡，任務、日曆、教學進度已經全部可用。想要 LINE 與大屏，繼續 Part B。</div>
+    </section>
+
+    <section id="part2">
+      <h2>🅱 Part B：部署 LINE 小幫手（40–60 分鐘，一生只做一次）</h2>
+      <p class="lead">做完這部分，你會擁有一個「只聽你的話」的 LINE 機器人。過程有 7 關，每一關都很短。</p>
+
+      <h3>第 1 關：建立 LINE 官方帳號（＝機器人的身體）</h3>
+      <div class="step"><div class="step-no">1</div><div class="step-body">用電腦開 <a href="https://developers.line.biz/console/" target="_blank" rel="noopener">developers.line.biz/console</a>，點「Log in with LINE account」，用你手機 LINE 的帳號密碼登入（手機 LINE →設定→帳號 可以確認/設定 Email 登入）。</div></div>
+      <div class="step"><div class="step-no">2</div><div class="step-body">按「Create a new provider」，名稱隨便打（例：<code>我的教師工具</code>）→ Create。</div></div>
+      <div class="step"><div class="step-no">3</div><div class="step-body">按「Create a Messaging API channel」。若它要求先建官方帳號：到 <a href="https://manager.line.biz/" target="_blank" rel="noopener">manager.line.biz</a> 建立（免費），名稱例如「班級小幫手」，建好後進該帳號「設定 → Messaging API」按啟用，再回來。</div></div>
+      <div class="step"><div class="step-no">4</div><div class="step-body">
+        進入 channel 的「<strong>Messaging API</strong>」分頁，做三件事：<br>
+        ① 捲到最下面「Channel access token」按「<strong>Issue（發行）</strong>」→ 出現一大串字 → 複製貼到記事本，標記為 <strong>🔑A</strong>。<br>
+        ② 「LINE Official Account features」區：把「自動回覆訊息」和「加入好友的歡迎訊息」都<strong>停用</strong>（點 Edit 進去關）。<br>
+        ③ 用手機 LINE「加入好友 → 行動條碼」掃這頁的 QR Code，把機器人加為好友。
+      </div></div>
+
+      <h3>第 2 關：建立試算表、貼上程式（＝機器人的大腦）</h3>
+      <div class="step"><div class="step-no">1</div><div class="step-body">開 <a href="https://sheets.google.com" target="_blank" rel="noopener">sheets.google.com</a>（建議用<strong>個人 Gmail</strong>，學校帳號可能被管理員限制）→ 按「＋」建新試算表 → 左上角把名稱改成 <code>LINE小幫手資料</code>。</div></div>
+      <div class="step"><div class="step-no">2</div><div class="step-body">上方選單「<strong>擴充功能 → Apps Script</strong>」→ 會開一個程式編輯器。</div></div>
+      <div class="step"><div class="step-no">3</div><div class="step-body">
+        先開啟本站的程式檔（會顯示一整頁文字）：
+        <div class="copyrow"><code id="urlGs">（載入中…）</code><button class="copy-btn" data-copy="#urlGs">複製</button> <a href="LineBot.gs" target="_blank" rel="noopener"><button class="copy-btn" type="button">直接開啟</button></a></div>
+        在那頁按 <span class="kbd">Ctrl</span>＋<span class="kbd">A</span> 全選 → <span class="kbd">Ctrl</span>＋<span class="kbd">C</span> 複製。
+      </div></div>
+      <div class="step"><div class="step-no">4</div><div class="step-body">回到 Apps Script 編輯器：把裡面原本那幾行 <code>function myFunction()...</code> 全選刪掉 → <span class="kbd">Ctrl</span>＋<span class="kbd">V</span> 貼上 → <span class="kbd">Ctrl</span>＋<span class="kbd">S</span> 儲存。<br><span class="lead">✔ 檢查：左側捲到最底，行數約 1,200 行、最後一行是單獨的「}」。若只有兩三百行代表沒複製完整，重做一次。</span></div></div>
+      <div class="step"><div class="step-no">5</div><div class="step-body">編輯器上方有個函式下拉選單（在「執行／偵錯」旁邊）→ 選 <code>setupLineBot</code> → 按「<strong>執行</strong>」。<br>第一次會跳出授權：選你的帳號 → 看到「Google 尚未驗證這個應用程式」<strong>不用怕</strong>（因為這程式是你自己貼的）→ 點小字「<strong>進階</strong>」→「<strong>前往…（不安全）</strong>」→「<strong>允許</strong>」。</div></div>
+      <div class="step"><div class="step-no">6</div><div class="step-body">下方「執行紀錄」會列出三串金鑰，<strong>全部複製到記事本</strong>：<br>・Webhook 驗證參數 ＝ <strong>🔑B</strong><br>・工作台同步金鑰 ＝ <strong>🔑C</strong><br>・教室大屏金鑰 ＝ <strong>🔑D</strong></div></div>
+
+      <h3>第 3 關：把鑰匙插進去（指令碼屬性）</h3>
+      <div class="step"><div class="step-no">1</div><div class="step-body">Apps Script 左側點齒輪「<strong>專案設定</strong>」→ 捲到最下面「<strong>指令碼屬性</strong>」→「新增指令碼屬性」，逐筆加入：
+        <table>
+          <tr><th>屬性（照抄）</th><th>值</th></tr>
+          <tr><td><code>LINE_CHANNEL_ACCESS_TOKEN</code></td><td>貼 🔑A（第 1 關那串最長的）</td></tr>
+          <tr><td><code>GEMINI_API_KEY</code></td><td>選填。到 <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a> 免費申請。不填也能用，但語音、照片、自然語言分類會停用</td></tr>
+        </table>
+        按「儲存指令碼屬性」。（還有一個 <code>LINE_ALLOWED_USER_IDS</code> 留到第 6 關。）
+      </div></div>
+
+      <h3>第 4 關：部署（＝把機器人開機）</h3>
+      <div class="step"><div class="step-no">1</div><div class="step-body">右上「<strong>部署 → 新增部署</strong>」→ 點左邊齒輪 ⚙ 選「<strong>網頁應用程式</strong>」。</div></div>
+      <div class="step"><div class="step-no">2</div><div class="step-body">設定兩項：執行身分「<strong>我</strong>」、具有存取權的使用者「<strong>任何人</strong>」（⚠ 一定要選任何人，安全由亂數金鑰把關）→ 按「部署」。</div></div>
+      <div class="step"><div class="step-no">3</div><div class="step-body">複製產生的「<strong>網頁應用程式 URL</strong>」（<code>https://script.google.com/macros/s/…/exec</code> 結尾）＝ <strong>🌐 你的機器人網址</strong>，存到記事本。<br><span class="lead">✔ 檢查：把這網址貼到瀏覽器打開，看到 <code>{"ok":true,…}</code> 就代表機器人活著。</span><br><span class="lead">🔁 以後更新程式：要用「部署 → 管理部署 → ✏️ 編輯 → 版本選『新版本』→ 部署」，網址才不會變。</span></div></div>
+
+      <h3>第 5 關：接上 LINE（Webhook）</h3>
+      <div class="step"><div class="step-no">1</div><div class="step-body">回 LINE Developers 的「Messaging API」分頁，找到「<strong>Webhook URL</strong>」→ 按 Edit，貼上：<br><code>🌐你的機器人網址?hook=🔑B</code><br><span class="lead">（把兩段接起來、中間不能有空格。例：<code>https://script.google.com/macros/s/AKfy…/exec?hook=a1b2c3…</code>）</span></div></div>
+      <div class="step"><div class="step-no">2</div><div class="step-body">開啟「<strong>Use webhook</strong>」開關 → 按「<strong>Verify</strong>」→ 顯示 Success ✅。</div></div>
+      <div class="step"><div class="step-no">3</div><div class="step-body">🎉 <strong>見證時刻</strong>：用手機對機器人傳「<code>說明</code>」→ 它會回你一整段使用說明。有回話就是全線打通了！</div></div>
+
+      <h3>第 6 關：鎖門（只聽你的話）</h3>
+      <div class="step"><div class="step-no">1</div><div class="step-body">對機器人傳「<code>我的ID</code>」→ 它回一串 <code>U</code> 開頭的字 → 複製。</div></div>
+      <div class="step"><div class="step-no">2</div><div class="step-body">回 Apps Script「指令碼屬性」新增：屬性 <code>LINE_ALLOWED_USER_IDS</code>、值＝那串 U 開頭的字。從此陌生人加這個機器人都不會有任何反應。</div></div>
+
+      <h3>第 7 關：設定自動化（執行一個函式就好）</h3>
+      <div class="step"><div class="step-no">1</div><div class="step-body">Apps Script 編輯器上方函式選單改選 <code>setupTriggers</code> → 按「執行」→ 完成！自動建立三個排程：<strong>每日簡報</strong>（每天 8–9 點）、<strong>未點名提醒</strong>（8:20 起智慧檢查）、<strong>每週家長關懷</strong>（週五下午）。</div></div>
+
+      <h3>最後：把工作台接上機器人</h3>
+      <div class="step"><div class="step-no">1</div><div class="step-body">回工作台網頁 →「⚙ 設定 → <strong>LINE 小幫手</strong>」→ 勾「啟用」→ 貼上 🌐機器人網址 與 🔑C 同步金鑰 → 按「<strong>測試連線</strong>」→ 成功後按「<strong>立即同步</strong>」。</div></div>
+      <div class="ok">✅ 完成！教師工具箱會出現「LINE 收件匣」與「聯絡本」按鈕。用手機傳「明天要收回條」再按立即同步，收件匣就有東西了。</div>
+    </section>
+
+    <section id="part3">
+      <h2>🅲 Part C：設置晨間大屏（教室電腦，10 分鐘）</h2>
+      <div class="step"><div class="step-no">1</div><div class="step-body">
+        <strong class="t">在教室電腦（接投影機或觸控大屏）開啟大屏網址</strong>
+        <div class="copyrow"><code id="urlMorning">（載入中…）</code><button class="copy-btn" data-copy="#urlMorning">複製</button></div>
+      </div></div>
+      <div class="step"><div class="step-no">2</div><div class="step-body">
+        <strong class="t">進「⚙ 設定」填好並儲存</strong>
+        <table>
+          <tr><th>欄位</th><th>填什麼</th></tr>
+          <tr><td>班級名稱</td><td>例：501</td></tr>
+          <tr><td>班級最大座號／空號</td><td>照實填；轉走的座號填進「空號」就不會出現</td></tr>
+          <tr><td>科目管理／作業名稱</td><td>點亮要收作業的科目；不夠的自己新增</td></tr>
+          <tr><td>三個時間</td><td>預設 08:00 遲到界線／08:05 未填轉未到／08:08 自動回報，可自訂</td></tr>
+          <tr><td>聯絡本字體</td><td>低年級選「注音體」，每個字自動標注音</td></tr>
+          <tr><td>Apps Script 部署網址</td><td>🌐 機器人網址（跟 Part B 同一個）</td></tr>
+          <tr><td>教室大屏金鑰</td><td><strong>🔑D</strong>（⚠ 教室電腦只填這把，別填 🔑C——D 的權限只限當天回報，被學生玩到也拿不到你的資料）</td></tr>
+        </table>
+      </div></div>
+      <div class="step"><div class="step-no">3</div><div class="step-body">
+        <strong class="t">（選用）開機自動全螢幕開啟</strong>
+        <p>① 桌面按右鍵 → 新增 → 文字文件 → 貼入下面內容 → 存檔後把副檔名改成 <code>.bat</code>（例：啟動大屏.bat）：</p>
+        <div class="copyrow"><code id="kioskCmd">（載入中…）</code><button class="copy-btn" data-copy="#kioskCmd">複製</button></div>
+        <p>② 按 <span class="kbd">Win</span>＋<span class="kbd">R</span> 輸入 <code>shell:startup</code> 按 Enter → 把 .bat 檔拖進開啟的資料夾。之後開機就自動全螢幕進大屏。</p>
+      </div></div>
+      <div class="ok">✅ 測一下：點幾個座號 → 點科目收作業 → 按「📤 送出」→ 你的手機 LINE 應該立刻收到晨間回報！</div>
+    </section>
+
+    <section id="part4">
+      <h2>🅳 Part D：每天怎麼用（日常流程）</h2>
+      <table>
+        <tr><th>時間</th><th>發生什麼</th></tr>
+        <tr><td>前一晚</td><td>工作台「聯絡本」用下拉選單快速輸入明天內容 → 儲存到雲端（或隨時對 LINE 說「<code>聯絡本：數習P.20、帶直笛</code>」）</td></tr>
+        <tr><td>早上開機</td><td>大屏自動開啟，黑板已顯示今日聯絡本，學生照抄</td></tr>
+        <tr><td>晨間</td><td>點名（點座號）＋收作業（點已交的變綠，或按「全班繳交」再取消少數）；可用倒數計時管理節奏</td></tr>
+        <tr><td>08:05 / 08:08</td><td>未填自動轉未到 → 自動送出 → <strong>你的 LINE 收到完整回報</strong></td></tr>
+        <tr><td>白天隨時</td><td>LINE 傳「明天要收回條」→ 開工作台按立即同步 → 收件匣確認轉任務；語音、拍照通知單也可以</td></tr>
+        <tr><td>下課</td><td>大屏「作業補交」分頁：學生補交按「完成」，缺交自動變補交</td></tr>
+        <tr><td>週五下午</td><td>缺交達 5 次的學生，LINE 自動送上委婉家長訊息草稿（在工作台收件匣，補上孩子優點再轉發）</td></tr>
+        <tr><td>期末</td><td>大屏「查詢統計」輸入 🔑C → 查區間 → 「⬇ 匯出 Excel」變輔導紀錄素材</td></tr>
+      </table>
+      <div class="box"><strong>LINE 指令速查：</strong>說明／我的ID／今日點名／缺交統計／今天上到哪／聯絡簿：…（產生家長群公告）／聯絡本：…（寫入黑板）／撤回／刪除 關鍵字</div>
+    </section>
+
+    <section id="part5">
+      <h2>🅴 Part E：疑難排解</h2>
+      <table>
+        <tr><th>症狀</th><th>解法</th></tr>
+        <tr><td>Webhook Verify 失敗</td><td>網址結尾少了 <code>?hook=🔑B</code>；或部署的存取權不是「任何人」</td></tr>
+        <tr><td>機器人已讀不回</td><td>①「自動回覆訊息」沒關 ② Use webhook 開關沒開 ③ <code>LINE_ALLOWED_USER_IDS</code> 填錯（先清空該屬性測試）</td></tr>
+        <tr><td>貼程式時出現語法錯誤</td><td>複製不完整。重開程式檔頁面 Ctrl+A 全選重貼，確認約 1,200 行</td></tr>
+        <tr><td>授權視窗一閃就關</td><td>瀏覽器擴充功能擋掉了。改用無痕視窗（Ctrl+Shift+N）登入 Google 重做</td></tr>
+        <tr><td>工作台「測試連線」失敗</td><td>🔑C 貼錯、網址不是 /exec 結尾、或改過程式忘了「新版本」重新部署</td></tr>
+        <tr><td>大屏送出失敗</td><td>教室金鑰 🔑D 貼錯，或班級名稱空白</td></tr>
+        <tr><td>語音／照片沒反應</td><td>沒填 <code>GEMINI_API_KEY</code></td></tr>
+        <tr><td>換了電腦資料不見</td><td>資料存在各電腦的瀏覽器裡。回舊電腦「下載 JSON 備份」→ 新電腦「從備份還原」</td></tr>
+        <tr><td>學校帳號部署被擋</td><td>改用個人 Gmail 重做 Part B 第 2～4 關</td></tr>
+      </table>
+    </section>
+
+    <section id="part6">
+      <h2>🅵 Part F：備份與安全（給自己的保險）</h2>
+      <ul>
+        <li><strong>每週一次</strong>：工作台「設定 → 備份與還原 → 下載 JSON 備份」（不含金鑰，可安心存隨身碟）。</li>
+        <li><strong>4 把金鑰的家</strong>：🔑A 在 LINE Developers、🔑B🔑C🔑D 在 Apps Script 執行 <code>setupLineBot</code> 隨時可再看。金鑰與機器人網址<strong>不要</strong>貼到公開網頁或群組。</li>
+        <li><strong>權限分層</strong>：教室電腦只放 🔑D（只能回報當天）；🔑C（老師金鑰，可查歷史）只放自己的電腦與手機。</li>
+        <li><strong>試算表就是雲端備份</strong>：點名、作業、聯絡本的歷史都在你自己 Google 帳號的試算表裡，隨時打開看得到。</li>
+        <li>大屏只使用<strong>座號</strong>，不輸入學生姓名；遲到紀錄只有老師在 LINE 與統計看得到，大屏畫面不顯示。</li>
+      </ul>
+    </section>
+  </main>
+  <div class="toast" id="toast">已複製！</div>
+
+  <script>
+    'use strict';
+    // 依目前網站網址自動組出各連結，使用者照著複製就不會打錯。
+    (function () {
+      const origin = location.origin && location.origin.startsWith('http') ? location.origin : 'https://你的網站網址';
+      const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+      set('urlIndex', origin + '/Index.html');
+      set('urlMorning', origin + '/Morning.html');
+      set('urlGs', origin + '/LineBot.gs');
+      set('kioskCmd', 'start chrome --kiosk "' + origin + '/Morning.html"');
+      const toast = document.getElementById('toast');
+      document.querySelectorAll('.copy-btn[data-copy]').forEach(button => button.addEventListener('click', async () => {
+        const text = document.querySelector(button.dataset.copy)?.textContent || '';
+        let copied = false;
+        try { await navigator.clipboard.writeText(text); copied = true; }
+        catch (error) {
+          const helper = document.createElement('textarea');
+          helper.value = text; document.body.appendChild(helper); helper.select();
+          try { copied = document.execCommand('copy'); } catch (error2) {}
+          helper.remove();
+        }
+        toast.textContent = copied ? '已複製！' : '複製失敗，請手動選取';
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 1800);
+      }));
+    })();
+  </script>
+</body>
+</html>

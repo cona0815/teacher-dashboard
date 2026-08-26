@@ -143,7 +143,7 @@ assert.deepEqual(
 assert.ok(options.類型.includes("舊制自訂類型"), "切換處室時應保留既有任務類型");
 assert.equal(options.類型.filter((value) => value === "課程教學").length, 1);
 
-for (const htmlName of ["Installer.html", "Index.html", "Board.html", "Morning.html"]) {
+for (const htmlName of ["Installer.html", "Index.html", "Board.html", "Morning.html", "Install.html"]) {
   const html = fs.readFileSync(path.join(projectRoot, htmlName), "utf8");
   const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((match) => match[1]);
   assert.ok(scripts.length > 0, `${htmlName} 缺少前端程式`);
@@ -295,6 +295,12 @@ assert.match(thirdPartyNotices, /ipaslogo\.com/, "素材聲明應記錄 IP as Lo
 assert.match(morningHtml, /data:image\/webp;base64,/, "大屏圖示應內嵌以維持單檔可攜");
 assert.match(morningHtml, /BpmfIansui/, "大屏聯絡本應提供注音體選項");
 assert.match(thirdPartyNotices, /bpmfvs/, "素材聲明應記錄注音字型來源與 OFL 授權");
+const installHtml = fs.readFileSync(path.join(projectRoot, "Install.html"), "utf8");
+for (const guideFeature of ["setupLineBot", "setupTriggers", "指令碼屬性", "Webhook", "教室大屏金鑰", "疑難排解", "shell:startup"]) {
+  assert.match(installHtml, new RegExp(guideFeature), `新手安裝教學缺少「${guideFeature}」`);
+}
+assert.match(indexHtml, /Install\.html/, "工作台應連結新手安裝教學");
+assert.match(morningHtml, /Install\.html/, "大屏應連結新手安裝教學");
 assert.ok(fs.existsSync(path.join(projectRoot, "assets", "fonts", "BpmfIansui-Regular.ttf")), "注音字型檔應存在於 assets/fonts");
 assert.match(lineBotSource, /writeContactBookFromLine_/, "LINE 應可直接寫入當天聯絡本");
 assert.match(lineBotSource, /contactbook/, "分類應支援聯絡本類型");
