@@ -1807,7 +1807,8 @@
           </div>
           <div class="field">
             <label for="apiModel">模型名稱</label>
-            <input class="input" id="apiModel" placeholder="例如：由服務商提供的模型名稱">
+            <input class="input" id="apiModel" placeholder="建議：gemini-2.5-flash（留空即用此預設）">
+            <div class="api-secret-note">請填 API 的正式模型代號（小寫加連字號）；填錯時按「檢查設定」會告訴你。</div>
           </div>
           <div class="field field-wide" id="apiEndpointField" hidden>
             <label for="apiEndpoint">API 端點</label>
@@ -1849,7 +1850,7 @@
         <div class="setting-checks">
           <label class="check-row"><input type="checkbox" id="petEnabled" checked>開啟小綿助功能</label>
           <label class="check-row"><input type="checkbox" id="petAutostart">Windows 登入後自動執行</label>
-          <label class="check-row"><input type="checkbox" id="petHealthReminders" checked>開啟喝水、久坐與服藥提醒</label>
+          <label class="check-row"><input type="checkbox" id="petHealthReminders" checked>開啟喝水、久坐與服藥提醒<span class="api-secret-note" style="display:block;margin-top:2px">詳細設定（喝水／起身間隔、服藥時間）：雙擊桌面小綿羊開啟祕書頁 → 🌿 健康管理 → ⚙ 詳細提醒設定。</span></label>
           <label class="check-row"><input type="checkbox" id="petOpeningBrief" checked>啟動時提示今日與逾期任務</label>
           <label class="check-row"><input type="checkbox" id="petRememberPosition" checked>記住小綿助在桌面的位置</label>
         </div>
@@ -6173,6 +6174,7 @@
     }
 
     function buildAdviceItems(analysis) {
+      if (analysis.aiChecklist?.length) return analysis.aiChecklist;
       if (analysis.existingSurveyNotice) return [
         ...(analysis.eligibility?.checks || ['確認自己是否符合通知中的填報對象與資格。']),
         '核對既有表單連結、截止日期與校內承辦窗口。',
@@ -6465,6 +6467,195 @@
       } finally { setLoading(false); }
     }
 
+    function storedApiKey() {
+      return localStorage.getItem('grade6AssistantApiKey') || sessionStorage.getItem('grade6AssistantApiKey') || '';
+    }
+
+    function normalizeGeminiModel(name) {
+      const cleaned = String(name || '').trim().toLowerCase().replace(/\s+/g, '-').replace(/^models\//, '');
+      return cleaned || 'gemini-2.5-flash';
+    }
+
+    function geminiConfigReady() {
+      return assistantSettings.api.enabled === true
+        && (assistantSettings.api.provider || 'gemini') === 'gemini'
+        && !!storedApiKey();
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || '').split(',')[1] || '');
+        reader.onerror = () => reject(new Error(`無法讀取附件 ${file.name || ''}`));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function fileToText(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error(`無法讀取附件 ${file.name || ''}`));
+        reader.readAsText(file);
+      });
+    }
+
+    async function buildGeminiAttachmentParts() {
+      const parts = [];
+      for (const item of aiAssistantState.attachments) {
+        try {
+          if (item.kind === 'image' || item.kind === 'pdf') {
+            const mime = item.type || (item.kind === 'pdf' ? 'application/pdf' : 'image/png');
+            parts.push({ inline_data: { mime_type: mime, data: await fileToBase64(item.file) } });
+          } else if (/\.(txt|md|csv)$/i.test(item.name)) {
+            const text = (await fileToText(item.file)).slice(0, 20000);
+            parts.push({ text: `附件「${item.name}」的文字內容：\n${text}` });
+          } else {
+            parts.push({ text: `附件「${item.name}」為 Office 文件格式，無法直接讀取；請提醒老師自行確認其內容。` });
+          }
+        } catch (error) {
+          parts.push({ text: `附件「${item.name}」讀取失敗，未能提供內容。` });
+        }
+      }
+      return parts;
+    }
+
+    function geminiEndpointBase() {
+      const base = assistantSettings.api.endpoint || 'https://generativelanguage.googleapis.com/v1beta/models';
+      return base.replace(/\/+$/, '');
+    }
+
+    async function callGeminiAnalysis(safeText, analysis) {
+      const key = storedApiKey();
+      const model = normalizeGeminiModel(assistantSettings.api.model);
+      const promptHint = analysis.activePrompt?.prompt ? `分析方式指引：${analysis.activePrompt.prompt}\n` : '';
+      const audience = $('aiAudience').value;
+      const audienceHint = audience !== 'auto' ? `訊息對象是「${messageAudienceLabel(audience)}」。\n` : '';
+      const instruction = [
+        '你是台灣國小教師的班級經營與行政助理。以下是老師描述的情境（已先去識別化，可能以〔遮蔽〕代替敏感字）。',
+        promptHint + audienceHint,
+        `今天是 ${localDateString(new Date())}。請閱讀文字與所有附件後，只回覆一個 JSON 物件（不要 markdown、不要多餘文字），格式如下：`,
+        '{',
+        ' "category": "情境分類，例如 行政交辦/親師溝通/活動籌備/教學/會議",',
+        ' "isTask": true 或 false（是否需要建立待辦任務）,',
+        ' "analysis": ["3 到 6 條重點分析與具體建議，每條一句話"],',
+        ' "checklist": ["3 到 6 條老師行動前應確認的事項"],',
+        ' "mainTask": {"name": "任務名稱，20 字內", "dueDate": "YYYY-MM-DD 或空字串", "priority": "高/中/低", "nextAction": "下一步行動一句話"} 或 null,',
+        ' "subtasks": [{"name": "子任務名稱", "dueDate": "YYYY-MM-DD 或空字串"}]（只有多階段工作才拆，最多 6 項，否則空陣列）,',
+        ' "parentMessage": "若適合發給家長，給一段禮貌委婉、不含個資的留言草稿；否則空字串",',
+        ' "attachmentSummary": ["每個附件的重點摘要，一項一條"]（沒有附件就空陣列）',
+        '}',
+        '規則：日期只能來自原文或附件，不可虛構；諮詢型情境 mainTask 給 null；一律使用繁體中文。',
+        '',
+        '老師的描述：',
+        safeText
+      ].join('\n');
+      const parts = [{ text: instruction }, ...await buildGeminiAttachmentParts()];
+      const url = `${geminiEndpointBase()}/${model}:generateContent?key=${encodeURIComponent(key)}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts }],
+          generationConfig: { temperature: 0.4, maxOutputTokens: 2048, responseMimeType: 'application/json' }
+        })
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        const message = data?.error?.message || `HTTP ${response.status}`;
+        throw new Error(String(message).slice(0, 160));
+      }
+      const data = await response.json();
+      const rawText = (data?.candidates?.[0]?.content?.parts || []).map(part => part.text || '').join('').trim();
+      if (!rawText) throw new Error('模型沒有回覆內容，可能觸發安全過濾');
+      const jsonText = rawText.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```\s*$/, '');
+      let parsed;
+      try { parsed = JSON.parse(jsonText); } catch (error) { throw new Error('模型回覆不是有效 JSON，請再試一次'); }
+      return parsed;
+    }
+
+    function safeIsoDate(value) {
+      return /^\d{4}-\d{2}-\d{2}$/.test(String(value || '')) ? String(value) : '';
+    }
+
+    function applyGeminiResult(analysis, parsed, redactionText) {
+      const model = normalizeGeminiModel(assistantSettings.api.model);
+      if (parsed.category) analysis.classification.category = String(parsed.category).slice(0, 20);
+      analysis.isTask = parsed.mainTask?.name ? true : parsed.isTask === true;
+      const analysisLines = (Array.isArray(parsed.analysis) ? parsed.analysis : [String(parsed.analysis || '')])
+        .filter(Boolean).map(line => `• ${String(line).trim()}`);
+      const attachmentLines = (Array.isArray(parsed.attachmentSummary) ? parsed.attachmentSummary : [])
+        .filter(Boolean).map(line => `• ${String(line).trim()}`);
+      const resultLines = [
+        `AI 分析｜Gemini（${model}）`,
+        `情境判斷｜${analysis.isTask ? '任務型' : '諮詢型'}｜${analysis.classification.category}`,
+        '',
+        '分析與建議',
+        ...analysisLines
+      ];
+      if (attachmentLines.length) resultLines.push('', '附件重點', ...attachmentLines);
+      resultLines.push('', 'AI 內容仍可能有誤，送出訊息或建立任務前請老師確認。');
+      if (parsed.parentMessage && String(parsed.parentMessage).trim()) {
+        const review = reviewParentFacingMessage(String(parsed.parentMessage).trim());
+        analysis.parentMessage = review.message;
+        analysis.parentLanguageReview = review;
+        resultLines.push('', '可直接傳給家長的留言草稿', '', review.message);
+        if (review.replaced) resultLines.push('', '（原草稿含有不適合的字詞，已改用保守版本。）');
+      }
+      $('aiOutput').textContent = resultLines.join('\n');
+      $('aiOutput').classList.remove('is-empty');
+      $('aiResultType').textContent = `${analysis.isTask ? '任務型｜可建立工作' : '諮詢型｜先提供建議'}｜Gemini`;
+      $('aiResultType').hidden = false;
+      if (Array.isArray(parsed.checklist) && parsed.checklist.length) {
+        analysis.aiChecklist = parsed.checklist.slice(0, 8).map(item => String(item).slice(0, 120));
+      }
+      renderAdviceChecklist(analysis);
+      if (parsed.mainTask?.name) {
+        analysis.mainTask = makeGenericTaskDraft(
+          String(parsed.mainTask.name).slice(0, 90),
+          analysis.classification.category,
+          ['高', '中', '低'].includes(parsed.mainTask.priority) ? parsed.mainTask.priority : '中',
+          safeIsoDate(parsed.mainTask.dueDate),
+          String(parsed.mainTask.nextAction || parsed.mainTask.name).slice(0, 120)
+        );
+        analysis.children = (Array.isArray(parsed.subtasks) ? parsed.subtasks : []).slice(0, 6)
+          .filter(item => item && item.name)
+          .map(item => ({
+            name: String(item.name).slice(0, 90),
+            dueDate: safeIsoDate(item.dueDate),
+            suggestedTiming: safeIsoDate(item.dueDate) ? `建議 ${safeIsoDate(item.dueDate)} 前` : '期限請老師確認'
+          }));
+        aiAssistantState.taskDraft = analysis.mainTask;
+        aiAssistantState.taskDrafts = analysis.children;
+        $('aiCreateTaskButton').disabled = false;
+        $('aiCreateTaskButton').textContent = analysis.children.length ? `建立主任務與 ${analysis.children.length} 個子任務` : '建立主任務';
+      }
+      renderTaskSuggestion(analysis);
+      if (!analysis.formDraft && !analysis.groupBuyRows) renderTeacherLineMessage(redactionText, analysis);
+    }
+
+    async function runGeminiAnalysis(analysis, redactionText) {
+      const requestId = ++aiGeminiRequestSeq;
+      const button = $('aiGenerateButton');
+      button.disabled = true;
+      button.textContent = '✨ Gemini 分析中…';
+      try {
+        const parsed = await callGeminiAnalysis(redactionText, analysis);
+        if (requestId !== aiGeminiRequestSeq || aiAssistantState.analysis !== analysis) return;
+        applyGeminiResult(analysis, parsed, redactionText);
+        showToast('✨ Gemini 分析完成；建議與任務草稿已更新。');
+      } catch (error) {
+        if (requestId === aiGeminiRequestSeq) {
+          showToast(`Gemini 呼叫失敗：${String(error.message).slice(0, 120)}。以下為本機規則分析。`, true);
+        }
+      } finally {
+        button.disabled = false;
+        button.textContent = '分析並給建議';
+      }
+    }
+
+    let aiGeminiRequestSeq = 0;
+
     function generateAiResult() {
       const originalText = $('aiInput').value.trim();
       const attachmentContext = attachmentAnalysisContext();
@@ -6537,8 +6728,9 @@
       if (aiAssistantState.attachments.length) {
         resultLines.unshift(
           `附件｜${attachmentContext}`,
-          '目前預覽版已完成格式與大小檢查；尚未串接多模態 API，因此不會假裝已讀取圖片或 PDF 內容。',
-          '正式分析前請再次確認附件內容與檔名不含學生姓名、聯絡方式或其他個人資料。',
+          geminiConfigReady()
+            ? '附件將一併送給 Gemini 讀取內容；送出前請確認附件與檔名不含學生姓名、聯絡方式或其他個人資料。'
+            : '尚未設定 Gemini API 金鑰，本機規則模擬不會讀取圖片或 PDF 內容；到「設定 → AI 設定」填入金鑰即可啟用。',
           ''
         );
       }
@@ -6560,8 +6752,15 @@
       renderGroupBuyDraft(analysis.groupBuyRows);
       $('aiCreateTaskButton').disabled = false;
       $('aiCreateTaskButton').textContent = analysis.children.length ? `建立主任務與 ${analysis.children.length} 個子任務` : '建立主任務';
+      if (geminiConfigReady()) {
+        showToast(redaction.count
+          ? `已遮蔽 ${redaction.count} 處敏感內容，交由 Gemini 分析中…`
+          : '已先顯示本機初步整理，Gemini 分析中…');
+        runGeminiAnalysis(analysis, redaction.text);
+        return;
+      }
       showToast(aiAssistantState.attachments.length && !originalText
-        ? `已準備 ${aiAssistantState.attachments.length} 個附件；串接多模態 API 後即可分析內容。`
+        ? `已準備 ${aiAssistantState.attachments.length} 個附件；填入 Gemini API 金鑰後即可分析內容。`
         : redaction.count
         ? `已遮蔽 ${redaction.count} 處敏感內容，再完成文字草稿。`
         : analysis.parentMessage ? '親師留言草稿已產生，可直接修改或複製。' : '情境分析與任務建議已完成。');
@@ -6752,7 +6951,9 @@
       const enabled = assistantSettings.api.enabled === true;
       document.querySelectorAll('.ai-local-note').forEach(note => {
         note.textContent = enabled
-          ? IS_LOCAL_PREVIEW ? 'AI 模擬已開啟｜內容只在本機處理' : 'AI 功能已開啟｜送出前仍會先去識別化'
+          ? geminiConfigReady()
+            ? 'Gemini API 已連接｜送出前仍會先去識別化'
+            : '本機規則模擬｜到「設定 → AI 設定」填入 Gemini 金鑰即可啟用真 AI'
           : 'AI 功能目前未開啟';
       });
       $('aiAssistantSection').hidden = !enabled;
@@ -6880,16 +7081,39 @@
         : '設定已儲存；API 金鑰只保留到關閉此瀏覽器分頁。');
     }
 
-    function checkApiSettings() {
+    async function checkApiSettings() {
       const config = readSettingsForm().api;
       if (!config.enabled) return showToast('請先勾選「開啟 AI 功能」。');
       if (config.provider === 'disabled') return showToast('請選擇 AI 服務。', true);
-      if (!config.model || !$('apiKey').value.trim()) return showToast('請填寫模型名稱與 API 金鑰。', true);
+      const key = $('apiKey').value.trim() || storedApiKey();
+      if (!key) return showToast('請填寫 API 金鑰。', true);
       if (config.provider !== 'gemini') {
         if (!config.endpoint) return showToast('自訂服務必須填寫 API 端點。', true);
         try { new URL(config.endpoint); } catch (error) { return showToast('API 端點網址格式不正確。', true); }
+        return showToast('欄位格式檢查通過；連線測試目前僅支援 Google Gemini API。');
       }
-      showToast('欄位格式檢查通過；目前模擬版不會對外發送請求。');
+      const model = normalizeGeminiModel(config.model);
+      const base = (config.endpoint || 'https://generativelanguage.googleapis.com/v1beta/models').replace(/\/+$/, '');
+      const button = $('checkApiButton');
+      button.disabled = true;
+      button.textContent = '測試連線中…';
+      try {
+        const response = await fetch(`${base}/${model}:generateContent?key=${encodeURIComponent(key)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: '請回覆 OK' }] }], generationConfig: { maxOutputTokens: 20 } })
+        });
+        if (!response.ok) {
+          const data = await response.json().catch(() => null);
+          throw new Error(data?.error?.message || `HTTP ${response.status}`);
+        }
+        showToast(`✅ Gemini 連線成功（模型 ${model}）。記得按「儲存設定」。`);
+      } catch (error) {
+        showToast(`❌ 連線失敗：${String(error.message).slice(0, 140)}`, true);
+      } finally {
+        button.disabled = false;
+        button.textContent = '檢查設定';
+      }
     }
 
     function summarizeCurrentTasks() {

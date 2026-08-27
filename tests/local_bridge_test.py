@@ -4,12 +4,42 @@ import unittest
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
+import tkinter as tk
+
 from desktop_pet_secretary import (
     LocalBridgeServer,
+    SecretaryPet,
     bridge_origin_allowed,
+    default_data,
     make_bridge_handler,
     sanitize_line_inbox,
 )
+
+
+class _DeadRoot:
+    """模擬已關閉的 Tk root：after 一律拋 TclError，_panel_apply_action 會吞掉。"""
+
+    def after(self, *args, **kwargs):
+        raise tk.TclError("stub root")
+
+
+class PanelActionStub:
+    """只帶資料層的假秘書，直接借用 SecretaryPet 的面板動作方法。"""
+
+    _panel_apply_action = SecretaryPet._panel_apply_action
+    _panel_payload = SecretaryPet._panel_payload
+
+    def __init__(self):
+        self.data = default_data()
+        self.data_lock = threading.Lock()
+        self.root = _DeadRoot()
+        self.saved = 0
+
+    def _save_data(self):
+        self.saved += 1
+
+    def _pet_name(self):
+        return "小綿助"
 
 
 class DummySecretary:
@@ -79,6 +109,28 @@ class LocalBridgeTest(unittest.TestCase):
         self.assertEqual(items[1]["type"], "note")
         self.assertEqual(items[1]["medium"], "")
         self.assertEqual(len(items[1]["title"]), 80)
+
+    def test_panel_health_detail_actions(self):
+        stub = PanelActionStub()
+        result = stub._panel_apply_action({"action": "set_move_interval", "minutes": "45"})
+        self.assertTrue(result["ok"])
+        self.assertEqual(stub.data["health"]["move_interval"], 45)
+        result = stub._panel_apply_action({"action": "set_water_interval", "minutes": 999})
+        self.assertTrue(result["ok"])
+        self.assertEqual(stub.data["health"]["water_interval"], 240)
+        self.assertEqual(result["health"]["waterInterval"], 240)
+        bad = stub._panel_apply_action({"action": "set_move_interval", "minutes": "abc"})
+        self.assertFalse(bad["ok"])
+        bad = stub._panel_apply_action({"action": "add_medicine_time", "time": "25:00"})
+        self.assertFalse(bad["ok"])
+        stub._panel_apply_action({"action": "add_medicine_time", "time": "12:30"})
+        result = stub._panel_apply_action({"action": "add_medicine_time", "time": "08:00"})
+        self.assertEqual(result["health"]["medicineTimes"], ["08:00", "12:30"])
+        self.assertEqual(stub.data["health"]["medicine_time"], "08:00")
+        result = stub._panel_apply_action({"action": "remove_medicine_time", "time": "08:00"})
+        self.assertEqual(result["health"]["medicineTimes"], ["12:30"])
+        self.assertEqual(stub.data["health"]["medicine_time"], "12:30")
+        self.assertGreater(stub.saved, 0)
 
     def test_rejects_foreign_origin(self):
         with self.assertRaises(HTTPError) as context:

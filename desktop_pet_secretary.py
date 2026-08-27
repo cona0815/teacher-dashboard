@@ -230,10 +230,20 @@ details summary{cursor:pointer;font-weight:800;color:var(--strong)}
 
   <section class="card soft"><h2>🌿 健康管理</h2>
     <div class="grid2">
-      <div>💧 今日喝水 <span class="num" id="water">0</span> 杯<div class="row"><button onclick="act('water')">喝一杯</button></div></div>
+      <div>💧 今日喝水 <span class="num" id="water">0</span> 杯<div class="row"><button onclick="act('water')">喝一杯</button><span class="note-meta" id="waterHint"></span></div></div>
       <div>🚶 距上次起身 <span class="num" id="moveElapsed">0</span> 分<div class="row"><button onclick="act('move_done')">活動完成</button><span class="note-meta" id="moveHint"></span></div></div>
     </div>
     <div style="margin-top:8px">💊 服藥提醒：<span id="medicine" class="empty">未設定</span></div>
+    <details style="margin-top:8px"><summary>⚙ 詳細提醒設定（喝水／起身間隔、服藥時間）</summary>
+      <div class="row">💧 喝水提醒間隔
+        <select id="cfgWaterInterval" onchange="actx({action:'set_water_interval',minutes:this.value})"><option>30</option><option>45</option><option>60</option><option>90</option><option>120</option></select> 分鐘
+        　🚶 起身提醒間隔
+        <select id="cfgMoveInterval" onchange="actx({action:'set_move_interval',minutes:this.value})"><option>15</option><option>30</option><option>45</option><option>60</option><option>90</option><option>120</option></select> 分鐘
+      </div>
+      <div class="row">💊 新增服藥時間 <input id="cfgMedTime" type="time" style="max-width:140px"> <button onclick="addMed()">＋新增</button><span class="note-meta">每一筆時間到了小綿助都會提醒；點時間旁的 ✖ 可移除。</span></div>
+      <div class="row" id="medManage"></div>
+      <div class="note-meta">提醒的總開關與安靜時段，在教師工作台「設定 → 小綿助」。</div>
+    </details>
   </section>
 
   <section class="card"><h2>📮 待追蹤</h2><ul id="tracking"></ul></section>
@@ -271,13 +281,19 @@ async function load(){
     fill('lineInbox',d.lineInbox,i=>`<li><span class="tag">${i.kind}</span>${i.medium==='voice'?'🎤':i.medium==='photo'?'📷':''}${esc(i.title)}${i.tag?`<span class="tag">${esc(i.tag)}</span>`:''}</li>`,'目前沒有 LINE 待整理的訊息');
     fill('notes',d.notes,n=>`<li>${esc(n.text)}<div class="note-meta">${esc(n.time)}</div></li>`,'目前沒有記事');
     $('water').textContent=d.health.water;
+    $('waterHint').textContent=`（每 ${d.health.waterInterval} 分鐘提醒）`;
     $('moveElapsed').textContent=d.health.moveElapsed;
     $('moveHint').textContent=d.health.moveDone?'（今天已完成 ✅）':`（每 ${d.health.moveInterval} 分鐘提醒）`;
+    if(document.activeElement!==$('cfgWaterInterval'))$('cfgWaterInterval').value=String(d.health.waterInterval);
+    if(document.activeElement!==$('cfgMoveInterval'))$('cfgMoveInterval').value=String(d.health.moveInterval);
     const med=d.health.medicineTimes;
     $('medicine').innerHTML=med.length?med.map(t=>d.health.medicineDone.includes(t)?`<span class="tag">✅ ${t}</span>`:`<span class="tag">⏰ ${t}</span> <button class="light" style="padding:2px 10px" onclick="act('medicine_done','${t}')">已服用</button>`).join(' '):'未設定';
+    $('medManage').innerHTML=med.length?med.map(t=>`<span class="tag">${t} <button class="light" style="padding:0 8px" title="移除" onclick="actx({action:'remove_medicine_time',time:'${t}'})">✖</button></span>`).join(' '):'<span class="note-meta">尚未設定服藥時間。</span>';
   }catch(e){$('brief').textContent='讀取失敗：'+e.message;}
 }
 async function act(action,time){await fetch('/panel-action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,time})});load();}
+async function actx(payload){const r=await(await fetch('/panel-action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})).json().catch(()=>null);if(r&&r.ok===false)alert(r.error||'設定失敗');load();}
+async function addMed(){const t=$('cfgMedTime').value;if(!t)return alert('請先選擇時間');await actx({action:'add_medicine_time',time:t});$('cfgMedTime').value='';}
 async function addNote(){const t=$('noteInput').value.trim();if(!t)return;await fetch('/panel-action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'add_note',text:t})});$('noteInput').value='';load();}
 function cloudCfg(){try{return JSON.parse(localStorage.getItem('petPanelCloud')||'null')||{}}catch(e){return{}}}
 function saveCloudCfg(){localStorage.setItem('petPanelCloud',JSON.stringify({url:$('cfgUrl').value.trim(),token:$('cfgToken').value.trim(),cls:$('cfgClass').value.trim()}));loadCloud();}
@@ -354,6 +370,7 @@ def default_data() -> dict:
             "last_move": now,
             "move_done_date": "",
             "move_interval": 60,
+            "water_interval": 60,
             "medicine_time": "",
             "medicine_times": [],
             "medicine_done_times": [],
@@ -509,6 +526,10 @@ class SecretaryPet(DesktopPetPreview):
             health["move_interval"] = max(5, int(health.get("move_interval", 60)))
         except (TypeError, ValueError):
             health["move_interval"] = 60
+        try:
+            health["water_interval"] = max(5, int(health.get("water_interval", 60)))
+        except (TypeError, ValueError):
+            health["water_interval"] = 60
         for field in ("medicine_done_times", "medicine_alerted_times"):
             if not isinstance(health.get(field), list):
                 health[field] = []
@@ -1013,6 +1034,7 @@ class SecretaryPet(DesktopPetPreview):
                     "water": int(health.get("water_count") or 0),
                     "moveElapsed": max(0, elapsed),
                     "moveInterval": int(health.get("move_interval") or 60),
+                    "waterInterval": int(health.get("water_interval") or 60),
                     "moveDone": health.get("move_done_date") == today,
                     "medicineTimes": list(health.get("medicine_times") or []),
                     "medicineDone": list(health.get("medicine_done_times") or []),
@@ -1041,6 +1063,43 @@ class SecretaryPet(DesktopPetPreview):
                 if slot and slot not in done:
                     done.append(slot)
                 bubble = f"{slot} 的藥記錄好了。"
+            elif action == "set_move_interval":
+                try:
+                    minutes = min(240, max(5, int(payload.get("minutes"))))
+                except (TypeError, ValueError):
+                    return {"ok": False, "error": "間隔必須是 5～240 的分鐘數"}
+                health["move_interval"] = minutes
+                bubble = f"起身提醒改為每 {minutes} 分鐘。"
+            elif action == "set_water_interval":
+                try:
+                    minutes = min(240, max(5, int(payload.get("minutes"))))
+                except (TypeError, ValueError):
+                    return {"ok": False, "error": "間隔必須是 5～240 的分鐘數"}
+                health["water_interval"] = minutes
+                bubble = f"喝水提醒改為每 {minutes} 分鐘。"
+            elif action == "add_medicine_time":
+                slot = str(payload.get("time") or "").strip()
+                if not re.fullmatch(r"([01]\d|2[0-3]):[0-5]\d", slot):
+                    return {"ok": False, "error": "服藥時間格式須為 HH:MM"}
+                times = health.setdefault("medicine_times", [])
+                if slot not in times:
+                    times.append(slot)
+                    times.sort()
+                if len(times) > 12:
+                    times[:] = times[:12]
+                health["medicine_time"] = times[0] if times else ""
+                bubble = f"已加入 {slot} 的服藥提醒。"
+            elif action == "remove_medicine_time":
+                slot = str(payload.get("time") or "").strip()
+                times = health.setdefault("medicine_times", [])
+                if slot in times:
+                    times.remove(slot)
+                for field in ("medicine_done_times", "medicine_alerted_times"):
+                    values = health.get(field)
+                    if isinstance(values, list) and slot in values:
+                        values.remove(slot)
+                health["medicine_time"] = times[0] if times else ""
+                bubble = f"已移除 {slot} 的服藥提醒。"
             elif action == "add_note":
                 text = str(payload.get("text") or "").strip()[:3000]
                 if not text:
@@ -1498,8 +1557,9 @@ class SecretaryPet(DesktopPetPreview):
             return
         alerts: list[str] = []
         move_interval = max(5, int(health.get("move_interval", 60)))
+        water_interval = max(5, int(health.get("water_interval", 60)))
         for key, field, minutes, message in [
-            ("water", "last_water", 60, "忙了一段時間，記得喝口水。"),
+            ("water", "last_water", water_interval, "忙了一段時間，記得喝口水。"),
             ("move", "last_move", move_interval, f"已經坐了 {move_interval} 分鐘，起身活動一下吧！"),
         ]:
             try:
