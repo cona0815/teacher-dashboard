@@ -4,7 +4,7 @@
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' https://generativelanguage.googleapis.com https://script.google.com https://script.googleusercontent.com http://127.0.0.1:8767; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' https://generativelanguage.googleapis.com https://api.openai.com https://api.x.ai https://script.google.com https://script.googleusercontent.com http://127.0.0.1:8767; object-src 'none'; base-uri 'self'; form-action 'self'">
   <title>國小教師工作台</title>
   <style>
     :root {
@@ -1800,19 +1800,25 @@
             <label for="apiProvider">AI 服務</label>
             <select class="select" id="apiProvider">
               <option value="disabled">暫不啟用</option>
-              <option value="openai-compatible">OpenAI 相容 API</option>
-              <option value="gemini">Google Gemini API</option>
-              <option value="custom">自訂端點</option>
+              <option value="gemini">Google Gemini（建議，有免費額度）</option>
+              <option value="openai">OpenAI（ChatGPT）</option>
+              <option value="grok">xAI（Grok）</option>
+              <option value="custom">自訂 OpenAI 相容端點</option>
             </select>
           </div>
           <div class="field">
-            <label for="apiModel">模型名稱</label>
-            <input class="input" id="apiModel" placeholder="建議：gemini-2.5-flash（留空即用此預設）">
-            <div class="api-secret-note">請填 API 的正式模型代號（小寫加連字號）；填錯時按「檢查設定」會告訴你。</div>
+            <label for="apiModelSelect">模型</label>
+            <div style="display:flex;gap:6px">
+              <select class="select" id="apiModelSelect" style="flex:1"><option value="">（使用服務預設模型）</option></select>
+              <button class="mini-button" type="button" id="fetchModelsButton" title="用你的金鑰向服務商查詢目前可用的模型">🔄 取得清單</button>
+            </div>
+            <input class="input" id="apiModel" placeholder="或自行輸入模型代號（Gemini 留空＝gemini-2.5-flash）" style="margin-top:6px">
+            <div class="api-secret-note">先填 API 金鑰、按「🔄 取得清單」，就能直接從服務商抓到最新模型；以後出新模型也不用更新系統。</div>
           </div>
           <div class="field field-wide" id="apiEndpointField" hidden>
-            <label for="apiEndpoint">API 端點</label>
-            <input class="input" id="apiEndpoint" type="url" placeholder="https://…">
+            <label for="apiEndpoint">API 端點（OpenAI 相容，不含 /chat/completions）</label>
+            <input class="input" id="apiEndpoint" type="url" placeholder="https://…/v1">
+            <div class="api-secret-note">⚠ 網站安全政策目前只預先放行 Gemini／OpenAI／Grok 官方網域；其他自訂網域可能被瀏覽器擋下。</div>
           </div>
           <div class="field field-wide">
             <label for="apiKey">API 金鑰</label>
@@ -6471,15 +6477,36 @@
       return localStorage.getItem('grade6AssistantApiKey') || sessionStorage.getItem('grade6AssistantApiKey') || '';
     }
 
+    const PROVIDER_PRESETS = {
+      gemini: { label: 'Google Gemini', kind: 'gemini', endpoint: 'https://generativelanguage.googleapis.com/v1beta/models', defaultModel: 'gemini-2.5-flash', modelFilter: id => !/embedding|imagen|veo|tts|aqa/i.test(id) },
+      openai: { label: 'OpenAI', kind: 'openai', endpoint: 'https://api.openai.com/v1', defaultModel: '', modelFilter: id => /^(gpt|o[0-9]|chatgpt)/i.test(id) && !/embedding|whisper|tts|dall|audio|realtime|image|moderation|transcribe/i.test(id) },
+      grok: { label: 'xAI Grok', kind: 'openai', endpoint: 'https://api.x.ai/v1', defaultModel: '', modelFilter: id => /grok/i.test(id) && !/image|video/i.test(id) },
+      custom: { label: '自訂服務', kind: 'openai', endpoint: '', defaultModel: '', modelFilter: () => true }
+    };
+
     function normalizeGeminiModel(name) {
       const cleaned = String(name || '').trim().toLowerCase().replace(/\s+/g, '-').replace(/^models\//, '');
       return cleaned || 'gemini-2.5-flash';
     }
 
+    function providerConfig() {
+      const provider = assistantSettings.api.provider || 'gemini';
+      const preset = PROVIDER_PRESETS[provider];
+      if (!preset) return { ready: false, provider, label: 'AI 服務' };
+      const key = storedApiKey();
+      const endpoint = (provider === 'custom' ? (assistantSettings.api.endpoint || '') : preset.endpoint).replace(/\/+$/, '');
+      const model = preset.kind === 'gemini'
+        ? normalizeGeminiModel(assistantSettings.api.model)
+        : String(assistantSettings.api.model || preset.defaultModel).trim();
+      return {
+        provider, label: preset.label, kind: preset.kind, endpoint, model, key,
+        modelFilter: preset.modelFilter,
+        ready: assistantSettings.api.enabled === true && !!key && !!endpoint && !!model
+      };
+    }
+
     function geminiConfigReady() {
-      return assistantSettings.api.enabled === true
-        && (assistantSettings.api.provider || 'gemini') === 'gemini'
-        && !!storedApiKey();
+      return providerConfig().ready;
     }
 
     function fileToBase64(file) {
@@ -6520,14 +6547,16 @@
       return parts;
     }
 
-    function geminiEndpointBase() {
-      const base = assistantSettings.api.endpoint || 'https://generativelanguage.googleapis.com/v1beta/models';
-      return base.replace(/\/+$/, '');
+    function fileToDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error(`無法讀取附件 ${file.name || ''}`));
+        reader.readAsDataURL(file);
+      });
     }
 
-    async function callGeminiAnalysis(safeText, analysis) {
-      const key = storedApiKey();
-      const model = normalizeGeminiModel(assistantSettings.api.model);
+    function buildAiInstruction(safeText, analysis) {
       const promptHint = analysis.activePrompt?.prompt ? `分析方式指引：${analysis.activePrompt.prompt}\n` : '';
       const audience = $('aiAudience').value;
       const audienceHint = audience !== 'auto' ? `訊息對象是「${messageAudienceLabel(audience)}」。\n` : '';
@@ -6550,28 +6579,71 @@
         '老師的描述：',
         safeText
       ].join('\n');
-      const parts = [{ text: instruction }, ...await buildGeminiAttachmentParts()];
-      const url = `${geminiEndpointBase()}/${model}:generateContent?key=${encodeURIComponent(key)}`;
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts }],
-          generationConfig: { temperature: 0.4, maxOutputTokens: 2048, responseMimeType: 'application/json' }
-        })
-      });
+      return instruction;
+    }
+
+    function parseAiJsonText(rawText) {
+      const trimmed = String(rawText || '').trim();
+      if (!trimmed) throw new Error('模型沒有回覆內容，可能觸發安全過濾');
+      const jsonText = trimmed.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```\s*$/, '');
+      try { return JSON.parse(jsonText); } catch (error) { throw new Error('模型回覆不是有效 JSON，請再試一次'); }
+    }
+
+    async function buildOpenAiContentParts(instruction) {
+      const parts = [{ type: 'text', text: instruction }];
+      for (const item of aiAssistantState.attachments) {
+        try {
+          if (item.kind === 'image') {
+            parts.push({ type: 'image_url', image_url: { url: await fileToDataUrl(item.file) } });
+          } else if (/\.(txt|md|csv)$/i.test(item.name)) {
+            parts.push({ type: 'text', text: `附件「${item.name}」的文字內容：\n${(await fileToText(item.file)).slice(0, 20000)}` });
+          } else {
+            parts.push({ type: 'text', text: `附件「${item.name}」（${item.kind === 'pdf' ? 'PDF' : 'Office 文件'}）此服務無法直接讀取；要讀 PDF 請改用 Google Gemini。` });
+          }
+        } catch (error) {
+          parts.push({ type: 'text', text: `附件「${item.name}」讀取失敗，未能提供內容。` });
+        }
+      }
+      return parts;
+    }
+
+    async function callGeminiAnalysis(safeText, analysis) {
+      const cfg = providerConfig();
+      if (!cfg.ready) throw new Error('AI 服務尚未設定完成');
+      const instruction = buildAiInstruction(safeText, analysis);
+      let response;
+      if (cfg.kind === 'gemini') {
+        const parts = [{ text: instruction }, ...await buildGeminiAttachmentParts()];
+        response = await fetch(`${cfg.endpoint}/${cfg.model}:generateContent?key=${encodeURIComponent(cfg.key)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ role: 'user', parts }],
+            generationConfig: { temperature: 0.4, maxOutputTokens: 2048, responseMimeType: 'application/json' }
+          })
+        });
+      } else {
+        response = await fetch(`${cfg.endpoint}/chat/completions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${cfg.key}` },
+          body: JSON.stringify({
+            model: cfg.model,
+            messages: [{ role: 'user', content: await buildOpenAiContentParts(instruction) }],
+            temperature: 0.4,
+            response_format: { type: 'json_object' }
+          })
+        });
+      }
       if (!response.ok) {
         const data = await response.json().catch(() => null);
-        const message = data?.error?.message || `HTTP ${response.status}`;
-        throw new Error(String(message).slice(0, 160));
+        const message = data?.error?.message || data?.error || `HTTP ${response.status}`;
+        throw new Error(String(typeof message === 'object' ? JSON.stringify(message) : message).slice(0, 160));
       }
       const data = await response.json();
-      const rawText = (data?.candidates?.[0]?.content?.parts || []).map(part => part.text || '').join('').trim();
-      if (!rawText) throw new Error('模型沒有回覆內容，可能觸發安全過濾');
-      const jsonText = rawText.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```\s*$/, '');
-      let parsed;
-      try { parsed = JSON.parse(jsonText); } catch (error) { throw new Error('模型回覆不是有效 JSON，請再試一次'); }
-      return parsed;
+      const rawText = cfg.kind === 'gemini'
+        ? (data?.candidates?.[0]?.content?.parts || []).map(part => part.text || '').join('')
+        : String(data?.choices?.[0]?.message?.content || '');
+      return parseAiJsonText(rawText);
     }
 
     function safeIsoDate(value) {
@@ -6579,7 +6651,8 @@
     }
 
     function applyGeminiResult(analysis, parsed, redactionText) {
-      const model = normalizeGeminiModel(assistantSettings.api.model);
+      const cfg = providerConfig();
+      const model = cfg.model || '預設模型';
       if (parsed.category) analysis.classification.category = String(parsed.category).slice(0, 20);
       analysis.isTask = parsed.mainTask?.name ? true : parsed.isTask === true;
       const analysisLines = (Array.isArray(parsed.analysis) ? parsed.analysis : [String(parsed.analysis || '')])
@@ -6587,7 +6660,7 @@
       const attachmentLines = (Array.isArray(parsed.attachmentSummary) ? parsed.attachmentSummary : [])
         .filter(Boolean).map(line => `• ${String(line).trim()}`);
       const resultLines = [
-        `AI 分析｜Gemini（${model}）`,
+        `AI 分析｜${cfg.label}（${model}）`,
         `情境判斷｜${analysis.isTask ? '任務型' : '諮詢型'}｜${analysis.classification.category}`,
         '',
         '分析與建議',
@@ -6604,7 +6677,7 @@
       }
       $('aiOutput').textContent = resultLines.join('\n');
       $('aiOutput').classList.remove('is-empty');
-      $('aiResultType').textContent = `${analysis.isTask ? '任務型｜可建立工作' : '諮詢型｜先提供建議'}｜Gemini`;
+      $('aiResultType').textContent = `${analysis.isTask ? '任務型｜可建立工作' : '諮詢型｜先提供建議'}｜${cfg.label}`;
       $('aiResultType').hidden = false;
       if (Array.isArray(parsed.checklist) && parsed.checklist.length) {
         analysis.aiChecklist = parsed.checklist.slice(0, 8).map(item => String(item).slice(0, 120));
@@ -6636,17 +6709,18 @@
 
     async function runGeminiAnalysis(analysis, redactionText) {
       const requestId = ++aiGeminiRequestSeq;
+      const label = providerConfig().label || 'AI';
       const button = $('aiGenerateButton');
       button.disabled = true;
-      button.textContent = '✨ Gemini 分析中…';
+      button.textContent = `✨ ${label} 分析中…`;
       try {
         const parsed = await callGeminiAnalysis(redactionText, analysis);
         if (requestId !== aiGeminiRequestSeq || aiAssistantState.analysis !== analysis) return;
         applyGeminiResult(analysis, parsed, redactionText);
-        showToast('✨ Gemini 分析完成；建議與任務草稿已更新。');
+        showToast(`✨ ${label} 分析完成；建議與任務草稿已更新。`);
       } catch (error) {
         if (requestId === aiGeminiRequestSeq) {
-          showToast(`Gemini 呼叫失敗：${String(error.message).slice(0, 120)}。以下為本機規則分析。`, true);
+          showToast(`${label} 呼叫失敗：${String(error.message).slice(0, 120)}。以下為本機規則分析。`, true);
         }
       } finally {
         button.disabled = false;
@@ -6753,9 +6827,10 @@
       $('aiCreateTaskButton').disabled = false;
       $('aiCreateTaskButton').textContent = analysis.children.length ? `建立主任務與 ${analysis.children.length} 個子任務` : '建立主任務';
       if (geminiConfigReady()) {
+        const providerLabel = providerConfig().label;
         showToast(redaction.count
-          ? `已遮蔽 ${redaction.count} 處敏感內容，交由 Gemini 分析中…`
-          : '已先顯示本機初步整理，Gemini 分析中…');
+          ? `已遮蔽 ${redaction.count} 處敏感內容，交由 ${providerLabel} 分析中…`
+          : `已先顯示本機初步整理，${providerLabel} 分析中…`);
         runGeminiAnalysis(analysis, redaction.text);
         return;
       }
@@ -6801,6 +6876,7 @@
         if (saved && saved.api) {
           Object.assign(assistantSettings.api, saved.api);
           if (typeof saved.api.enabled !== 'boolean') assistantSettings.api.enabled = saved.api.provider && saved.api.provider !== 'disabled';
+          if (assistantSettings.api.provider === 'openai-compatible') assistantSettings.api.provider = 'custom';
         }
       } catch (error) {
         console.warn('無法讀取本機設定', error);
@@ -6868,10 +6944,62 @@
 
     function updateApiFieldVisibility() {
       const provider = $('apiProvider').value;
-      const usesGeminiDefault = provider === 'gemini' || provider === 'disabled';
-      $('apiEndpointField').hidden = usesGeminiDefault;
-      if (provider === 'gemini') {
-        $('apiEndpoint').value = 'https://generativelanguage.googleapis.com/v1beta/models';
+      const preset = PROVIDER_PRESETS[provider];
+      $('apiEndpointField').hidden = provider !== 'custom';
+      if (preset && provider !== 'custom') $('apiEndpoint').value = preset.endpoint;
+      $('apiModel').placeholder = provider === 'gemini'
+        ? '或自行輸入模型代號（Gemini 留空＝gemini-2.5-flash）'
+        : '此服務必須選擇或輸入模型，請先按「🔄 取得清單」';
+    }
+
+    function fillModelSelect(ids, current) {
+      const select = $('apiModelSelect');
+      select.innerHTML = '<option value="">（使用服務預設模型）</option>'
+        + ids.map(id => `<option value="${escapeHtml(id)}">${escapeHtml(id)}</option>`).join('');
+      if (current && ids.includes(current)) select.value = current;
+    }
+
+    async function fetchProviderModels() {
+      const provider = $('apiProvider').value;
+      const preset = PROVIDER_PRESETS[provider];
+      if (!preset) return showToast('請先選擇 AI 服務。', true);
+      const key = $('apiKey').value.trim() || storedApiKey();
+      if (!key) return showToast('請先填 API 金鑰，再按「🔄 取得清單」。', true);
+      const endpoint = (provider === 'custom' ? $('apiEndpoint').value.trim() : preset.endpoint).replace(/\/+$/, '');
+      if (!endpoint) return showToast('自訂服務請先填 API 端點。', true);
+      const button = $('fetchModelsButton');
+      button.disabled = true;
+      button.textContent = '查詢中…';
+      try {
+        let ids = [];
+        if (preset.kind === 'gemini') {
+          const response = await fetch(`${endpoint}?key=${encodeURIComponent(key)}&pageSize=200`);
+          if (!response.ok) {
+            const data = await response.json().catch(() => null);
+            throw new Error(data?.error?.message || `HTTP ${response.status}`);
+          }
+          const data = await response.json();
+          ids = (data.models || [])
+            .filter(model => (model.supportedGenerationMethods || []).includes('generateContent'))
+            .map(model => String(model.name || '').replace(/^models\//, ''));
+        } else {
+          const response = await fetch(`${endpoint}/models`, { headers: { Authorization: `Bearer ${key}` } });
+          if (!response.ok) {
+            const data = await response.json().catch(() => null);
+            throw new Error(data?.error?.message || `HTTP ${response.status}`);
+          }
+          const data = await response.json();
+          ids = (data.data || []).map(model => String(model.id || ''));
+        }
+        ids = [...new Set(ids.filter(id => id && preset.modelFilter(id)))].sort().reverse();
+        if (!ids.length) throw new Error('沒有找到可用的對話模型');
+        fillModelSelect(ids, $('apiModel').value.trim());
+        showToast(`✅ 已取得 ${ids.length} 個模型，請從下拉選單挑一個。`);
+      } catch (error) {
+        showToast(`❌ 取得模型清單失敗：${String(error.message).slice(0, 140)}`, true);
+      } finally {
+        button.disabled = false;
+        button.textContent = '🔄 取得清單';
       }
     }
 
@@ -6952,8 +7080,8 @@
       document.querySelectorAll('.ai-local-note').forEach(note => {
         note.textContent = enabled
           ? geminiConfigReady()
-            ? 'Gemini API 已連接｜送出前仍會先去識別化'
-            : '本機規則模擬｜到「設定 → AI 設定」填入 Gemini 金鑰即可啟用真 AI'
+            ? `${providerConfig().label} 已連接｜送出前仍會先去識別化`
+            : '本機規則模擬｜到「設定 → AI 設定」填入 API 金鑰即可啟用真 AI'
           : 'AI 功能目前未開啟';
       });
       $('aiAssistantSection').hidden = !enabled;
@@ -7085,29 +7213,39 @@
       const config = readSettingsForm().api;
       if (!config.enabled) return showToast('請先勾選「開啟 AI 功能」。');
       if (config.provider === 'disabled') return showToast('請選擇 AI 服務。', true);
+      const preset = PROVIDER_PRESETS[config.provider];
+      if (!preset) return showToast('請選擇 AI 服務。', true);
       const key = $('apiKey').value.trim() || storedApiKey();
       if (!key) return showToast('請填寫 API 金鑰。', true);
-      if (config.provider !== 'gemini') {
-        if (!config.endpoint) return showToast('自訂服務必須填寫 API 端點。', true);
-        try { new URL(config.endpoint); } catch (error) { return showToast('API 端點網址格式不正確。', true); }
-        return showToast('欄位格式檢查通過；連線測試目前僅支援 Google Gemini API。');
-      }
-      const model = normalizeGeminiModel(config.model);
-      const base = (config.endpoint || 'https://generativelanguage.googleapis.com/v1beta/models').replace(/\/+$/, '');
+      const endpoint = (config.provider === 'custom' ? config.endpoint : preset.endpoint).replace(/\/+$/, '');
+      if (!endpoint) return showToast('自訂服務必須填寫 API 端點。', true);
+      try { new URL(endpoint); } catch (error) { return showToast('API 端點網址格式不正確。', true); }
+      const model = preset.kind === 'gemini' ? normalizeGeminiModel(config.model) : String(config.model || '').trim();
+      if (!model) return showToast('此服務必須選擇模型：先按「🔄 取得清單」再挑一個。', true);
       const button = $('checkApiButton');
       button.disabled = true;
       button.textContent = '測試連線中…';
       try {
-        const response = await fetch(`${base}/${model}:generateContent?key=${encodeURIComponent(key)}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: [{ text: '請回覆 OK' }] }], generationConfig: { maxOutputTokens: 20 } })
-        });
+        let response;
+        if (preset.kind === 'gemini') {
+          response = await fetch(`${endpoint}/${model}:generateContent?key=${encodeURIComponent(key)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: '請回覆 OK' }] }], generationConfig: { maxOutputTokens: 20 } })
+          });
+        } else {
+          response = await fetch(`${endpoint}/chat/completions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+            body: JSON.stringify({ model, messages: [{ role: 'user', content: '請回覆 OK' }], max_tokens: 20 })
+          });
+        }
         if (!response.ok) {
           const data = await response.json().catch(() => null);
-          throw new Error(data?.error?.message || `HTTP ${response.status}`);
+          const message = data?.error?.message || data?.error || `HTTP ${response.status}`;
+          throw new Error(typeof message === 'object' ? JSON.stringify(message) : message);
         }
-        showToast(`✅ Gemini 連線成功（模型 ${model}）。記得按「儲存設定」。`);
+        showToast(`✅ ${preset.label} 連線成功（模型 ${model}）。記得按「儲存設定」。`);
       } catch (error) {
         showToast(`❌ 連線失敗：${String(error.message).slice(0, 140)}`, true);
       } finally {
@@ -7571,7 +7709,13 @@
       if (event.target.checked && $('apiProvider').value === 'disabled') $('apiProvider').value = 'gemini';
       updateApiFieldVisibility();
     });
-    $('apiProvider').addEventListener('change', updateApiFieldVisibility);
+    $('apiProvider').addEventListener('change', () => {
+      updateApiFieldVisibility();
+      fillModelSelect([], '');
+      $('apiModel').value = '';
+    });
+    $('fetchModelsButton').addEventListener('click', fetchProviderModels);
+    $('apiModelSelect').addEventListener('change', () => { $('apiModel').value = $('apiModelSelect').value; });
     $('settingsModal').addEventListener('click', event => { if (event.target === $('settingsModal')) closeSettings(); });
 
     $('newTaskButton').addEventListener('click', () => openTaskModal(null));
