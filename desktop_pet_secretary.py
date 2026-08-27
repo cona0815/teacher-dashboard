@@ -223,8 +223,8 @@ details summary{cursor:pointer;font-weight:800;color:var(--strong)}
   <section class="card" style="grid-column:1/-1"><h2>🏫 今日出席與作業繳交（晨間大屏回報）</h2>
     <div id="cloudBody" class="empty">載入中……</div>
     <details id="cloudSetup" style="margin-top:8px"><summary>⚙ 雲端連線設定（第一次使用點我）</summary>
-      <div class="row"><input id="cfgUrl" placeholder="Apps Script 部署網址（/exec 結尾，與大屏同一份）"></div>
-      <div class="row"><input id="cfgToken" type="password" placeholder="教室大屏金鑰（CLASSROOM_TOKEN）"><input id="cfgClass" placeholder="班級名稱（例：501）" style="max-width:160px"></div>
+      <div class="row"><input id="cfgUrl" placeholder="貼上 🌐 機器人網址（/exec 結尾，與大屏同一份）"></div>
+      <div class="row"><input id="cfgToken" type="password" placeholder="貼上 🔑D 教室大屏金鑰（CLASSROOM_TOKEN）"><input id="cfgClass" placeholder="班級名稱（例：501）" style="max-width:160px"></div>
       <div class="row"><button onclick="saveCloudCfg()">儲存並讀取</button><span class="note-meta">設定只存在這台電腦的瀏覽器。</span></div>
     </details></section>
 
