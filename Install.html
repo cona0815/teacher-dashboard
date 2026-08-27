@@ -75,7 +75,18 @@
         <strong>會用到的名詞（先有個印象就好）：</strong><br>
         ・<strong>Google 試算表</strong>＝像 Excel 的雲端表格，當作 LINE 訊息的「轉運倉庫」。<br>
         ・<strong>Apps Script（GAS）</strong>＝Google 提供的免費小程式空間，我們把「機器人的大腦」貼進去。<br>
-        ・<strong>金鑰</strong>＝一長串亂碼，功能像鑰匙：拿到鑰匙的人才能開門。本系統共有 4 把，後面會逐一說明。
+        ・<strong>金鑰</strong>＝一長串亂碼，功能像鑰匙：拿到鑰匙的人才能開門。本系統共有 4 把＋1 個網址，全部用下面的符號標記。
+      </div>
+      <div class="box">
+        <strong>🗝 符號對照表（超重要！設定畫面的欄位上印著一模一樣的符號，照著貼就對了）：</strong>
+        <table>
+          <tr><th>符號</th><th>這是什麼</th><th>哪裡取得</th><th>貼到哪裡</th></tr>
+          <tr><td><strong>🔑A</strong></td><td>Channel access token</td><td>Part B 第 1 關，LINE Developers 按 Issue 發行</td><td>Apps Script「指令碼屬性」的 <code>LINE_CHANNEL_ACCESS_TOKEN</code>（第 3 關）</td></tr>
+          <tr><td><strong>🔑B</strong></td><td>Webhook 驗證參數</td><td rowspan="3">Part B 第 2 關，執行 <code>setupLineBot</code> 後的「執行紀錄」（隨時可再執行查看）</td><td>接在機器人網址後面：<code>🌐?hook=🔑B</code>（第 5 關）</td></tr>
+          <tr><td><strong>🔑C</strong></td><td>工作台同步金鑰（老師專用，可查歷史）</td><td>工作台「⚙ 設定 → LINE 小幫手 → <strong>🔑C 同步金鑰</strong>」欄；大屏「查詢統計」也用這把</td></tr>
+          <tr><td><strong>🔑D</strong></td><td>教室大屏金鑰（教室專用，只能報當天）</td><td>大屏「⚙ 設定 → <strong>🔑D 教室大屏金鑰</strong>」欄（教室電腦只放這把）</td></tr>
+          <tr><td><strong>🌐</strong></td><td>機器人網址（/exec 結尾）</td><td>Part B 第 4 關，部署後產生的網頁應用程式 URL</td><td>工作台與大屏的「<strong>🌐 Apps Script 部署網址</strong>」欄，以及第 5 關的 Webhook URL</td></tr>
+        </table>
       </div>
       <div class="warn">💰 <strong>費用：全部免費。</strong>LINE 官方帳號免費方案＋Google 免費額度就夠用。唯一的量限制：LINE「主動推播」每月 200 則（每日簡報一天 1 則，一個月才用 30 則，很夠）。</div>
     </section>
@@ -153,7 +164,7 @@
       <div class="step"><div class="step-no">1</div><div class="step-body">Apps Script 編輯器上方函式選單改選 <code>setupTriggers</code> → 按「執行」→ 完成！自動建立三個排程：<strong>每日簡報</strong>（每天 8–9 點）、<strong>未點名提醒</strong>（8:20 起智慧檢查）、<strong>每週家長關懷</strong>（週五下午）。</div></div>
 
       <h3>最後：把工作台接上機器人</h3>
-      <div class="step"><div class="step-no">1</div><div class="step-body">回工作台網頁 →「⚙ 設定 → <strong>LINE 小幫手</strong>」→ 勾「啟用」→ 貼上 🌐機器人網址 與 🔑C 同步金鑰 → 按「<strong>測試連線</strong>」→ 成功後按「<strong>立即同步</strong>」。</div></div>
+      <div class="step"><div class="step-no">1</div><div class="step-body">回工作台網頁 →「⚙ 設定 → <strong>LINE 小幫手</strong>」→ 勾「啟用」→ 「<strong>🌐 Apps Script 部署網址</strong>」欄貼 🌐、「<strong>🔑C 同步金鑰</strong>」欄貼 🔑C（欄位上印著同樣符號，照符號貼就對了）→ 按「<strong>測試連線</strong>」→ 成功後按「<strong>立即同步</strong>」。</div></div>
       <div class="ok">✅ 完成！教師工具箱會出現「LINE 收件匣」與「聯絡本」按鈕。用手機傳「明天要收回條」再按立即同步，收件匣就有東西了。</div>
     </section>
 
@@ -172,8 +183,8 @@
           <tr><td>科目管理／作業名稱</td><td>點亮要收作業的科目；不夠的自己新增</td></tr>
           <tr><td>三個時間</td><td>預設 08:00 遲到界線／08:05 未填轉未到／08:08 自動回報，可自訂</td></tr>
           <tr><td>聯絡本字體</td><td>低年級選「注音體」，每個字自動標注音</td></tr>
-          <tr><td>Apps Script 部署網址</td><td>🌐 機器人網址（跟 Part B 同一個）</td></tr>
-          <tr><td>教室大屏金鑰</td><td><strong>🔑D</strong>（⚠ 教室電腦只填這把，別填 🔑C——D 的權限只限當天回報，被學生玩到也拿不到你的資料）</td></tr>
+          <tr><td>🌐 Apps Script 部署網址</td><td>貼 <strong>🌐</strong> 機器人網址（跟 Part B 同一個；欄位上印著 🌐 符號）</td></tr>
+          <tr><td>🔑D 教室大屏金鑰</td><td>貼 <strong>🔑D</strong>（欄位上印著 🔑D 符號。⚠ 教室電腦只填這把，別填 🔑C——D 的權限只限當天回報，被學生玩到也拿不到你的資料）</td></tr>
         </table>
       </div></div>
       <div class="step"><div class="step-no">3</div><div class="step-body">
