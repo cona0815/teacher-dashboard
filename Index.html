@@ -424,6 +424,25 @@
     .ai-advice-actions { margin-left: auto; display: inline-flex; gap: 4px; flex: 0 0 auto; }
     .ai-advice-actions .mini-button { padding: 2px 8px; font-size: 10px; }
     .ai-drop-target { outline: 2px dashed var(--primary); outline-offset: 5px; border-radius: 12px; }
+    .calendar-note-chip { display: block; width: 100%; text-align: left; border: 1px solid #e3c988; background: #fff8e6; color: #7a5b16; border-radius: 8px; padding: 2px 6px; margin-top: 3px; font-size: 10px; font-weight: 800; cursor: grab; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .calendar-note-chip.dragging { opacity: .45; }
+    .calendar-note-popover { position: fixed; z-index: 260; width: min(360px, calc(100vw - 24px)); background: var(--surface, #fff); border: 1.5px solid #e3c988; border-radius: 14px; box-shadow: 0 12px 32px rgba(60, 50, 20, .18); padding: 12px 14px; }
+    .calendar-note-popover-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .calendar-note-popover-row { display: flex; align-items: flex-start; gap: 7px; padding: 6px 0; border-bottom: 1px dashed #eadfc4; font-size: 12px; }
+    .calendar-note-popover-row.done .calendar-note-popover-text { text-decoration: line-through; opacity: .55; }
+    .calendar-note-popover-text { flex: 1; line-height: 1.5; }
+    .secretary-note-row-actions { display: inline-flex; gap: 5px; align-items: center; flex: 0 0 auto; }
+    .note-date-input { border: 1px solid #d8d2c2; border-radius: 8px; font-size: 10px; padding: 2px 4px; max-width: 118px; }
+    .note-remind-chip { display: inline-block; background: #fff3d6; color: #7a5b16; border-radius: 7px; padding: 0 6px; font-size: 10px; font-weight: 800; margin-right: 6px; }
+    .note-remind-chip.is-today { background: #e0f0e4; color: #23684b; }
+    .note-remind-chip.is-overdue { background: #f8e2dc; color: #a33a2b; }
+    .secretary-note-compose-side { display: flex; flex-direction: column; gap: 6px; min-width: 190px; }
+    .secretary-note-date-label { font-size: 10px; color: var(--muted); font-weight: 700; }
+    .note-filter-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .today-notes-strip { border: 1.5px solid #e3c988; background: #fffdf4; border-radius: 12px; padding: 8px 12px; margin-bottom: 10px; }
+    .today-notes-strip summary { cursor: pointer; font-size: 12px; font-weight: 800; color: #7a5b16; }
+    .today-note-row { display: flex; align-items: center; gap: 7px; padding: 5px 0 0 4px; font-size: 12px; }
+    .today-note-row.is-overdue span { color: #a33a2b; }
     .teacher-message-text { min-height: 128px; font-size: 12px; line-height: 1.7; }
     .teacher-message-note { margin: 7px 0 0; color: var(--muted); font-size: 10px; }
     .teacher-message-note.is-safe { color: #276653; font-weight: 800; }
@@ -1471,9 +1490,16 @@
       <div class="secretary-notes-body" id="secretaryNotesBody" hidden>
         <div class="secretary-note-compose">
           <textarea class="textarea" id="secretaryNoteInput" maxlength="3000" placeholder="先記下臨時交代、等待回覆或稍後要整理的事情……"></textarea>
-          <button class="button button-dark" type="button" id="addSecretaryNoteButton">儲存記事</button>
+          <div class="secretary-note-compose-side">
+            <label class="secretary-note-date-label" for="secretaryNoteDate">📌 提醒日（選填，會出現在日曆與晨間 LINE）</label>
+            <input class="input" type="date" id="secretaryNoteDate">
+            <button class="button button-dark" type="button" id="addSecretaryNoteButton">儲存記事</button>
+          </div>
         </div>
         <div class="secretary-note-actions">
+          <button class="mini-button note-filter-chip active" type="button" data-note-filter="all">全部</button>
+          <button class="mini-button note-filter-chip" type="button" data-note-filter="today">📌 今天</button>
+          <button class="mini-button note-filter-chip" type="button" data-note-filter="dated">有提醒日</button>
           <button class="button button-light" type="button" id="importSecretaryNotesButton">匯入桌面記事</button>
           <button class="button button-light" type="button" id="toggleDoneNotesButton">顯示已完成</button>
           <input id="secretaryNotesFileInput" type="file" accept="application/json,.json" hidden>
@@ -1572,6 +1598,11 @@
               <option value="none">未設定期限</option>
             </select>
           </div>
+          <div class="field">
+            <label>日曆顯示內容</label>
+            <label class="check-row"><input type="checkbox" id="calendarShowTasks" checked>任務與課程</label>
+            <label class="check-row"><input type="checkbox" id="calendarShowNotes" checked>📌 記事提醒</label>
+          </div>
           <div class="filter-buttons">
             <button class="button button-dark" type="button" id="applyFilterButton">套用</button>
             <button class="button button-ghost" type="button" id="resetFilterButton">清除</button>
@@ -1594,6 +1625,10 @@
             <button class="button button-light" type="button" id="refreshButton">重新整理</button>
           </div>
         </div>
+        <details class="today-notes-strip" id="todayNotesStrip" hidden>
+          <summary>📌 今日記事提醒（<span id="todayNotesStripCount">0</span>）｜勾選即完成，管理請到「小綿助記事」</summary>
+          <div id="todayNotesStripList"></div>
+        </details>
         <div class="table-wrap" id="taskTableWrap"></div>
         <div class="calendar-shell" id="calendarShell">
           <div class="calendar-controls">
@@ -3546,7 +3581,8 @@
         createdAt: Number.isNaN(createdAt.getTime()) ? new Date().toISOString() : createdAt.toISOString(),
         source: note.source === 'desktop' || source === 'desktop' ? 'desktop'
           : note.source === 'line' || source === 'line' ? 'line' : 'web',
-        done: note.done === true
+        done: note.done === true,
+        remindDate: /^\d{4}-\d{2}-\d{2}$/.test(String(note.remindDate || note.remind_date || '')) ? String(note.remindDate || note.remind_date) : ''
       };
     }
 
@@ -3572,48 +3608,87 @@
       const date = new Date(note.createdAt);
       const time = Number.isNaN(date.getTime()) ? '' : date.toLocaleString('zh-TW');
       const attachmentText = note.attachments.length ? `・附件 ${note.attachments.map(escapeHtml).join('、')}` : '';
-      const source = note.source === 'desktop' ? '桌面小綿助' : note.source === 'line' ? 'LINE' : '網頁';
+      const source = note.source === 'desktop' ? '🐑 桌面' : note.source === 'line' ? '📱 LINE' : '🌐 網頁';
+      const today = calendarDateKey(new Date());
+      const remindChip = note.remindDate
+        ? `<span class="note-remind-chip${note.remindDate === today ? ' is-today' : note.remindDate < today && !note.done ? ' is-overdue' : ''}">📌 ${escapeHtml(note.remindDate.replace(/-/g, '/'))}</span>`
+        : '';
       const actions = note.done
         ? `<button class="mini-button" type="button" data-delete-secretary-note="${escapeHtml(note.id)}">刪除</button>`
-        : `<button class="mini-button" type="button" data-note-to-task="${escapeHtml(note.id)}">轉為任務</button>`;
+        : `<span class="secretary-note-row-actions"><input type="date" class="note-date-input" value="${escapeHtml(note.remindDate)}" data-note-date="${escapeHtml(note.id)}" title="設定或修改提醒日">` +
+          `<button class="mini-button" type="button" data-note-to-task="${escapeHtml(note.id)}">轉為任務</button></span>`;
       return `<article class="secretary-note-item${note.done ? ' done' : ''}">
         <div class="secretary-note-main">
           <input type="checkbox" class="note-done-check" data-note-toggle="${escapeHtml(note.id)}" ${note.done ? 'checked' : ''} title="${note.done ? '取消完成' : '勾選完成'}">
-          <div><div class="secretary-note-text">${escapeHtml(note.text)}</div><div class="secretary-note-meta">${escapeHtml(time)}・${source}${attachmentText}</div></div>
+          <div><div class="secretary-note-text">${remindChip}${escapeHtml(note.text)}</div><div class="secretary-note-meta">${escapeHtml(time)}・${source}${attachmentText}</div></div>
         </div>${actions}</article>`;
     }
 
     function renderSecretaryNotes() {
       const host = $('secretaryNoteList');
       if (!host) return;
-      const activeNotes = secretaryNotesState.notes.filter(note => !note.done);
-      const doneNotes = secretaryNotesState.notes.filter(note => note.done);
-      $('secretaryNoteCount').textContent = activeNotes.length;
+      const today = calendarDateKey(new Date());
+      const filter = secretaryNotesState.filter || 'all';
+      document.querySelectorAll('[data-note-filter]').forEach(chip => chip.classList.toggle('active', chip.dataset.noteFilter === filter));
+      const matchFilter = note => filter === 'today' ? (note.remindDate && note.remindDate <= today) : filter === 'dated' ? !!note.remindDate : true;
+      const activeNotes = secretaryNotesState.notes.filter(note => !note.done && matchFilter(note))
+        .sort((a, b) => (a.remindDate && b.remindDate) ? a.remindDate.localeCompare(b.remindDate) || String(b.createdAt).localeCompare(String(a.createdAt))
+          : (a.remindDate ? -1 : b.remindDate ? 1 : String(b.createdAt).localeCompare(String(a.createdAt))));
+      const doneNotes = secretaryNotesState.notes.filter(note => note.done && matchFilter(note));
+      $('secretaryNoteCount').textContent = secretaryNotesState.notes.filter(note => !note.done).length;
       const toggleButton = $('toggleDoneNotesButton');
       if (toggleButton) {
         toggleButton.textContent = secretaryNotesState.showDone ? '隱藏已完成' : `顯示已完成（${doneNotes.length}）`;
         toggleButton.hidden = !doneNotes.length && !secretaryNotesState.showDone;
       }
       let html = activeNotes.map(secretaryNoteRowHtml).join('')
-        || '<div class="secretary-note-empty">目前沒有待處理的記事。可直接新增，或匯入桌面小綿助的資料檔。</div>';
+        || '<div class="secretary-note-empty">目前沒有符合條件的記事。可直接新增，或匯入桌面小綿助的資料檔。</div>';
       if (secretaryNotesState.showDone && doneNotes.length) {
         html += `<div class="secretary-note-meta" style="margin-top:8px">已完成（${doneNotes.length}）</div>` + doneNotes.map(secretaryNoteRowHtml).join('');
       }
       host.innerHTML = html;
+      renderTodayNotesStrip();
+      if (state.viewMode === 'calendar') renderCalendar();
+      if (typeof refreshCalendarNotePopover === 'function') refreshCalendarNotePopover();
     }
 
     function addSecretaryNote() {
       const text = $('secretaryNoteInput').value.trim();
       if (!text) return showToast('請先輸入記事內容。', true);
-      const note = normalizeSecretaryNote({ text, createdAt: new Date().toISOString() }, 'web');
+      const note = normalizeSecretaryNote({ text, createdAt: new Date().toISOString(), remindDate: $('secretaryNoteDate').value }, 'web');
       if (!note) return;
       secretaryNotesState.notes.unshift(note);
       try {
-        saveSecretaryNotes('記事已保存在目前瀏覽器。');
+        saveSecretaryNotes(note.remindDate ? `記事已保存；${note.remindDate.replace(/-/g, '/')} 會出現在日曆與晨間 LINE 提醒。` : '記事已保存在目前瀏覽器。');
         $('secretaryNoteInput').value = '';
+        $('secretaryNoteDate').value = '';
       } catch (error) {
         secretaryNotesState.notes = secretaryNotesState.notes.filter(item => item.id !== note.id);
       }
+    }
+
+    function setNoteRemindDate(noteId, value) {
+      const note = secretaryNotesState.notes.find(item => item.id === noteId);
+      if (!note) return;
+      const next = /^\d{4}-\d{2}-\d{2}$/.test(String(value || '')) ? String(value) : '';
+      if (note.remindDate === next) return;
+      note.remindDate = next;
+      saveSecretaryNotes(next ? `提醒日已設為 ${next.replace(/-/g, '/')}。` : '已清除提醒日。');
+    }
+
+    function renderTodayNotesStrip() {
+      const host = $('todayNotesStrip');
+      if (!host) return;
+      const today = calendarDateKey(new Date());
+      const dueNotes = secretaryNotesState.notes.filter(note => !note.done && note.remindDate && note.remindDate <= today);
+      host.hidden = !dueNotes.length;
+      if (!dueNotes.length) return;
+      $('todayNotesStripCount').textContent = dueNotes.length;
+      $('todayNotesStripList').innerHTML = dueNotes.slice(0, 12).map(note => `
+        <label class="today-note-row${note.remindDate < today ? ' is-overdue' : ''}">
+          <input type="checkbox" data-note-toggle="${escapeHtml(note.id)}" title="勾選完成">
+          <span>${note.remindDate < today ? `⏰ ${escapeHtml(note.remindDate.slice(5).replace('-', '/'))}｜` : '📌 '}${escapeHtml(note.text.slice(0, 60))}</span>
+        </label>`).join('');
     }
 
     async function importSecretaryNotes(file) {
@@ -3898,7 +3973,12 @@
           .slice(0, 12)
           .map(row => ({ subject: String(row.subject || ''), content: String(row.content || row.week || '課程進度').slice(0, 80) }));
       } catch (error) {}
-      return { generatedAt: new Date().toISOString(), todayTasks, overdueCount, overdueTasks, todayCourses };
+      const todayNotes = secretaryNotesState.notes
+        .filter(note => !note.done && note.remindDate && note.remindDate <= today)
+        .sort((a, b) => a.remindDate.localeCompare(b.remindDate))
+        .slice(0, 10)
+        .map(note => ({ text: String(note.text).slice(0, 60), remindDate: note.remindDate }));
+      return { generatedAt: new Date().toISOString(), todayTasks, overdueCount, overdueTasks, todayCourses, todayNotes };
     }
 
     async function syncLineBridge({ silent = false } = {}) {
@@ -4042,11 +4122,13 @@
 
     function convertLineItemToNote(item) {
       const text = (item.tag ? `【${item.tag}】` : '') + item.text;
-      const note = normalizeSecretaryNote({ text, createdAt: item.createdAt }, 'line');
+      const note = normalizeSecretaryNote({ text, createdAt: item.createdAt, remindDate: item.dueDate || '' }, 'line');
       if (!note) return showToast('這則訊息沒有可保存的內容。', true);
       secretaryNotesState.notes.unshift(note);
       try {
-        saveSecretaryNotes('已把 LINE 訊息存成記事。');
+        saveSecretaryNotes(note.remindDate
+          ? `已把 LINE 訊息存成記事；提醒日 ${note.remindDate.replace(/-/g, '/')} 會出現在日曆與晨間簡報。`
+          : '已把 LINE 訊息存成記事。');
         removeLineItem(item.id);
         ackLineItem(item.id, 'imported');
       } catch (error) {
@@ -4541,6 +4623,12 @@
         if (!calendarItemsByDate.has(row.startDate)) calendarItemsByDate.set(row.startDate, []);
         calendarItemsByDate.get(row.startDate).push({ kind: 'progress', row });
       });
+      const notesByRemindDate = new Map();
+      secretaryNotesState.notes.forEach(note => {
+        if (!note.remindDate || note.done) return;
+        if (!notesByRemindDate.has(note.remindDate)) notesByRemindDate.set(note.remindDate, []);
+        notesByRemindDate.get(note.remindDate).push(note);
+      });
       const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
       const monthTasks = state.filteredTasks.filter(task => task.dueDate && task.dueDate.startsWith(monthPrefix));
       const monthProgress = progressRows.filter(row => row.startDate.startsWith(monthPrefix));
@@ -4572,10 +4660,14 @@
           const time = task.dueTime ? `${task.dueTime} ` : '';
           return `<button class="${classes.join(' ')}" type="button" data-calendar-task-id="${escapeHtml(task.taskId)}" title="${escapeHtml(task.name)}｜可拖曳更改日期">${escapeHtml(time + task.name)}</button>`;
         }).join('');
+        const showTasks = $('calendarShowTasks')?.checked !== false;
+        const showNotes = $('calendarShowNotes')?.checked !== false;
+        const noteChips = showNotes ? (notesByRemindDate.get(key) || []).map(note => `
+          <button class="calendar-note-chip${note.done ? ' done' : ''}" type="button" draggable="true" data-calendar-note-id="${escapeHtml(note.id)}" title="${escapeHtml(note.text)}｜點擊管理、拖曳改提醒日">📌 ${escapeHtml(note.text.slice(0, 14))}${note.text.length > 14 ? '…' : ''}</button>`).join('') : '';
         cells.push(`
           <div class="calendar-day ${date.getMonth() === month ? '' : 'other-month'} ${key === todayKey ? 'today' : ''}" data-date="${key}">
             <div class="calendar-date"><span>${date.getDate()}</span>${key === todayKey ? '<span class="today-label">今天</span>' : ''}</div>
-            ${rollcallBadgeFor(key)}${visibleTasks}
+            ${rollcallBadgeFor(key)}${noteChips}${showTasks ? visibleTasks : ''}
           </div>`);
       }
       $('calendarGrid').innerHTML = cells.join('');
@@ -4615,7 +4707,8 @@
       if (event.button !== undefined && event.button !== 0) return;
       const taskButton = event.target.closest('[data-calendar-task-id]');
       const progressButton = event.target.closest('[data-calendar-progress-id]');
-      const button = taskButton || progressButton;
+      const noteButton = event.target.closest('[data-calendar-note-id]');
+      const button = taskButton || progressButton || noteButton;
       if (!button) return;
       const ghost = document.createElement('div');
       ghost.className = 'calendar-drag-ghost';
@@ -4637,7 +4730,9 @@
         frameRequest: 0,
         clientX: event.clientX,
         clientY: event.clientY,
-        token: taskButton ? `task:${taskButton.dataset.calendarTaskId}` : `progress:${progressButton.dataset.calendarProgressId}`
+        token: taskButton ? `task:${taskButton.dataset.calendarTaskId}`
+          : progressButton ? `progress:${progressButton.dataset.calendarProgressId}`
+          : `snote:${noteButton.dataset.calendarNoteId}`
       };
       try { button.setPointerCapture(event.pointerId); } catch (error) {}
     }
@@ -4679,6 +4774,7 @@
       window.setTimeout(() => { calendarDropJustFinished = false; }, 180);
       if (!day) return showToast('請把行程拖到日曆日期格內。', true);
       if (drag.token.startsWith('progress:')) moveCalendarProgress(drag.token.slice(9), day.dataset.date);
+      else if (drag.token.startsWith('snote:')) moveCalendarNote(drag.token.slice(6), day.dataset.date);
       else moveCalendarTask(drag.token.slice(5), day.dataset.date);
     }
 
@@ -4706,6 +4802,71 @@
         applyFilters();
         showToast(`日期更新失敗：${error.message}`, true);
       }
+    }
+
+    let calendarNotePopoverDate = '';
+
+    function ensureCalendarNotePopover() {
+      let popover = $('calendarNotePopover');
+      if (popover) return popover;
+      popover = document.createElement('div');
+      popover.id = 'calendarNotePopover';
+      popover.className = 'calendar-note-popover';
+      popover.hidden = true;
+      document.body.appendChild(popover);
+      document.addEventListener('click', event => {
+        if (popover.hidden) return;
+        if (event.target.closest('#calendarNotePopover') || event.target.closest('[data-calendar-note-id]')) return;
+        closeCalendarNotesPopover();
+      });
+      return popover;
+    }
+
+    function closeCalendarNotesPopover() {
+      const popover = $('calendarNotePopover');
+      if (popover) popover.hidden = true;
+      calendarNotePopoverDate = '';
+    }
+
+    function openCalendarNotesPopover(dateKey) {
+      calendarNotePopoverDate = dateKey;
+      refreshCalendarNotePopover();
+    }
+
+    function refreshCalendarNotePopover() {
+      if (!calendarNotePopoverDate) return;
+      const popover = ensureCalendarNotePopover();
+      const notes = secretaryNotesState.notes.filter(note => note.remindDate === calendarNotePopoverDate);
+      if (!notes.length) return closeCalendarNotesPopover();
+      popover.innerHTML = `
+        <div class="calendar-note-popover-head">
+          <strong>📌 ${escapeHtml(calendarNotePopoverDate.replace(/-/g, '/'))} 記事</strong>
+          <button class="mini-button" type="button" onclick="closeCalendarNotesPopover()">✕ 關閉</button>
+        </div>
+        ${notes.map(note => `
+          <div class="calendar-note-popover-row${note.done ? ' done' : ''}">
+            <input type="checkbox" data-note-toggle="${escapeHtml(note.id)}" ${note.done ? 'checked' : ''} title="勾選完成">
+            <span class="calendar-note-popover-text">${escapeHtml(note.text)}</span>
+            <span class="secretary-note-row-actions">
+              <input type="date" class="note-date-input" value="${escapeHtml(note.remindDate)}" data-note-date="${escapeHtml(note.id)}" title="改提醒日">
+              ${note.done ? `<button class="mini-button" type="button" data-delete-secretary-note="${escapeHtml(note.id)}">刪除</button>` : `<button class="mini-button" type="button" data-note-to-task="${escapeHtml(note.id)}">轉任務</button>`}
+            </span>
+          </div>`).join('')}
+        <div class="secretary-note-meta">完整管理請到「教師工具箱 → 小綿助記事」。</div>`;
+      popover.hidden = false;
+      const dayCell = document.querySelector(`.calendar-day[data-date="${calendarNotePopoverDate}"]`);
+      const rect = dayCell?.getBoundingClientRect();
+      if (rect) {
+        popover.style.top = `${Math.min(window.innerHeight - popover.offsetHeight - 16, rect.bottom + 6)}px`;
+        popover.style.left = `${Math.max(12, Math.min(window.innerWidth - popover.offsetWidth - 12, rect.left))}px`;
+      }
+    }
+
+    function moveCalendarNote(noteId, newDate) {
+      const note = secretaryNotesState.notes.find(item => item.id === noteId);
+      if (!note || !/^\d{4}-\d{2}-\d{2}$/.test(newDate) || note.remindDate === newDate) return;
+      note.remindDate = newDate;
+      try { saveSecretaryNotes(`📌 記事提醒改到 ${newDate.replace(/-/g, '/')}。`); } catch (error) {}
     }
 
     function moveCalendarProgress(progressId, newStartDate) {
@@ -7864,12 +8025,29 @@
         if (task) openTaskModal(task);
         return;
       }
+      const noteChip = event.target.closest('[data-calendar-note-id]');
+      if (noteChip) {
+        const day = noteChip.closest('.calendar-day[data-date]');
+        if (day) openCalendarNotesPopover(day.dataset.date);
+        return;
+      }
       const progressButton = event.target.closest('[data-calendar-progress-id]');
       if (progressButton) {
         openProgressEditModal(progressButton.dataset.calendarProgressId);
       }
     });
 
+    ['calendarShowTasks', 'calendarShowNotes'].forEach(id => $(id)?.addEventListener('change', () => {
+      try { localStorage.setItem('grade6CalendarShow', JSON.stringify({ tasks: $('calendarShowTasks').checked, notes: $('calendarShowNotes').checked })); } catch (error) {}
+      if (state.viewMode === 'calendar') renderCalendar();
+    }));
+    try {
+      const savedShow = JSON.parse(localStorage.getItem('grade6CalendarShow') || 'null');
+      if (savedShow) {
+        $('calendarShowTasks').checked = savedShow.tasks !== false;
+        $('calendarShowNotes').checked = savedShow.notes !== false;
+      }
+    } catch (error) {}
     $('calendarGrid').addEventListener('pointerdown', beginCalendarPointerDrag);
     $('calendarGrid').addEventListener('pointermove', moveCalendarPointerDrag);
     $('calendarGrid').addEventListener('pointerup', endCalendarPointerDrag);
@@ -7878,12 +8056,14 @@
     $('calendarGrid').addEventListener('dragstart', event => {
       const taskButton = event.target.closest('[data-calendar-task-id]');
       const progressButton = event.target.closest('[data-calendar-progress-id][draggable="true"]');
-      if (!taskButton && !progressButton) return;
+      const noteButton = event.target.closest('[data-calendar-note-id]');
+      if (!taskButton && !progressButton && !noteButton) return;
       event.dataTransfer.effectAllowed = 'move';
       event.dataTransfer.setData('text/plain', taskButton
         ? `task:${taskButton.dataset.calendarTaskId}`
-        : `progress:${progressButton.dataset.calendarProgressId}`);
-      (taskButton || progressButton).classList.add('dragging');
+        : progressButton ? `progress:${progressButton.dataset.calendarProgressId}`
+        : `snote:${noteButton.dataset.calendarNoteId}`);
+      (taskButton || progressButton || noteButton).classList.add('dragging');
     });
 
     $('calendarGrid').addEventListener('dragover', event => {
@@ -7911,6 +8091,7 @@
       calendarDropJustFinished = true;
       window.setTimeout(() => { calendarDropJustFinished = false; }, 150);
       if (dragToken.startsWith('progress:')) moveCalendarProgress(dragToken.slice(9), day.dataset.date);
+      else if (dragToken.startsWith('snote:')) moveCalendarNote(dragToken.slice(6), day.dataset.date);
       else moveCalendarTask(dragToken.replace(/^task:/, ''), day.dataset.date);
     });
 
@@ -7938,7 +8119,13 @@
       secretaryNotesState.showDone = !secretaryNotesState.showDone;
       renderSecretaryNotes();
     });
-    $('secretaryNoteList').addEventListener('change', event => {
+    document.querySelectorAll('[data-note-filter]').forEach(chip => chip.addEventListener('click', () => {
+      secretaryNotesState.filter = chip.dataset.noteFilter;
+      renderSecretaryNotes();
+    }));
+    document.addEventListener('change', event => {
+      const dateInput = event.target.closest('[data-note-date]');
+      if (dateInput) return setNoteRemindDate(dateInput.dataset.noteDate, dateInput.value);
       const checkbox = event.target.closest('[data-note-toggle]');
       if (!checkbox) return;
       const note = secretaryNotesState.notes.find(item => item.id === checkbox.dataset.noteToggle);
@@ -7946,7 +8133,7 @@
       note.done = checkbox.checked;
       try { saveSecretaryNotes(note.done ? '已完成，收進「已完成」清單。' : '已恢復為待處理記事。'); } catch (error) {}
     });
-    $('secretaryNoteList').addEventListener('click', async event => {
+    document.addEventListener('click', async event => {
       const taskButton = event.target.closest('[data-note-to-task]');
       if (taskButton) {
         const note = secretaryNotesState.notes.find(item => item.id === taskButton.dataset.noteToTask);

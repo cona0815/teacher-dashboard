@@ -879,6 +879,17 @@ function buildSnapshotReply_() {
   } else {
     lines.push('✅ 今天沒有到期任務。');
   }
+  var notes = Array.isArray(snapshot.todayNotes) ? snapshot.todayNotes : [];
+  if (notes.length) {
+    lines.push('📌 今日記事提醒（' + notes.length + ' 則）：');
+    var snapshotToday = lineBotToday_();
+    notes.slice(0, 10).forEach(function (note) {
+      var overdueMark = note.remindDate && note.remindDate < snapshotToday
+        ? '⏰' + String(note.remindDate).slice(5).replace('-', '/') + '｜'
+        : '';
+      lines.push('・' + overdueMark + note.text);
+    });
+  }
   if (snapshot.overdueCount) {
     lines.push('⚠️ 逾期任務（' + snapshot.overdueCount + ' 件）：');
     var overdueTasks = Array.isArray(snapshot.overdueTasks) ? snapshot.overdueTasks : [];
