@@ -251,8 +251,8 @@
           <div class="field"><label>自動缺席（未填自動轉未到）</label><input id="setupAutoAbsentTime" type="time" value="08:05"></div>
           <div class="field"><label>自動回報（自動送出並推播 LINE）</label><input id="setupAutoNotifyTime" type="time" value="08:08"></div>
           <div class="field"><label>補交回溯天數</label><input id="setupLookbackDays" type="number" min="1" max="60" value="30"></div>
-          <div class="field" style="grid-column:1/-1"><label>Apps Script 部署網址（/exec 結尾，與 LINE 小幫手同一份）</label><input id="setupGasUrl" type="url" placeholder="https://script.google.com/macros/s/……/exec"></div>
-          <div class="field" style="grid-column:1/-1"><label>教室大屏金鑰（執行 setupLineBot 後取得的 CLASSROOM_TOKEN）</label><input id="setupClassroomToken" type="password" autocomplete="off" placeholder="權限只限當日回報與補交標記"></div>
+          <div class="field" style="grid-column:1/-1"><label>🌐 Apps Script 部署網址（/exec 結尾，與 LINE 小幫手同一份）＝教學裡的「🌐 機器人網址」　<a href="Install.html#part2" target="_blank" rel="noopener" style="font-weight:700">還沒有？看申請教學 📖</a></label><input id="setupGasUrl" type="url" placeholder="貼上 🌐 機器人網址：https://script.google.com/macros/s/……/exec"></div>
+          <div class="field" style="grid-column:1/-1"><label>🔑D 教室大屏金鑰＝教學裡的「教室大屏金鑰」（執行 setupLineBot 後取得的 CLASSROOM_TOKEN）　<a href="Install.html#part2" target="_blank" rel="noopener" style="font-weight:700">如何取得？📖</a></label><input id="setupClassroomToken" type="password" autocomplete="off" placeholder="貼上 🔑D（教室只放這把；老師金鑰 🔑C 不要貼這裡）"></div>
         </div>
         <button class="primary-button" type="button" id="saveSetupButton" style="margin-top:14px;font-size:18px;padding:12px 26px">儲存設定</button>
         <p class="note">

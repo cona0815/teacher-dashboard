@@ -1881,12 +1881,12 @@
         <label class="check-row" style="margin-bottom:14px"><input type="checkbox" id="lineBridgeEnabled">啟用 LINE 小幫手同步</label>
         <div class="form-grid" style="padding:0">
           <div class="field field-wide">
-            <label for="lineGasUrl">Apps Script 部署網址（/exec 結尾）</label>
-            <input class="input" id="lineGasUrl" type="url" autocomplete="off" placeholder="https://script.google.com/macros/s/……/exec">
+            <label for="lineGasUrl">🌐 Apps Script 部署網址（/exec 結尾）＝教學裡的「🌐 機器人網址」　<a href="Install.html#part2" target="_blank" rel="noopener" style="font-weight:600">還沒有？看申請教學 📖</a></label>
+            <input class="input" id="lineGasUrl" type="url" autocomplete="off" placeholder="貼上 🌐 機器人網址：https://script.google.com/macros/s/……/exec">
           </div>
           <div class="field field-wide">
-            <label for="lineSyncToken">同步金鑰（執行 setupLineBot 後取得）</label>
-            <input class="input" id="lineSyncToken" type="password" autocomplete="off" placeholder="貼上 LINE_SYNC_TOKEN">
+            <label for="lineSyncToken">🔑C 同步金鑰＝教學裡的「工作台同步金鑰」（執行 setupLineBot 後取得）　<a href="Install.html#part2" target="_blank" rel="noopener" style="font-weight:600">如何取得？📖</a></label>
+            <input class="input" id="lineSyncToken" type="password" autocomplete="off" placeholder="貼上 🔑C（LINE_SYNC_TOKEN，不是教室金鑰 🔑D）">
             <label class="check-row" style="margin-top:8px"><input type="checkbox" id="rememberLineSyncToken" checked>記住在這台電腦的目前瀏覽器</label>
             <div class="api-secret-note">同步金鑰與網址不會放進 JSON 備份或 GitHub。共用電腦請取消勾選，金鑰便只保留到關閉此瀏覽器分頁。</div>
           </div>
