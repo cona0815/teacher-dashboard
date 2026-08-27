@@ -24,7 +24,7 @@ from tkinter import filedialog, messagebox, ttk
 
 from PIL import Image, ImageGrab
 
-from desktop_pet_preview import DesktopPetPreview
+from desktop_pet_preview import ERROR_LOG, DesktopPetPreview
 
 
 APP_NAME = "小綿助教師秘書"
@@ -70,7 +70,7 @@ def make_bridge_handler(secretary: "SecretaryPet") -> type[BaseHTTPRequestHandle
         def _origin(self) -> str:
             return str(self.headers.get("Origin") or "")
 
-        def _headers(self, status: int = 200) -> bool:
+        def _headers(self, status: int = 200, content_type: str = "application/json; charset=utf-8") -> bool:
             origin = self._origin()
             if not bridge_origin_allowed(origin, secretary._bridge_allowed_origin()):
                 self.send_response(403)
@@ -78,7 +78,7 @@ def make_bridge_handler(secretary: "SecretaryPet") -> type[BaseHTTPRequestHandle
                 self.end_headers()
                 return False
             self.send_response(status)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Type", content_type)
             self.send_header("Cache-Control", "no-store")
             self.send_header("Access-Control-Allow-Origin", origin or "null")
             self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
@@ -96,13 +96,22 @@ def make_bridge_handler(secretary: "SecretaryPet") -> type[BaseHTTPRequestHandle
             self._headers(204)
 
         def do_GET(self) -> None:  # noqa: N802 - BaseHTTPRequestHandler API
-            if self.path != "/health":
-                self._write_json({"ok": False, "error": "not found"}, 404)
+            if self.path == "/health":
+                self._write_json(secretary._bridge_health())
                 return
-            self._write_json(secretary._bridge_health())
+            if self.path == "/panel":
+                # 秘書面板改由瀏覽器呈現：部分機器的 Tk 文字繪製不穩定（面板空白），
+                # 瀏覽器渲染在任何顯示環境都可靠。頁面只在本機回環位址提供。
+                if self._headers(200, "text/html; charset=utf-8"):
+                    self.wfile.write(secretary._panel_html().encode("utf-8"))
+                return
+            if self.path == "/panel-data":
+                self._write_json(secretary._panel_payload())
+                return
+            self._write_json({"ok": False, "error": "not found"}, 404)
 
         def do_POST(self) -> None:  # noqa: N802 - BaseHTTPRequestHandler API
-            if self.path != "/sync":
+            if self.path not in ("/sync", "/panel-action"):
                 self._write_json({"ok": False, "error": "not found"}, 404)
                 return
             try:
@@ -112,6 +121,9 @@ def make_bridge_handler(secretary: "SecretaryPet") -> type[BaseHTTPRequestHandle
                 payload = json.loads(self.rfile.read(length).decode("utf-8"))
                 if not isinstance(payload, dict):
                     raise ValueError("資料格式不正確")
+                if self.path == "/panel-action":
+                    self._write_json(secretary._panel_apply_action(payload))
+                    return
                 result = secretary._bridge_sync(payload)
                 self._write_json(result)
             except (ValueError, json.JSONDecodeError, UnicodeDecodeError) as error:
@@ -171,6 +183,123 @@ def configure_windows_autostart(enabled: bool) -> None:
     except OSError:
         # 公司或學校的 Windows 原則可能禁止修改登入啟動項；程式仍可手動執行。
         pass
+
+
+PANEL_PAGE_HTML = """<!DOCTYPE html>
+<html lang="zh-Hant"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>__PET_NAME__ 教師秘書</title>
+<style>
+:root{--bg:#f3f6f4;--surface:#fff;--soft:#e8f2ee;--primary:#1f514a;--strong:#173f3a;--ink:#1c302d;--muted:#657570;--line:#d5e1dc;--danger:#a34339;--danger-soft:#fff0ed;--gold:#b9852f}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Microsoft JhengHei","Noto Sans TC",sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.7}
+header{background:var(--strong);color:#fff;padding:14px 22px;display:flex;align-items:center;gap:12px}
+header h1{font-size:20px}header .meta{margin-left:auto;font-size:12px;opacity:.85}
+main{max-width:1180px;margin:0 auto;padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:14px 16px}
+.card.soft{background:var(--soft)}.card.danger{background:var(--danger-soft)}
+.card h2{font-size:16px;color:var(--strong);margin-bottom:8px}
+.card ul{list-style:none}.card li{padding:3px 0;border-bottom:1px dashed var(--line)}.card li:last-child{border-bottom:0}
+.empty{color:var(--muted);font-size:13px}
+button{font-family:inherit;border:0;border-radius:10px;padding:8px 18px;font-size:14px;font-weight:800;cursor:pointer;background:var(--primary);color:#fff}
+button.light{background:var(--surface);color:var(--strong);border:1.5px solid var(--line)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0}
+textarea,input{font-family:inherit;font-size:14px;border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;width:100%}
+.tag{display:inline-block;background:var(--soft);color:var(--strong);border-radius:8px;padding:1px 8px;font-size:11px;font-weight:800;margin-right:4px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.num{font-size:26px;font-weight:900;color:var(--strong)}
+.note-meta{color:var(--muted);font-size:11px}
+details summary{cursor:pointer;font-weight:800;color:var(--strong)}
+.seat-ok{color:#1c6b45}.seat-bad{color:var(--danger);font-weight:800}
+</style></head><body>
+<header><h1>🐑 __PET_NAME__ 教師秘書</h1><div class="meta">本機頁面（127.0.0.1）｜<span id="stamp">載入中</span>｜每 15 秒自動更新</div></header>
+<main>
+  <section class="card soft" style="grid-column:1/-1"><h2>☀ 今日簡報</h2><div id="brief" class="empty">載入中……</div></section>
+
+  <section class="card"><h2>📌 今日重要</h2><ul id="dueToday"></ul></section>
+  <section class="card danger"><h2>⚠ 已逾期</h2><ul id="overdue"></ul></section>
+
+  <section class="card" style="grid-column:1/-1"><h2>🏫 今日出席與作業繳交（晨間大屏回報）</h2>
+    <div id="cloudBody" class="empty">載入中……</div>
+    <details id="cloudSetup" style="margin-top:8px"><summary>⚙ 雲端連線設定（第一次使用點我）</summary>
+      <div class="row"><input id="cfgUrl" placeholder="Apps Script 部署網址（/exec 結尾，與大屏同一份）"></div>
+      <div class="row"><input id="cfgToken" type="password" placeholder="教室大屏金鑰（CLASSROOM_TOKEN）"><input id="cfgClass" placeholder="班級名稱（例：501）" style="max-width:160px"></div>
+      <div class="row"><button onclick="saveCloudCfg()">儲存並讀取</button><span class="note-meta">設定只存在這台電腦的瀏覽器。</span></div>
+    </details></section>
+
+  <section class="card soft"><h2>🌿 健康管理</h2>
+    <div class="grid2">
+      <div>💧 今日喝水 <span class="num" id="water">0</span> 杯<div class="row"><button onclick="act('water')">喝一杯</button></div></div>
+      <div>🚶 距上次起身 <span class="num" id="moveElapsed">0</span> 分<div class="row"><button onclick="act('move_done')">活動完成</button><span class="note-meta" id="moveHint"></span></div></div>
+    </div>
+    <div style="margin-top:8px">💊 服藥提醒：<span id="medicine" class="empty">未設定</span></div>
+  </section>
+
+  <section class="card"><h2>📮 待追蹤</h2><ul id="tracking"></ul></section>
+
+  <section class="card"><h2>💬 快速記事</h2>
+    <textarea id="noteInput" rows="3" placeholder="先記下臨時交代、等待回覆或稍後要整理的事情……"></textarea>
+    <div class="row"><button onclick="addNote()">儲存記事</button><span class="note-meta">保存在小綿助本機資料；工作台開啟時會自動帶入。</span></div>
+  </section>
+
+  <section class="card"><h2>📱 LINE 待整理</h2><ul id="lineInbox"></ul><div class="note-meta">請到教師工作台的「LINE 收件匣」確認建立。</div></section>
+
+  <section class="card" style="grid-column:1/-1"><h2>📝 本機記事（最近 10 則）</h2><ul id="notes"></ul></section>
+
+  <section class="card" style="grid-column:1/-1"><h2>🐑 桌寵控制</h2>
+    <div class="row">
+      <button class="light" onclick="act('toggle_pause')">⏸ 暫停／繼續走動</button>
+      <button class="light" style="color:var(--danger);border-color:var(--danger)" onclick="if(confirm('確定關閉小綿助？（提醒與本機連線都會停止）'))act('quit')">❌ 關閉小綿助</button>
+      <span class="note-meta">開啟本頁：對桌面上的小綿羊按右鍵或雙擊。</span>
+    </div>
+  </section>
+</main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function fill(id, items, render, empty){const el=$(id);el.innerHTML=items.length?items.map(render).join(''):'<li class="empty">'+empty+'</li>';}
+async function load(){
+  try{
+    const d=await (await fetch('/panel-data',{cache:'no-store'})).json();
+    $('stamp').textContent=d.generatedAt;
+    $('brief').innerHTML=`今天有 <b>${d.dueToday.length}</b> 件期限任務、<b>${d.overdue.length}</b> 件逾期、<b>${d.tracking.length}</b> 件等待回覆。`+(d.overdue.length?`　建議優先處理：<b>${esc(d.overdue[0].title)}</b>`:d.dueToday.length?`　今天先完成：<b>${esc(d.dueToday[0].title)}</b>`:'　今天的期限工作已整理完成 🎉');
+    fill('dueToday',d.dueToday,t=>`<li>${esc(t.title)}${t.due_time?'｜'+t.due_time:''}</li>`,'今天沒有期限任務');
+    fill('overdue',d.overdue,t=>`<li>${esc(t.title)}</li>`,'目前沒有逾期任務');
+    fill('tracking',d.tracking,t=>`<li>${esc(t.title)}</li>`,'目前沒有等待回覆的事項');
+    fill('lineInbox',d.lineInbox,i=>`<li><span class="tag">${i.kind}</span>${i.medium==='voice'?'🎤':i.medium==='photo'?'📷':''}${esc(i.title)}${i.tag?`<span class="tag">${esc(i.tag)}</span>`:''}</li>`,'目前沒有 LINE 待整理的訊息');
+    fill('notes',d.notes,n=>`<li>${esc(n.text)}<div class="note-meta">${esc(n.time)}</div></li>`,'目前沒有記事');
+    $('water').textContent=d.health.water;
+    $('moveElapsed').textContent=d.health.moveElapsed;
+    $('moveHint').textContent=d.health.moveDone?'（今天已完成 ✅）':`（每 ${d.health.moveInterval} 分鐘提醒）`;
+    const med=d.health.medicineTimes;
+    $('medicine').innerHTML=med.length?med.map(t=>d.health.medicineDone.includes(t)?`<span class="tag">✅ ${t}</span>`:`<span class="tag">⏰ ${t}</span> <button class="light" style="padding:2px 10px" onclick="act('medicine_done','${t}')">已服用</button>`).join(' '):'未設定';
+  }catch(e){$('brief').textContent='讀取失敗：'+e.message;}
+}
+async function act(action,time){await fetch('/panel-action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,time})});load();}
+async function addNote(){const t=$('noteInput').value.trim();if(!t)return;await fetch('/panel-action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'add_note',text:t})});$('noteInput').value='';load();}
+function cloudCfg(){try{return JSON.parse(localStorage.getItem('petPanelCloud')||'null')||{}}catch(e){return{}}}
+function saveCloudCfg(){localStorage.setItem('petPanelCloud',JSON.stringify({url:$('cfgUrl').value.trim(),token:$('cfgToken').value.trim(),cls:$('cfgClass').value.trim()}));loadCloud();}
+async function loadCloud(){
+  const c=cloudCfg();
+  $('cfgUrl').value=c.url||'';$('cfgToken').value=c.token||'';$('cfgClass').value=c.cls||'';
+  if(!c.url||!c.token||!c.cls){$('cloudBody').textContent='尚未設定雲端連線——點下方「⚙ 雲端連線設定」貼上大屏用的網址、教室金鑰與班級即可。';$('cloudSetup').open=true;return;}
+  $('cloudBody').textContent='讀取大屏回報中……';
+  try{
+    const r=await(await fetch(c.url,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'classroom_today',token:c.token,className:c.cls})})).json();
+    if(!r.ok)throw new Error(r.error||'雲端回應異常');
+    const absent=(r.attendance||[]).map(a=>`${a.seat}號${a.status}`);
+    const boards={};
+    (r.homework||[]).forEach(h=>{const k=h.subject+(h.assignment?'／'+h.assignment:'');(boards[k]=boards[k]||{m:[],r:[]})[h.status==='補交'?'r':'m'].push(h.seat);});
+    let html=`<div>👥 出缺：${absent.length?'<span class="seat-bad">'+absent.join('、')+'</span>':'<span class="seat-ok">全班到齊 🎉</span>'}</div>`;
+    const keys=Object.keys(boards);
+    html+= keys.length?keys.map(k=>`<div>📚 ${esc(k)}：${boards[k].m.length?'<span class="seat-bad">缺交 '+boards[k].m.join('、')+'號</span>':'<span class="seat-ok">全交 ✅</span>'}${boards[k].r.length?'｜補交 '+boards[k].r.join('、')+'號':''}</div>`).join(''):'<div class="empty">今天還沒有作業登記。</div>';
+    $('cloudBody').innerHTML=html;
+  }catch(e){$('cloudBody').textContent='大屏回報讀取失敗：'+e.message+'（今天可能還沒送出回報）';}
+}
+load();loadCloud();setInterval(load,15000);setInterval(loadCloud,60000);
+</script></body></html>"""
 
 
 def sanitize_line_inbox(items: object) -> list[dict]:
@@ -292,9 +421,10 @@ class SecretaryPet(DesktopPetPreview):
         self.bridge_thread: threading.Thread | None = None
         self.bridge_error = ""
 
-        self.menu.insert_command(0, label=f"開啟{self._pet_name()}秘書首頁", command=self.toggle_secretary)
-        self.menu.insert_command(1, label="整理今日簡報", command=lambda: self.open_secretary("today"))
-        self.menu.insert_separator(2)
+        # 秘書面板改由瀏覽器呈現；右鍵與雙擊桌寵都直接開啟（不再使用 Tk 選單）。
+        for widget in (self.root, self.pet_label):
+            widget.bind("<Double-Button-1>", lambda _e: self.open_secretary_page())
+        self.root.after(4000, self._visibility_heartbeat)
         self.root.after(1000, self._health_tick)
         self.root.after(1000, self._health_animation_tick)
         if settings.get("opening_brief", True):
@@ -434,20 +564,59 @@ class SecretaryPet(DesktopPetPreview):
         self._schedule_cheer()
 
     def toggle_secretary(self) -> None:
-        if self.panel and self.panel.winfo_exists() and self.panel.state() != "withdrawn":
-            self.panel.withdraw()
-            return
-        self.open_secretary()
+        self.open_secretary_page()
 
     def open_secretary(self, brief_mode: str | None = None) -> None:
+        # 舊 Tk 面板在部分機器（高解析縮放）會觸發繪圖層崩潰；一律改開瀏覽器版秘書頁。
+        del brief_mode
+        self.open_secretary_page()
+
+    def _legacy_open_secretary(self, brief_mode: str | None = None) -> None:
         if not self.panel or not self.panel.winfo_exists():
-            self._build_panel()
+            try:
+                self._build_panel()
+            except Exception:  # noqa: BLE001 - 建構失敗必須留下完整紀錄，避免只看到半張面板
+                self._report_callback_exception(*sys.exc_info())
+                raise
         if brief_mode:
             self._render_brief(brief_mode)
         self._render_dashboard()
         self.panel.deiconify()
         self.panel.lift()
         self.panel.focus_force()
+        self._audit_panel_layout()
+        # 高解析縮放螢幕上，Canvas 內嵌框架偶爾不會完成第一次重繪（看起來一片空白）。
+        # 開啟後強制滾動一往一返，逼 Canvas 重新繪製全部內容。
+        self.panel.after(180, self._force_panel_repaint)
+
+    def _force_panel_repaint(self) -> None:
+        try:
+            canvas = next(c for c in self.panel.winfo_children() if isinstance(c, tk.Canvas))
+            canvas.update_idletasks()
+            canvas.yview_scroll(1, "units")
+            canvas.update_idletasks()
+            canvas.yview_moveto(0.0)
+            canvas.update_idletasks()
+        except (StopIteration, tk.TclError):
+            pass
+
+    def _audit_panel_layout(self) -> None:
+        """面板健檢：卡片數量異常時把幾何狀態寫進錯誤日誌，協助遠端診斷。"""
+        try:
+            self.panel.update_idletasks()
+            columns = self.panel_widgets.get("panel_columns") or ()
+            detail = ["[panel-audit] 開啟面板診斷報告（雙欄版）",
+                      f"panel geometry={self.panel.geometry()} state={self.panel.state()}"]
+            for name, column in zip(("left", "right"), columns):
+                detail.append(f"{name} col size={column.winfo_width()}x{column.winfo_height()} mapped={column.winfo_ismapped()}")
+                for kid in column.winfo_children():
+                    detail.append(f"  {kid.__class__.__name__} mgr={kid.winfo_manager()!r} "
+                                  f"y={kid.winfo_y()} h={kid.winfo_height()} reqh={kid.winfo_reqheight()} mapped={kid.winfo_ismapped()}")
+            ERROR_LOG.parent.mkdir(parents=True, exist_ok=True)
+            with ERROR_LOG.open("a", encoding="utf-8") as stream:
+                stream.write("\n[" + datetime.now().isoformat(timespec="seconds") + "]\n" + "\n".join(detail) + "\n")
+        except Exception:  # noqa: BLE001 - 健檢本身失敗不影響面板使用
+            pass
 
     def _build_panel(self) -> None:
         c = self.COLORS
@@ -457,10 +626,11 @@ class SecretaryPet(DesktopPetPreview):
         panel.configure(bg=c["bg"])
         # 不把秘書視窗設為 topmost：Windows 的 Combobox 下拉層可能因此被主視窗擋住。
         panel.attributes("-topmost", False)
-        default_width = min(760, max(640, self.screen_width - 120))
-        default_height = min(860, max(680, self.screen_height - 110))
+        _s = self.dpi_scale
+        default_width = min(int(1180 * _s), max(int(1000 * _s), self.screen_width - 120))
+        default_height = min(int(944 * _s), max(int(700 * _s), self.screen_height - 60))
         panel.geometry(self._panel_geometry(default_width, default_height))
-        panel.minsize(620, 650)
+        panel.minsize(int(980 * _s), int(700 * _s))
         panel.protocol("WM_DELETE_WINDOW", panel.withdraw)
 
         style = ttk.Style(panel)
@@ -491,7 +661,7 @@ class SecretaryPet(DesktopPetPreview):
         style.configure("Secretary.TCombobox", padding=5, fieldbackground=c["surface"], background=c["surface"])
         style.configure("Secretary.Horizontal.TProgressbar", troughcolor="#dfe8e4", background=c["primary"], bordercolor="#dfe8e4")
 
-        header = tk.Frame(panel, bg=c["primary"], padx=22, pady=16)
+        header = tk.Frame(panel, bg=c["primary"], padx=22, pady=9)
         header.pack(fill="x")
         header_copy = tk.Frame(header, bg=c["primary"])
         header_copy.pack(side="left", fill="x", expand=True)
@@ -503,26 +673,26 @@ class SecretaryPet(DesktopPetPreview):
         self.panel_widgets["header_title"] = header_title
         self.panel_widgets["mode_badge"] = mode_badge
 
-        footer = tk.Frame(panel, bg=c["surface"], padx=18, pady=9, highlightbackground=c["line"], highlightthickness=1)
+        footer = tk.Frame(panel, bg=c["surface"], padx=18, pady=6, highlightbackground=c["line"], highlightthickness=1)
         footer.pack(side="bottom", fill="x")
         tk.Label(footer, text="資料保存在這台電腦・可匯出記事給教師工作台", bg=c["surface"], fg=c["muted"], font=("Microsoft JhengHei", 8)).pack(side="left")
         ttk.Button(footer, text="關閉", style="Secretary.TButton", command=panel.withdraw).pack(side="right")
 
-        canvas = tk.Canvas(panel, bg=c["bg"], highlightthickness=0)
-        scrollbar = ttk.Scrollbar(panel, orient="vertical", command=canvas.yview)
-        body = tk.Frame(canvas, bg=c["bg"], padx=18, pady=16)
-        body_window = canvas.create_window((0, 0), window=body, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
-        canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
-        body.bind("<Configure>", lambda _e: canvas.configure(scrollregion=canvas.bbox("all")))
-        canvas.bind("<Configure>", lambda e: canvas.itemconfigure(body_window, width=e.width))
-        wheel_handler = lambda e: canvas.yview_scroll(int(-e.delta / 120), "units")
-        canvas.bind("<Enter>", lambda _e: panel.bind_all("<MouseWheel>", wheel_handler))
-        canvas.bind("<Leave>", lambda _e: panel.unbind_all("<MouseWheel>"))
+        # 雙欄一頁式版面：不使用 Canvas 捲動容器（部分高解析縮放環境下
+        # Canvas 內嵌框架會出現「元件存在但畫面空白」的重繪問題）。
+        body = tk.Frame(panel, bg=c["bg"], padx=16, pady=12)
+        body.pack(fill="both", expand=True)
+        body.columnconfigure(0, weight=1, uniform="col")
+        body.columnconfigure(1, weight=1, uniform="col")
+        body.rowconfigure(0, weight=1)
+        left_col = tk.Frame(body, bg=c["bg"])
+        left_col.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
+        right_col = tk.Frame(body, bg=c["bg"])
+        right_col.grid(row=0, column=1, sticky="nsew", padx=(8, 0))
+        self.panel_widgets["panel_columns"] = (left_col, right_col)
 
-        brief = self._card(body, "☀ 今日簡報", c["soft"])
-        brief_label = tk.Label(brief, bg=c["soft"], fg=c["ink"], justify="left", anchor="w", wraplength=510, font=("Microsoft JhengHei", 10), pady=5)
+        brief = self._card(left_col, "☀ 今日簡報", c["soft"])
+        brief_label = tk.Label(brief, bg=c["soft"], fg=c["ink"], justify="left", anchor="w", wraplength=int(500 * self.dpi_scale), font=("Microsoft JhengHei", 10), pady=3)
         brief_label.pack(fill="x")
         brief_actions = tk.Frame(brief, bg=c["soft"])
         brief_actions.pack(fill="x", pady=(5, 0))
@@ -530,19 +700,19 @@ class SecretaryPet(DesktopPetPreview):
         ttk.Button(brief_actions, text="準備明天", style="Secretary.TButton", command=lambda: self._render_brief("tomorrow")).pack(side="left", padx=6)
         self.panel_widgets["brief"] = brief_label
 
-        empty_state = tk.Frame(body, bg=c["surface"], padx=18, pady=18, highlightbackground=c["line"], highlightthickness=1)
-        empty_state.pack(fill="x", pady=(9, 0))
+        empty_state = tk.Frame(left_col, bg=c["surface"], padx=18, pady=14, highlightbackground=c["line"], highlightthickness=1)
+        empty_state.pack(fill="x", pady=(6, 0))
         tk.Label(empty_state, text="目前還沒有任務", bg=c["surface"], fg=c["strong"], font=("Microsoft JhengHei", 12, "bold")).pack(anchor="w")
         tk.Label(
             empty_state,
             text="可以先在教師工作台新增任務，或使用下方「快速交代」建立本機記事；今日、逾期、待追蹤與健康管理仍可正常使用。",
-            bg=c["surface"], fg=c["muted"], justify="left", anchor="w", wraplength=650,
+            bg=c["surface"], fg=c["muted"], justify="left", anchor="w", wraplength=int(500 * self.dpi_scale),
             font=("Microsoft JhengHei", 9),
         ).pack(fill="x", pady=(5, 0))
         self.panel_widgets["empty_state"] = empty_state
 
-        task_grid = tk.Frame(body, bg=c["bg"])
-        task_grid.pack(fill="x", pady=9)
+        task_grid = tk.Frame(left_col, bg=c["bg"])
+        task_grid.pack(fill="x", pady=6)
         self.panel_widgets["task_grid"] = task_grid
         task_grid.columnconfigure(0, weight=1)
         task_grid.columnconfigure(1, weight=1)
@@ -553,16 +723,16 @@ class SecretaryPet(DesktopPetPreview):
         self.panel_widgets["today"] = self._listbox(today_card)
         self.panel_widgets["overdue"] = self._listbox(overdue_card)
 
-        tracking = self._card(body, "📮 待追蹤｜等待回覆、尚未收齊", c["surface"])
-        tracking.pack(fill="x", pady=(0, 9))
+        tracking = self._card(left_col, "📮 待追蹤｜等待回覆、尚未收齊", c["surface"])
+        tracking.pack(fill="x", pady=(0, 6))
         self.panel_widgets["tracking"] = self._listbox(tracking, height=3)
 
-        health = self._card(body, "🌿 健康管理", c["soft"])
-        health.pack(fill="x", pady=(0, 9))
+        health = self._card(left_col, "🌿 健康管理", c["soft"])
+        health.pack(fill="x", pady=(0, 6))
         self._build_health_rows(health)
 
-        personalization = self._card(body, "⚙ 個人化設定", c["surface"])
-        personalization.pack(fill="x", pady=(0, 9))
+        personalization = self._card(right_col, "⚙ 個人化設定", c["surface"])
+        personalization.pack(fill="x", pady=(0, 6))
         settings_row = tk.Frame(personalization, bg=c["surface"])
         settings_row.pack(fill="x")
         settings_row.columnconfigure(1, weight=1)
@@ -579,12 +749,12 @@ class SecretaryPet(DesktopPetPreview):
         self.panel_widgets["pet_name_var"] = pet_name_var
         self.panel_widgets["cheer_interval_var"] = cheer_interval_var
 
-        bridge = self._card(body, "🔗 教師工作台本機連線", c["surface"])
-        bridge.pack(fill="x", pady=(0, 9))
+        bridge = self._card(right_col, "🔗 教師工作台本機連線", c["surface"])
+        bridge.pack(fill="x", pady=(0, 6))
         tk.Label(
             bridge,
             text="小綿助開啟時，Netlify 或本機教師工作台會透過這台電腦的 127.0.0.1 自動交換任務與記事；資料不會經過第三方伺服器。",
-            bg=c["surface"], fg=c["muted"], justify="left", anchor="w", wraplength=650,
+            bg=c["surface"], fg=c["muted"], justify="left", anchor="w", wraplength=int(500 * self.dpi_scale),
             font=("Microsoft JhengHei", 8),
         ).pack(fill="x", pady=(0, 8))
         bridge_status = tk.Label(bridge, bg=c["surface"], fg=c["muted"], justify="left", anchor="w", font=("Microsoft JhengHei", 8, "bold"))
@@ -592,14 +762,14 @@ class SecretaryPet(DesktopPetPreview):
         self.panel_widgets["bridge_status"] = bridge_status
         self._update_bridge_status()
 
-        quick = self._card(body, "💬 快速交代", c["surface"])
+        quick = self._card(right_col, "💬 快速交代", c["surface"])
         quick.pack(fill="x")
         tk.Label(quick, text="輸入文字，或加入圖片、PDF、Word、Excel、PowerPoint，讓秘書讀取後整理。", bg=c["surface"], fg=c["muted"], font=("Microsoft JhengHei", 8)).pack(anchor="w", pady=(0, 7))
-        handoff = tk.Text(quick, height=4, wrap="word", relief="flat", borderwidth=0, highlightthickness=1, highlightbackground=c["line"], highlightcolor=c["primary"], padx=9, pady=8, font=("Microsoft JhengHei", 10), undo=True)
+        handoff = tk.Text(quick, height=3, wrap="word", relief="flat", borderwidth=0, highlightthickness=1, highlightbackground=c["line"], highlightcolor=c["primary"], padx=9, pady=8, font=("Microsoft JhengHei", 10), undo=True)
         handoff.pack(fill="x")
         handoff.bind("<Control-v>", self._paste_attachment, add="+")
         self.panel_widgets["handoff"] = handoff
-        attachment_label = tk.Label(quick, text="尚未加入附件", bg=c["surface"], fg=c["muted"], anchor="w", justify="left", wraplength=620, font=("Microsoft JhengHei", 8))
+        attachment_label = tk.Label(quick, text="尚未加入附件", bg=c["surface"], fg=c["muted"], anchor="w", justify="left", wraplength=int(500 * self.dpi_scale), font=("Microsoft JhengHei", 8))
         attachment_label.pack(fill="x", pady=5)
         self.panel_widgets["attachments"] = attachment_label
         actions = tk.Frame(quick, bg=c["surface"])
@@ -614,24 +784,24 @@ class SecretaryPet(DesktopPetPreview):
         ttk.Button(primary_actions, text="先存為記事", style="Secretary.TButton", command=self._save_note).pack(side="right", padx=7)
         self.panel_widgets["organize_button"] = organize_button
 
-        line_card = self._card(body, "📱 LINE 待整理", c["surface"])
-        line_card.pack(fill="x", pady=(9, 0))
+        line_card = self._card(right_col, "📱 LINE 待整理", c["surface"])
+        line_card.pack(fill="x", pady=(6, 0))
         tk.Label(line_card, text="從 LINE 傳給小幫手的訊息；請到教師工作台的「LINE 收件匣」確認後建立。", bg=c["surface"], fg=c["muted"], font=("Microsoft JhengHei", 8)).pack(anchor="w", pady=(0, 4))
         line_list = self._listbox(line_card, height=3)
         self.panel_widgets["line_inbox"] = line_list
 
-        notes = self._card(body, "📝 本機記事", c["surface"])
-        notes.pack(fill="x", pady=(9, 0))
+        notes = self._card(right_col, "📝 本機記事", c["surface"])
+        notes.pack(fill="x", pady=(6, 0))
         tk.Label(notes, text="記事保存在這台電腦；教師工作台開啟時會透過本機連線自動帶入。", bg=c["surface"], fg=c["muted"], font=("Microsoft JhengHei", 8)).pack(anchor="w", pady=(0, 4))
-        notes_list = self._listbox(notes, height=4)
+        notes_list = self._listbox(notes, height=3)
         note_actions = tk.Frame(notes, bg=c["surface"])
         note_actions.pack(fill="x", pady=(5, 0))
         ttk.Button(note_actions, text="開啟記事資料夾", style="Secretary.TButton", command=self._open_data_folder).pack(side="right")
         ttk.Button(note_actions, text="匯出給網頁", style="Secretary.TButton", command=self._export_notes_for_web).pack(side="right", padx=5)
         self.panel_widgets["notes"] = notes_list
 
-        draft = tk.Frame(body, bg=c["gold_soft"], padx=12, pady=10, highlightbackground="#d9c58e", highlightthickness=1)
-        draft_label = tk.Label(draft, bg=c["gold_soft"], fg=c["ink"], justify="left", anchor="w", wraplength=500, font=("Microsoft JhengHei", 10, "bold"))
+        draft = tk.Frame(right_col, bg=c["gold_soft"], padx=12, pady=10, highlightbackground="#d9c58e", highlightthickness=1)
+        draft_label = tk.Label(draft, bg=c["gold_soft"], fg=c["ink"], justify="left", anchor="w", wraplength=int(500 * self.dpi_scale), font=("Microsoft JhengHei", 10, "bold"))
         draft_label.pack(fill="x")
         draft_actions = tk.Frame(draft, bg=c["gold_soft"])
         draft_actions.pack(fill="x", pady=(8, 0))
@@ -752,7 +922,7 @@ class SecretaryPet(DesktopPetPreview):
             if self.data["tasks"]:
                 empty_state.pack_forget()
             elif not empty_state.winfo_manager():
-                empty_state.pack(fill="x", pady=(9, 0), before=self.panel_widgets["task_grid"])
+                empty_state.pack(fill="x", pady=(6, 0), before=self.panel_widgets["task_grid"])
         self._fill_task_list("today", due_today, "今天沒有期限任務")
         self._fill_task_list("overdue", overdue, "目前沒有逾期任務")
         self._fill_task_list("tracking", tracking, "目前沒有等待回覆的事項")
@@ -777,9 +947,131 @@ class SecretaryPet(DesktopPetPreview):
         header.configure(text=f"教師秘書・{name}")
         organize_button: ttk.Button = self.panel_widgets["organize_button"]  # type: ignore[assignment]
         organize_button.configure(text=f"交給{name}整理")
-        self.menu.entryconfigure(0, label=f"開啟{name}秘書首頁")
+        self.menu.entryconfigure(0, label=f"開啟{name}秘書")
         self._schedule_cheer()
         self.play("success", 2, "idle", f"好！以後可以叫我{name}。")
+
+    # ------------------------------------------------------------------
+    # 瀏覽器版秘書面板：資料與動作由本機橋接供應，畫面交給瀏覽器渲染。
+    # （部分機器的 Tk 文字繪製不穩定；瀏覽器在任何顯示環境都可靠。）
+    # ------------------------------------------------------------------
+
+    def _show_menu(self, _event: tk.Event) -> str:
+        # Tk 右鍵選單與面板同屬會在部分機器崩潰／消失的繪圖管線；
+        # 右鍵改為直接開啟瀏覽器版秘書（暫停、關閉等功能都在秘書頁上）。
+        self.open_secretary_page()
+        return "break"
+
+    def _visibility_heartbeat(self) -> None:
+        """部分顯示卡會無聲丟棄透明色鍵視窗的畫面；定期重新亮相讓桌寵自我復活。"""
+        try:
+            if self.data.get("settings", {}).get("enabled", True):
+                self.root.deiconify()
+                self.root.attributes("-topmost", True)
+                self.root.lift()
+        except tk.TclError:
+            return
+        self.root.after(4000, self._visibility_heartbeat)
+
+    def open_secretary_page(self) -> None:
+        if self.bridge_error:
+            self.show_bubble("本機服務未啟動，秘書頁開不了；請重新啟動小綿助。", 3200)
+            return
+        import webbrowser
+
+        webbrowser.open(f"http://{BRIDGE_HOST}:{BRIDGE_PORT}/panel")
+        self.play("success", 2, "idle", "秘書頁開好了！")
+
+    def _panel_payload(self) -> dict:
+        today = date.today().isoformat()
+        with self.data_lock:
+            active = [task for task in self.data.get("tasks", []) if task.get("status") != "已完成"]
+            def pick(tasks):
+                return [{"title": str(t.get("title") or "未命名")[:80], "due_time": str(t.get("due_time") or "")} for t in tasks[:8]]
+            due_today = pick([t for t in active if t.get("due_date") == today])
+            overdue = pick([t for t in active if t.get("due_date") and t["due_date"] < today])
+            tracking = pick([t for t in active if t.get("waiting_for") or t.get("status") == "等待回覆"])
+            notes = [{"text": str(n.get("text") or "")[:200], "time": str(n.get("created_at") or "")[5:16].replace("T", " ")}
+                     for n in self.data.get("notes", [])[:10] if n.get("text")]
+            line_items = [{"title": str(i.get("title") or "")[:80],
+                           "kind": "任務" if i.get("kind") == "task" or i.get("type") == "task" else "記事",
+                           "tag": str(i.get("tag") or ""), "medium": str(i.get("medium") or "")}
+                          for i in self.data.get("line_inbox", []) if isinstance(i, dict)]
+            health = self.data.get("health", {})
+            try:
+                last_move = datetime.fromisoformat(str(health.get("last_move")))
+                elapsed = int((datetime.now() - last_move).total_seconds() // 60)
+            except (TypeError, ValueError):
+                elapsed = 0
+            payload = {
+                "ok": True,
+                "petName": self._pet_name(),
+                "generatedAt": datetime.now().strftime("%H:%M:%S"),
+                "dueToday": due_today, "overdue": overdue, "tracking": tracking,
+                "notes": notes, "lineInbox": line_items,
+                "health": {
+                    "water": int(health.get("water_count") or 0),
+                    "moveElapsed": max(0, elapsed),
+                    "moveInterval": int(health.get("move_interval") or 60),
+                    "moveDone": health.get("move_done_date") == today,
+                    "medicineTimes": list(health.get("medicine_times") or []),
+                    "medicineDone": list(health.get("medicine_done_times") or []),
+                },
+            }
+        return payload
+
+    def _panel_apply_action(self, payload: dict) -> dict:
+        action = str(payload.get("action") or "")
+        now = now_iso()
+        today = date.today().isoformat()
+        bubble = ""
+        with self.data_lock:
+            health = self.data.setdefault("health", {})
+            if action == "water":
+                health["water_count"] = int(health.get("water_count") or 0) + 1
+                health["last_water"] = now
+                bubble = f"喝水第 {health['water_count']} 杯，讚！"
+            elif action == "move_done":
+                health["last_move"] = now
+                health["move_done_date"] = today
+                bubble = "起身活動完成，繼續加油！"
+            elif action == "medicine_done":
+                slot = str(payload.get("time") or "")
+                done = health.setdefault("medicine_done_times", [])
+                if slot and slot not in done:
+                    done.append(slot)
+                bubble = f"{slot} 的藥記錄好了。"
+            elif action == "add_note":
+                text = str(payload.get("text") or "").strip()[:3000]
+                if not text:
+                    return {"ok": False, "error": "記事內容不可空白"}
+                self.data.setdefault("notes", []).insert(0, {
+                    "id": str(uuid.uuid4()), "text": text, "attachments": [], "created_at": now,
+                })
+                bubble = "記事保存好了。"
+            elif action == "toggle_pause":
+                try:
+                    self.root.after(0, self.toggle_pause)
+                except tk.TclError:
+                    pass
+                return {"ok": True, "message": "已切換暫停／繼續"}
+            elif action == "quit":
+                try:
+                    self.root.after(150, self.root.destroy)
+                except tk.TclError:
+                    pass
+                return {"ok": True, "message": "小綿助即將關閉"}
+            else:
+                return {"ok": False, "error": f"未知動作：{action}"}
+            self._save_data()
+        try:
+            self.root.after(0, lambda: self.show_bubble(bubble, 2600))
+        except tk.TclError:
+            pass
+        return self._panel_payload()
+
+    def _panel_html(self) -> str:
+        return PANEL_PAGE_HTML.replace("__PET_NAME__", self._pet_name())
 
     def _start_local_bridge(self) -> None:
         if not self.data.get("settings", {}).get("bridge_enabled", True):
@@ -789,7 +1081,22 @@ class SecretaryPet(DesktopPetPreview):
             self.bridge_thread = threading.Thread(target=self.bridge_server.serve_forever, name="xiaomianzhu-local-bridge", daemon=True)
             self.bridge_thread.start()
         except OSError as error:
+            # 8767 被占用最常見的原因是「已有另一個小綿助在執行」。多個實例會疊在
+            # 同一位置、面板互相干擾，看起來像壞掉；直接提示並結束，避免殭屍實例。
             self.bridge_error = str(error)
+            try:
+                messagebox.showwarning(
+                    APP_NAME,
+                    "偵測到本機連接埠 8767 已被使用。\n\n"
+                    "最可能的原因：小綿助已經在執行中（請看工作列或桌面角落，"
+                    "或用工作管理員結束多餘的 XiaoMianZhu／python 程序後再開一次）。\n\n"
+                    "若是其他程式占用了 8767，關閉該程式後重新啟動小綿助即可。\n"
+                    "本次啟動將結束，以免出現多隻小綿助互相干擾。",
+                )
+            except tk.TclError:
+                pass
+            self.root.destroy()
+            sys.exit(0)
 
     def _update_bridge_status(self) -> None:
         badge = self.panel_widgets.get("mode_badge")

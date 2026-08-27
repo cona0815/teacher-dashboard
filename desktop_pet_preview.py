@@ -11,6 +11,16 @@ from typing import Callable
 
 from PIL import Image, ImageTk
 
+if sys.platform == "win32":
+    # 宣告 DPI 感知：高解析縮放螢幕上，非感知程式會被 Windows 點陣拉伸，
+    # 部分機器（尤其超寬螢幕＋150% 縮放）拉伸重繪會損壞（面板空白、文字重影）。
+    try:
+        import ctypes
+
+        ctypes.windll.shcore.SetProcessDpiAwareness(1)
+    except Exception:  # noqa: BLE001 - 舊系統沒有此 API 時維持原行為
+        pass
+
 
 TRANSPARENT = "#ff00ff"
 WINDOW_WIDTH = 330
@@ -59,15 +69,19 @@ class DesktopPetPreview:
         if sys.platform == "win32":
             self.root.wm_attributes("-transparentcolor", TRANSPARENT)
 
+        self.dpi_scale = max(1.0, self.root.winfo_fpixels("1i") / 96.0)
+        self.win_w = int(WINDOW_WIDTH * self.dpi_scale)
+        self.win_h = int(WINDOW_HEIGHT * self.dpi_scale)
+        self.pet_px = int(PET_SIZE * self.dpi_scale)
         self.screen_width = self.root.winfo_screenwidth()
         self.screen_height = self.root.winfo_screenheight()
         # Start in a clearly visible position for local testing. The real
         # secretary remembers its saved location; this preview should never
         # appear to be missing because it started behind a taskbar or off the
         # right edge of a multi-monitor desktop.
-        self.x = max(12, (self.screen_width - WINDOW_WIDTH) // 2)
-        self.y = max(12, (self.screen_height - WINDOW_HEIGHT) // 2)
-        self.root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}+{self.x}+{self.y}")
+        self.x = max(12, (self.screen_width - self.win_w) // 2)
+        self.y = max(12, (self.screen_height - self.win_h) // 2)
+        self.root.geometry(f"{self.win_w}x{self.win_h}+{self.x}+{self.y}")
 
         self.assets_root = Path(__file__).resolve().parent / "assets" / "pet" / "frames"
         self.frames = self._load_frames()
@@ -97,12 +111,12 @@ class DesktopPetPreview:
             borderwidth=1,
             justify="center",
             anchor="center",
-            wraplength=BUBBLE_WRAP,
+            wraplength=int(BUBBLE_WRAP * self.dpi_scale),
         )
         self.bubble.place(relx=0.5, y=4, anchor="n")
 
         self.pet_label = tk.Label(self.root, bg=TRANSPARENT, borderwidth=0, highlightthickness=0)
-        self.pet_label.place(x=(WINDOW_WIDTH - PET_SIZE) // 2, y=PET_TOP, width=PET_SIZE, height=PET_SIZE)
+        self.pet_label.place(x=(self.win_w - self.pet_px) // 2, y=int(PET_TOP * self.dpi_scale), width=self.pet_px, height=self.pet_px)
 
         for widget in (self.root, self.pet_label):
             widget.bind("<ButtonPress-1>", self._start_drag)
@@ -154,7 +168,7 @@ class DesktopPetPreview:
                 raise FileNotFoundError(f"{folder} 應有 {count} 張動畫，目前找到 {len(paths)} 張。")
             result[state] = []
             for path in paths:
-                image = Image.open(path).convert("RGBA").resize((PET_SIZE, PET_SIZE), Image.Resampling.LANCZOS)
+                image = Image.open(path).convert("RGBA").resize((self.pet_px, self.pet_px), Image.Resampling.LANCZOS)
                 # Tk's Windows color-key transparency only removes exact magenta.
                 # Remove the very soft alpha fringe before Tk blends it with the
                 # magenta window background, otherwise a pink outline remains.
@@ -234,7 +248,7 @@ class DesktopPetPreview:
             # Keep screen travel in proportion to the relaxed animation.
             # One pixel per 30 ms avoids the previous skating/limping effect.
             self.x += self.walk_direction
-            max_x = max(0, self.screen_width - WINDOW_WIDTH)
+            max_x = max(0, self.screen_width - self.win_w)
             if self.x <= 0 or self.x >= max_x:
                 self.x = min(max(self.x, 0), max_x)
                 self.walk_direction *= -1
@@ -263,8 +277,8 @@ class DesktopPetPreview:
         dx, dy = event.x_root - start_x, event.y_root - start_y
         if abs(dx) + abs(dy) > 5:
             self.drag_moved = True
-        self.x = min(max(0, window_x + dx), max(0, self.screen_width - WINDOW_WIDTH))
-        self.y = min(max(0, window_y + dy), max(0, self.screen_height - WINDOW_HEIGHT))
+        self.x = min(max(0, window_x + dx), max(0, self.screen_width - self.win_w))
+        self.y = min(max(0, window_y + dy), max(0, self.screen_height - self.win_h))
         self.root.geometry(f"+{self.x}+{self.y}")
 
     def _finish_drag(self, _event: tk.Event) -> None:
