@@ -156,7 +156,7 @@ assert.match(installerHtml, /主要工作身分/, "安裝介面應改為選擇�
 
 const indexHtml = fs.readFileSync(path.join(projectRoot, "Index.html"), "utf8");
 assert.match(indexHtml, /#apiEndpointField\[hidden\] \{ display: none !important; \}/, "Gemini 預設端點應隱藏，只有自訂服務才顯示端點欄位");
-assert.match(indexHtml, /github\.com\/cona0815\/teacher-dashboard\/releases\/download\/xiaomianzhu-v1\.3\/xiaomianzhu-windows-portable\.zip/, "小綿助設定頁應提供免 Python 可攜版下載入口");
+assert.match(indexHtml, /github\.com\/cona0815\/teacher-dashboard\/releases\/download\/xiaomianzhu-v1\.6\/xiaomianzhu-windows-portable\.zip/, "小綿助設定頁應提供免 Python 可攜版下載入口");
 assert.doesNotMatch(indexHtml, /先安裝 Python 3/, "一般老師的小綿助下載說明不應要求安裝 Python");
 assert.match(indexHtml, /id="checkPetDownloadBridgeButton"/, "小綿助下載卡片應提供本機連線檢查");
 assert.match(indexHtml, /let previewTasks = loadLocalPreviewTasks\(\)/, "公開版第一次開啟應載入空白本機任務，而非示範任務");

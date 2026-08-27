@@ -46,9 +46,9 @@
 
 ### 從 Python 原始碼啟動
 
-一般老師不需要安裝 Python。請下載 [小綿助 Windows 自然步態版 v1.3](https://github.com/cona0815/teacher-dashboard/releases/download/xiaomianzhu-v1.3/xiaomianzhu-windows-portable.zip)，解壓縮後直接開啟 `XiaoMianZhu.exe`。
+一般老師不需要安裝 Python。請下載 [小綿助 Windows 穩定強化版 v1.6](https://github.com/cona0815/teacher-dashboard/releases/download/xiaomianzhu-v1.6/xiaomianzhu-windows-portable.zip)，解壓縮後直接開啟 `XiaoMianZhu.exe`。
 
-v1.3 SHA-256：`e3fc9a03a56fe69c912289327ad1d256b69156260fbf8e4170914262705bc913`
+v1.6 SHA-256：`675889d45e5788130e1d6082a962bfd8fa66971bc439fec86147cfb26e8bb58d`
 
 開發者若要從原始碼執行，才需要 Python 3.10 以上：
 
