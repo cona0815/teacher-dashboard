@@ -420,6 +420,10 @@
     .ai-advice-option { display: flex; align-items: flex-start; gap: 8px; padding: 8px 9px; border: 1.5px solid #d6ddd7; border-radius: 10px; background: white; color: var(--ink); font-size: 11px; font-weight: 750; line-height: 1.5; }
     .ai-advice-option input { width: 17px; height: 17px; margin-top: 1px; flex: 0 0 auto; accent-color: var(--primary); }
     .ai-advice-option:has(input:checked) { border-color: #8eb09b; background: #edf5ef; color: #3f6a49; }
+    .ai-advice-option { cursor: grab; }
+    .ai-advice-actions { margin-left: auto; display: inline-flex; gap: 4px; flex: 0 0 auto; }
+    .ai-advice-actions .mini-button { padding: 2px 8px; font-size: 10px; }
+    .ai-drop-target { outline: 2px dashed var(--primary); outline-offset: 5px; border-radius: 12px; }
     .teacher-message-text { min-height: 128px; font-size: 12px; line-height: 1.7; }
     .teacher-message-note { margin: 7px 0 0; color: var(--muted); font-size: 10px; }
     .teacher-message-note.is-safe { color: #276653; font-weight: 800; }
@@ -6205,11 +6209,53 @@
       const items = buildAdviceItems(analysis);
       $('aiAdviceChecklist').hidden = !items.length;
       $('aiAdviceItems').innerHTML = items.map((item, index) => `
-        <label class="ai-advice-option">
+        <label class="ai-advice-option" draggable="true" data-ai-advice-drag="${index}" title="拖到下方「任務建立建議」可轉成任務">
           <input type="checkbox" data-ai-advice-index="${index}">
           <span>${escapeHtml(item)}</span>
+          <span class="ai-advice-actions">
+            <button type="button" class="mini-button" data-advice-to-task="${index}" title="加入下方任務草稿">➕任務</button>
+            <button type="button" class="mini-button" data-advice-to-note="${index}" title="存到小綿助記事統一管理">📌記事</button>
+          </span>
         </label>`).join('');
       updateAdviceProgress();
+    }
+
+    function adviceItemText(index) {
+      const analysis = aiAssistantState.analysis;
+      if (!analysis) return '';
+      return buildAdviceItems(analysis)[index] || '';
+    }
+
+    function adviceItemToNote(index) {
+      const text = adviceItemText(index);
+      if (!text) return;
+      const note = normalizeSecretaryNote({ text: `【提醒】${text}`, createdAt: new Date().toISOString() }, 'web');
+      if (!note) return;
+      secretaryNotesState.notes.unshift(note);
+      saveSecretaryNotes('📌 已存到「小綿助記事」；到該版面可勾完成、刪除或轉為任務。');
+    }
+
+    function adviceItemToTask(index) {
+      const analysis = aiAssistantState.analysis;
+      const text = adviceItemText(index);
+      if (!analysis || !text) return;
+      const clean = text.replace(/[。；]$/, '').slice(0, 90);
+      if (!analysis.isTask || !analysis.mainTask) {
+        analysis.isTask = true;
+        analysis.mainTask = makeGenericTaskDraft(clean, analysis.classification.category, '中', safeIsoDate(analysis.dueDate) || '', clean);
+        aiAssistantState.taskDraft = analysis.mainTask;
+        analysis.children = analysis.children || [];
+      } else if (analysis.mainTask.name === clean || analysis.children.some(child => child.name === clean)) {
+        return showToast('這一項已在任務草稿裡。');
+      } else {
+        analysis.children.push({ name: clean, dueDate: '', suggestedTiming: '期限請老師確認' });
+        aiAssistantState.taskDrafts = analysis.children;
+      }
+      renderTaskSuggestion(analysis);
+      $('aiCreateTaskButton').disabled = false;
+      $('aiCreateTaskButton').textContent = analysis.children.length ? `建立主任務與 ${analysis.children.length} 個子任務` : '建立主任務';
+      showToast('➕ 已加入任務草稿；請在「任務建立建議」確認後建立。');
+      $('aiTaskSuggestion').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
 
     function updateAdviceProgress() {
@@ -6560,9 +6606,17 @@
       const promptHint = analysis.activePrompt?.prompt ? `分析方式指引：${analysis.activePrompt.prompt}\n` : '';
       const audience = $('aiAudience').value;
       const audienceHint = audience !== 'auto' ? `訊息對象是「${messageAudienceLabel(audience)}」。\n` : '';
+      const teacher = assistantSettings.teacher || {};
+      const identity = [
+        teacher.title,
+        teacher.grade ? `${teacher.grade}年級` : '',
+        teacher.className ? `${teacher.className}班` : '',
+        teacher.committees ? `行政兼職：${teacher.committees}` : ''
+      ].filter(Boolean).join('、');
+      const identityHint = identity ? `這位老師的身分：${identity}。請站在這個身分的視角判斷哪些事與他有關、該由他做什麼。\n` : '';
       const instruction = [
         '你是台灣國小教師的班級經營與行政助理。以下是老師描述的情境（已先去識別化，可能以〔遮蔽〕代替敏感字）。',
-        promptHint + audienceHint,
+        identityHint + promptHint + audienceHint,
         `今天是 ${localDateString(new Date())}。請閱讀文字與所有附件後，只回覆一個 JSON 物件（不要 markdown、不要多餘文字），格式如下：`,
         '{',
         ' "category": "情境分類，例如 行政交辦/親師溝通/活動籌備/教學/會議",',
@@ -7649,6 +7703,28 @@
     });
     $('aiCreateGoogleFormButton').addEventListener('click', createGoogleFormFromDraft);
     $('aiAdviceItems').addEventListener('change', updateAdviceProgress);
+    $('aiAdviceItems').addEventListener('click', event => {
+      const toTask = event.target.closest('[data-advice-to-task]');
+      const toNote = event.target.closest('[data-advice-to-note]');
+      if (toTask) { event.preventDefault(); adviceItemToTask(Number(toTask.dataset.adviceToTask)); }
+      else if (toNote) { event.preventDefault(); adviceItemToNote(Number(toNote.dataset.adviceToNote)); }
+    });
+    $('aiAdviceItems').addEventListener('dragstart', event => {
+      const row = event.target.closest('[data-ai-advice-drag]');
+      if (row) event.dataTransfer.setData('text/advice-index', row.dataset.aiAdviceDrag);
+    });
+    $('aiTaskSuggestion').addEventListener('dragover', event => {
+      if ([...event.dataTransfer.types].includes('text/advice-index')) {
+        event.preventDefault();
+        $('aiTaskSuggestion').classList.add('ai-drop-target');
+      }
+    });
+    $('aiTaskSuggestion').addEventListener('dragleave', () => $('aiTaskSuggestion').classList.remove('ai-drop-target'));
+    $('aiTaskSuggestion').addEventListener('drop', event => {
+      $('aiTaskSuggestion').classList.remove('ai-drop-target');
+      const index = event.dataTransfer.getData('text/advice-index');
+      if (index !== '') { event.preventDefault(); adviceItemToTask(Number(index)); }
+    });
     $('aiAudience').addEventListener('change', () => {
       if (!aiAssistantState.analysis) return;
       const safeText = aiAssistantState.lastRedaction?.text || $('aiInput').value.trim();
