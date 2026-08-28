@@ -3978,7 +3978,21 @@
         .sort((a, b) => a.remindDate.localeCompare(b.remindDate))
         .slice(0, 10)
         .map(note => ({ text: String(note.text).slice(0, 60), remindDate: note.remindDate }));
-      return { generatedAt: new Date().toISOString(), todayTasks, overdueCount, overdueTasks, todayCourses, todayNotes };
+      // 明天的任務與課程供 LINE 小幫手的「到期前一天提醒」與「代課包」使用
+      const tomorrow = calendarDateKey(new Date(Date.now() + 86400000));
+      const tomorrowTasks = activeTasks
+        .filter(task => task.dueDate === tomorrow)
+        .slice(0, 20)
+        .map(task => ({ name: String(task.name || '').slice(0, 60), dueTime: task.dueTime || '' }));
+      let tomorrowCourses = [];
+      try {
+        tomorrowCourses = getAllTeachingProgressRows()
+          .filter(row => row.startDate && !row.overflow && row.type !== 'buffer'
+            && row.startDate <= tomorrow && tomorrow <= (row.endDate || row.startDate))
+          .slice(0, 12)
+          .map(row => ({ subject: String(row.subject || ''), content: String(row.content || row.week || '課程進度').slice(0, 80) }));
+      } catch (error) {}
+      return { generatedAt: new Date().toISOString(), todayTasks, overdueCount, overdueTasks, todayCourses, todayNotes, tomorrowTasks, tomorrowCourses };
     }
 
     async function syncLineBridge({ silent = false } = {}) {

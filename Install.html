@@ -212,7 +212,35 @@
         <tr><td>週五下午</td><td>缺交達 5 次的學生，LINE 自動送上委婉家長訊息草稿（在工作台收件匣，補上孩子優點再轉發）</td></tr>
         <tr><td>期末</td><td>大屏「查詢統計」輸入 🔑C → 查區間 → 「⬇ 匯出 Excel」變輔導紀錄素材</td></tr>
       </table>
-      <div class="box"><strong>LINE 指令速查：</strong>說明／我的ID／今日點名／缺交統計／今天上到哪／聯絡簿：…（產生家長群公告）／聯絡本：…（寫入黑板）／撤回／刪除 關鍵字</div>
+      <div class="box"><strong>LINE 指令速查（這些都不用 LINE 額度）：</strong><br>
+        說明／我的ID／今日點名／缺交統計／今天上到哪<br>
+        <strong>9號</strong>（查該座號近 30 天出缺與缺交）／<strong>請假</strong>、<strong>明天請假</strong>（產生代課交接包）<br>
+        聯絡本：…（寫入教室黑板）／聯絡簿：…（產生家長群公告）／照片轉聯絡本<br>
+        撤回／刪除 關鍵字／<strong>推播設定</strong>（查用量與開關）／開啟 XX、關閉 XX
+      </div>
+      <div class="box">
+        <strong>📢 LINE 額度怎麼算？</strong><br>
+        LINE 免費方案的則數只算「小幫手<strong>主動推播</strong>」；<strong>你問它答完全免費、無上限</strong>。<br>
+        會用到額度的只有：點名推播、作業推播、未點名提醒、週五家長關懷，以及預設關閉的
+        每日簡報備援、早期缺交預警、到期前一天提醒、放學小結。<br>
+        在 LINE 傳「<strong>推播設定</strong>」可看到目前開關與<strong>本月真實用量</strong>，傳「開啟 放學小結」「關閉 作業推播」即可切換。
+        用量接近上限時，系統會自動只保留點名推播，不會突然爆量。<br>
+        <span class="lead">⚠️ 額度是按收件人計算：若把兩支手機或同事的 ID 都加進 <code>LINE_ALLOWED_USER_IDS</code>，用量會加倍。</span>
+      </div>
+      <div class="box">
+        <strong>☁️ LINE 檔案自動備份（解決檔案過期）</strong><br>
+        傳給小幫手的照片與檔案（含轉傳的），會在收到當下自動存進<strong>你自己的 Google 雲端硬碟</strong>，
+        依月份分資料夾，回覆訊息裡會附上連結。以後 LINE 對話裡的檔案過期也不怕。<br>
+        可在「指令碼屬性」自訂：
+        <table>
+          <tr><th>屬性</th><th>說明</th></tr>
+          <tr><td><code>DRIVE_BACKUP_FOLDER_ID</code></td><td>想存到指定資料夾就貼該資料夾 ID（從網址列複製）；不填會自動建立「LINE小幫手備份」</td></tr>
+          <tr><td><code>DRIVE_BACKUP_TYPES</code></td><td>要備份的類型，預設 <code>image,file</code>（照片與檔案）。想連影片一起備份就填 <code>image,file,video</code>；填 <code>off</code> 完全停用</td></tr>
+          <tr><td><code>DRIVE_BACKUP_MAX_MB</code></td><td>單檔上限，預設 20（MB）</td></tr>
+          <tr><td><code>CLASS_NOTES</code></td><td>代課包裡要附上的班級注意事項（選填）</td></tr>
+        </table>
+        <span class="lead">⚠️ 此功能需要雲端硬碟權限：更新程式碼後第一次執行會再跳一次授權，照第 2 關第 5 步的方式允許即可。備份會佔用你 Google 帳號的免費容量（與 Gmail 共用 15GB）。</span>
+      </div>
     </section>
 
     <section id="part5">

@@ -117,14 +117,24 @@ function ensureLineBotSheets_(spreadsheet) {
  * 3. sendWeeklyHomeworkAlerts　每週五 15–16 點：缺交達門檻的家長訊息草稿
  */
 function setupTriggers() {
-  var handlers = ['sendLineDailyBriefing', 'sendRollcallReminder', 'sendWeeklyHomeworkAlerts'];
+  var handlers = ['sendLineDailyBriefing', 'sendRollcallReminder', 'sendWeeklyHomeworkAlerts', 'sendAfternoonBriefing'];
   ScriptApp.getProjectTriggers().forEach(function (trigger) {
     if (handlers.indexOf(trigger.getHandlerFunction()) !== -1) ScriptApp.deleteTrigger(trigger);
   });
   ScriptApp.newTrigger('sendLineDailyBriefing').timeBased().everyDays(1).atHour(8).create();
   ScriptApp.newTrigger('sendRollcallReminder').timeBased().everyDays(1).atHour(8).create();
+  ScriptApp.newTrigger('sendAfternoonBriefing').timeBased().everyDays(1).atHour(16).create();
   ScriptApp.newTrigger('sendWeeklyHomeworkAlerts').timeBased().onWeekDay(ScriptApp.WeekDay.FRIDAY).atHour(15).create();
-  var summary = '✅ 已設定 3 個自動觸發器：每日簡報（每天 8–9 點，大屏已推播今日重點時自動略過）、未點名提醒（8:20 起智慧檢查，僅在當天沒回報時發送）、每週家長關懷（每週五下午 3–4 點）。之後不必再設定。\n提醒：有開大屏的日子，08:08 的點名推播就會一併帶上今日課程、任務、記事與逾期提醒；08:40 再補一則作業繳交情況。';
+  var summary = [
+    '✅ 已設定 4 個自動觸發器（實際會不會發送，由「推播設定」決定）：',
+    '・每日簡報備援（每天 8–9 點）— 預設關閉，因為點名推播已含相同內容',
+    '・未點名提醒（8:20 起智慧檢查，僅在當天沒回報時發送）— 預設開啟',
+    '・下午整合推播（16–17 點：放學小結／早期缺交預警／到期前提醒）— 三項皆預設關閉，開幾項都只用 1 則額度',
+    '・每週家長關懷（每週五下午 3–4 點）— 預設開啟',
+    '',
+    '在 LINE 傳「推播設定」可查看目前開關與本月用量，傳「開啟 放學小結」「關閉 作業推播」即可切換。',
+    '有開大屏的日子，08:08 點名推播會一併帶上今日課程、任務、記事與逾期；08:40 再補一則作業繳交情況。'
+  ].join('\n');
   Logger.log(summary);
   return summary;
 }
@@ -145,6 +155,123 @@ function morningBriefSectionOnce_(date) {
   if (!readWorkspaceSnapshot_()) return '';   // 工作台還沒同步過快照就先不附，避免推一段沒內容的提示
   props.setProperty(MORNING_BRIEF_FLAG, date);
   return buildSnapshotReply_();
+}
+
+// ---------------------------------------------------------------------------
+// 推播設定與 LINE 額度保護
+// 只有「主動推播」會用到 LINE 免費額度；老師問、小幫手答（reply）完全免費，
+// 因此這裡只管理 4+1 項主動推播，老師可用 LINE 指令隨時開關。
+// ---------------------------------------------------------------------------
+
+var PUSH_SETTINGS_KEY = 'PUSH_SETTINGS';
+var QUOTA_CACHE_KEY = 'LINE_QUOTA_CACHE';
+var QUOTA_SAFETY_MARGIN = 20;   // 距離上限剩這麼多則時，只保留最重要的點名推播
+
+var PUSH_ITEMS = [
+  { key: 'rollcall', name: '點名推播', desc: '早上出缺＋今日課程／任務／記事／逾期', def: true },
+  { key: 'homework', name: '作業推播', desc: '收完作業後的點名＋各科繳交情況', def: true },
+  { key: 'reminder', name: '未點名提醒', desc: '當天沒收到大屏回報才發', def: true },
+  { key: 'weekly', name: '週五家長關懷', desc: '缺交達門檻的家長訊息草稿', def: true },
+  { key: 'dailyBrief', name: '每日簡報備援', desc: '沒在用大屏的人才需要；點名推播已含相同內容', def: false },
+  { key: 'missingAlert', name: '早期缺交預警', desc: '同一科連續缺交就提早通知', def: false },
+  { key: 'dueTomorrow', name: '到期前一天提醒', desc: '明天到期的任務先提醒', def: false },
+  { key: 'dayEnd', name: '放學小結', desc: '下午回顧今天並提醒明天', def: false }
+];
+
+function pushSettings_() {
+  var saved = {};
+  try { saved = JSON.parse(lineBotProperty_(PUSH_SETTINGS_KEY) || '{}') || {}; } catch (error) {}
+  var result = {};
+  PUSH_ITEMS.forEach(function (item) {
+    result[item.key] = typeof saved[item.key] === 'boolean' ? saved[item.key] : item.def;
+  });
+  return result;
+}
+
+function savePushSettings_(settings) {
+  PropertiesService.getScriptProperties().setProperty(PUSH_SETTINGS_KEY, JSON.stringify(settings));
+}
+
+/** 向 LINE 查詢本月推播用量；查不到時回 null（例如金鑰未設定或網路異常）。 */
+function lineQuotaUsage_() {
+  var token = lineBotProperty_('LINE_CHANNEL_ACCESS_TOKEN');
+  if (!token) return null;
+  try {
+    var options = { method: 'get', muteHttpExceptions: true, headers: { Authorization: 'Bearer ' + token } };
+    var quotaResponse = UrlFetchApp.fetch('https://api.line.me/v2/bot/message/quota', options);
+    var usageResponse = UrlFetchApp.fetch('https://api.line.me/v2/bot/message/quota/consumption', options);
+    if (quotaResponse.getResponseCode() !== 200 || usageResponse.getResponseCode() !== 200) return null;
+    var quota = JSON.parse(quotaResponse.getContentText() || '{}');
+    var usage = JSON.parse(usageResponse.getContentText() || '{}');
+    return {
+      limit: String(quota.type) === 'limited' ? Number(quota.value || 0) : 0,
+      used: Number(usage.totalUsage || 0)
+    };
+  } catch (error) {
+    return null;
+  }
+}
+
+/** 每天只實際查詢一次，避免每則推播都多打兩次 API。 */
+function cachedQuotaUsage_() {
+  var props = PropertiesService.getScriptProperties();
+  var today = lineBotToday_();
+  try {
+    var cache = JSON.parse(props.getProperty(QUOTA_CACHE_KEY) || 'null');
+    if (cache && cache.date === today) return cache;
+  } catch (error) {}
+  var live = lineQuotaUsage_();
+  var record = { date: today, limit: live ? live.limit : 0, used: live ? live.used : 0 };
+  props.setProperty(QUOTA_CACHE_KEY, JSON.stringify(record));
+  return record;
+}
+
+/**
+ * 這一項推播現在可不可以發：老師關掉的不發；額度快用完時，
+ * 只保留最重要的點名推播，其餘自動暫停到下個月。
+ */
+function pushAllowed_(key) {
+  if (!pushSettings_()[key]) return false;
+  if (key === 'rollcall') return true;
+  var quota = cachedQuotaUsage_();
+  if (quota.limit && quota.used >= quota.limit - QUOTA_SAFETY_MARGIN) return false;
+  return true;
+}
+
+function buildPushSettingsReply_() {
+  var settings = pushSettings_();
+  var quota = lineQuotaUsage_();
+  var lines = ['📢 推播設定'];
+  if (quota && quota.limit) {
+    lines.push('本月推播已用 ' + quota.used + '／' + quota.limit + ' 則');
+    if (quota.used >= quota.limit - QUOTA_SAFETY_MARGIN) {
+      lines.push('⚠️ 已接近上限，除了點名推播外會自動暫停到下個月。');
+    }
+  } else if (quota) {
+    lines.push('本月推播已用 ' + quota.used + ' 則（目前方案沒有則數上限）');
+  }
+  lines.push('');
+  PUSH_ITEMS.forEach(function (item) {
+    lines.push((settings[item.key] ? '✅ ' : '⬜ ') + item.name + '｜' + item.desc);
+  });
+  lines.push('');
+  lines.push('切換方式：傳「開啟 放學小結」或「關閉 作業推播」。');
+  lines.push('只有以上項目會用到 LINE 額度；你問我答（今日點名、缺交統計、座號查詢、代課包…）完全免費。');
+  return lines.join('\n');
+}
+
+function togglePushSetting_(action, name) {
+  var keyword = String(name || '').trim();
+  var target = null;
+  PUSH_ITEMS.forEach(function (item) {
+    if (target) return;
+    if (item.name === keyword || item.name.indexOf(keyword) !== -1 || (keyword && keyword.indexOf(item.name) !== -1)) target = item;
+  });
+  if (!target) return '找不到「' + keyword + '」這項推播。\n傳「推播設定」可以看全部可切換的項目。';
+  var settings = pushSettings_();
+  settings[target.key] = action === '開啟';
+  savePushSettings_(settings);
+  return (action === '開啟' ? '✅ 已開啟「' : '⬜ 已關閉「') + target.name + '」\n\n' + buildPushSettingsReply_();
 }
 
 /**
@@ -279,6 +406,10 @@ function submitRollcall_(body) {
 
   // 大屏按「送出」與自動存檔都是 push:'none'：資料存進試算表，但不打擾老師的 LINE。
   if (pushMode === 'none') return { ok: true, pushed: 0, saved: true };
+  // 老師可在 LINE 傳「關閉 作業推播」等指令關掉個別推播；關掉時資料照樣存好。
+  if (!pushAllowed_(pushMode === 'attendance' ? 'rollcall' : 'homework')) {
+    return { ok: true, pushed: 0, saved: true, skipped: 'push-disabled' };
+  }
 
   var summaryText = buildRollcallSummaryText_(
     date, className, attendance, pushMode === 'attendance' ? [] : homework, pushMode);
@@ -417,6 +548,7 @@ function markHomeworkResubmitted_(body) {
  * 當天若還沒有任何大屏點名回報，LINE 提醒老師；已回報則不重複打擾。
  */
 function sendRollcallReminder() {
+  if (!pushAllowed_('reminder')) return;
   var today = lineBotToday_();
   var data = readRollcallRange_(today, today, '');
   if (data.attendance.length || data.homework.length) return; // 已有回報（大屏 8:08 已即時推播）→ 不打擾。
@@ -566,6 +698,34 @@ function handleLineEvent_(event, allowedUsers) {
     replyLineMessage_(event.replyToken, buildHomeworkStatsReply_());
     return;
   }
+  if (/^(推播設定|推播|用量|額度)$/.test(text)) {
+    replyLineMessage_(event.replyToken, buildPushSettingsReply_());
+    return;
+  }
+  var toggleMatch = text.match(/^(開啟|關閉)\s*(.+)$/);
+  if (toggleMatch) {
+    replyLineMessage_(event.replyToken, togglePushSetting_(toggleMatch[1], toggleMatch[2]));
+    return;
+  }
+  if (/^(代課包|請假|今天請假|明天請假|代課)$/.test(text) || /^(明天|今天)?請假$/.test(text)) {
+    replyLineMessages_(event.replyToken, [
+      buildSubstituteKitReply_(text),
+      '↑ 長按上面那一則即可轉發給代課老師或學年主任。'
+    ]);
+    return;
+  }
+  var seatMatch = text.match(/^(\d{1,2})\s*號?$/);
+  if (seatMatch && Number(seatMatch[1]) >= 1 && Number(seatMatch[1]) <= 99) {
+    replyLineMessage_(event.replyToken, buildSeatLookupReply_(Number(seatMatch[1])));
+    return;
+  }
+  if (/^(照片轉聯絡本|加入聯絡本|存進聯絡本)$/.test(text)) {
+    var pending = lineBotProperty_(LAST_MEDIA_SUMMARY_KEY);
+    replyLineMessage_(event.replyToken, pending
+      ? writeContactBookFromLine_(pending)
+      : '目前沒有可轉入的辨識結果。請先傳一張通知單照片，再傳「照片轉聯絡本」。');
+    return;
+  }
 
   var classified = classifyLineMessage_(text);
   if (classified.type === 'query') {
@@ -621,15 +781,12 @@ function revokeLineInbox_(userId, keyword) {
 // 語音與照片（需要 Gemini 金鑰）
 // ---------------------------------------------------------------------------
 
+var LAST_MEDIA_SUMMARY_KEY = 'LAST_MEDIA_SUMMARY';
+
 function handleLineMediaMessage_(event, userId) {
   var messageType = event.message.type;
-  if (messageType !== 'audio' && messageType !== 'image') {
-    replyLineMessage_(event.replyToken, '目前我看得懂文字、語音與照片；其他訊息類型還在學習中。');
-    return;
-  }
-  var geminiKey = lineBotProperty_('GEMINI_API_KEY');
-  if (!geminiKey) {
-    replyLineMessage_(event.replyToken, '語音與照片辨識需要 Gemini 金鑰。請在 Apps Script「指令碼屬性」設定 GEMINI_API_KEY 後再試。');
+  if (['audio', 'image', 'file', 'video'].indexOf(messageType) === -1) {
+    replyLineMessage_(event.replyToken, '目前我看得懂文字、語音、照片、影片與檔案；其他訊息類型還在學習中。');
     return;
   }
   var content = fetchLineContent_(String(event.message.id));
@@ -637,8 +794,25 @@ function handleLineMediaMessage_(event, userId) {
     replyLineMessage_(event.replyToken, '這則訊息的內容讀取失敗，請再傳一次。');
     return;
   }
+  // 先備份再辨識：LINE 的檔案有保存期限，先落地到老師自己的雲端硬碟最保險。
+  var backup = backupLineContentToDrive_(String(event.message.id), messageType, String(event.message.fileName || ''), content);
+
+  // 影片與一般檔案不做 AI 辨識，直接記錄檔名並附上備份連結。
+  if (messageType === 'file' || messageType === 'video') {
+    var fileLabel = String(event.message.fileName || (messageType === 'video' ? '影片' : '檔案'));
+    var saved = saveAndConfirm_({ type: 'note', title: fileLabel, tag: '檔案' }, fileLabel, userId, '');
+    replyLineMessage_(event.replyToken, saved + driveBackupNote_(backup));
+    return;
+  }
+
+  var geminiKey = lineBotProperty_('GEMINI_API_KEY');
+  if (!geminiKey) {
+    replyLineMessage_(event.replyToken,
+      '語音與照片辨識需要 Gemini 金鑰。請在 Apps Script「指令碼屬性」設定 GEMINI_API_KEY 後再試。' + driveBackupNote_(backup));
+    return;
+  }
   if (content.bytes.length > 15 * 1024 * 1024) {
-    replyLineMessage_(event.replyToken, '檔案超過 15 MB，暫時無法辨識，請縮短語音或改傳截圖。');
+    replyLineMessage_(event.replyToken, '檔案超過 15 MB，暫時無法辨識，請縮短語音或改傳截圖。' + driveBackupNote_(backup));
     return;
   }
   var classified = classifyMediaByGemini_(content, messageType, geminiKey);
@@ -663,10 +837,14 @@ function handleLineMediaMessage_(event, userId) {
   }
   var sourceText = String(classified.transcript || classified.title || '').slice(0, LINE_BOT_CONFIG.MAX_TEXT_LENGTH);
   if (!sourceText) {
-    replyLineMessage_(event.replyToken, '辨識結果是空的，請再試一次。');
+    replyLineMessage_(event.replyToken, '辨識結果是空的，請再試一次。' + driveBackupNote_(backup));
     return;
   }
-  replyLineMessage_(event.replyToken, saveAndConfirm_(classified, sourceText, userId, messageType === 'audio' ? 'voice' : 'photo'));
+  // 記住這次的辨識結果，老師接著傳「照片轉聯絡本」就能一鍵寫進今天的黑板。
+  PropertiesService.getScriptProperties().setProperty(LAST_MEDIA_SUMMARY_KEY, sourceText.slice(0, 1000));
+  var confirmText = saveAndConfirm_(classified, sourceText, userId, messageType === 'audio' ? 'voice' : 'photo');
+  if (messageType === 'image') confirmText += '\n（要把重點寫進今天的聯絡本嗎？傳「照片轉聯絡本」即可。）';
+  replyLineMessage_(event.replyToken, confirmText + driveBackupNote_(backup));
 }
 
 /** 以 LINE Content API 取回語音／照片位元組。 */
@@ -736,6 +914,277 @@ function classifyMediaByGemini_(content, messageType, apiKey) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// LINE 檔案自動備份到老師自己的 Google Drive
+// LINE 對話裡的檔案有保存期限，這裡在收到當下就抓下來存進老師自己的雲端硬碟。
+// 指令碼屬性：DRIVE_BACKUP_TYPES（預設 image,file）、DRIVE_BACKUP_FOLDER_ID、DRIVE_BACKUP_MAX_MB（預設 20）
+// ---------------------------------------------------------------------------
+
+var DRIVE_FOLDER_PROP = 'DRIVE_BACKUP_FOLDER_ID';
+var DRIVE_TYPES_PROP = 'DRIVE_BACKUP_TYPES';
+var DRIVE_MAX_MB_PROP = 'DRIVE_BACKUP_MAX_MB';
+var DRIVE_DEFAULT_TYPES = ['image', 'file'];   // 影片與語音預設不備份，避免吃掉雲端容量
+
+function driveBackupTypes_() {
+  var raw = lineBotProperty_(DRIVE_TYPES_PROP);
+  if (!raw) return DRIVE_DEFAULT_TYPES;
+  if (/^(off|none|關閉|停用)$/i.test(raw)) return [];
+  return raw.split(/[,，、]/).map(function (value) { return value.trim().toLowerCase(); }).filter(String);
+}
+
+function driveBackupFolder_() {
+  var props = PropertiesService.getScriptProperties();
+  var savedId = String(props.getProperty(DRIVE_FOLDER_PROP) || '').trim();
+  if (savedId) {
+    try { return DriveApp.getFolderById(savedId); } catch (error) {}   // 資料夾被刪掉就重建
+  }
+  var name = 'LINE小幫手備份';
+  var existing = DriveApp.getFoldersByName(name);
+  var folder = existing.hasNext() ? existing.next() : DriveApp.createFolder(name);
+  props.setProperty(DRIVE_FOLDER_PROP, folder.getId());
+  return folder;
+}
+
+function driveMonthFolder_(root, date) {
+  var monthName = String(date).slice(0, 7);
+  var found = root.getFoldersByName(monthName);
+  return found.hasNext() ? found.next() : root.createFolder(monthName);
+}
+
+var DRIVE_TYPE_LABELS = { image: '照片', video: '影片', audio: '語音', file: '檔案' };
+
+/**
+ * 把 LINE 訊息的檔案存進 Drive；回傳 { name, url } 或 null。
+ * 任何失敗都只回 null，不讓備份影響原本的訊息處理。
+ */
+function backupLineContentToDrive_(messageId, messageType, originalName, content) {
+  if (driveBackupTypes_().indexOf(String(messageType)) === -1) return null;
+  var maxMb = Number(lineBotProperty_(DRIVE_MAX_MB_PROP) || 20);
+  try {
+    var payload = content || fetchLineContent_(messageId);
+    if (!payload || !payload.bytes) return null;
+    if (payload.bytes.length > maxMb * 1024 * 1024) return { oversize: true, limitMb: maxMb };
+    var date = lineBotToday_();
+    var stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyyMMdd_HHmmss');
+    var label = DRIVE_TYPE_LABELS[messageType] || '檔案';
+    var safeName = String(originalName || '').replace(/[\\\/:*?"<>|]/g, '_').slice(0, 80);
+    if (!safeName) {
+      var extension = messageType === 'image' ? '.jpg' : messageType === 'video' ? '.mp4' : messageType === 'audio' ? '.m4a' : '';
+      safeName = label + extension;
+    }
+    var blob = Utilities.newBlob(payload.bytes, payload.contentType || 'application/octet-stream', stamp + '_' + label + '_' + safeName);
+    var file = driveMonthFolder_(driveBackupFolder_(), date).createFile(blob);
+    return { name: file.getName(), url: file.getUrl() };
+  } catch (error) {
+    return null;
+  }
+}
+
+/** 組出要附在回覆後面的備份說明；沒有備份就回空字串。 */
+function driveBackupNote_(backup) {
+  if (!backup) return '';
+  if (backup.oversize) return '\n（檔案超過 ' + backup.limitMb + ' MB，未自動備份到雲端硬碟。）';
+  return '\n☁️ 已備份到你的雲端硬碟：\n' + backup.url;
+}
+
+// ---------------------------------------------------------------------------
+// 代課包：臨時請假時，一則訊息交接完畢
+// ---------------------------------------------------------------------------
+
+/** 「請假」「代課包」→ 整理成可直接轉發給代課老師的交接資訊。 */
+function buildSubstituteKitReply_(text) {
+  var today = lineBotToday_();
+  var forTomorrow = /明天|明日/.test(String(text || ''));
+  var target = forTomorrow ? shiftLineBotDate_(today, 1) : today;
+  var snapshot = readWorkspaceSnapshot_();
+  var lines = ['🧳 代課交接包｜' + target.replace(/-/g, '/') + (forTomorrow ? '（明天）' : '（今天）')];
+
+  var courses = snapshot && Array.isArray(forTomorrow ? snapshot.tomorrowCourses : snapshot.todayCourses)
+    ? (forTomorrow ? snapshot.tomorrowCourses : snapshot.todayCourses) : [];
+  lines.push('');
+  lines.push('📚 課程進度');
+  if (courses.length) {
+    courses.slice(0, 10).forEach(function (course) {
+      lines.push('・' + course.subject + '：' + course.content);
+    });
+  } else {
+    lines.push('・工作台目前沒有這天的課程進度紀錄。');
+  }
+
+  var sheets = ensureLineBotSheets_(SpreadsheetApp.getActiveSpreadsheet());
+  var contactRow = findContactBookRow_(sheets.contactbook, target);
+  lines.push('');
+  lines.push('📝 聯絡本');
+  if (contactRow !== -1) {
+    var contactText = String(sheets.contactbook.getRange(contactRow, 3).getValue() || '').trim();
+    lines.push(contactText || '・（該日聯絡本是空的）');
+  } else {
+    lines.push('・還沒寫；可傳「聯絡本：……」直接補上。');
+  }
+
+  var missing = readRollcallRange_(shiftLineBotDate_(today, -6), today, '').homework
+    .filter(function (row) { return row.status === '缺交'; });
+  var bySeat = {};
+  missing.forEach(function (row) { bySeat[row.seat] = (bySeat[row.seat] || 0) + 1; });
+  var seats = Object.keys(bySeat).sort(function (a, b) { return bySeat[b] - bySeat[a]; }).slice(0, 8);
+  lines.push('');
+  lines.push('📌 近 7 天需要多留意的座號（缺交次數）');
+  lines.push(seats.length
+    ? seats.map(function (seat) { return seat + '號 ' + bySeat[seat] + ' 次'; }).join('、')
+    : '・近期沒有缺交紀錄 🎉');
+
+  var notes = lineBotProperty_('CLASS_NOTES');
+  if (notes) {
+    lines.push('');
+    lines.push('⚠️ 班級注意事項');
+    lines.push(notes);
+  }
+
+  lines.push('');
+  lines.push('（可長按整則轉發給代課老師。班級注意事項請在 Apps Script 指令碼屬性 CLASS_NOTES 自訂。）');
+  return lines.join('\n');
+}
+
+function shiftLineBotDate_(dateText, days) {
+  var parts = String(dateText).split('-');
+  var date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+  date.setDate(date.getDate() + days);
+  return Utilities.formatDate(date, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+}
+
+// ---------------------------------------------------------------------------
+// 座號快查：親師溝通前 30 秒掌握狀況
+// ---------------------------------------------------------------------------
+
+function buildSeatLookupReply_(seat) {
+  var today = lineBotToday_();
+  var from = shiftLineBotDate_(today, -29);
+  var data = readRollcallRange_(from, today, '');
+  var attendance = data.attendance.filter(function (row) { return row.seat === seat; });
+  var homework = data.homework.filter(function (row) { return row.seat === seat; });
+  var lines = ['🔍 ' + seat + '號｜近 30 天紀錄（' + from.slice(5).replace('-', '/') + '～' + today.slice(5).replace('-', '/') + '）'];
+
+  lines.push('');
+  lines.push('👥 出缺');
+  if (attendance.length) {
+    var statusCount = {};
+    attendance.forEach(function (row) { statusCount[row.status] = (statusCount[row.status] || 0) + 1; });
+    lines.push(Object.keys(statusCount).map(function (status) { return status + ' ' + statusCount[status] + ' 次'; }).join('、'));
+    lines.push('最近：' + attendance.slice(-5).map(function (row) { return row.date.slice(5).replace('-', '/') + ' ' + row.status; }).join('、'));
+  } else {
+    lines.push('・全勤，沒有缺席紀錄 🎉');
+  }
+
+  var missing = homework.filter(function (row) { return row.status === '缺交'; });
+  var resubmitted = homework.filter(function (row) { return row.status === '補交'; });
+  lines.push('');
+  lines.push('📚 作業');
+  if (missing.length || resubmitted.length) {
+    var bySubject = {};
+    missing.forEach(function (row) { bySubject[row.subject] = (bySubject[row.subject] || 0) + 1; });
+    lines.push('缺交 ' + missing.length + ' 次｜補交 ' + resubmitted.length + ' 次');
+    if (Object.keys(bySubject).length) {
+      lines.push('分科：' + Object.keys(bySubject).map(function (subject) { return subject + ' ' + bySubject[subject] + ' 次'; }).join('、'));
+    }
+    if (missing.length) {
+      lines.push('最近缺交：' + missing.slice(-5).map(function (row) {
+        return row.date.slice(5).replace('-', '/') + ' ' + row.subject + (row.assignment ? '／' + row.assignment : '');
+      }).join('、'));
+    }
+  } else {
+    lines.push('・沒有缺交紀錄 ✅');
+  }
+
+  lines.push('');
+  lines.push('（僅供老師參考，請勿轉發；系統只記錄座號，不含姓名。）');
+  return lines.join('\n');
+}
+
+// ---------------------------------------------------------------------------
+// 下午推播：放學小結／早期缺交預警／到期前一天提醒
+// 三項合併成一則訊息，開幾項都只用 1 則額度。
+// ---------------------------------------------------------------------------
+
+/** 找出近期同一科連續缺交達門檻的座號（預設連續 3 個有登記的日子）。 */
+function findConsecutiveMissing_(threshold) {
+  var today = lineBotToday_();
+  var data = readRollcallRange_(shiftLineBotDate_(today, -13), today, '');
+  var bySubjectDate = {};
+  data.homework.forEach(function (row) {
+    var key = row.subject;
+    if (!bySubjectDate[key]) bySubjectDate[key] = {};
+    if (!bySubjectDate[key][row.date]) bySubjectDate[key][row.date] = { missing: {}, seen: true };
+    if (row.status === '缺交') bySubjectDate[key][row.date].missing[row.seat] = true;
+  });
+  var alerts = [];
+  Object.keys(bySubjectDate).forEach(function (subject) {
+    var dates = Object.keys(bySubjectDate[subject]).sort();
+    var recent = dates.slice(-threshold);
+    if (recent.length < threshold) return;
+    var seats = Object.keys(bySubjectDate[subject][recent[0]].missing);
+    seats.forEach(function (seat) {
+      var everyDay = recent.every(function (date) { return bySubjectDate[subject][date].missing[seat]; });
+      if (everyDay) alerts.push({ subject: subject, seat: Number(seat), days: threshold });
+    });
+  });
+  return alerts;
+}
+
+/**
+ * 下午的一則整合推播。三個開關各自控制一個段落；全關就不發。
+ * 由 setupTriggers 建立的每日觸發器呼叫。
+ */
+function sendAfternoonBriefing() {
+  var users = lineBotProperty_('LINE_ALLOWED_USER_IDS')
+    .split(',').map(function (value) { return value.trim(); }).filter(String);
+  if (!users.length) return;
+  var today = lineBotToday_();
+  var sections = [];
+
+  if (pushAllowed_('dayEnd')) {
+    var rollcall = readRollcallRange_(today, today, '');
+    var sheets = ensureLineBotSheets_(SpreadsheetApp.getActiveSpreadsheet());
+    var tomorrow = shiftLineBotDate_(today, 1);
+    var tomorrowRow = findContactBookRow_(sheets.contactbook, tomorrow);
+    var summary = ['🌇 放學小結'];
+    summary.push(rollcall.attendance.length || rollcall.homework.length
+      ? '・今天的點名與作業已回報完成。'
+      : '・今天還沒收到大屏回報，記得補登。');
+    summary.push(tomorrowRow !== -1
+      ? '・明天的聯絡本已經寫好了 ✅'
+      : '・明天的聯絡本還沒寫；可直接傳「聯絡本：……」補上。');
+    sections.push(summary.join('\n'));
+  }
+
+  if (pushAllowed_('missingAlert')) {
+    var threshold = Math.max(2, Number(lineBotProperty_('MISSING_ALERT_DAYS') || 3));
+    var alerts = findConsecutiveMissing_(threshold);
+    if (alerts.length) {
+      var alertLines = ['⚠️ 早期缺交預警（同一科連續 ' + threshold + ' 次缺交）'];
+      alerts.slice(0, 10).forEach(function (item) {
+        alertLines.push('・' + item.seat + '號｜' + item.subject);
+      });
+      alertLines.push('建議先個別關心，不必等到週五統計。');
+      sections.push(alertLines.join('\n'));
+    }
+  }
+
+  if (pushAllowed_('dueTomorrow')) {
+    var snapshot = readWorkspaceSnapshot_();
+    var tomorrowTasks = snapshot && Array.isArray(snapshot.tomorrowTasks) ? snapshot.tomorrowTasks : [];
+    if (tomorrowTasks.length) {
+      var taskLines = ['⏳ 明天到期（' + tomorrowTasks.length + ' 件）'];
+      tomorrowTasks.slice(0, 8).forEach(function (task) {
+        taskLines.push('・' + task.name + (task.dueTime ? '｜' + task.dueTime : ''));
+      });
+      sections.push(taskLines.join('\n'));
+    }
+  }
+
+  if (!sections.length) return;
+  users.forEach(function (userId) { pushLineMessage_(userId, sections.join('\n\n')); });
+}
+
 function lineBotHelpText_() {
   return [
     '我是教師工作台的 LINE 小幫手，可以這樣用：',
@@ -747,10 +1196,16 @@ function lineBotHelpText_() {
     '・「聯絡本：數習P.20、帶直笛」→ 直接寫入今天的聯絡本（大屏黑板自動顯示）',
     '・「今日點名」→ 回報大屏的出缺與作業登記',
     '・「缺交統計」→ 近 30 天各科缺交天數排行',
+    '・「9號」→ 查該座號近 30 天的出缺與缺交（親師溝通前快速掌握）',
+    '・「請假」「明天請假」→ 產生代課交接包，可直接轉發給代課老師',
     '・「聯絡簿：項目1、項目2」→ 產生家長群公告',
+    '・「照片轉聯絡本」→ 把剛剛辨識的通知單重點寫進今天的聯絡本',
+    '・傳影片或檔案 → 自動備份到你的雲端硬碟（LINE 檔案會過期，這裡不會）',
+    '・「推播設定」→ 查看本月用量與各項推播開關；「開啟 放學小結」「關閉 作業推播」可切換',
     '・「撤回」→ 作廢剛剛那一筆；「刪除 關鍵字」→ 作廢含關鍵字的最新一筆',
     '・「我的ID」→ 查詢自己的 LINE userId（安裝設定用）',
-    '訊息會先進工作台的 LINE 收件匣，由你確認後才正式建立。'
+    '訊息會先進工作台的 LINE 收件匣，由你確認後才正式建立。',
+    '（以上你問我答的功能都不用 LINE 額度；只有主動推播才會計算。）'
   ].join('\n');
 }
 
@@ -1148,6 +1603,7 @@ function listContactBook_(body) {
  * 訊息只含座號與缺交明細，不含姓名；請老師在工作台補上稱謂與孩子的優點後再轉發。
  */
 function sendWeeklyHomeworkAlerts() {
+  if (!pushAllowed_('weekly')) return;
   var threshold = parseInt(lineBotProperty_('WEEKLY_ALERT_THRESHOLD'), 10);
   if (!(threshold >= 1)) threshold = 5;
   var today = lineBotToday_();
@@ -1222,6 +1678,7 @@ function sendLineDailyBriefing() {
   var users = lineBotProperty_('LINE_ALLOWED_USER_IDS')
     .split(',').map(function (value) { return value.trim(); }).filter(String);
   if (!users.length) return;
+  if (!pushAllowed_('dailyBrief')) return;   // 預設關閉：點名推播已含相同內容
   var today = lineBotToday_();
   var props = PropertiesService.getScriptProperties();
   // 大屏的點名推播已經帶過今日重點就不再重複；老師早上只會收到一則含任務的訊息。
