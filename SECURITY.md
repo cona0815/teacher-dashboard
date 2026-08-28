@@ -15,6 +15,29 @@
 4. 網站部署標頭限制物件嵌入、外部腳本、表單目的地、Referrer 與不必要的裝置權限。
 5. API 金鑰不放入 JSON 備份；使用者可選擇不記住金鑰。
 
+## 程式碼掃描紀錄
+
+### 2026-08-29（涵蓋 Index.html / Morning.html / Install.html / Intro.html / LineBot.gs / netlify.toml / desktop_pet_secretary.py）
+
+掃描項目與結果：
+
+| 項目 | 方法 | 結果 |
+|---|---|---|
+| 硬編碼金鑰／Token | 正則掃描 `api_key`、`token`、`secret`、`AIza*`、`sk-*`、`xai-*`、`ghp_*`，以及專案已知的敏感字串 | 無 |
+| 第三方函式庫供應鏈 | 檢查是否夾帶 jQuery／Bootstrap／min.js 等外部程式碼 | 無夾帶，零 npm 執行期相依 |
+| 外連主機 | 列出程式碼內所有 http(s) 目的地 | 僅 LINE、Google、OpenAI、xAI 等使用者自行設定的 API，與本專案自己的網址 |
+| XSS | 檢查 `innerHTML` 是否插入未跳脫的雲端資料；`eval`／`new Function`／`document.write`／`srcdoc` | 所有動態欄位皆經 `escapeHtml()`；無高危 API |
+| API 權限 | 檢視 `handleLineSyncApi_` 的兩層金鑰與動作白名單 | 教室金鑰僅限白名單動作，歷史查詢與備份需老師金鑰 |
+| LINE Webhook | 檢視來源驗證 | 以 `?hook=` 密鑰＋`LINE_ALLOWED_USER_IDS` 白名單驗證（Apps Script 讀不到 request header，無法做 HMAC 簽章驗證，此為平台限制下的等效作法） |
+| 金鑰是否進備份 | 追 `buildBackupPayload()` → `readSettingsForm()` | 備份只含 provider／model／endpoint 等設定，**不含金鑰**；雲端備份再額外移除 endpoint |
+| 桌寵本機橋接 | 檢視綁定位址與 CORS 來源判斷 | 只綁 `127.0.0.1`；`bridge_origin_allowed()` 以來源白名單先行 403，再回應 CORS 標頭 |
+| 試算表公式注入 | 檢查寫入 Sheets 的自由文字 | **發現並修正**（見下） |
+
+已修正：**試算表公式注入**。寫進試算表的自由文字（班級、科目、進度、聯絡本、
+LINE 收件匣、檔案備份標題）若以 `=`、`+`、`-`、`@` 開頭，Google Sheets 會當公式執行，
+例如被寫入 `=IMAGE("http://…")` 時，老師一開啟試算表就會對外連線。
+已加入 `sheetText_()`，寫入前補前導單引號強制為文字。
+
 ## 已知限制
 
 - `localStorage` 不是加密保管庫。同一 Windows／瀏覽器帳號的使用者，以及網站本身執行的程式碼，都可能存取資料。
@@ -25,10 +48,11 @@
 ## 每次發布前
 
 1. 執行語法檢查與自動測試。
-2. 用 Microsoft Defender 掃描實際要發出的 EXE／ZIP。
-3. 對發布檔執行 `Get-FileHash -Algorithm SHA256`，把結果和檔案一起公布。
-4. 檢查 `Get-AuthenticodeSignature`；正式大量發布建議使用受信任的程式碼簽章或 Microsoft Store。
-5. 若 Defender 誤判，使用 Microsoft 官方提交入口送交分析；不要要求老師停用防毒或設定資料夾排除。
+2. 執行上表的程式碼掃描項目（至少：硬編碼金鑰、XSS、外連主機、API 權限、寫入試算表的自由文字），並把日期與結果補進「程式碼掃描紀錄」。
+3. 用 Microsoft Defender 掃描實際要發出的 EXE／ZIP。
+4. 對發布檔執行 `Get-FileHash -Algorithm SHA256`，把結果和檔案一起公布。
+5. 檢查 `Get-AuthenticodeSignature`；正式大量發布建議使用受信任的程式碼簽章或 Microsoft Store。
+6. 若 Defender 誤判，使用 Microsoft 官方提交入口送交分析；不要要求老師停用防毒或設定資料夾排除。
 
 ## 回報問題
 
