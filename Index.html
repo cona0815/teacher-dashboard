@@ -1987,12 +1987,16 @@
             <button class="button button-light" type="button" id="importBackupButton">選擇備份檔</button>
             <input id="backupFileInput" type="file" accept="application/json,.json" hidden>
           </article>
-          <article class="backup-card" style="display:none">
-            <h3>備份到 Google Drive（GAS）</h3>
-            <p>透過 Apps Script 把同一份 JSON 備份存入「School Admin Dashboard／Backups」。</p>
-            <button class="button button-dark" type="button" id="cloudBackupButton">立即雲端備份</button>
-            <button class="button button-light" type="button" id="refreshCloudBackupsButton">重新整理</button>
-            <div class="cloud-list" id="cloudBackupList"><div class="cloud-row-meta">按「重新整理」讀取既有備份。</div></div>
+          <article class="backup-card" style="grid-column:1/-1">
+            <h3>☁️ 雲端備份（需先設定 LINE 小幫手）</h3>
+            <p>把同一份完整備份存進<strong>你自己的 Google 試算表</strong>，換電腦或清掉瀏覽器資料時可完整還原。保留最近 10 份，每天自動備份一次。</p>
+            <label class="check-row"><input type="checkbox" id="cloudBackupAuto" checked>每天開啟工作台時自動備份一次</label>
+            <div style="margin-top:8px">
+              <button class="button button-dark" type="button" id="cloudBackupButton">立即雲端備份</button>
+              <button class="button button-light" type="button" id="refreshCloudBackupsButton">查看雲端備份</button>
+            </div>
+            <div class="cloud-list" id="cloudBackupList"><div class="cloud-row-meta">按「查看雲端備份」讀取清單。</div></div>
+            <div class="api-secret-note">備份不含 API 金鑰與同步金鑰。資料存在你自己的 Google 帳號，開發者拿不到。</div>
           </article>
            <article class="backup-card gas-install-card" style="display:none">
              <h3>GAS 雲端版安裝教學與完整程式碼</h3>
@@ -7555,12 +7559,22 @@
       if (!file) return;
       try {
         if (file.size > 5 * 1024 * 1024) throw new Error('備份檔超過 5 MB，已停止匯入。');
-        const backup = JSON.parse(await file.text());
+        applyBackupObject(JSON.parse(await file.text()), '備份檔');
+      } catch (error) {
+        showToast(error.message || '備份檔讀取失敗。', true);
+      } finally {
+        $('backupFileInput').value = '';
+      }
+    }
+
+    /** 套用一份備份內容；檔案匯入與雲端還原共用。回傳是否真的完成還原。 */
+    function applyBackupObject(backup, sourceLabel = '備份') {
+      {
         if (backup.kind !== 'grade6-team-dashboard-backup' || backup.version !== 1 || !Array.isArray(backup.tasks)) {
           throw new Error('這不是有效的六年級工作台備份檔。');
         }
         if (backup.tasks.length > 5000) throw new Error('備份檔任務數量異常，已停止匯入。');
-        if (!window.confirm(`備份包含 ${backup.tasks.length} 項任務。要還原到目前畫面嗎？`)) return;
+        if (!window.confirm(`${sourceLabel}包含 ${backup.tasks.length} 項任務。要還原到目前畫面嗎？\n（目前的任務清單會被覆蓋）`)) return false;
         state.tasks = backup.tasks.filter(task => task && typeof task === 'object' && task.taskId && task.name);
         state.filteredTasks = [...state.tasks];
         if (IS_LOCAL_PREVIEW && window.localPreviewStorage && window.localPreviewStorage.replaceTasks) {
@@ -7618,11 +7632,8 @@
         applyPetPreferences();
         applyWorkspaceBranding();
         closeSettings();
-        showToast(`已從備份還原 ${state.tasks.length} 項任務到目前畫面。`);
-      } catch (error) {
-        showToast(error.message || '備份檔讀取失敗。', true);
-      } finally {
-        $('backupFileInput').value = '';
+        showToast(`已從${sourceLabel}還原 ${state.tasks.length} 項任務到目前畫面。`);
+        return true;
       }
     }
 
@@ -7631,48 +7642,100 @@
       return Number.isNaN(date.getTime()) ? '' : date.toLocaleString('zh-TW');
     }
 
-    function renderCloudBackups(files) {
+    // ---- 雲端備份：把完整 JSON 存進老師自己的 Google 試算表（需 LINE 小幫手金鑰 🔑C）----
+    const CLOUD_BACKUP_AUTO_KEY = 'grade6CloudBackupAuto';
+    const CLOUD_BACKUP_LAST_KEY = 'grade6CloudBackupLastDate';
+
+    function cloudBackupReady() {
+      return lineBridgeState.settings.enabled && !!lineBridgeState.settings.gasUrl && !!lineSyncToken();
+    }
+
+    function formatBackupSize(chars) {
+      return chars > 1024 * 1024 ? `${(chars / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(chars / 1024))} KB`;
+    }
+
+    function renderCloudBackups(backups) {
       const host = $('cloudBackupList');
-      host.innerHTML = '';
-      if (!files.length) {
-        host.innerHTML = '<div class="cloud-row-meta">目前沒有雲端備份。</div>';
+      if (!backups.length) {
+        host.innerHTML = '<div class="cloud-row-meta">目前沒有雲端備份。按「立即雲端備份」建立第一份。</div>';
         return;
       }
-      files.forEach(file => {
+      host.innerHTML = '';
+      backups.forEach((backup, index) => {
         const row = document.createElement('div');
         row.className = 'cloud-row';
-        row.innerHTML = `<div class="cloud-row-main"><div class="cloud-row-name">${escapeHtml(file.name)}</div><div class="cloud-row-meta">${escapeHtml(formatCloudDate(file.createdAt))}</div></div><button class="mini-button" type="button">還原</button>`;
-        row.querySelector('button').addEventListener('click', () => restoreCloudBackup(file.id));
+        row.innerHTML = `<div class="cloud-row-main"><div class="cloud-row-name">${index === 0 ? '🆕 ' : ''}${escapeHtml(formatCloudDate(backup.updatedAt))}</div>`
+          + `<div class="cloud-row-meta">${escapeHtml(backup.summary || '')}｜${escapeHtml(formatBackupSize(backup.chars))}${backup.device ? '｜' + escapeHtml(backup.device) : ''}</div></div>`
+          + '<button class="mini-button" type="button">還原這份</button>';
+        row.querySelector('button').addEventListener('click', () => restoreCloudBackup(backup.id, backup.updatedAt));
         host.appendChild(row);
       });
     }
 
-    async function createCloudBackup() {
+    async function createCloudBackup({ silent = false } = {}) {
+      if (!cloudBackupReady()) {
+        if (!silent) showToast('請先在「設定 → LINE 小幫手」填入 🌐 網址與 🔑C 同步金鑰。', true);
+        return false;
+      }
       const button = $('cloudBackupButton');
-      button.disabled = true;
+      if (button) button.disabled = true;
       try {
-        await serverCall('backupDashboardToDrive', { backup: buildBackupPayload(), csrfToken: state.csrfToken });
-        showToast('已備份到 Google Drive。');
-        await refreshCloudBackups();
+        const payload = buildBackupPayload();
+        // 金鑰與同步網址不放進備份；還原到新電腦時由老師重新填一次。
+        if (payload.assistantSettings?.api) delete payload.assistantSettings.api.endpoint;
+        const text = JSON.stringify(payload);
+        const summary = `任務 ${payload.tasks.length}・記事 ${payload.secretaryNotes?.length || 0}`;
+        const result = await callLineBridge('backup_save', {
+          payload: text, device: navigator.platform || '', summary
+        });
+        try { localStorage.setItem(CLOUD_BACKUP_LAST_KEY, calendarDateKey(new Date())); } catch (error) {}
+        if (!silent) {
+          showToast(`☁️ 已備份到雲端（${formatBackupSize(result.chars || text.length)}）；系統保留最近 ${result.keep || 10} 份。`);
+          await refreshCloudBackups();
+        }
+        return true;
       } catch (error) {
-        showToast(error.message || '雲端備份失敗。', true);
-      } finally { button.disabled = false; }
+        if (!silent) showToast(error.message || '雲端備份失敗。', true);
+        return false;
+      } finally {
+        if (button) button.disabled = false;
+      }
     }
 
     async function refreshCloudBackups() {
+      if (!cloudBackupReady()) {
+        $('cloudBackupList').innerHTML = '<div class="cloud-row-meta">尚未設定 LINE 小幫手；雲端備份需要 🌐 網址與 🔑C 同步金鑰。</div>';
+        return;
+      }
       $('cloudBackupList').innerHTML = '<div class="cloud-row-meta">正在讀取雲端備份……</div>';
       try {
-        const result = await serverCall('listDashboardBackups');
-        renderCloudBackups(result.files || []);
-      } catch (error) { $('cloudBackupList').innerHTML = `<div class="cloud-row-meta">${escapeHtml(error.message || '讀取失敗')}</div>`; }
+        const result = await callLineBridge('backup_list');
+        renderCloudBackups(Array.isArray(result.backups) ? result.backups : []);
+      } catch (error) {
+        $('cloudBackupList').innerHTML = `<div class="cloud-row-meta">${escapeHtml(error.message || '讀取失敗')}</div>`;
+      }
     }
 
-    async function restoreCloudBackup(fileId) {
+    async function restoreCloudBackup(backupId, updatedAt) {
       try {
-        const result = await serverCall('getDashboardBackup', fileId);
-        const file = new File([result.text], result.name || 'drive-backup.json', { type: 'application/json' });
-        await importBackup(file);
-      } catch (error) { showToast(error.message || '雲端還原失敗。', true); }
+        showToast('正在下載雲端備份……');
+        const result = await callLineBridge('backup_get', { id: backupId });
+        applyBackupObject(JSON.parse(result.payload || '{}'), `${formatCloudDate(updatedAt || result.updatedAt)} 的雲端備份`);
+      } catch (error) {
+        showToast(error.message || '雲端還原失敗。', true);
+      }
+    }
+
+    /** 每天第一次開啟工作台時自動備份一次（靜默，失敗不打擾）。 */
+    function maybeAutoCloudBackup() {
+      let enabled = true;
+      try { enabled = localStorage.getItem(CLOUD_BACKUP_AUTO_KEY) !== 'off'; } catch (error) {}
+      if ($('cloudBackupAuto')) $('cloudBackupAuto').checked = enabled;
+      if (!enabled || !cloudBackupReady()) return;
+      let last = '';
+      try { last = localStorage.getItem(CLOUD_BACKUP_LAST_KEY) || ''; } catch (error) {}
+      if (last === calendarDateKey(new Date())) return;
+      window.setTimeout(() => createCloudBackup({ silent: true }), 8000);
     }
 
     function fileToBase64(file) {
@@ -7963,8 +8026,12 @@
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden) schedulePetBridgeSync(150);
     });
-    $('cloudBackupButton').addEventListener('click', createCloudBackup);
+    $('cloudBackupButton').addEventListener('click', () => createCloudBackup());
     $('refreshCloudBackupsButton').addEventListener('click', refreshCloudBackups);
+    $('cloudBackupAuto')?.addEventListener('change', event => {
+      try { localStorage.setItem(CLOUD_BACKUP_AUTO_KEY, event.target.checked ? 'on' : 'off'); } catch (error) {}
+      showToast(event.target.checked ? '已開啟每日自動雲端備份。' : '已關閉自動備份；仍可隨時手動備份。');
+    });
     $('copyGasGuideButton').addEventListener('click', copyGasGuide);
     $('driveUploadButton').addEventListener('click', () => $('driveUploadInput').click());
     $('driveUploadInput').addEventListener('change', event => uploadDriveFiles(event.target.files));
@@ -8307,6 +8374,7 @@
     loadLineBridgeSettings();
     loadRollcallStats();
     wireLineBridgeUi();
+    maybeAutoCloudBackup();
     renderLineInbox();
     updateLocalStorageStatus();
     setTaskView(state.viewMode);

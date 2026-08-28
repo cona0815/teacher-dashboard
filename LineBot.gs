@@ -21,6 +21,8 @@ var LINE_BOT_CONFIG = {
   CONTACTBOOK_HEADERS: ['日期', '班級', '內容', '更新時間', '來源'],
   FILES_SHEET: '檔案備份',
   FILES_HEADERS: ['日期', '類型', '分類', '標題', '檔名', '雲端連結'],
+  BACKUP_SHEET: '工作台備份',
+  BACKUP_HEADERS: ['備份編號', '序號', '總段數', '更新時間', '裝置', '摘要', '內容'],
   INBOX_HEADERS: ['編號', '建立時間', '類型', '原文', '整理標題', '到期日', '工作主軸', '狀態', '來源使用者', '補充JSON'],
   ROLLCALL_HEADERS: ['日期', '班級', '座號', '狀態'],
   HOMEWORK_HEADERS: ['日期', '班級', '科目', '作業名稱', '座號', '狀態'],
@@ -114,7 +116,13 @@ function ensureLineBotSheets_(spreadsheet) {
     files.getRange(1, 1, 1, LINE_BOT_CONFIG.FILES_HEADERS.length).setValues([LINE_BOT_CONFIG.FILES_HEADERS]);
     files.setFrozenRows(1);
   }
-  return { inbox: inbox, snapshot: snapshot, rollcall: rollcall, homework: homework, contactbook: contactbook, files: files };
+  var backup = spreadsheet.getSheetByName(LINE_BOT_CONFIG.BACKUP_SHEET);
+  if (!backup) {
+    backup = spreadsheet.insertSheet(LINE_BOT_CONFIG.BACKUP_SHEET);
+    backup.getRange(1, 1, 1, LINE_BOT_CONFIG.BACKUP_HEADERS.length).setValues([LINE_BOT_CONFIG.BACKUP_HEADERS]);
+    backup.setFrozenRows(1);
+  }
+  return { inbox: inbox, snapshot: snapshot, rollcall: rollcall, homework: homework, contactbook: contactbook, files: files, backup: backup };
 }
 
 /**
@@ -331,6 +339,9 @@ function handleLineSyncApi_(body) {
     if (action === 'pull') return lineBotJson_(pullLineInbox_());
     if (action === 'ack') return lineBotJson_(ackLineInbox_(body));
     if (action === 'snapshot') return lineBotJson_(saveWorkspaceSnapshot_(body));
+    if (action === 'backup_save') return lineBotJson_(saveWorkspaceBackup_(body));
+    if (action === 'backup_list') return lineBotJson_(listWorkspaceBackups_());
+    if (action === 'backup_get') return lineBotJson_(getWorkspaceBackup_(body));
     if (action === 'rollcall_submit') return lineBotJson_(submitRollcall_(body));
     if (action === 'classroom_today') return lineBotJson_(readRollcallRange_(lineBotToday_(), lineBotToday_(), String(body.className || '')));
     if (action === 'classroom_missing') return lineBotJson_(readClassroomMissing_(body));
@@ -1828,6 +1839,112 @@ function commitPendingContactBook_(date) {
 function cancelPendingContactBook_() {
   PropertiesService.getScriptProperties().deleteProperty(PENDING_CONTACTBOOK_KEY);
   return '已取消，沒有寫入任何聯絡本內容。';
+}
+
+// ---------------------------------------------------------------------------
+// 工作台完整備份（老師金鑰限定）
+// 任務、教學進度、記事、設定平常只存在瀏覽器；這裡讓老師把整份 JSON 存進
+// 自己的試算表，換電腦或清掉瀏覽器資料時可以完整還原。
+// 單一儲存格上限 5 萬字，因此長內容切段存成多列，取回時再接回來。
+// ---------------------------------------------------------------------------
+
+var BACKUP_CHUNK_SIZE = 40000;
+var BACKUP_MAX_KEEP = 10;          // 只保留最近 10 份，避免試算表無限長大
+var BACKUP_MAX_CHARS = 4 * 1024 * 1024;
+
+function saveWorkspaceBackup_(body) {
+  var payload = String(body.payload || '');
+  if (!payload) throw new Error('缺少備份內容');
+  if (payload.length > BACKUP_MAX_CHARS) throw new Error('備份內容超過 4 MB，請先在工作台清理封存任務');
+  var sheets = ensureLineBotSheets_(SpreadsheetApp.getActiveSpreadsheet());
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var id = 'B-' + new Date().getTime();
+    var now = new Date();
+    var device = String(body.device || '').slice(0, 40);
+    var summary = String(body.summary || '').slice(0, 120);
+    var rows = [];
+    var total = Math.ceil(payload.length / BACKUP_CHUNK_SIZE);
+    for (var index = 0; index < total; index += 1) {
+      rows.push([id, index + 1, total, now, device, summary,
+        payload.substr(index * BACKUP_CHUNK_SIZE, BACKUP_CHUNK_SIZE)]);
+    }
+    sheets.backup.getRange(sheets.backup.getLastRow() + 1, 1, rows.length, LINE_BOT_CONFIG.BACKUP_HEADERS.length).setValues(rows);
+    pruneWorkspaceBackups_(sheets.backup);
+    return { ok: true, id: id, chunks: total, chars: payload.length, keep: BACKUP_MAX_KEEP };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/** 只保留最新的 BACKUP_MAX_KEEP 份備份，較舊的整份刪除。 */
+function pruneWorkspaceBackups_(sheet) {
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return;
+  var ids = sheet.getRange(2, 1, lastRow - 1, 1).getValues().map(function (row) { return String(row[0]); });
+  var order = [];
+  ids.forEach(function (id) { if (order.indexOf(id) === -1) order.push(id); });
+  if (order.length <= BACKUP_MAX_KEEP) return;
+  var drop = {};
+  order.slice(0, order.length - BACKUP_MAX_KEEP).forEach(function (id) { drop[id] = true; });
+  for (var index = ids.length - 1; index >= 0; index -= 1) {
+    if (drop[ids[index]]) sheet.deleteRow(index + 2);
+  }
+}
+
+function listWorkspaceBackups_() {
+  var sheets = ensureLineBotSheets_(SpreadsheetApp.getActiveSpreadsheet());
+  var lastRow = sheets.backup.getLastRow();
+  if (lastRow <= 1) return { ok: true, backups: [] };
+  var values = sheets.backup.getRange(2, 1, lastRow - 1, LINE_BOT_CONFIG.BACKUP_HEADERS.length).getValues();
+  var byId = {};
+  var order = [];
+  values.forEach(function (row) {
+    var id = String(row[0]);
+    if (!id) return;
+    if (!byId[id]) {
+      byId[id] = {
+        id: id,
+        updatedAt: row[3] instanceof Date ? row[3].toISOString() : String(row[3] || ''),
+        device: String(row[4] || ''),
+        summary: String(row[5] || ''),
+        chars: 0,
+        chunks: Number(row[2] || 0)
+      };
+      order.push(id);
+    }
+    byId[id].chars += String(row[6] || '').length;
+  });
+  var backups = order.map(function (id) { return byId[id]; }).reverse();
+  return { ok: true, backups: backups };
+}
+
+function getWorkspaceBackup_(body) {
+  var id = String(body.id || '');
+  var sheets = ensureLineBotSheets_(SpreadsheetApp.getActiveSpreadsheet());
+  var lastRow = sheets.backup.getLastRow();
+  if (lastRow <= 1) throw new Error('目前沒有任何雲端備份');
+  var values = sheets.backup.getRange(2, 1, lastRow - 1, LINE_BOT_CONFIG.BACKUP_HEADERS.length).getValues();
+  if (!id) {
+    // 沒指定就取最新一份
+    for (var scan = values.length - 1; scan >= 0; scan -= 1) {
+      if (String(values[scan][0])) { id = String(values[scan][0]); break; }
+    }
+  }
+  var parts = values.filter(function (row) { return String(row[0]) === id; })
+    .sort(function (a, b) { return Number(a[1]) - Number(b[1]); });
+  if (!parts.length) throw new Error('找不到這份備份，可能已被較新的備份汰換');
+  var expected = Number(parts[0][2] || parts.length);
+  if (parts.length !== expected) throw new Error('備份資料不完整（' + parts.length + '/' + expected + ' 段），請改用其他版本');
+  return {
+    ok: true,
+    id: id,
+    updatedAt: parts[0][3] instanceof Date ? parts[0][3].toISOString() : String(parts[0][3] || ''),
+    device: String(parts[0][4] || ''),
+    summary: String(parts[0][5] || ''),
+    payload: parts.map(function (row) { return String(row[6] || ''); }).join('')
+  };
 }
 
 /** 老師金鑰限定：聯絡本歷史清單（近 limit 筆，新到舊，含內容預覽）。 */
