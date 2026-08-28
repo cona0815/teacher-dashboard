@@ -98,6 +98,8 @@
     .makeup-cal-day.has-missing { background: #fdeee9; border-color: var(--missing); color: var(--missing); }
     .makeup-cal-day.has-correcting { background: #fdf0e6; border-color: var(--correcting); color: var(--correcting); }
     .board-date { background: var(--primary); color: #fff; border-radius: 999px; padding: 3px 12px; font-size: 14px; font-weight: 900; flex: 0 0 auto; }
+    .board-card.board-settled { background: var(--ok-soft); }
+    .board-card.board-settled .board-head { margin: 0; }
     .makeup-cal-day.other { opacity: .35; }
     .rollcall-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(420px, 3fr); gap: 16px; align-items: stretch; }
     /* 座號格尺寸隨螢幕高度縮放，確保點名＋聯絡本剛好一頁不捲動 */
@@ -328,7 +330,7 @@
       boards: [],            // [{id, subject, assignment, seats:{seat:'submitted'|'resub'}}]（未標=缺交）
       flags: { autoAbsentDone: false, autoNotifyDone: false, autoHomeworkNotifyDone: false },
       makeup: { items: [], loaded: false, mode: 'subject', focus: '' },
-      correct: { items: [], loaded: false, mode: 'day', focus: '', selectedDay: '', doneCount: 0 },
+      correct: { items: [], loaded: false, mode: 'day', focus: '', selectedDay: '', doneCount: 0, expanded: new Set() },
       countdown: { remaining: 0, running: false },
       submitting: false,
       dirty: false,          // 有未存到雲端的異動；每 5 分鐘與離開頁面時自動存檔
@@ -418,6 +420,15 @@
         if (saved && typeof saved === 'object') {
           state.attendance = saved.attendance && typeof saved.attendance === 'object' ? saved.attendance : {};
           state.boards = Array.isArray(saved.boards) ? saved.boards.filter(board => board && board.subject) : [];
+          // 修復舊資料：早期版本用 Date.now() 當 id，同毫秒建立的版面會撞號，
+          // 導致點某一科的座號改到另一科。這裡把重複的重新編號。
+          const seenIds = new Set();
+          state.boards.forEach(board => {
+            if (!board.id || seenIds.has(board.id)) {
+              board.id = `b${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+            }
+            seenIds.add(board.id);
+          });
           state.flags = {
             autoAbsentDone: saved.flags?.autoAbsentDone === true,
             autoNotifyDone: saved.flags?.autoNotifyDone === true,
@@ -670,7 +681,9 @@
       if (state.boards.some(board => board.subject === subject && board.assignment === assignment)) {
         return showToast('這個版面已存在。', true);
       }
-      state.boards.push({ id: `b${Date.now()}`, subject, assignment, seats: {} });
+      // 加上亂數尾碼：同一毫秒連續新增兩個版面時，只用 Date.now() 會撞號，
+      // 之後點座號會用 find() 找到第一個同 id 的版面，改到別科去。
+      state.boards.push({ id: `b${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, subject, assignment, seats: {} });
       $('boardExtraInput').value = '';
       saveTodayState();
       renderBoards();
@@ -712,25 +725,36 @@
       }
       wall.innerHTML = state.boards.map(board => {
         let pending = 0;
+        let done = 0;
         const cells = activeSeats().map(seat => {
           const mark = board.seats[seat] || 'missing';
           const handedIn = HANDED_IN.includes(mark);
           if (mark === 'correcting') pending += 1;
+          if (mark === 'corrected') done += 1;
           // 沒交的一律停用：畫面上還亮著的就是「可以挑來訂正」的已交名單。
           return `<button class="hw-seat" type="button" data-correct-board="${board.id}" data-seat="${seat}"`
             + `${handedIn ? '' : ' disabled title="這位還沒交，請先到「作業繳交」標記已交"'}`
             + ` data-hw="${mark === 'correcting' ? 'correcting' : mark === 'corrected' ? 'corrected' : handedIn ? 'submitted' : ''}">${seat}</button>`;
         });
-        return `<div class="board-card" data-board-card="${board.id}">
-          <div class="board-head">
+        const head = `<div class="board-head">
             <span class="board-date">${escapeHtml(todayLabelShort())}</span>
-            <span class="board-title">${escapeHtml(boardLabel(board))}</span>
-            <span class="status-text">${pending ? `待訂正 ${pending} 人` : '目前沒有待訂正'}</span>
+            <span class="board-title">${escapeHtml(boardLabel(board))}</span>`;
+        // 訂正過且已全部清完的版面收成一行，不再占滿畫面；需要時可展開再標。
+        if (!pending && done && !state.correct.expanded.has(board.id)) {
+          return `<div class="board-card board-settled" data-board-card="${board.id}">${head}
+            <span class="status-text" style="color:var(--ok);font-weight:900">✅ 訂正完成 ${done} 人</span>
+            <button class="ghost-button" type="button" data-correct-expand="${board.id}">展開</button>
+          </div></div>`;
+        }
+        return `<div class="board-card" data-board-card="${board.id}">${head}
+            <span class="status-text">${pending ? `待訂正 ${pending} 人` : done ? `已完成 ${done} 人` : '尚未標記訂正'}</span>
+            ${done && !pending ? `<button class="ghost-button" type="button" data-correct-collapse="${board.id}">收合</button>` : ''}
             <button class="board-all-button" type="button" data-correct-all="${board.id}" style="background:var(--ok)">✅ 全部訂正完成</button>
           </div>
           <div class="board-grid">${cells.join('')}</div>
         </div>`;
       }).join('');
+      renderCorrectStats();   // 標記訂正後，下方日曆與統計同步更新
     }
 
     function tapCorrectSeat(boardId, seat) {
@@ -744,6 +768,18 @@
       else board.seats[seat] = 'correcting';
       saveTodayState();
       renderBoards();
+      scheduleCorrectCloudSave();
+    }
+
+    /**
+     * 訂正結果要讓別台電腦（老師的工作台）看得到，就得上雲端。
+     * 連續點多個座號時只在停手 3 秒後存一次，避免每點一下就連線。
+     */
+    let correctSaveTimer = 0;
+    function scheduleCorrectCloudSave() {
+      if (!state.settings.className || !state.settings.classroomToken) return;
+      window.clearTimeout(correctSaveTimer);
+      correctSaveTimer = window.setTimeout(() => submitReport({ silent: true, push: 'none' }), 3000);
     }
 
     function markBoardAllCorrected(boardId) {
@@ -755,13 +791,16 @@
       });
       saveTodayState();
       renderBoards();
+      if (done) scheduleCorrectCloudSave();
       showToast(done ? `「${boardLabel(board)}」${done} 位標記為訂正完成。` : '目前沒有待訂正的座號。');
     }
 
     // ---------- 訂正統計：分天／分科目／分人 ----------
     async function loadCorrectStats() {
       if (!state.settings.className || !state.settings.classroomToken) {
-        $('correctStatus').textContent = '請先在「設定」填入班級名稱與教室金鑰。';
+        // 沒設金鑰也要看得到今天的訂正狀況，只是撈不到前幾天的紀錄。
+        $('correctStatus').textContent = '目前只顯示今天的訂正狀況；填入「設定」的班級名稱與教室金鑰後，可一併查看前幾天。';
+        renderCorrectStats();
         return;
       }
       $('correctStatus').textContent = '載入中……';
@@ -784,14 +823,30 @@
     function correctBadge(count) {
       return `<span style="color:var(--correcting);font-weight:900">待訂正 ${count}</span>`;
     }
+    /**
+     * 統計用的待訂正清單。資料以雲端為準——大屏在教室、老師可能在別台電腦看，
+     * 只有這台正在登記今天作業的機器（本機有版面）才用本機資料覆蓋今天，
+     * 因為剛點下去的訂正要等自動存檔才會上雲端，先顯示比較即時。
+     */
+    function correctStatsItems() {
+      const today = todayKey();
+      const cloud = state.correct.items;
+      if (!state.boards.length) return cloud;          // 沒有本機版面（例如老師自己的電腦）→ 全部看雲端
+      const local = [];
+      state.boards.forEach(board => {
+        activeSeats().forEach(seat => {
+          if (board.seats[seat] === 'correcting') {
+            local.push({ date: today, subject: board.subject, assignment: board.assignment, seat, status: '待訂正' });
+          }
+        });
+      });
+      return [...cloud.filter(item => item.date !== today), ...local];
+    }
+
     function renderCorrectStats() {
       const host = $('correctStatBody');
       if (!host) return;
-      const items = state.correct.items;   // 只含待訂正
-      if (!state.correct.loaded) {
-        host.innerHTML = '<div class="status-text">按「🔄 重新整理」載入近期訂正紀錄。</div>';
-        return;
-      }
+      const items = correctStatsItems();   // 只含待訂正
       if (!items.length) {
         host.innerHTML = '<div class="status-text" style="padding:16px 4px;font-size:18px">🎉 目前沒有待訂正的項目，全部都清完了。</div>';
         return;
@@ -1265,8 +1320,15 @@
       if (seatButton) tapBoardSeat(seatButton.dataset.boardId, Number(seatButton.dataset.seat));
     });
     $('correctWall').addEventListener('click', event => {
+      const expand = event.target.closest('[data-correct-expand]');
+      if (expand) { state.correct.expanded.add(expand.dataset.correctExpand); return renderCorrectBoards(); }
+      const collapse = event.target.closest('[data-correct-collapse]');
+      if (collapse) { state.correct.expanded.delete(collapse.dataset.correctCollapse); return renderCorrectBoards(); }
       const allButton = event.target.closest('[data-correct-all]');
-      if (allButton) return markBoardAllCorrected(allButton.dataset.correctAll);
+      if (allButton) {
+        state.correct.expanded.delete(allButton.dataset.correctAll);   // 清完就收起來，不占版面
+        return markBoardAllCorrected(allButton.dataset.correctAll);
+      }
       const seatButton = event.target.closest('[data-correct-board][data-seat]');
       if (seatButton && !seatButton.disabled) tapCorrectSeat(seatButton.dataset.correctBoard, Number(seatButton.dataset.seat));
     });
