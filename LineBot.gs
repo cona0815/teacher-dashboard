@@ -539,11 +539,18 @@ function readClassroomMissing_(body) {
     .map(function (row) {
       return { date: row.date, subject: row.subject, assignment: row.assignment, seat: row.seat, status: row.status };
     });
+  // 訂正紀錄（待訂正＋已訂正）供大屏「作業訂正」分頁做分天／分科目／分人統計。
+  var corrections = data.homework.filter(function (row) {
+    return row.status === '待訂正' || row.status === '已訂正';
+  }).map(function (row) {
+    return { date: row.date, subject: row.subject, assignment: row.assignment, seat: row.seat, status: row.status };
+  });
   return {
     ok: true, from: from, to: lineBotToday_(),
     // missing 保留舊欄位名稱給舊版大屏；新版改看 pending（含待訂正）。
     missing: pending.filter(function (row) { return row.status === '缺交'; }),
-    pending: pending
+    pending: pending,
+    corrections: corrections
   };
 }
 
