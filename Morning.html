@@ -97,6 +97,7 @@
     .makeup-cal-day { border: 2px solid var(--line); border-radius: 10px; min-height: 62px; padding: 5px; font-size: 14px; font-weight: 800; background: var(--surface); cursor: pointer; text-align: left; }
     .makeup-cal-day.has-missing { background: #fdeee9; border-color: var(--missing); color: var(--missing); }
     .makeup-cal-day.has-correcting { background: #fdf0e6; border-color: var(--correcting); color: var(--correcting); }
+    .board-date { background: var(--primary); color: #fff; border-radius: 999px; padding: 3px 12px; font-size: 14px; font-weight: 900; flex: 0 0 auto; }
     .makeup-cal-day.other { opacity: .35; }
     .rollcall-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(420px, 3fr); gap: 16px; align-items: stretch; }
     /* 座號格尺寸隨螢幕高度縮放，確保點名＋聯絡本剛好一頁不捲動 */
@@ -695,6 +696,12 @@
     // ---------- 作業訂正分頁：延續同一批版面，只從已交的名單挑要訂正的 ----------
     const HANDED_IN = ['submitted', 'resub', 'correcting', 'corrected'];
 
+    /** 版面上標示的日期，例如「8/28（五）」；訂正統計會跨天，這裡標明現在改的是哪一天。 */
+    function todayLabelShort() {
+      const now = new Date();
+      return `${now.getMonth() + 1}/${now.getDate()}（${['日', '一', '二', '三', '四', '五', '六'][now.getDay()]}）`;
+    }
+
     function renderCorrectBoards() {
       const wall = $('correctWall');
       if (!wall) return;
@@ -716,6 +723,7 @@
         });
         return `<div class="board-card" data-board-card="${board.id}">
           <div class="board-head">
+            <span class="board-date">${escapeHtml(todayLabelShort())}</span>
             <span class="board-title">${escapeHtml(boardLabel(board))}</span>
             <span class="status-text">${pending ? `待訂正 ${pending} 人` : '目前沒有待訂正'}</span>
             <button class="board-all-button" type="button" data-correct-all="${board.id}" style="background:var(--ok)">✅ 全部訂正完成</button>
