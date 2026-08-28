@@ -27,7 +27,7 @@ var LINE_BOT_CONFIG = {
   ROLLCALL_HEADERS: ['日期', '班級', '座號', '狀態'],
   HOMEWORK_HEADERS: ['日期', '班級', '科目', '作業名稱', '座號', '狀態'],
   ATTENDANCE_STATUSES: ['病假', '事假', '遲到', '未到'],
-  HOMEWORK_STATUSES: ['缺交', '補交'],
+  HOMEWORK_STATUSES: ['缺交', '補交', '待訂正', '已訂正'],
   MAX_TEXT_LENGTH: 3000,
   MAX_PULL_ROWS: 200,
   MAX_INBOX_ROWS: 1000,
@@ -415,6 +415,15 @@ function submitRollcall_(body) {
         seat = parseInt(seat, 10);
         if (seat >= 1 && seat <= 99) homeworkRows.push([date, className, subject, assignment, seat, '補交']);
       });
+      // 訂正：已交但需要訂正／已完成訂正。兩者都代表「有交」，只是訂正進度不同。
+      (Array.isArray(entry.correcting) ? entry.correcting : []).slice(0, 60).forEach(function (seat) {
+        seat = parseInt(seat, 10);
+        if (seat >= 1 && seat <= 99) homeworkRows.push([date, className, subject, assignment, seat, '待訂正']);
+      });
+      (Array.isArray(entry.corrected) ? entry.corrected : []).slice(0, 60).forEach(function (seat) {
+        seat = parseInt(seat, 10);
+        if (seat >= 1 && seat <= 99) homeworkRows.push([date, className, subject, assignment, seat, '已訂正']);
+      });
     });
     if (homeworkRows.length) {
       sheets.homework.getRange(sheets.homework.getLastRow() + 1, 1, homeworkRows.length, 6).setValues(homeworkRows);
@@ -477,9 +486,11 @@ function buildRollcallSummaryText_(date, className, attendance, homework, mode) 
     var label = subject + (String((entry && entry.assignment) || '').trim() ? '／' + String(entry.assignment).trim() : '');
     var missing = (Array.isArray(entry.missing) ? entry.missing : []).map(function (seat) { return seat + '號'; });
     var resubmitted = (Array.isArray(entry.resubmitted) ? entry.resubmitted : []).map(function (seat) { return seat + '號'; });
+    var correcting = (Array.isArray(entry.correcting) ? entry.correcting : []).map(function (seat) { return seat + '號'; });
     var parts = [];
     if (missing.length) parts.push('缺交' + missing.length + '（' + missing.join('、') + '）');
     if (resubmitted.length) parts.push('補交' + resubmitted.length + '（' + resubmitted.join('、') + '）');
+    if (correcting.length) parts.push('待訂正' + correcting.length + '（' + correcting.join('、') + '）');
     homeworkLines.push('・' + label + '：' + (parts.length ? parts.join('、') : '全交 ✅'));
   });
   if (homeworkLines.length) {
@@ -517,19 +528,29 @@ function readRollcallRange_(from, to, className) {
   return { ok: true, from: from, to: to, attendance: attendance, homework: homework };
 }
 
-/** 教室金鑰可用：近 N 天仍為缺交的清單（僅日期、科目、作業名稱、座號）。 */
+/** 教室金鑰可用：近 N 天仍待處理的清單（缺交與待訂正；僅日期、科目、作業名稱、座號）。 */
 function readClassroomMissing_(body) {
   var className = String(body.className || '').trim();
   if (!className) throw new Error('缺少班級名稱');
   var days = Math.min(60, Math.max(1, parseInt(body.days, 10) || 30));
   var from = Utilities.formatDate(new Date(new Date().getTime() - (days - 1) * 24 * 3600 * 1000), Session.getScriptTimeZone(), 'yyyy-MM-dd');
   var data = readRollcallRange_(from, lineBotToday_(), className);
-  var missing = data.homework.filter(function (row) { return row.status === '缺交'; })
-    .map(function (row) { return { date: row.date, subject: row.subject, assignment: row.assignment, seat: row.seat }; });
-  return { ok: true, from: from, to: lineBotToday_(), missing: missing };
+  var pending = data.homework.filter(function (row) { return row.status === '缺交' || row.status === '待訂正'; })
+    .map(function (row) {
+      return { date: row.date, subject: row.subject, assignment: row.assignment, seat: row.seat, status: row.status };
+    });
+  return {
+    ok: true, from: from, to: lineBotToday_(),
+    // missing 保留舊欄位名稱給舊版大屏；新版改看 pending（含待訂正）。
+    missing: pending.filter(function (row) { return row.status === '缺交'; }),
+    pending: pending
+  };
 }
 
-/** 教室金鑰可用的唯一歷史寫入：把單筆「缺交」改為「補交」，其他欄位一律不可改。 */
+/**
+ * 教室金鑰可用的唯一歷史寫入：把單筆「缺交」改為「補交」、或「待訂正」改為「已訂正」，
+ * 其他欄位一律不可改。
+ */
 function markHomeworkResubmitted_(body) {
   var className = String(body.className || '').trim();
   var date = String(body.date || '');
@@ -549,10 +570,13 @@ function markHomeworkResubmitted_(body) {
     for (var index = 0; index < values.length; index += 1) {
       var row = values[index];
       var rowDate = row[0] instanceof Date ? Utilities.formatDate(row[0], Session.getScriptTimeZone(), 'yyyy-MM-dd') : String(row[0]);
+      var current = String(row[5]);
       if (rowDate === date && String(row[1]) === className && String(row[2]) === subject
-        && String(row[3] || '') === assignment && Number(row[4]) === seat && String(row[5]) === '缺交') {
-        sheets.homework.getRange(index + 2, 6).setValue('補交');
-        return { ok: true, updated: 1 };
+        && String(row[3] || '') === assignment && Number(row[4]) === seat
+        && (current === '缺交' || current === '待訂正')) {
+        var next = current === '缺交' ? '補交' : '已訂正';
+        sheets.homework.getRange(index + 2, 6).setValue(next);
+        return { ok: true, updated: 1, from: current, to: next };
       }
     }
     return { ok: true, updated: 0 };

@@ -12,6 +12,7 @@
       --ok: #1d9e5f; --ok-soft: #e3f6ec;
       --blank: #aebbb5;
       --absent-sick: #e07b1f; --absent-personal: #d4a900; --missing: #cf4433; --resub: #2273c9;
+      --correcting: #c2571a; --corrected: #6b4bb5;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: "Microsoft JhengHei", "Noto Sans TC", sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; }
@@ -61,6 +62,11 @@
     .hw-seat { border: 0; border-radius: 9px; padding: 8px 2px; font-size: 17px; font-weight: 900; cursor: pointer; color: #fff; background: var(--blank); }
     .hw-seat[data-hw="submitted"] { background: var(--ok); }
     .hw-seat[data-hw="resub"] { background: var(--resub); }
+    .hw-seat[data-hw="correcting"] { background: var(--correcting); }
+    .hw-seat[data-hw="corrected"] { background: var(--corrected); }
+    .board-mode { border: 1.5px solid var(--line); background: #fff; border-radius: 999px; padding: 3px 12px; font-size: 13px; font-weight: 800; cursor: pointer; color: var(--ink); }
+    .board-mode.on { background: var(--correcting); border-color: var(--correcting); color: #fff; }
+    .board.correct-mode { box-shadow: 0 0 0 2px var(--correcting) inset; }
     .board-all-button { border: 2px solid var(--line); background: var(--surface); color: var(--primary-strong); border-radius: 9px; padding: 4px 12px; font-size: 13px; font-weight: 900; cursor: pointer; margin-left: auto; }
     .summary-table { width: 100%; border-collapse: collapse; font-size: 15px; margin-top: 8px; }
     .summary-table th, .summary-table td { border: 1px solid var(--line); padding: 6px 8px; text-align: left; }
@@ -188,7 +194,8 @@
           <select class="inline-select" id="boardAssignmentSelect"></select>
           <input class="inline-select" id="boardExtraInput" maxlength="20" placeholder="補充（頁數、範圍…）" style="max-width:180px">
           <button class="ghost-button" type="button" id="addBoardButton">＋ 新增收件版面</button>
-          <span class="status-text">例：國語＋習作＋11-15 →「國語／習作 11-15」。座號預設空白，點「已交」的變綠，未點＝缺交；補交請用「作業補交」分頁。</span>
+          <span class="status-text">例：國語＋習作＋11-15 →「國語／習作 11-15」。座號預設空白，點「已交」的變綠，未點＝缺交；補交請用「作業補交」分頁。<br>
+            批改後要學生訂正：按版面上的「📥 收作業」切成「✏️ 訂正模式」，點座號＝<span style="color:var(--correcting);font-weight:800">待訂正</span>，訂正完再點一次＝<span style="color:var(--corrected);font-weight:800">已訂正</span>。</span>
         </div>
         <div class="board-wall" id="boardWall"></div>
         <div class="stat-block">
@@ -591,10 +598,12 @@
             const mark = board.seats[seat] || 'missing';
             return `<button class="hw-seat" type="button" data-board-id="${board.id}" data-seat="${seat}" data-hw="${mark === 'missing' ? '' : mark}">${seat}</button>`;
           });
-          return `<div class="board-card" data-board-card="${board.id}">
+          const correcting = board.mode === 'correct';
+          return `<div class="board-card${correcting ? ' correct-mode' : ''}" data-board-card="${board.id}">
             <div class="board-head">
               <span class="board-title">${escapeHtml(boardLabel(board))}</span>
-              <button class="board-all-button" type="button" data-board-all="${board.id}">✅ 全班繳交</button>
+              <button class="board-mode${correcting ? ' on' : ''}" type="button" data-board-mode="${board.id}" title="切換收作業／訂正模式">${correcting ? '✏️ 訂正模式' : '📥 收作業'}</button>
+              <button class="board-all-button" type="button" data-board-all="${board.id}">${correcting ? '✅ 全部訂正完成' : '✅ 全班繳交'}</button>
               <button class="board-remove" type="button" data-remove-board="${board.id}" title="移除版面">✕</button>
             </div>
             <div class="board-grid">${cells.join('')}</div>
@@ -602,15 +611,22 @@
         }).join('');
       }
       const rows = state.boards.map(board => {
-        let submitted = 0, resub = 0;
+        let submitted = 0, resub = 0, corrected = 0;
         const missing = [];
+        const correcting = [];
         activeSeats().forEach(seat => {
           const mark = board.seats[seat] || 'missing';
           if (mark === 'submitted') submitted += 1;
           else if (mark === 'resub') resub += 1;
+          else if (mark === 'correcting') correcting.push(seat);
+          else if (mark === 'corrected') corrected += 1;
           else missing.push(seat);
         });
-        return `<tr><th>${escapeHtml(boardLabel(board))}</th><td>已交 ${submitted}</td><td>補交 ${resub}</td><td>缺交 ${missing.length}${missing.length ? `（${missing.join('、')}）` : ''}</td></tr>`;
+        // 待訂正與已訂正都算有交，交件數要把它們加回去。
+        const handedIn = submitted + resub + correcting.length + corrected;
+        return `<tr><th>${escapeHtml(boardLabel(board))}</th><td>已交 ${handedIn}</td><td>補交 ${resub}</td>`
+          + `<td>${correcting.length ? `待訂正 ${correcting.length}（${correcting.join('、')}）` : '待訂正 0'}${corrected ? `／已訂正 ${corrected}` : ''}</td>`
+          + `<td>缺交 ${missing.length}${missing.length ? `（${missing.join('、')}）` : ''}</td></tr>`;
       });
       $('todayStatTable').querySelector('tbody').innerHTML = rows.length ? rows.join('') : '<tr><td class="status-text">尚未有版面。</td></tr>';
     }
@@ -636,14 +652,42 @@
       const board = state.boards.find(item => item.id === boardId);
       if (!board) return;
       const mark = board.seats[seat] || 'missing';
-      if (mark === 'missing') board.seats[seat] = 'submitted';
-      else delete board.seats[seat];
+      if (board.mode === 'correct') {
+        // 訂正模式：已交 → 待訂正 → 已訂正 → 回到已交。沒交的要先在收作業模式標記已交。
+        if (mark === 'missing') return showToast('這位座號還沒交，請先切回「📥 收作業」標記已交。', true);
+        if (mark === 'correcting') board.seats[seat] = 'corrected';
+        else if (mark === 'corrected') board.seats[seat] = 'submitted';
+        else board.seats[seat] = 'correcting';
+      } else {
+        if (mark === 'missing') board.seats[seat] = 'submitted';
+        else delete board.seats[seat];
+      }
       saveTodayState();
       renderBoards();
+    }
+    function toggleBoardMode(boardId) {
+      const board = state.boards.find(item => item.id === boardId);
+      if (!board) return;
+      board.mode = board.mode === 'correct' ? 'collect' : 'correct';
+      saveTodayState();
+      renderBoards();
+      showToast(board.mode === 'correct'
+        ? `「${boardLabel(board)}」切到訂正模式：點座號＝待訂正，再點一次＝已訂正。`
+        : `「${boardLabel(board)}」回到收作業模式。`);
     }
     function markBoardAllSubmitted(boardId) {
       const board = state.boards.find(item => item.id === boardId);
       if (!board) return;
+      if (board.mode === 'correct') {
+        // 訂正模式的整批動作：把所有待訂正標成已訂正。
+        let done = 0;
+        activeSeats().forEach(seat => {
+          if (board.seats[seat] === 'correcting') { board.seats[seat] = 'corrected'; done += 1; }
+        });
+        saveTodayState();
+        renderBoards();
+        return showToast(done ? `「${boardLabel(board)}」${done} 位標記為已訂正。` : '目前沒有待訂正的座號。');
+      }
       activeSeats().forEach(seat => { if (!board.seats[seat]) board.seats[seat] = 'submitted'; });
       saveTodayState();
       renderBoards();
@@ -659,12 +703,16 @@
       const homework = state.boards.map(board => {
         const missing = [];
         const resubmitted = [];
+        const correcting = [];
+        const corrected = [];
         activeSeats().forEach(seat => {
           const mark = board.seats[seat] || 'missing';
           if (mark === 'missing') missing.push(seat);
-          if (mark === 'resub') resubmitted.push(seat);
+          else if (mark === 'resub') resubmitted.push(seat);
+          else if (mark === 'correcting') correcting.push(seat);
+          else if (mark === 'corrected') corrected.push(seat);
         });
-        return { subject: board.subject, assignment: board.assignment, missing, resubmitted };
+        return { subject: board.subject, assignment: board.assignment, missing, resubmitted, correcting, corrected };
       });
       return { action: 'rollcall_submit', token: state.settings.classroomToken, date: todayKey(), className: state.settings.className, attendance, homework, push };
     }
@@ -754,9 +802,15 @@
       $('makeupStatus').textContent = '載入中……';
       try {
         const result = await callGas({ action: 'classroom_missing', token: state.settings.classroomToken, className: state.settings.className, days: state.settings.lookbackDays });
-        state.makeup.items = Array.isArray(result.missing) ? result.missing : [];
+        // 新版 GAS 回傳 pending（含待訂正）；舊版只有 missing，兩者都相容。
+        state.makeup.items = Array.isArray(result.pending) ? result.pending
+          : (Array.isArray(result.missing) ? result.missing : []);
         state.makeup.loaded = true;
-        $('makeupStatus').textContent = `近 ${state.settings.lookbackDays} 天缺交 ${state.makeup.items.length} 筆（${result.from} ～ ${result.to}）。學生補交後按「完成」。`;
+        const missingCount = state.makeup.items.filter(item => item.status !== '待訂正').length;
+        const correctingCount = state.makeup.items.length - missingCount;
+        $('makeupStatus').textContent = `近 ${state.settings.lookbackDays} 天：缺交 ${missingCount} 筆`
+          + (correctingCount ? `、待訂正 ${correctingCount} 筆` : '')
+          + `（${result.from} ～ ${result.to}）。學生補交或訂正完成後按「完成」。`;
         renderMakeup();
       } catch (error) {
         $('makeupStatus').textContent = `載入失敗：${error.message}`;
@@ -770,7 +824,11 @@
       if (showSeat) parts.push(`<span class="who">${item.seat}號</span>`);
       if (showDate) parts.push(`<span>${escapeHtml(item.date.slice(5).replace('-', '/'))}</span>`);
       parts.push(`<span>${escapeHtml(item.subject)}${item.assignment ? '／' + escapeHtml(item.assignment) : ''}</span>`);
-      return `<div class="makeup-item">${parts.join('')}<button class="makeup-done" type="button" data-makeup-done="${escapeHtml(makeupItemKey(item))}">完成</button></div>`;
+      const correcting = item.status === '待訂正';
+      if (correcting) parts.push('<span style="color:var(--correcting);font-weight:800">✏️ 待訂正</span>');
+      return `<div class="makeup-item">${parts.join('')}<button class="makeup-done" type="button"`
+        + `${correcting ? ' style="background:var(--corrected)"' : ''}`
+        + ` data-makeup-done="${escapeHtml(makeupItemKey(item))}">${correcting ? '訂正完成' : '完成'}</button></div>`;
     }
     function renderMakeup() {
       const body = $('makeupBody');
@@ -826,12 +884,14 @@
       if (!item) return;
       try {
         const result = await callGas({ action: 'homework_resubmit', token: state.settings.classroomToken, className: state.settings.className, date: item.date, subject: item.subject, assignment: item.assignment || '', seat: item.seat });
-        if (!result.updated) showToast('雲端找不到這筆缺交（可能已處理過），已從清單移除。');
-        else showToast(`✅ ${item.seat}號 ${item.subject}${item.assignment ? '／' + item.assignment : ''} 補交完成！`);
+        const wasCorrecting = item.status === '待訂正';
+        if (!result.updated) showToast('雲端找不到這筆紀錄（可能已處理過），已從清單移除。');
+        else showToast(`✅ ${item.seat}號 ${item.subject}${item.assignment ? '／' + item.assignment : ''} ${wasCorrecting ? '訂正完成' : '補交完成'}！`);
         state.makeup.items = state.makeup.items.filter(entry => makeupItemKey(entry) !== key);
         const todayBoard = state.boards.find(board => board.subject === item.subject && (board.assignment || '') === (item.assignment || ''));
-        if (item.date === todayKey() && todayBoard && !todayBoard.seats[item.seat]) {
-          todayBoard.seats[item.seat] = 'resub';
+        if (item.date === todayKey() && todayBoard) {
+          if (wasCorrecting) todayBoard.seats[item.seat] = 'corrected';
+          else if (!todayBoard.seats[item.seat]) todayBoard.seats[item.seat] = 'resub';
           saveTodayState();
           renderBoards();
         }
@@ -852,7 +912,7 @@
       const homeworkBySeat = {};
       data.homework.forEach(row => {
         if (!homeworkBySeat[row.seat]) homeworkBySeat[row.seat] = {};
-        if (!homeworkBySeat[row.seat][row.subject]) homeworkBySeat[row.seat][row.subject] = { 缺交: 0, 補交: 0 };
+        if (!homeworkBySeat[row.seat][row.subject]) homeworkBySeat[row.seat][row.subject] = { 缺交: 0, 補交: 0, 待訂正: 0, 已訂正: 0 };
         if (homeworkBySeat[row.seat][row.subject][row.status] !== undefined) homeworkBySeat[row.seat][row.subject][row.status] += 1;
       });
       const collectedDays = {};
@@ -872,11 +932,18 @@
         const cells = stats.subjects.map(subject => {
           const entry = stats.homeworkBySeat[seat][subject];
           if (!entry) return '<td>—</td>';
-          return `<td>${entry.缺交 ? `缺${entry.缺交}` : ''}${entry.補交 ? ` 補${entry.補交}` : ''}</td>`;
+          const parts = [];
+          if (entry.缺交) parts.push(`<span style="color:var(--missing)">缺${entry.缺交}</span>`);
+          if (entry.補交) parts.push(`<span style="color:var(--resub)">補${entry.補交}</span>`);
+          if (entry.待訂正) parts.push(`<span style="color:var(--correcting);font-weight:800">訂${entry.待訂正}</span>`);
+          if (entry.已訂正) parts.push(`<span style="color:var(--corrected)">✔${entry.已訂正}</span>`);
+          return `<td>${parts.join(' ') || '—'}</td>`;
         }).join('');
         return `<tr><th>${seat}號</th>${cells}</tr>`;
       });
-      $('homeworkStats').innerHTML = `<h3>📚 各科缺交／補交次數（分科統計）</h3><table class="summary-table"><tr><th>座號</th>${stats.subjects.map(subject => `<th>${escapeHtml(subject)}</th>`).join('')}</tr>${homeworkRows.join('') || '<tr><td>區間內沒有缺交紀錄 🎉</td></tr>'}</table>`;
+      $('homeworkStats').innerHTML = `<h3>📚 各科作業狀況（分科統計）</h3>`
+        + `<p class="status-text" style="margin:0 0 6px"><span style="color:var(--missing)">缺</span>＝缺交・<span style="color:var(--resub)">補</span>＝補交・<span style="color:var(--correcting);font-weight:800">訂</span>＝待訂正（尚未完成）・<span style="color:var(--corrected)">✔</span>＝已訂正</p>`
+        + `<table class="summary-table"><tr><th>座號</th>${stats.subjects.map(subject => `<th>${escapeHtml(subject)}</th>`).join('')}</tr>${homeworkRows.join('') || '<tr><td>區間內沒有待處理紀錄 🎉</td></tr>'}</table>`;
       const rateRows = stats.subjects.map(subject => {
         const collected = stats.collectedDays[subject];
         const totalSlots = collected * activeSeats().length;
@@ -942,12 +1009,12 @@
         rows.push([seat, entry.病假, entry.事假, entry.遲到, entry.未到]);
       });
       rows.push([]);
-      rows.push(['【各科缺交／補交次數】']);
-      rows.push(['座號', ...stats.subjects.flatMap(subject => [`${subject}缺交`, `${subject}補交`])]);
+      rows.push(['【各科作業狀況次數】']);
+      rows.push(['座號', ...stats.subjects.flatMap(subject => [`${subject}缺交`, `${subject}補交`, `${subject}待訂正`, `${subject}已訂正`])]);
       Object.keys(stats.homeworkBySeat).map(Number).sort((a, b) => a - b).forEach(seat => {
         rows.push([seat, ...stats.subjects.flatMap(subject => {
           const entry = stats.homeworkBySeat[seat][subject];
-          return [entry ? entry.缺交 : 0, entry ? entry.補交 : 0];
+          return [entry ? entry.缺交 : 0, entry ? entry.補交 : 0, entry ? entry.待訂正 : 0, entry ? entry.已訂正 : 0];
         })]);
       });
       rows.push([]);
@@ -1039,6 +1106,8 @@
         }
         return;
       }
+      const modeButton = event.target.closest('[data-board-mode]');
+      if (modeButton) return toggleBoardMode(modeButton.dataset.boardMode);
       const allButton = event.target.closest('[data-board-all]');
       if (allButton) return markBoardAllSubmitted(allButton.dataset.boardAll);
       const seatButton = event.target.closest('[data-board-id][data-seat]');
