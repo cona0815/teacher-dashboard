@@ -96,6 +96,7 @@
     .makeup-cal-head { font-size: 14px; font-weight: 900; color: var(--muted); text-align: center; }
     .makeup-cal-day { border: 2px solid var(--line); border-radius: 10px; min-height: 62px; padding: 5px; font-size: 14px; font-weight: 800; background: var(--surface); cursor: pointer; text-align: left; }
     .makeup-cal-day.has-missing { background: #fdeee9; border-color: var(--missing); color: var(--missing); }
+    .makeup-cal-day.has-correcting { background: #fdf0e6; border-color: var(--correcting); color: var(--correcting); }
     .makeup-cal-day.other { opacity: .35; }
     .rollcall-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(420px, 3fr); gap: 16px; align-items: stretch; }
     /* 座號格尺寸隨螢幕高度縮放，確保點名＋聯絡本剛好一頁不捲動 */
@@ -326,7 +327,7 @@
       boards: [],            // [{id, subject, assignment, seats:{seat:'submitted'|'resub'}}]（未標=缺交）
       flags: { autoAbsentDone: false, autoNotifyDone: false, autoHomeworkNotifyDone: false },
       makeup: { items: [], loaded: false, mode: 'subject', focus: '' },
-      correct: { items: [], loaded: false, mode: 'day' },
+      correct: { items: [], loaded: false, mode: 'day', focus: '', selectedDay: '', doneCount: 0 },
       countdown: { remaining: 0, running: false },
       submitting: false,
       dirty: false,          // 有未存到雲端的異動；每 5 分鐘與離開頁面時自動存檔
@@ -758,72 +759,83 @@
       $('correctStatus').textContent = '載入中……';
       try {
         const result = await callGas({ action: 'classroom_missing', token: state.settings.classroomToken, className: state.settings.className, days: state.settings.lookbackDays });
-        state.correct.items = Array.isArray(result.corrections) ? result.corrections : [];
+        const all = Array.isArray(result.corrections) ? result.corrections : [];
+        // 清單只留「還沒訂正完」的；已完成的只在狀態列報個數字，不佔畫面。
+        state.correct.items = all.filter(item => item.status === '待訂正');
+        state.correct.doneCount = all.length - state.correct.items.length;
         state.correct.loaded = true;
-        const pending = state.correct.items.filter(item => item.status === '待訂正').length;
-        $('correctStatus').textContent = `近 ${state.settings.lookbackDays} 天：待訂正 ${pending} 筆、已完成 ${state.correct.items.length - pending} 筆（${result.from} ～ ${result.to}）。`
-          + (Array.isArray(result.corrections) ? '' : '（雲端程式為舊版，請更新後才有訂正統計）');
+        $('correctStatus').textContent = `近 ${state.settings.lookbackDays} 天：待訂正 ${state.correct.items.length} 筆`
+          + (state.correct.doneCount ? `（另有 ${state.correct.doneCount} 筆已完成，不列出）` : '')
+          + `｜${result.from} ～ ${result.to}`
+          + (Array.isArray(result.corrections) ? '' : '　⚠ 雲端程式為舊版，請更新後才有訂正統計');
         renderCorrectStats();
       } catch (error) {
         $('correctStatus').textContent = `載入失敗：${error.message}`;
       }
     }
-    function correctBadge(pending, done) {
-      return `<span style="color:var(--correcting);font-weight:900">待訂正 ${pending}</span>`
-        + `${done ? `　<span style="color:var(--ok)">已完成 ${done}</span>` : ''}`;
+    function correctBadge(count) {
+      return `<span style="color:var(--correcting);font-weight:900">待訂正 ${count}</span>`;
     }
     function renderCorrectStats() {
       const host = $('correctStatBody');
       if (!host) return;
-      const items = state.correct.items;
+      const items = state.correct.items;   // 只含待訂正
       if (!state.correct.loaded) {
         host.innerHTML = '<div class="status-text">按「🔄 重新整理」載入近期訂正紀錄。</div>';
         return;
       }
       if (!items.length) {
-        host.innerHTML = '<div class="status-text" style="padding:14px 4px;font-size:17px">近期沒有訂正紀錄 🎉</div>';
+        host.innerHTML = '<div class="status-text" style="padding:16px 4px;font-size:18px">🎉 目前沒有待訂正的項目，全部都清完了。</div>';
         return;
       }
       const group = keyOf => {
         const map = {};
-        items.forEach(item => {
-          const key = keyOf(item);
-          if (!map[key]) map[key] = { pending: [], done: [] };
-          map[key][item.status === '待訂正' ? 'pending' : 'done'].push(item);
-        });
+        items.forEach(item => { (map[keyOf(item)] ??= []).push(item); });
         return map;
       };
-      const detail = list => list.map(item =>
-        `${item.seat}號 ${item.subject}${item.assignment ? '／' + item.assignment : ''}`).join('、');
 
       if (state.correct.mode === 'day') {
-        const map = group(item => item.date);
-        host.innerHTML = Object.keys(map).sort().reverse().map(date => {
-          const entry = map[date];
-          const weekday = ['日', '一', '二', '三', '四', '五', '六'][new Date(date + 'T00:00:00').getDay()];
-          return `<div class="makeup-group"><h4>${escapeHtml(date)}（${weekday}）　${correctBadge(entry.pending.length, entry.done.length)}</h4>`
-            + `<div class="status-text" style="font-size:15px">${entry.pending.length ? escapeHtml(detail(entry.pending)) : '當天的訂正都完成了 ✅'}</div></div>`;
-        }).join('');
+        // 日曆：只有還沒訂正完的日子會亮紅；一片空白就代表都清完了。
+        const byDate = group(item => item.date);
+        const focusMonth = /^\d{4}-\d{2}$/.test(state.correct.focus) ? state.correct.focus : todayKey().slice(0, 7);
+        state.correct.focus = focusMonth;
+        const [year, month] = focusMonth.split('-').map(Number);
+        const first = new Date(year, month - 1, 1);
+        const heads = ['日', '一', '二', '三', '四', '五', '六'].map(day => `<div class="makeup-cal-head">${day}</div>`).join('');
+        const cells = [];
+        for (let index = 0; index < 42; index += 1) {
+          const date = new Date(year, month - 1, 1 - first.getDay() + index);
+          const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+          const count = (byDate[key] || []).length;
+          cells.push(`<button class="makeup-cal-day${count ? ' has-correcting' : ''}${date.getMonth() + 1 === month ? '' : ' other'}" type="button" data-correct-day="${key}">${date.getDate()}${count ? `<br>訂正 ${count}` : ''}</button>`);
+        }
+        const selected = state.correct.selectedDay && byDate[state.correct.selectedDay] ? state.correct.selectedDay : '';
+        const detail = selected
+          ? `<h3 style="margin-top:14px;color:var(--primary-strong)">${selected} 還沒訂正完</h3>`
+            + `<div class="makeup-list">${byDate[selected].sort((a, b) => a.seat - b.seat).map(item =>
+              `<div class="makeup-item"><span class="who">${item.seat}號</span><span>${escapeHtml(item.subject)}${item.assignment ? '／' + escapeHtml(item.assignment) : ''}</span></div>`).join('')}</div>`
+          : '<div class="status-text" style="margin-top:12px">點紅色日期看當天還沒訂正完的名單；沒有紅色就代表都清完了。</div>';
+        host.innerHTML = `<div class="mode-row"><button class="ghost-button" type="button" data-correct-month="-1">◀ 上個月</button>`
+          + `<strong style="font-size:18px">${year} 年 ${month} 月</strong>`
+          + `<button class="ghost-button" type="button" data-correct-month="1">下個月 ▶</button></div>`
+          + `<div class="makeup-cal">${heads}${cells.join('')}</div>${detail}`;
         return;
       }
+
       if (state.correct.mode === 'subject') {
         const map = group(item => item.subject + (item.assignment ? '／' + item.assignment : ''));
-        host.innerHTML = Object.keys(map).sort().map(label => {
-          const entry = map[label];
-          const seats = entry.pending.map(item => `${item.seat}號（${item.date.slice(5).replace('-', '/')}）`).join('、');
-          return `<div class="makeup-group"><h4>${escapeHtml(label)}　${correctBadge(entry.pending.length, entry.done.length)}</h4>`
-            + `<div class="status-text" style="font-size:15px">${seats || '這一項的訂正都完成了 ✅'}</div></div>`;
-        }).join('');
+        host.innerHTML = Object.keys(map).sort().map(label =>
+          `<div class="makeup-group"><h4>${escapeHtml(label)}　${correctBadge(map[label].length)}</h4>`
+          + `<div class="status-text" style="font-size:15px">${map[label].sort((a, b) => a.seat - b.seat).map(item =>
+            `${item.seat}號（${item.date.slice(5).replace('-', '/')}）`).join('、')}</div></div>`).join('');
         return;
       }
+
       const map = group(item => item.seat);
-      host.innerHTML = Object.keys(map).map(Number).sort((a, b) => a - b).map(seat => {
-        const entry = map[seat];
-        const list = entry.pending.map(item =>
-          `${item.date.slice(5).replace('-', '/')} ${item.subject}${item.assignment ? '／' + item.assignment : ''}`).join('、');
-        return `<div class="makeup-group"><h4>${seat}號　${correctBadge(entry.pending.length, entry.done.length)}</h4>`
-          + `<div class="status-text" style="font-size:15px">${list || '沒有待訂正的項目 ✅'}</div></div>`;
-      }).join('');
+      host.innerHTML = Object.keys(map).map(Number).sort((a, b) => a - b).map(seat =>
+        `<div class="makeup-group"><h4>${seat}號　${correctBadge(map[seat].length)}</h4>`
+        + `<div class="status-text" style="font-size:15px">${map[seat].sort((a, b) => a.date.localeCompare(b.date)).map(item =>
+          `${item.date.slice(5).replace('-', '/')} ${item.subject}${item.assignment ? '／' + item.assignment : ''}`).join('、')}</div></div>`).join('');
     }
 
     // ---------- 送出回報 ----------
@@ -1252,10 +1264,23 @@
     });
     document.querySelectorAll('[data-correct-mode]').forEach(button => button.addEventListener('click', () => {
       state.correct.mode = button.dataset.correctMode;
+      state.correct.selectedDay = '';
       document.querySelectorAll('[data-correct-mode]').forEach(item => item.classList.toggle('active', item === button));
       renderCorrectStats();
     }));
     $('refreshCorrectButton').addEventListener('click', loadCorrectStats);
+    $('correctStatBody').addEventListener('click', event => {
+      const day = event.target.closest('[data-correct-day]');
+      if (day) { state.correct.selectedDay = day.dataset.correctDay; return renderCorrectStats(); }
+      const monthNav = event.target.closest('[data-correct-month]');
+      if (monthNav) {
+        const [year, month] = state.correct.focus.split('-').map(Number);
+        const moved = new Date(year, month - 1 + Number(monthNav.dataset.correctMonth), 1);
+        state.correct.focus = `${moved.getFullYear()}-${String(moved.getMonth() + 1).padStart(2, '0')}`;
+        state.correct.selectedDay = '';
+        renderCorrectStats();
+      }
+    });
     document.querySelectorAll('[data-makeup-mode]').forEach(button => button.addEventListener('click', () => {
       state.makeup.mode = button.dataset.makeupMode;
       state.makeup.focus = '';
