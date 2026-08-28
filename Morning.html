@@ -847,15 +847,17 @@
       const host = $('correctStatBody');
       if (!host) return;
       const items = correctStatsItems();   // 只含待訂正
-      if (!items.length) {
-        host.innerHTML = '<div class="status-text" style="padding:16px 4px;font-size:18px">🎉 目前沒有待訂正的項目，全部都清完了。</div>';
-        return;
-      }
       const group = keyOf => {
         const map = {};
         items.forEach(item => { (map[keyOf(item)] ??= []).push(item); });
         return map;
       };
+      // 分天是日曆：即使一筆都沒有也要把月曆畫出來（整片空白＝都清完了）。
+      // 分科目／分人是清單，沒資料就只顯示一句話。
+      if (!items.length && state.correct.mode !== 'day') {
+        host.innerHTML = '<div class="status-text" style="padding:16px 4px;font-size:18px">🎉 目前沒有待訂正的項目，全部都清完了。</div>';
+        return;
+      }
 
       if (state.correct.mode === 'day') {
         // 日曆：只有還沒訂正完的日子會亮紅；一片空白就代表都清完了。
@@ -877,7 +879,9 @@
           ? `<h3 style="margin-top:14px;color:var(--primary-strong)">${selected} 還沒訂正完</h3>`
             + `<div class="makeup-list">${byDate[selected].sort((a, b) => a.seat - b.seat).map(item =>
               `<div class="makeup-item"><span class="who">${item.seat}號</span><span>${escapeHtml(item.subject)}${item.assignment ? '／' + escapeHtml(item.assignment) : ''}</span></div>`).join('')}</div>`
-          : '<div class="status-text" style="margin-top:12px">點紅色日期看當天還沒訂正完的名單；沒有紅色就代表都清完了。</div>';
+          : items.length
+            ? '<div class="status-text" style="margin-top:12px">點橘色日期看當天還沒訂正完的名單。</div>'
+            : '<div class="status-text" style="margin-top:12px;font-size:17px">🎉 整個月都沒有待訂正的項目。在上方版面點座號標記訂正後，當天就會變橘色。</div>';
         host.innerHTML = `<div class="mode-row"><button class="ghost-button" type="button" data-correct-month="-1">◀ 上個月</button>`
           + `<strong style="font-size:18px">${year} 年 ${month} 月</strong>`
           + `<button class="ghost-button" type="button" data-correct-month="1">下個月 ▶</button></div>`
