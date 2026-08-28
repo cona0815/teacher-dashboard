@@ -33,6 +33,34 @@
 | 桌寵本機橋接 | 檢視綁定位址與 CORS 來源判斷 | 只綁 `127.0.0.1`；`bridge_origin_allowed()` 以來源白名單先行 403，再回應 CORS 標頭 |
 | 試算表公式注入 | 檢查寫入 Sheets 的自由文字 | **發現並修正**（見下） |
 
+### 2026-08-29 深度掃描（第二輪）
+
+| 項目 | 結果 |
+|---|---|
+| Drive 檔案分享權限 | 未呼叫 `setSharing`／`addViewer`，備份檔維持雲端硬碟預設的「僅自己」 |
+| AI 回應寫入畫面 | 主要輸出走 `textContent`；AI 產生的子任務名稱經 `escapeHtml()` — 惡意 PDF 無法藉 AI 回應注入 HTML |
+| 還原備份 | 檢查 `kind`／`version`、任務數上限 5000、需使用者確認、逐筆過濾欄位 |
+| 災難性回溯 regex（ReDoS） | 未發現巢狀量詞 |
+| 收件匣洪水 | `MAX_INBOX_ROWS: 1000`＋`trimLineInbox_()` 自動裁切 |
+| Referrer 外洩 | `Referrer-Policy: no-referrer`；同步 API 用 POST，金鑰不放網址 |
+| 點擊劫持 | **發現並修正**（見下） |
+
+已修正：**點擊劫持（clickjacking）**。站台標頭原本沒有 `frame-ancestors`／`X-Frame-Options`，
+外部網站可以把工作台或大屏塞進 iframe，疊上透明元素誘導老師誤點（例如移除版面、還原備份）。
+已在 `netlify.toml` 加上 `X-Frame-Options: SAMEORIGIN` 與 CSP `frame-ancestors 'self'`；
+用 `'self'` 而非 `'none'`，是因為安裝教學頁需要以 iframe 嵌入自家的 `Code.gs`。
+
+### 這一輪確認為「已知取捨」而非漏洞
+
+- **AI 提示詞注入**：AI 助理會讀老師上傳的 PDF／圖片，內容若刻意寫入指示，可能影響
+  AI 產出的摘要與任務建議。影響僅限「產生誤導性文字」，不會執行程式、不會自動送出；
+  所有建議都要老師按下確認才寫入。仍請維持人工複核。
+- **桌寵本機端點沒有金鑰**：`127.0.0.1:8767` 的 `/sync` 只靠來源白名單，不驗證金鑰。
+  只綁回環位址，同機器上的其他程式仍可存取。若機器已被惡意程式入侵，此防線本就無效；
+  一般使用情境下風險可接受。
+- **Gemini 金鑰放在網址查詢參數**：這是 Google Generative Language API 的官方用法
+  （`?key=`）。若要更保守，可改用 `x-goog-api-key` 標頭。
+
 已修正：**試算表公式注入**。寫進試算表的自由文字（班級、科目、進度、聯絡本、
 LINE 收件匣、檔案備份標題）若以 `=`、`+`、`-`、`@` 開頭，Google Sheets 會當公式執行，
 例如被寫入 `=IMAGE("http://…")` 時，老師一開啟試算表就會對外連線。
