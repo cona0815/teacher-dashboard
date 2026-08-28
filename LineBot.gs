@@ -19,6 +19,8 @@ var LINE_BOT_CONFIG = {
   HOMEWORK_SHEET: '作業紀錄',
   CONTACTBOOK_SHEET: '聯絡本',
   CONTACTBOOK_HEADERS: ['日期', '班級', '內容', '更新時間', '來源'],
+  FILES_SHEET: '檔案備份',
+  FILES_HEADERS: ['日期', '類型', '分類', '標題', '檔名', '雲端連結'],
   INBOX_HEADERS: ['編號', '建立時間', '類型', '原文', '整理標題', '到期日', '工作主軸', '狀態', '來源使用者', '補充JSON'],
   ROLLCALL_HEADERS: ['日期', '班級', '座號', '狀態'],
   HOMEWORK_HEADERS: ['日期', '班級', '科目', '作業名稱', '座號', '狀態'],
@@ -106,7 +108,13 @@ function ensureLineBotSheets_(spreadsheet) {
     contactbook.getRange(1, 1, 1, LINE_BOT_CONFIG.CONTACTBOOK_HEADERS.length).setValues([LINE_BOT_CONFIG.CONTACTBOOK_HEADERS]);
     contactbook.setFrozenRows(1);
   }
-  return { inbox: inbox, snapshot: snapshot, rollcall: rollcall, homework: homework, contactbook: contactbook };
+  var files = spreadsheet.getSheetByName(LINE_BOT_CONFIG.FILES_SHEET);
+  if (!files) {
+    files = spreadsheet.insertSheet(LINE_BOT_CONFIG.FILES_SHEET);
+    files.getRange(1, 1, 1, LINE_BOT_CONFIG.FILES_HEADERS.length).setValues([LINE_BOT_CONFIG.FILES_HEADERS]);
+    files.setFrozenRows(1);
+  }
+  return { inbox: inbox, snapshot: snapshot, rollcall: rollcall, homework: homework, contactbook: contactbook, files: files };
 }
 
 /**
@@ -719,6 +727,11 @@ function handleLineEvent_(event, allowedUsers) {
     replyLineMessage_(event.replyToken, buildSeatLookupReply_(Number(seatMatch[1])));
     return;
   }
+  var fileSearchMatch = text.match(/^(找檔案|找檔|檔案)\s*(.*)$/);
+  if (fileSearchMatch) {
+    replyLineMessage_(event.replyToken, buildFileSearchReply_(fileSearchMatch[2]));
+    return;
+  }
   if (/^(照片轉聯絡本|加入聯絡本|存進聯絡本)$/.test(text)) {
     var pending = lineBotProperty_(LAST_MEDIA_SUMMARY_KEY);
     replyLineMessage_(event.replyToken, pending
@@ -842,6 +855,8 @@ function handleLineMediaMessage_(event, userId) {
   }
   // 記住這次的辨識結果，老師接著傳「照片轉聯絡本」就能一鍵寫進今天的黑板。
   PropertiesService.getScriptProperties().setProperty(LAST_MEDIA_SUMMARY_KEY, sourceText.slice(0, 1000));
+  // 用 AI 讀出的標題把雲端檔案改成看得懂的名字，並歸到正確的分類資料夾。
+  backup = refineDriveBackup_(backup, classified.title || sourceText.slice(0, 30), classified.tag || '');
   var confirmText = saveAndConfirm_(classified, sourceText, userId, messageType === 'audio' ? 'voice' : 'photo');
   if (messageType === 'image') confirmText += '\n（要把重點寫進今天的聯絡本嗎？傳「照片轉聯絡本」即可。）';
   replyLineMessage_(event.replyToken, confirmText + driveBackupNote_(backup));
@@ -953,9 +968,59 @@ function driveMonthFolder_(root, date) {
 
 var DRIVE_TYPE_LABELS = { image: '照片', video: '影片', audio: '語音', file: '檔案' };
 
+/** 依關鍵字判斷這份資料屬於哪一類，決定要放進哪個資料夾。 */
+var DRIVE_CATEGORY_RULES = [
+  { name: '通知單與回條', pattern: /通知單|回條|同意書|報名表|調查表|意願|繳費|收費/ },
+  { name: '學生與親師', pattern: /學生|家長|親師|輔導|請假|健康中心|保健室|受傷|跌倒|缺交|出缺席/ },
+  { name: '會議與晨會', pattern: /會議|晨會|朝會|報告事項|決議|議程/ },
+  { name: '公文與行政', pattern: /公文|來函|行政|處室|校務|人事|研習|考核|評鑑|計畫|方案|實施要點/ },
+  { name: '課程與教材', pattern: /教材|學習單|課程|進度|備課|試卷|命題|題目|教案|講義|評量/ },
+  { name: '活動與競賽', pattern: /活動|校慶|運動會|畢旅|校外教學|競賽|比賽|表演|展覽|演練/ }
+];
+
+/** AI 標籤對應的預設分類；關鍵字沒命中時使用。 */
+var DRIVE_TAG_CATEGORY = {
+  '家長聯繫': '學生與親師',
+  '學生概況': '學生與親師',
+  '作業缺交': '學生與親師',
+  '備課靈感': '課程與教材',
+  '生活雜事': '其他'
+};
+
+function driveCategoryFor_(text, tag) {
+  var haystack = String(text || '') + ' ' + String(tag || '');
+  for (var index = 0; index < DRIVE_CATEGORY_RULES.length; index += 1) {
+    if (DRIVE_CATEGORY_RULES[index].pattern.test(haystack)) return DRIVE_CATEGORY_RULES[index].name;
+  }
+  return DRIVE_TAG_CATEGORY[String(tag)] || '其他';
+}
+
+function driveCategoryFolder_(monthFolder, category) {
+  var found = monthFolder.getFoldersByName(category);
+  return found.hasNext() ? found.next() : monthFolder.createFolder(category);
+}
+
+function driveSafeName_(value) {
+  return String(value || '').replace(/[\\\/:*?"<>|\r\n]/g, '_').replace(/\s+/g, ' ').trim().slice(0, 60);
+}
+
+function driveExtensionFor_(messageType, originalName, contentType) {
+  var fromName = String(originalName || '').match(/\.[A-Za-z0-9]{1,6}$/);
+  if (fromName) return fromName[0].toLowerCase();
+  if (/jpeg|jpg/.test(String(contentType))) return '.jpg';
+  if (/png/.test(String(contentType))) return '.png';
+  if (/pdf/.test(String(contentType))) return '.pdf';
+  if (messageType === 'image') return '.jpg';
+  if (messageType === 'video') return '.mp4';
+  if (messageType === 'audio') return '.m4a';
+  return '';
+}
+
 /**
- * 把 LINE 訊息的檔案存進 Drive；回傳 { name, url } 或 null。
- * 任何失敗都只回 null，不讓備份影響原本的訊息處理。
+ * 把 LINE 訊息的檔案存進 Drive；回傳 { fileId, name, url, category } 或 null。
+ * 收到當下就先落地（LINE 檔案有期限），檔名先用原檔名或類型；
+ * 之後 AI 辨識完成再呼叫 refineDriveBackup_ 改成看得懂的名稱並歸到正確分類。
+ * 任何失敗都只回 null，不影響原本的訊息處理。
  */
 function backupLineContentToDrive_(messageId, messageType, originalName, content) {
   if (driveBackupTypes_().indexOf(String(messageType)) === -1) return null;
@@ -965,26 +1030,100 @@ function backupLineContentToDrive_(messageId, messageType, originalName, content
     if (!payload || !payload.bytes) return null;
     if (payload.bytes.length > maxMb * 1024 * 1024) return { oversize: true, limitMb: maxMb };
     var date = lineBotToday_();
-    var stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyyMMdd_HHmmss');
     var label = DRIVE_TYPE_LABELS[messageType] || '檔案';
-    var safeName = String(originalName || '').replace(/[\\\/:*?"<>|]/g, '_').slice(0, 80);
-    if (!safeName) {
-      var extension = messageType === 'image' ? '.jpg' : messageType === 'video' ? '.mp4' : messageType === 'audio' ? '.m4a' : '';
-      safeName = label + extension;
-    }
-    var blob = Utilities.newBlob(payload.bytes, payload.contentType || 'application/octet-stream', stamp + '_' + label + '_' + safeName);
-    var file = driveMonthFolder_(driveBackupFolder_(), date).createFile(blob);
-    return { name: file.getName(), url: file.getUrl() };
+    var extension = driveExtensionFor_(messageType, originalName, payload.contentType);
+    var baseName = driveSafeName_(String(originalName || '').replace(/\.[A-Za-z0-9]{1,6}$/, '')) || label;
+    var category = driveCategoryFor_(originalName, '');
+    var monthFolder = driveMonthFolder_(driveBackupFolder_(), date);
+    var folder = driveCategoryFolder_(monthFolder, category);
+    var fileName = date.slice(5).replace('-', '') + '_' + baseName + extension;
+    var blob = Utilities.newBlob(payload.bytes, payload.contentType || 'application/octet-stream', fileName);
+    var file = folder.createFile(blob);
+    var backup = { fileId: file.getId(), name: file.getName(), url: file.getUrl(), category: category, type: label, date: date };
+    recordDriveBackup_(backup, baseName);
+    return backup;
   } catch (error) {
     return null;
   }
+}
+
+/**
+ * AI 辨識完成後，用辨識出的標題重新命名並歸類，讓檔案在雲端硬碟一眼看得懂。
+ * 例：0828_通知單與回條/0828_第二次返校日晨會報告事項.jpg
+ */
+function refineDriveBackup_(backup, title, tag) {
+  if (!backup || !backup.fileId || !title) return backup;
+  try {
+    var cleanTitle = driveSafeName_(title);
+    if (!cleanTitle) return backup;
+    var file = DriveApp.getFileById(backup.fileId);
+    var extension = String(backup.name).match(/\.[A-Za-z0-9]{1,6}$/);
+    var newName = String(backup.date).slice(5).replace('-', '') + '_' + cleanTitle + (extension ? extension[0] : '');
+    file.setName(newName);
+    var category = driveCategoryFor_(title, tag);
+    if (category !== backup.category) {
+      var monthFolder = driveMonthFolder_(driveBackupFolder_(), backup.date);
+      file.moveTo(driveCategoryFolder_(monthFolder, category));
+      backup.category = category;
+    }
+    backup.name = newName;
+    updateDriveBackupRecord_(backup, cleanTitle);
+    return backup;
+  } catch (error) {
+    return backup;
+  }
+}
+
+/** 在「檔案備份」分頁留一筆索引，之後可用「找檔案 關鍵字」搜尋。 */
+function recordDriveBackup_(backup, title) {
+  try {
+    var sheets = ensureLineBotSheets_(SpreadsheetApp.getActiveSpreadsheet());
+    sheets.files.appendRow([backup.date, backup.type, backup.category, title || '', backup.name, backup.url]);
+  } catch (error) {}
+}
+
+function updateDriveBackupRecord_(backup, title) {
+  try {
+    var sheets = ensureLineBotSheets_(SpreadsheetApp.getActiveSpreadsheet());
+    var lastRow = sheets.files.getLastRow();
+    if (lastRow <= 1) return;
+    var values = sheets.files.getRange(2, 1, lastRow - 1, LINE_BOT_CONFIG.FILES_HEADERS.length).getValues();
+    for (var index = values.length - 1; index >= 0; index -= 1) {
+      if (String(values[index][5]) === backup.url) {
+        sheets.files.getRange(index + 2, 3, 1, 3).setValues([[backup.category, title, backup.name]]);
+        return;
+      }
+    }
+  } catch (error) {}
+}
+
+/** 「找檔案 關鍵字」：從備份索引找出符合的檔案並附上連結。 */
+function buildFileSearchReply_(keyword) {
+  var sheets = ensureLineBotSheets_(SpreadsheetApp.getActiveSpreadsheet());
+  var lastRow = sheets.files.getLastRow();
+  if (lastRow <= 1) return '目前還沒有備份任何檔案。傳照片或檔案給我，就會自動存進你的雲端硬碟。';
+  var values = sheets.files.getRange(2, 1, lastRow - 1, LINE_BOT_CONFIG.FILES_HEADERS.length).getValues();
+  var query = String(keyword || '').trim();
+  var matched = values.filter(function (row) {
+    if (!query) return true;
+    return (String(row[2]) + String(row[3]) + String(row[4])).indexOf(query) !== -1;
+  }).slice(-8).reverse();
+  if (!matched.length) return '找不到含「' + query + '」的備份檔案。傳「找檔案」可看最近備份的幾筆。';
+  var lines = [query ? '📁 含「' + query + '」的備份（最近 ' + matched.length + ' 筆）' : '📁 最近備份的檔案'];
+  matched.forEach(function (row) {
+    var date = row[0] instanceof Date ? Utilities.formatDate(row[0], Session.getScriptTimeZone(), 'yyyy-MM-dd') : String(row[0]);
+    lines.push('');
+    lines.push('・' + date.slice(5).replace('-', '/') + '｜' + row[2] + '｜' + (row[3] || row[4]));
+    lines.push(String(row[5]));
+  });
+  return lines.join('\n');
 }
 
 /** 組出要附在回覆後面的備份說明；沒有備份就回空字串。 */
 function driveBackupNote_(backup) {
   if (!backup) return '';
   if (backup.oversize) return '\n（檔案超過 ' + backup.limitMb + ' MB，未自動備份到雲端硬碟。）';
-  return '\n☁️ 已備份到你的雲端硬碟：\n' + backup.url;
+  return '\n☁️ 已備份到雲端硬碟｜' + backup.category + '\n' + backup.url;
 }
 
 // ---------------------------------------------------------------------------
@@ -1200,7 +1339,8 @@ function lineBotHelpText_() {
     '・「請假」「明天請假」→ 產生代課交接包，可直接轉發給代課老師',
     '・「聯絡簿：項目1、項目2」→ 產生家長群公告',
     '・「照片轉聯絡本」→ 把剛剛辨識的通知單重點寫進今天的聯絡本',
-    '・傳影片或檔案 → 自動備份到你的雲端硬碟（LINE 檔案會過期，這裡不會）',
+    '・傳照片或檔案 → 自動備份到雲端硬碟，AI 會依內容命名並分類歸檔',
+    '・「找檔案 通知單」→ 從備份索引找出檔案並附連結（不加關鍵字就看最近幾筆）',
     '・「推播設定」→ 查看本月用量與各項推播開關；「開啟 放學小結」「關閉 作業推播」可切換',
     '・「撤回」→ 作廢剛剛那一筆；「刪除 關鍵字」→ 作廢含關鍵字的最新一筆',
     '・「我的ID」→ 查詢自己的 LINE userId（安裝設定用）',
