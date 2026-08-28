@@ -124,13 +124,27 @@ function setupTriggers() {
   ScriptApp.newTrigger('sendLineDailyBriefing').timeBased().everyDays(1).atHour(8).create();
   ScriptApp.newTrigger('sendRollcallReminder').timeBased().everyDays(1).atHour(8).create();
   ScriptApp.newTrigger('sendWeeklyHomeworkAlerts').timeBased().onWeekDay(ScriptApp.WeekDay.FRIDAY).atHour(15).create();
-  var summary = '✅ 已設定 3 個自動觸發器：每日簡報（每天 8–9 點）、未點名提醒（8:20 起智慧檢查，僅在當天沒回報時發送）、每週家長關懷（每週五下午 3–4 點）。之後不必再設定。\n提醒：點名資訊的主通道是大屏 8:08 自動送出，LINE 當下就會收到。';
+  var summary = '✅ 已設定 3 個自動觸發器：每日簡報（每天 8–9 點，大屏已推播今日重點時自動略過）、未點名提醒（8:20 起智慧檢查，僅在當天沒回報時發送）、每週家長關懷（每週五下午 3–4 點）。之後不必再設定。\n提醒：有開大屏的日子，08:08 的點名推播就會一併帶上今日課程、任務、記事與逾期提醒；08:40 再補一則作業繳交情況。';
   Logger.log(summary);
   return summary;
 }
 
 function lineBotProperty_(key) {
   return String(PropertiesService.getScriptProperties().getProperty(key) || '').trim();
+}
+
+var MORNING_BRIEF_FLAG = 'MORNING_BRIEF_SENT_DATE';
+
+/**
+ * 取得「今日重點」段落（今日課程／任務／記事／逾期），同一天只回傳一次。
+ * 大屏的點名推播與每日簡報共用這個旗標，先送到的那一則帶上，另一則就不再重複。
+ */
+function morningBriefSectionOnce_(date) {
+  var props = PropertiesService.getScriptProperties();
+  if (String(props.getProperty(MORNING_BRIEF_FLAG) || '') === date) return '';
+  if (!readWorkspaceSnapshot_()) return '';   // 工作台還沒同步過快照就先不附，避免推一段沒內容的提示
+  props.setProperty(MORNING_BRIEF_FLAG, date);
+  return buildSnapshotReply_();
 }
 
 /**
@@ -268,6 +282,12 @@ function submitRollcall_(body) {
 
   var summaryText = buildRollcallSummaryText_(
     date, className, attendance, pushMode === 'attendance' ? [] : homework, pushMode);
+  // 點名推播同時當成老師的晨間簡報：附上今日課程、任務、記事與逾期提醒。
+  // 同一天只附一次，之後 sendLineDailyBriefing 會自動略過，不會重複轟炸。
+  if (pushMode === 'attendance') {
+    var brief = morningBriefSectionOnce_(date);
+    if (brief) summaryText += '\n\n' + brief;
+  }
   var users = lineBotProperty_('LINE_ALLOWED_USER_IDS')
     .split(',').map(function (value) { return value.trim(); }).filter(String);
   users.forEach(function (userId) { pushLineMessage_(userId, summaryText); });
@@ -1193,17 +1213,21 @@ function buildParentHomeworkMessage_(items) {
 }
 
 /**
- * 每日簡報（選用）：在 Apps Script「觸發條件」新增時間驅動觸發器，
- * 建議時段選在大屏自動回報之後（例如每日 8:00–9:00），內容包含：
- * 今日點名與作業繳交回報＋今日課程進度＋今日任務＋逾期任務清單。
- * 推播訊息計入 LINE 免費額度（目前每月 200 則；每日 1 則約 30 則／月）。
+ * 每日簡報（雲端備援）：內容包含今日點名與作業回報＋今日課程進度＋今日任務＋
+ * 今日記事＋逾期任務清單。有使用晨間大屏時，這些內容已附在大屏的點名推播裡，
+ * 本函式會自動略過不重複發送；沒開大屏的日子才由這裡補上。
+ * 推播訊息計入 LINE 免費額度（目前每月 200 則）。
  */
 function sendLineDailyBriefing() {
   var users = lineBotProperty_('LINE_ALLOWED_USER_IDS')
     .split(',').map(function (value) { return value.trim(); }).filter(String);
   if (!users.length) return;
-  var sections = ['☀️ 早安！今日簡報：'];
   var today = lineBotToday_();
+  var props = PropertiesService.getScriptProperties();
+  // 大屏的點名推播已經帶過今日重點就不再重複；老師早上只會收到一則含任務的訊息。
+  if (String(props.getProperty(MORNING_BRIEF_FLAG) || '') === today) return;
+  props.setProperty(MORNING_BRIEF_FLAG, today);
+  var sections = ['☀️ 早安！今日簡報：'];
   var rollcall = readRollcallRange_(today, today, '');
   if (rollcall.attendance.length || rollcall.homework.length) {
     sections.push(buildRollcallTodayReply_());

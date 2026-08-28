@@ -249,7 +249,7 @@
           </div>
           <div class="field"><label>遲到界線（此時間後點到校＝記遲到）</label><input id="setupLateTime" type="time" value="08:00"></div>
           <div class="field"><label>自動缺席（未填自動轉未到）</label><input id="setupAutoAbsentTime" type="time" value="08:05"></div>
-          <div class="field"><label>① 點名推播（只傳出缺到 LINE）</label><input id="setupAutoNotifyTime" type="time" value="08:08"></div>
+          <div class="field"><label>① 點名推播（出缺＋今日任務／記事／逾期）</label><input id="setupAutoNotifyTime" type="time" value="08:08"></div>
           <div class="field"><label>② 作業推播（點名＋作業繳交到 LINE）</label><input id="setupAutoHomeworkNotifyTime" type="time" value="08:40"></div>
           <div class="field"><label>補交回溯天數</label><input id="setupLookbackDays" type="number" min="1" max="60" value="30"></div>
           <div class="field" style="grid-column:1/-1"><label>🌐 Apps Script 部署網址（/exec 結尾，與 LINE 小幫手同一份）＝教學裡的「🌐 機器人網址」　<a href="Install.html#part2" target="_blank" rel="noopener" style="font-weight:700">還沒有？看申請教學 📖</a></label><input id="setupGasUrl" type="url" placeholder="貼上 🌐 機器人網址：https://script.google.com/macros/s/……/exec"></div>
@@ -261,7 +261,7 @@
           ・設定保存在這台電腦的瀏覽器；只使用座號，不輸入學生姓名。<br>
           ・點名預設全部未填。遲到界線後點「到校」，大屏顯示「到」，但資料記為遲到——遲到只有老師在 LINE 與查詢統計看得到。<br>
           ・「💾 存到雲端」只把資料存進試算表，<strong>不會</strong>推播 LINE；每 5 分鐘與離開頁面時也會自動存一次。<br>
-          ・LINE 只在兩個時間推播：① 點名推播（只報出缺）② 作業推播（點名＋各科繳交）。教室電腦需開著本頁。<br>
+          ・LINE 只在兩個時間推播：① 點名推播（出缺，並附上工作台的今日課程、任務、記事與逾期提醒）② 作業推播（點名＋各科繳交）。教室電腦需開著本頁。<br>
           ・自動缺席時間一到，仍未填的座號自動轉「未到」。<br>
           ・可在 Apps Script 另設 sendRollcallReminder 每日觸發器作雲端備援：當天沒回報時 LINE 提醒老師。<br>
           ・教室金鑰權限受限：只能回報當天、讀取近期缺交、把缺交標成補交；歷史統計需要老師金鑰，別把老師金鑰存在教室電腦。
