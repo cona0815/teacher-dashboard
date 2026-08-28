@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <title>教師工作台｜給國小老師的免費班級經營工具</title>
+  <meta name="description" content="點名、收作業、寫聯絡本、追作業訂正——免費開源的教室大屏、教師工作台與 LINE 小幫手，資料全在自己手上。">
+  <meta name="color-scheme" content="light dark">
+
+<style>
+  /* ── 色票：教室黑板（深綠）、粉筆白、粉筆黃、木框 ───────────────── */
+  :root {
+    --board:      #1D4636;   /* 黑板綠 */
+    --board-deep: #143026;
+    --chalk:      #EEF2E9;   /* 粉筆白 */
+    --chalk-dim:  #A9BBAF;
+    --ink:        #16201B;   /* 帶綠的近黑 */
+    --paper:      #F4F6F1;   /* 帶綠的紙白 */
+    --paper-2:    #FFFFFF;
+    --line:       #DCE3D8;
+    --muted:      #5F6F66;   /* 帶綠的中性灰 */
+    --accent:     #D6A231;   /* 粉筆黃 */
+    --accent-ink: #6B4E0C;
+    --brick:      #B4503C;   /* 紅粉筆：缺交 */
+    --grass:      #2E7D5B;   /* 已交 */
+    --wood:       #8A6A45;
+
+    --shadow: 0 1px 2px rgba(22,32,27,.06), 0 8px 24px -12px rgba(22,32,27,.18);
+    --radius: 14px;
+    --maxw: 74rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --chalk:      #E9EFE6;
+      --chalk-dim:  #93A79A;
+      --ink:        #E7EDE7;
+      --paper:      #101713;
+      --paper-2:    #17201B;
+      --line:       #26332C;
+      --muted:      #93A79A;
+      --accent:     #E4B54A;
+      --accent-ink: #F3DFA8;
+      --brick:      #D4705B;
+      --grass:      #4CA97D;
+      --wood:       #A88257;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px -14px rgba(0,0,0,.7);
+    }
+  }
+  :root[data-theme="dark"] {
+    --chalk:      #E9EFE6;
+    --chalk-dim:  #93A79A;
+    --ink:        #E7EDE7;
+    --paper:      #101713;
+    --paper-2:    #17201B;
+    --line:       #26332C;
+    --muted:      #93A79A;
+    --accent:     #E4B54A;
+    --accent-ink: #F3DFA8;
+    --brick:      #D4705B;
+    --grass:      #4CA97D;
+    --wood:       #A88257;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px -14px rgba(0,0,0,.7);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", "Heiti TC", system-ui, sans-serif;
+    font-size: 17px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 clamp(18px, 4vw, 40px); }
+
+  h1, h2, h3 { font-family: "Noto Serif TC", "Source Han Serif TC", "PingFang TC", "Microsoft JhengHei", serif; text-wrap: balance; margin: 0; }
+
+  .eyebrow {
+    font-family: Consolas, "SF Mono", ui-monospace, "Courier New", monospace;
+    font-size: 12px; font-weight: 700;
+    letter-spacing: .18em; text-transform: uppercase;
+  }
+
+  a { color: inherit; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+
+  /* ── 黑板：兩個主題都維持深綠，這是教室裡真的東西 ──────────────── */
+  .board {
+    background:
+      radial-gradient(120% 90% at 15% 0%, rgba(255,255,255,.07), transparent 60%),
+      linear-gradient(180deg, var(--board) 0%, var(--board-deep) 100%);
+    color: var(--chalk);
+    border-bottom: 10px solid var(--wood);
+    position: relative;
+    overflow: hidden;
+  }
+  /* 粉筆擦過的痕跡 */
+  .board::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background:
+      repeating-linear-gradient(101deg, rgba(255,255,255,.030) 0 3px, transparent 3px 26px),
+      repeating-linear-gradient(-84deg, rgba(255,255,255,.022) 0 2px, transparent 2px 38px);
+    mix-blend-mode: screen;
+  }
+  .board > * { position: relative; z-index: 1; }
+
+  /* padding-block（不用 shorthand），否則會蓋掉 .wrap 的左右留白 */
+  .hero { display: grid; gap: clamp(30px, 5vw, 60px); padding-block: clamp(40px, 7vw, 78px) clamp(34px, 5vw, 60px); }
+  @media (min-width: 940px) { .hero { grid-template-columns: 1.05fr .95fr; align-items: center; } }
+
+  .hero .eyebrow { color: var(--accent); }
+  .hero h1 {
+    font-size: clamp(34px, 6.2vw, 60px);
+    font-weight: 900; line-height: 1.18; letter-spacing: -.01em;
+    margin: 14px 0 0;
+  }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .keep { white-space: nowrap; }
+  .hero .lede { color: var(--chalk-dim); font-size: clamp(16px, 2.1vw, 19px); max-width: 34ch; margin-top: 18px; }
+
+  .chalk-rule { height: 1px; background: rgba(238,242,233,.28); margin: 26px 0; max-width: 30ch; }
+
+  .hero-cta { display: flex; flex-wrap: wrap; gap: 12px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 9px;
+    padding: 13px 20px; border-radius: 11px;
+    font-weight: 700; text-decoration: none; font-size: 16px;
+    border: 2px solid transparent; transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .btn-solid { background: var(--accent); color: #29200A; }
+  .btn-ghost { border-color: rgba(238,242,233,.4); color: var(--chalk); }
+  .btn:hover { transform: translateY(-2px); }
+  .btn-solid:hover { box-shadow: 0 10px 24px -10px rgba(214,162,49,.8); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── 座號格：早自習點名的樣子 ─────────────────────────────── */
+  .rollcall {
+    background: rgba(0,0,0,.22);
+    border: 1px solid rgba(238,242,233,.16);
+    border-radius: 16px;
+    padding: 20px;
+  }
+  .rollcall-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 12px; margin-bottom: 14px; flex-wrap: wrap;
+  }
+  .rollcall-head .t { font-family: "Noto Serif TC", "Source Han Serif TC", "PingFang TC", "Microsoft JhengHei", serif; font-weight: 700; font-size: 18px; }
+  .rollcall-head .s { font-family: Consolas, "SF Mono", ui-monospace, "Courier New", monospace; font-size: 12px; color: var(--chalk-dim); letter-spacing: .08em; }
+
+  .seats { display: grid; grid-template-columns: repeat(7, 1fr); gap: 7px; }
+  .seat {
+    aspect-ratio: 1; border-radius: 9px;
+    display: grid; place-items: center;
+    font-family: Consolas, "SF Mono", ui-monospace, "Courier New", monospace; font-weight: 700; font-size: 14px;
+    background: rgba(238,242,233,.10); color: rgba(238,242,233,.55);
+    animation: fill .45s ease forwards;
+  }
+  .seat.ok { --to-bg: #2E7D5B; --to-fg: #F2FBF6; }
+  .seat.late { --to-bg: #C99A2E; --to-fg: #2B2007; }
+  .seat.out { animation: none; background: rgba(180,80,60,.22); color: #E8B5A9; box-shadow: inset 0 0 0 2px rgba(180,80,60,.55); }
+  @keyframes fill { to { background: var(--to-bg); color: var(--to-fg); } }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 15px; font-size: 13px; color: var(--chalk-dim); }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .dot { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .seat { animation: none; }
+    .seat.ok { background: #2E7D5B; color: #F2FBF6; }
+    .seat.late { background: #C99A2E; color: #2B2007; }
+    .btn { transition: none; }
+    .btn:hover { transform: none; }
+  }
+
+  /* ── 內文區 ──────────────────────────────────────────────── */
+  section { padding: clamp(48px, 7vw, 86px) 0; }
+  section + section { border-top: 1px solid var(--line); }
+
+  .sec-head { max-width: 60ch; margin-bottom: clamp(26px, 4vw, 40px); }
+  .sec-head .eyebrow { color: var(--muted); }
+  .sec-head h2 { font-size: clamp(25px, 3.6vw, 35px); font-weight: 900; margin-top: 10px; }
+  .sec-head p { color: var(--muted); margin: 12px 0 0; }
+
+  .cards { display: grid; gap: 18px; }
+  @media (min-width: 760px) { .cards { grid-template-columns: repeat(2, 1fr); } }
+
+  .card {
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 24px 24px 26px;
+    box-shadow: var(--shadow);
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .card h3 { font-size: clamp(21px, 2.1vw, 25px); font-weight: 800; line-height: 1.4; }
+  .card .kicker { font-family: Consolas, "SF Mono", ui-monospace, "Courier New", monospace; font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--accent-ink); }
+  .card ul { margin: 0; padding-left: 1.15em; display: grid; gap: 7px; }
+  .card li::marker { color: var(--grass); }
+  .card p { margin: 0; color: var(--muted); }
+  .card .pain {
+    font-family: "Noto Serif TC", "Source Han Serif TC", "PingFang TC", "Microsoft JhengHei", serif; font-weight: 600; font-size: 18px;
+    color: var(--brick); line-height: 1.6; margin: 0;
+    padding-left: 14px; border-left: 3px solid var(--brick);
+  }
+
+  /* ── 一天的節奏：時間軸 ──────────────────────────────────── */
+  .timeline { display: grid; gap: 0; }
+  .tl {
+    display: grid; grid-template-columns: 5.5rem 1fr; gap: 18px;
+    padding: 18px 0; border-top: 1px solid var(--line);
+  }
+  .tl:first-child { border-top: none; }
+  .tl .when {
+    font-family: Consolas, "SF Mono", ui-monospace, "Courier New", monospace; font-weight: 700; font-size: 15px;
+    font-variant-numeric: tabular-nums; color: var(--accent-ink);
+    padding-top: 2px;
+  }
+  .tl .what strong { font-weight: 700; }
+  .tl .what { margin: 0; }
+  .tl .note { color: var(--muted); font-size: 15px; display: block; margin-top: 3px; }
+
+  /* ── 三層：安裝路徑 ─────────────────────────────────────── */
+  .layers { display: grid; gap: 18px; }
+  @media (min-width: 900px) { .layers { grid-template-columns: repeat(3, 1fr); } }
+  .layer {
+    background: var(--paper-2); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 24px; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow);
+  }
+  .layer .step {
+    font-family: Consolas, "SF Mono", ui-monospace, "Courier New", monospace; font-weight: 700; font-size: 12px;
+    letter-spacing: .16em; color: var(--muted);
+  }
+  .layer h3 { font-size: 21px; font-weight: 700; }
+  .layer .cost { font-size: 14px; color: var(--muted); }
+  .layer p { margin: 0; color: var(--muted); font-size: 15px; flex: 1; }
+  .layer a.go {
+    display: inline-flex; align-items: center; gap: 8px; align-self: flex-start;
+    font-weight: 700; text-decoration: none; color: var(--grass);
+    border-bottom: 2px solid var(--grass); padding-bottom: 2px;
+    word-break: break-all;
+  }
+  .layer a.go:hover { color: var(--accent-ink); border-color: var(--accent); }
+
+  /* ── 可直接轉貼的文案 ───────────────────────────────────── */
+  .share { display: grid; gap: 16px; }
+  .share-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+  .share-head .who { font-family: Consolas, "SF Mono", ui-monospace, "Courier New", monospace; font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .copy-btn {
+    font: inherit; font-weight: 700; font-size: 15px;
+    padding: 9px 17px; border-radius: 10px; cursor: pointer;
+    background: var(--grass); color: #F2FBF6; border: 2px solid var(--grass);
+  }
+  .copy-btn:hover { background: transparent; color: var(--grass); }
+  .copy-btn[data-done="1"] { background: var(--accent); border-color: var(--accent); color: #29200A; }
+  pre.copy-text {
+    margin: 0; padding: 22px;
+    background: var(--paper-2); border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", "Heiti TC", system-ui, sans-serif;
+    font-size: 15px; line-height: 1.85; color: var(--ink);
+    white-space: pre-wrap; word-break: break-word;
+    overflow-x: auto;
+  }
+  pre.copy-text .u { color: var(--grass); word-break: break-all; }
+
+  /* ── 連結整理 ───────────────────────────────────────────── */
+  .links { display: grid; gap: 10px; }
+  .link-row {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px;
+    padding: 15px 18px; border: 1px solid var(--line); border-radius: 11px;
+    background: var(--paper-2); text-decoration: none;
+    transition: border-color .15s ease, transform .15s ease;
+  }
+  .link-row:hover { border-color: var(--accent); transform: translateX(3px); }
+  .link-row .name { font-weight: 700; }
+  .link-row .desc { color: var(--muted); font-size: 14px; }
+  .link-row .url {
+    font-family: Consolas, "SF Mono", ui-monospace, "Courier New", monospace; font-size: 13px; color: var(--grass);
+    margin-left: auto; word-break: break-all;
+  }
+  @media (prefers-reduced-motion: reduce) { .link-row:hover { transform: none; } }
+
+  /* ── 放心區 ─────────────────────────────────────────────── */
+  .safe { display: grid; gap: 16px; }
+  @media (min-width: 820px) { .safe { grid-template-columns: repeat(3, 1fr); } }
+  .safe div {
+    border-left: 3px solid var(--grass); padding: 4px 0 4px 16px;
+  }
+  .safe h3 { font-size: 17px; font-weight: 700; margin-bottom: 5px; }
+  .safe p { margin: 0; color: var(--muted); font-size: 15px; }
+
+  .callout {
+    margin-top: 28px; padding: 18px 20px;
+    border: 1px solid var(--line); border-left: 4px solid var(--accent);
+    border-radius: 10px; background: var(--paper-2);
+    color: var(--muted); font-size: 15px;
+  }
+  .callout strong { color: var(--ink); }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 34px 0 46px; color: var(--muted); font-size: 14px;
+  }
+  footer a { color: var(--grass); }
+  footer p { margin: 0 0 8px; }
+</style>
+
+</head>
+<body>
+<header class="board">
+  <div class="wrap hero">
+    <div>
+      <div class="eyebrow">免費・開源・國小教師專用</div>
+      <h1>早自習的十分鐘，<br>可以不用那麼<em class="keep">兵荒馬亂</em></h1>
+      <p class="lede">
+        點名、收作業、寫聯絡本、追作業訂正——一套接起來的免費工具，
+        教室大屏＋電腦工作台＋LINE 小幫手，資料全在你自己手上。
+      </p>
+      <div class="chalk-rule"></div>
+      <div class="hero-cta">
+        <a class="btn btn-solid" href="https://t-borad2026.netlify.app/Index.html" target="_blank" rel="noopener">
+          1 分鐘開始用 →
+        </a>
+        <a class="btn btn-ghost" href="https://t-borad2026.netlify.app/Install.html" target="_blank" rel="noopener">
+          看新手教學
+        </a>
+      </div>
+    </div>
+
+    <div class="rollcall" aria-label="早自習點名示意">
+      <div class="rollcall-head">
+        <span class="t">601　晨間點名</span>
+        <span class="s">08:05　自動轉未到</span>
+      </div>
+      <div class="seats">
+        <div class="seat ok"  style="animation-delay:.10s">1</div>
+        <div class="seat ok"  style="animation-delay:.16s">2</div>
+        <div class="seat ok"  style="animation-delay:.22s">3</div>
+        <div class="seat ok"  style="animation-delay:.28s">4</div>
+        <div class="seat ok"  style="animation-delay:.34s">5</div>
+        <div class="seat ok"  style="animation-delay:.40s">6</div>
+        <div class="seat out">7</div>
+        <div class="seat ok"  style="animation-delay:.46s">8</div>
+        <div class="seat ok"  style="animation-delay:.52s">9</div>
+        <div class="seat late" style="animation-delay:.58s">10</div>
+        <div class="seat ok"  style="animation-delay:.64s">11</div>
+        <div class="seat ok"  style="animation-delay:.70s">12</div>
+        <div class="seat ok"  style="animation-delay:.76s">13</div>
+        <div class="seat ok"  style="animation-delay:.82s">14</div>
+        <div class="seat ok"  style="animation-delay:.88s">15</div>
+        <div class="seat ok"  style="animation-delay:.94s">16</div>
+        <div class="seat ok"  style="animation-delay:1.00s">17</div>
+        <div class="seat out">18</div>
+        <div class="seat ok"  style="animation-delay:1.06s">19</div>
+        <div class="seat ok"  style="animation-delay:1.12s">20</div>
+        <div class="seat ok"  style="animation-delay:1.18s">21</div>
+        <div class="seat ok"  style="animation-delay:1.24s">22</div>
+        <div class="seat ok"  style="animation-delay:1.30s">23</div>
+        <div class="seat ok"  style="animation-delay:1.36s">24</div>
+        <div class="seat ok"  style="animation-delay:1.42s">25</div>
+        <div class="seat ok"  style="animation-delay:1.48s">26</div>
+      </div>
+      <div class="legend">
+        <span><i class="dot" style="background:#2E7D5B"></i>到</span>
+        <span><i class="dot" style="background:#C99A2E"></i>遲到</span>
+        <span><i class="dot" style="background:rgba(180,80,60,.55)"></i>未到／請假</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- 三層 -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow">怎麼開始</div>
+        <h2>分三層，用多少裝多少</h2>
+        <p>不必一次全裝。只用第 1 層也很好用，覺得順手再往下走。</p>
+      </div>
+
+      <div class="layers">
+        <div class="layer">
+          <span class="step">第 1 層</span>
+          <h3>教師工作台</h3>
+          <span class="cost">0 安裝・1 分鐘</span>
+          <p>任務清單、日曆拖曳改期、教學進度自動排課（假日與評量週會自動避開）、記事提醒。打開網址、加入書籤就開始。</p>
+          <a class="go" href="https://t-borad2026.netlify.app/Index.html" target="_blank" rel="noopener">開啟工作台 →</a>
+        </div>
+
+        <div class="layer">
+          <span class="step">第 2 層</span>
+          <h3>晨間大屏</h3>
+          <span class="cost">教室電腦・10 分鐘</span>
+          <p>點名、收作業、作業補交與訂正追蹤、黑板風今日聯絡本。開網址、進「設定」填班級與科目即可。</p>
+          <a class="go" href="https://t-borad2026.netlify.app/Morning.html" target="_blank" rel="noopener">開啟大屏 →</a>
+        </div>
+
+        <div class="layer">
+          <span class="step">第 3 層</span>
+          <h3>LINE 小幫手＋AI 助理</h3>
+          <span class="cost">40–60 分鐘・一生只做一次</span>
+          <p>申請自己的 LINE 機器人＋部署一份 Google 程式。全程免費、不用會寫程式，教學附金鑰符號對照表，照符號貼不會錯。</p>
+          <a class="go" href="https://t-borad2026.netlify.app/Install.html" target="_blank" rel="noopener">看新手教學 →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 功能亮點 -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow">痛點 → 亮點</div>
+        <h2>每一項功能，都是從一個「很煩」開始的</h2>
+        <p>每張卡上面是老師每天在忍的那件事，下面就是這套工具怎麼把它拿掉。</p>
+      </div>
+
+      <div class="cards">
+        <article class="card">
+          <span class="kicker">晨間大屏</span>
+          <p class="pain">早自習點名收作業，弄到上課鐘響還沒完。</p>
+          <h3>座號點一下就好，8:08 它自己回報</h3>
+          <ul>
+            <li>座號方塊點一下完成點名，不用拿紙本唱名</li>
+            <li>收作業按「全班繳交」，再點掉少數沒交的就好</li>
+            <li>08:05 未填自動轉未到、08:08 自動送出——忘記按也不怕</li>
+            <li>可用倒數計時管理節奏，學生自己看得到還剩幾分鐘</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <span class="kicker">作業追蹤</span>
+          <p class="pain">「這本改完要訂正」——誰改完了，根本記不住也查不到。</p>
+          <h3>繳交 → 補交 → 訂正，一條龍追到底</h3>
+          <ul>
+            <li>訂正延續收作業的同一批版面，不用重新輸入</li>
+            <li>沒交的自動變灰不能點；點一下＝待訂正，改完再點＝完成</li>
+            <li>誰還沒訂正完，依座號／按科目／日曆都查得到</li>
+            <li>近 30 天跨日累計，不是只有今天；清完的版面自己收起來</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <span class="kicker">今日聯絡本</span>
+          <p class="pain">聯絡本抄到手酸，還要一直唸給學生聽。</p>
+          <h3>黑板風聯絡本自動投影，學生照抄</h3>
+          <ul>
+            <li>前一晚在工作台用下拉選單輸入，隔天大屏一開就在</li>
+            <li>低年級可切換注音字體，不會的字自己看得懂</li>
+            <li>想先寫下週的也行，它會問你要存哪一天</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <span class="kicker">LINE 小幫手</span>
+          <p class="pain">走路、開會時想到要交代的事，回辦公室就忘了。</p>
+          <h3>對 LINE 說一句，就變成待辦</h3>
+          <ul>
+            <li>「明天要收回條」→ 語音直接轉成任務，不用打字</li>
+            <li>拍張通知單 → AI 辨識重點自動歸檔</li>
+            <li>傳「聯絡本：數習P.20、帶直笛」→ 教室黑板同步更新</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <span class="kicker">即問即答</span>
+          <p class="pain">家長突然打來問孩子狀況，手上什麼資料都沒有；臨時請假交接更慌。</p>
+          <h3>一句話就有答案，不用開電腦</h3>
+          <ul>
+            <li>傳「9號」→ 該座號近 30 天出缺與缺交分科統計，30 秒掌握</li>
+            <li>傳「明天請假」→ 自動生成代課交接包：課程進度、聯絡本、
+              需留意的座號、班級注意事項，長按轉發</li>
+            <li>這類問答完全免費、沒有次數上限</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <span class="kicker">檔案備份</span>
+          <p class="pain">LINE 裡的通知單過幾天就打不開，要用的時候找不到。</p>
+          <h3>照片檔案自動分類，存進你自己的雲端硬碟</h3>
+          <ul>
+            <li>傳給小幫手的照片與檔案，收到當下就備份，不會過期</li>
+            <li>AI 依內容命名歸類，例如「會議與晨會／0828_返校日晨會報告事項」</li>
+            <li>傳「找檔案 晨會」，三個月前那張通知單就回來了</li>
+            <li>工作台整份資料也能存進你自己的試算表，換電腦一鍵還原</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <span class="kicker">AI 行政助理</span>
+          <p class="pain">晨會報告一長串，跟我有關的到底是哪幾條？</p>
+          <h3>PDF 丟進去，依你的身分挑重點</h3>
+          <ul>
+            <li>學年主任和科任老師看到的不一樣，AI 依角色篩選</li>
+            <li>自動列出確認清單與可建立的任務，一鍵轉任務或存提醒</li>
+            <li>Gemini／ChatGPT／Grok 自己選，一鍵抓最新模型清單</li>
+            <li>送出前一律先去識別化，敏感字自動遮蔽</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <span class="kicker">教師工作台</span>
+          <p class="pain">任務、教學進度、聯絡本、記事，分散在腦子裡各處。</p>
+          <h3>全部收在同一張日曆上</h3>
+          <ul>
+            <li>任務清單＋日曆拖曳改期，一眼看懂這週要做什麼</li>
+            <li>教學進度自動排課，假日與評量週自動避開，不用算堂數</li>
+            <li>出缺與缺交自動標在日曆上，期末一鍵匯出 Excel</li>
+            <li>記事可設「提醒日」，隔天早上出現在 LINE 簡報裡</li>
+          </ul>
+        </article>
+      </div>
+  </section>
+
+  <!-- 一天的節奏 -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow">一天的節奏</div>
+        <h2>LINE 一天只主動響兩次</h2>
+        <p>其餘都是你問它才答。這也是為什麼免費額度用不完——額度只算「主動推播」。</p>
+      </div>
+
+      <div class="timeline">
+        <div class="tl">
+          <span class="when">前一晚</span>
+          <p class="what"><strong>寫明天的聯絡本</strong>
+            <span class="note">工作台用下拉選單快速輸入，或直接對 LINE 說「聯絡本：數習P.20、帶直笛」。想先寫下週的也行，它會問你要存哪一天。</span></p>
+        </div>
+        <div class="tl">
+          <span class="when">早上</span>
+          <p class="what"><strong>大屏自動開啟，黑板已顯示今日聯絡本</strong>
+            <span class="note">學生照抄，你專心點名收作業；可用倒數計時管理節奏。</span></p>
+        </div>
+        <div class="tl">
+          <span class="when">08:05</span>
+          <p class="what"><strong>未填的座號自動轉「未到」</strong></p>
+        </div>
+        <div class="tl">
+          <span class="when">08:08</span>
+          <p class="what"><strong>LINE 第一則：等於你的早安簡報</strong>
+            <span class="note">出缺情況＋今日課程進度＋今日任務＋記事提醒＋逾期任務，一則看完。</span></p>
+        </div>
+        <div class="tl">
+          <span class="when">08:40</span>
+          <p class="what"><strong>LINE 第二則：各科作業繳交情況</strong>
+            <span class="note">等收完作業才送，不會半途打擾。</span></p>
+        </div>
+        <div class="tl">
+          <span class="when">批改後</span>
+          <p class="what"><strong>大屏「作業訂正」點出要訂正的座號</strong>
+            <span class="note">學生改完再點一次就結案；誰還沒訂正完，依座號／按科目／日曆都查得到。</span></p>
+        </div>
+        <div class="tl">
+          <span class="when">週五</span>
+          <p class="what"><strong>缺交達 5 次的名單自動整理好</strong>
+            <span class="note">還幫你擬好委婉的家長訊息草稿，補上孩子的優點再轉發。</span></p>
+        </div>
+        <div class="tl">
+          <span class="when">期末</span>
+          <p class="what"><strong>查詢區間 → 匯出 Excel</strong>
+            <span class="note">含各科缺交／補交／待訂正／已訂正次數，寫輔導紀錄不用重新翻資料。</span></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 三個放心 -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow">三個放心</div>
+        <h2>免費、保護個資、程式碼公開</h2>
+      </div>
+      <div class="safe">
+        <div>
+          <h3>完全免費</h3>
+          <p>LINE 官方帳號免費方案＋Google 免費額度就夠。額度只算主動推播，你問它答完全免費、無上限；正常使用每月約 40–60 則，離 200 則上限還很遠。</p>
+        </div>
+        <div>
+          <h3>隱私至上</h3>
+          <p>大屏只用座號、不用姓名；工作台資料存在你自己電腦的瀏覽器，LINE 功能的資料與備份檔案都存在你自己的 Google 帳號，開發者拿不到。</p>
+        </div>
+        <div>
+          <h3>開源透明</h3>
+          <p>MIT 授權，程式碼全部公開，可自由使用、修改與分享。</p>
+        </div>
+      </div>
+
+      <div class="callout">
+        <strong>⚠️ 一件重要小事：</strong>LINE 機器人與各項金鑰請各自申請，<strong>不要與其他老師共用</strong>——金鑰就像家門鑰匙，共用等於別人能看你的班級資料。
+      </div>
+    </div>
+  </section>
+
+  <!-- 可直接轉貼 -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow">分享給同事</div>
+        <h2>整段複製，貼到 LINE 群組就好</h2>
+        <p>寫成「一個痛點配一個解法」，同事掃過去就知道跟自己有沒有關係。</p>
+      </div>
+
+      <div class="share">
+        <div class="share-head">
+          <span class="who">給第一次接觸的老師</span>
+          <button class="copy-btn" type="button" id="copyBtn">複製全部文字</button>
+        </div>
+<pre class="copy-text" id="copyText">🏫 給國小老師的免費班級經營工具
+
+😩 早自習點名收作業，弄到上課鐘響還沒完
+✅ 座號方塊點一下就好；08:05 沒點的自動轉未到，
+　08:08 你的 LINE 就收到全班出缺＋今天要處理的事
+
+😩「這本改完要訂正」，誰改完了根本記不住
+✅ 繳交 → 補交 → 訂正一條龍，近 30 天誰還沒訂正完一眼看到
+
+😩 聯絡本抄到手酸，還要一直唸給學生聽
+✅ 黑板風「今日聯絡本」自動投影，低年級可切注音字體
+
+😩 走路、開會想到的事，回辦公室就忘了
+✅ 對 LINE 說一句「明天要收回條」，就自動變成待辦
+
+😩 家長突然打來問孩子狀況，手上什麼都沒有
+✅ 傳「9號」→ 該生近 30 天出缺與缺交，30 秒掌握
+
+😩 臨時請假，交接怎麼交代都覺得漏掉什麼
+✅ 傳「明天請假」→ 自動生成代課包，長按就能轉發
+
+😩 LINE 裡的通知單過幾天就打不開了
+✅ 照片檔案自動分類備份到你自己的雲端硬碟，
+　傳「找檔案 晨會」就把它找回來
+
+😩 晨會報告一長串，跟我有關的到底哪幾條
+✅ PDF 丟進 AI 助理，依你的身分挑重點、列出待辦
+
+💰 完全免費　🔒 只用座號不用姓名　📖 程式碼公開
+
+先用最簡單的就好，1 分鐘、什麼都不用裝：
+📌 教師工作台 👉 <span class="u">https://t-borad2026.netlify.app/Index.html</span>
+📌 晨間大屏 👉 <span class="u">https://t-borad2026.netlify.app/Morning.html</span>
+📌 新手教學 👉 <span class="u">https://t-borad2026.netlify.app/Install.html</span></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- 連結整理 -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow">連結整理</div>
+        <h2>全部網址在這裡</h2>
+        <p>點下去直接開，也可以長按複製轉貼給同事。</p>
+      </div>
+
+      <div class="links">
+        <a class="link-row" href="https://t-borad2026.netlify.app/Index.html" target="_blank" rel="noopener">
+          <span class="name">教師工作台</span>
+          <span class="desc">任務、日曆、教學進度、AI 助理</span>
+          <span class="url">t-borad2026.netlify.app/Index.html</span>
+        </a>
+        <a class="link-row" href="https://t-borad2026.netlify.app/Morning.html" target="_blank" rel="noopener">
+          <span class="name">晨間大屏</span>
+          <span class="desc">教室電腦：點名、收作業、補交與訂正</span>
+          <span class="url">t-borad2026.netlify.app/Morning.html</span>
+        </a>
+        <a class="link-row" href="https://t-borad2026.netlify.app/Install.html" target="_blank" rel="noopener">
+          <span class="name">新手安裝教學</span>
+          <span class="desc">含金鑰符號對照表與四張示意圖</span>
+          <span class="url">t-borad2026.netlify.app/Install.html</span>
+        </a>
+        <a class="link-row" href="https://github.com/cona0815/teacher-dashboard/releases/download/xiaomianzhu-v1.7/xiaomianzhu-windows-portable.zip" target="_blank" rel="noopener">
+          <span class="name">桌面小綿助 v1.7</span>
+          <span class="desc">選用：Windows 免安裝，喝水與久坐提醒</span>
+          <span class="url">github.com／…／xiaomianzhu-windows-portable.zip</span>
+        </a>
+        <a class="link-row" href="https://github.com/cona0815/teacher-dashboard" target="_blank" rel="noopener">
+          <span class="name">專案原始碼</span>
+          <span class="desc">MIT 授權，歡迎自由取用</span>
+          <span class="url">github.com/cona0815/teacher-dashboard</span>
+        </a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>本系統為開源軟體，採 MIT License 授權，可自由使用、修改與分享（需保留授權聲明）。</p>
+    <p>本版開發維護：cona0815｜改作自 mihozip 的開源專案
+      <a href="https://github.com/mihozip/school-admin-daily-dashboard" target="_blank" rel="noopener">school-admin-daily-dashboard</a>（MIT License）。</p>
+    <p>介面吉祥物圖示 IP as Logo Skill（MIT）・注音字型 芫荽注音 BpmfIansui（SIL OFL 1.1）・部分圖示 Koboyo Icons。完整聲明見專案內 THIRD_PARTY_NOTICES.md。</p>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var btn = document.getElementById('copyBtn');
+    var box = document.getElementById('copyText');
+    if (!btn || !box) return;
+    btn.addEventListener('click', function () {
+      var text = box.innerText;
+      function done(msg) {
+        btn.textContent = msg;
+        btn.dataset.done = '1';
+        window.setTimeout(function () { btn.textContent = '複製全部文字'; btn.dataset.done = ''; }, 2600);
+      }
+      // 有些瀏覽器不給背景複製，退回「幫你全選，按 Ctrl+C」
+      function selectFallback() {
+        var range = document.createRange();
+        range.selectNodeContents(box);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        done('已全選，按 Ctrl+C');
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { done('已複製 ✓'); }, selectFallback);
+      } else {
+        selectFallback();
+      }
+    });
+  })();
+</script>
+</body>
+</html>
