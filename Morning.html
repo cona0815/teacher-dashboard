@@ -12,7 +12,7 @@
       --ok: #1d9e5f; --ok-soft: #e3f6ec;
       --blank: #aebbb5;
       --absent-sick: #e07b1f; --absent-personal: #d4a900; --missing: #cf4433; --resub: #2273c9;
-      --correcting: #c2571a; --corrected: #6b4bb5;
+      --correcting: #6b3fb5; --correcting-soft: #f0ebfa;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: "Microsoft JhengHei", "Noto Sans TC", sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; }
@@ -54,8 +54,8 @@
     .board-add-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
     .board-wall { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; }
     .board-card { border: 2px solid var(--line); border-radius: 14px; background: #fffefb; padding: 10px; }
-    .board-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-    .board-title { font-size: 18px; font-weight: 900; color: var(--primary-strong); }
+    .board-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+    .board-title { font-size: 18px; font-weight: 900; color: var(--primary-strong); white-space: nowrap; }
     .board-missing { font-size: 13px; font-weight: 800; color: var(--missing); margin-left: auto; }
     .board-remove { border: 0; background: transparent; color: var(--muted); font-size: 16px; cursor: pointer; }
     .board-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: 6px; }
@@ -67,10 +67,12 @@
     .hw-seat[data-hw="corrected"] { background: var(--ok); position: relative; }
     .hw-seat[data-hw="corrected"]::after { content: "✓"; position: absolute; top: -1px; right: 4px; font-size: 12px; opacity: .95; }
     .hw-seat[disabled] { background: #e8ece9; color: var(--blank); cursor: not-allowed; }
-    .board-all-button { border: 2px solid var(--line); background: var(--surface); color: var(--primary-strong); border-radius: 9px; padding: 4px 12px; font-size: 13px; font-weight: 900; cursor: pointer; margin-left: auto; }
+    .board-all-button { border: 2px solid var(--line); background: var(--surface); color: var(--primary-strong); border-radius: 9px; padding: 4px 12px; font-size: 13px; font-weight: 900; cursor: pointer; margin-left: auto; white-space: nowrap; }
     .summary-table { width: 100%; border-collapse: collapse; font-size: 15px; margin-top: 8px; }
     .summary-table th, .summary-table td { border: 1px solid var(--line); padding: 6px 8px; text-align: left; }
     .summary-table th { background: var(--ok-soft); }
+    .summary-table thead th { font-size: 14px; color: var(--primary-strong); white-space: nowrap; }
+    .summary-table tbody tr:nth-child(even) td, .summary-table tbody tr:nth-child(even) th { background: #fafcfb; }
     .submit-bar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--surface); border-top: 2px solid var(--line); padding: 7px 18px; display: flex; gap: 12px; align-items: center; z-index: 20; }
     .primary-button { border: 0; background: var(--primary); color: #fff; border-radius: 12px; padding: 10px 28px; font-size: 19px; font-weight: 900; cursor: pointer; }
     .primary-button:disabled { opacity: .5; }
@@ -87,6 +89,12 @@
     .query-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; margin-bottom: 14px; }
     .stat-block { margin-top: 18px; overflow-x: auto; }
     .stat-block h3 { font-size: 19px; color: var(--primary-strong); margin-bottom: 6px; }
+    /* 大屏是觸控操作：不要在小框框裡捲動（手指容易捲錯層），要捲就整頁一起捲。
+       所以這裡只把上方說明與按鈕壓扁省高度，不設任何內部 overflow。 */
+    .stat-block .mode-row { gap: 8px; align-items: center; }
+    .stat-block .mode-button, .stat-block .ghost-button { padding: 6px 14px; font-size: 15px; border-radius: 10px; }
+    .page-hint { display: block; line-height: 1.6; }
+    .page-hint .sep { color: var(--line); margin: 0 8px; font-weight: 900; }
     .makeup-list { display: grid; gap: 8px; margin-top: 10px; }
     .makeup-item { display: flex; align-items: center; gap: 10px; border: 2px solid var(--line); border-radius: 12px; background: #fffefb; padding: 10px 12px; font-size: 17px; font-weight: 800; flex-wrap: wrap; }
     .makeup-item .who { font-size: 20px; color: var(--missing); }
@@ -94,12 +102,25 @@
     .makeup-seat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: 10px; margin-top: 10px; }
     .makeup-cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 10px; }
     .makeup-cal-head { font-size: 14px; font-weight: 900; color: var(--muted); text-align: center; }
-    .makeup-cal-day { border: 2px solid var(--line); border-radius: 10px; min-height: 62px; padding: 5px; font-size: 14px; font-weight: 800; background: var(--surface); cursor: pointer; text-align: left; }
+    /* 高度隨螢幕縮放：大屏一頁看完，不用捲動 */
+    .makeup-cal-day { border: 2px solid var(--line); border-radius: 10px; min-height: clamp(34px, 5.2vh, 58px); padding: 4px 5px; font-size: 14px; font-weight: 800; background: var(--surface); cursor: pointer; text-align: left; line-height: 1.25; }
     .makeup-cal-day.has-missing { background: #fdeee9; border-color: var(--missing); color: var(--missing); }
-    .makeup-cal-day.has-correcting { background: #fdf0e6; border-color: var(--correcting); color: var(--correcting); }
+    .makeup-cal-day.has-correcting { background: var(--correcting-soft); border-color: var(--correcting); color: var(--correcting); }
     .board-date { background: var(--primary); color: #fff; border-radius: 999px; padding: 3px 12px; font-size: 14px; font-weight: 900; flex: 0 0 auto; }
     .board-card.board-settled { background: var(--ok-soft); }
     .board-card.board-settled .board-head { margin: 0; }
+    .board-card.board-flash { animation: boardFlash 1.6s ease-out; }
+    @keyframes boardFlash { 0%, 60% { box-shadow: 0 0 0 3px var(--correcting); } 100% { box-shadow: none; } }
+    .seat.correct-seat { background: var(--correcting); }
+    .seat.makeup-seat { background: var(--missing); }
+    /* 待處理項目做成大按鈕，按一下就完成 */
+    .item-button-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; margin-top: 10px; }
+    .item-button { border: 0; border-radius: 14px; padding: 14px 12px; color: #fff; font-size: 19px; font-weight: 900; cursor: pointer; font-family: inherit; text-align: left; box-shadow: 0 2px 4px rgba(20,50,40,.18); transition: transform .06s; }
+    .item-button:active { transform: scale(.97); }
+    .item-button .d { display: block; font-size: 13px; font-weight: 700; opacity: .85; }
+    /* 摘要用的醒目標籤；座號方格本身仍維持灰色，只有這裡的文字要跳出來 */
+    .missing-chip { display: inline-block; background: #fdeee9; color: var(--missing); border: 1.5px solid var(--missing); border-radius: 9px; padding: 2px 11px; font-size: 19px; font-weight: 900; }
+    .correcting-chip { display: inline-block; background: var(--correcting-soft); color: var(--correcting); border: 1.5px solid var(--correcting); border-radius: 9px; padding: 2px 11px; font-size: 19px; font-weight: 900; }
     .makeup-cal-day.other { opacity: .35; }
     .rollcall-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(420px, 3fr); gap: 16px; align-items: stretch; }
     /* 座號格尺寸隨螢幕高度縮放，確保點名＋聯絡本剛好一頁不捲動 */
@@ -212,33 +233,39 @@
 
     <section class="page" id="page-makeup">
       <div class="panel">
-        <div class="mode-row">
-          <button class="mode-button active" type="button" data-makeup-mode="subject">按科目</button>
-          <button class="mode-button" type="button" data-makeup-mode="seat">依座號</button>
-          <button class="mode-button" type="button" data-makeup-mode="calendar">日曆</button>
-          <button class="ghost-button" type="button" id="refreshMakeupButton">🔄 重新整理</button>
-          <span class="status-text" id="makeupStatus">尚未載入。按「重新整理」取得近期缺交清單。</span>
+        <div class="board-add-row">
+          <span class="status-text page-hint">
+            <strong>前幾天沒交的作業</strong>：學生補來了就把號碼點掉。<span class="sep">｜</span>點一下＝<span style="color:var(--missing);font-weight:900">已補交</span>，點完就從清單消失。<span class="sep">｜</span>今天的缺交請到「作業繳交」直接改。
+          </span>
         </div>
-        <div id="makeupBody"></div>
+        <div class="stat-block">
+          <h3>🕘 補交統計</h3>
+          <div class="mode-row">
+            <button class="mode-button active" type="button" data-makeup-mode="seat">依座號</button>
+            <button class="mode-button" type="button" data-makeup-mode="subject">按科目</button>
+            <button class="mode-button" type="button" data-makeup-mode="calendar">日曆</button>
+            <button class="ghost-button" type="button" id="refreshMakeupButton">🔄 重新整理</button>
+            <span class="status-text" id="makeupStatus">尚未載入。按「重新整理」取得近期缺交清單。</span>
+          </div>
+          <div id="makeupBody"></div>
+        </div>
       </div>
     </section>
 
     <section class="page" id="page-correct">
       <div class="panel">
         <div class="board-add-row">
-          <span class="status-text">
-            <strong>延續「作業繳交」的版面</strong>：從已交的名單裡，點出要訂正的座號。<br>
-            點一下＝<span style="color:var(--correcting);font-weight:900">待訂正</span>（紅）　→　學生改完再點一次＝<span style="color:var(--ok);font-weight:900">訂正完成</span>（綠底小勾）。<br>
-            沒交的座號會變灰不能點，請先到「作業繳交」標記已交。
+          <span class="status-text page-hint">
+            <strong>延續「作業繳交」的版面</strong>：從已交的名單裡點出要訂正的座號。<span class="sep">｜</span>點一下＝<span style="color:var(--correcting);font-weight:900">待訂正</span>，改完再點一次＝<span style="color:var(--ok);font-weight:900">訂正完成</span>（綠底小勾）。<span class="sep">｜</span>沒交的座號會變灰不能點，請先到「作業繳交」標記已交。
           </span>
         </div>
         <div class="board-wall" id="correctWall"></div>
         <div class="stat-block">
           <h3>✏️ 訂正統計</h3>
           <div class="mode-row">
-            <button class="mode-button active" type="button" data-correct-mode="day">分天</button>
-            <button class="mode-button" type="button" data-correct-mode="subject">分科目</button>
-            <button class="mode-button" type="button" data-correct-mode="seat">分人</button>
+            <button class="mode-button active" type="button" data-correct-mode="seat">依座號</button>
+            <button class="mode-button" type="button" data-correct-mode="subject">按科目</button>
+            <button class="mode-button" type="button" data-correct-mode="calendar">日曆</button>
             <button class="ghost-button" type="button" id="refreshCorrectButton">🔄 重新整理</button>
             <span class="status-text" id="correctStatus">尚未載入。按「重新整理」取得近期訂正紀錄。</span>
           </div>
@@ -272,6 +299,14 @@
           <div class="field"><label>班級名稱（例：601）</label><input id="setupClassName" maxlength="20" placeholder="601"></div>
           <div class="field"><label>大屏標題（顯示在左上角，可自訂）</label><input id="setupBoardTitle" maxlength="20" placeholder="晨間大屏"></div>
           <div class="field"><label>聯絡本字體（低年級可選注音體）</label><select id="setupContactFont"><option value="default">標準字體</option><option value="bpmf">注音體（芫荽 BpmfIansui）</option></select></div>
+          <div class="field"><label>「待訂正」的顏色</label><select id="setupCorrectColor">
+            <option value="brown">米褐（沙褐）— 與介面最和諧</option>
+            <option value="indigo">深靛藍 — 冷色穩重</option>
+            <option value="amber">琥珀金 — 遠距離最醒目</option>
+            <option value="pine">青綠深色 — 同色系低調</option>
+            <option value="purple">紫色</option>
+            <option value="orange">橘紅</option>
+          </select></div>
           <div class="field"><label>班級最大座號（1～N）</label><input id="setupSeatCount" type="number" min="1" max="60" value="26"></div>
           <div class="field"><label>空號（沒有人的座號，以、或逗號分隔）</label><input id="setupEmptySeats" placeholder="例：4、13"></div>
           <div class="field"><label>作業名稱選單（以、分隔，可自訂）</label><input id="setupAssignmentTypes" placeholder="習作、試卷、作業本、學習單、其他"></div>
@@ -321,7 +356,7 @@
     const DEFAULT_ENABLED = ['國語', '數學', '英語', '自然', '社會', '聯絡簿', '通知單'];
     const state = {
       settings: {
-        className: '', boardTitle: '晨間大屏', contactFont: 'default', seatCount: 26, emptySeats: [],
+        className: '', boardTitle: '晨間大屏', contactFont: 'default', correctColor: 'brown', seatCount: 26, emptySeats: [],
         subjects: [], assignmentTypes: ['習作', '試卷', '作業本', '學習單', '其他'],
         gasUrl: '', classroomToken: '',
         lateTime: '08:00', autoAbsentTime: '08:05', autoNotifyTime: '08:08', autoHomeworkNotifyTime: '08:40', lookbackDays: 30
@@ -329,8 +364,10 @@
       attendance: {},        // {seat: 到|遲到|病假|事假|未到}（遲到畫面顯示為「到」）
       boards: [],            // [{id, subject, assignment, seats:{seat:'submitted'|'resub'}}]（未標=缺交）
       flags: { autoAbsentDone: false, autoNotifyDone: false, autoHomeworkNotifyDone: false },
-      makeup: { items: [], loaded: false, mode: 'subject', focus: '' },
-      correct: { items: [], loaded: false, mode: 'day', focus: '', selectedDay: '', doneCount: 0, expanded: new Set() },
+      makeup: { items: [], loaded: false, mode: 'seat', focus: '', focusSubject: '', selectedDay: '' },
+      // 欄位刻意與 makeup 一致（mode/focus/selectedDay），兩個分頁操作方式相同
+      // 預設「依座號」：訂正的人少，老師最常問的是「誰還沒訂正完」
+      correct: { items: [], loaded: false, mode: 'seat', focus: '', focusSubject: '', selectedDay: '', doneCount: 0, showSettled: false, sticky: [] },
       countdown: { remaining: 0, running: false },
       submitting: false,
       dirty: false,          // 有未存到雲端的異動；每 5 分鐘與離開頁面時自動存檔
@@ -382,6 +419,7 @@
           s.className = String(saved.className || '');
           s.boardTitle = String(saved.boardTitle || '').trim().slice(0, 20) || '晨間大屏';
           s.contactFont = saved.contactFont === 'bpmf' ? 'bpmf' : 'default';
+          if (CORRECT_COLORS[saved.correctColor]) s.correctColor = saved.correctColor;
           s.seatCount = Math.min(60, Math.max(1, Number(saved.seatCount) || 26));
           s.emptySeats = Array.isArray(saved.emptySeats) ? saved.emptySeats.map(Number).filter(n => n >= 1) : [];
           if (Array.isArray(saved.subjects) && saved.subjects.length) {
@@ -617,8 +655,27 @@
     }
 
     // ---------- 作業繳交（多版面） ----------
+    // 「待訂正」的可選配色：綠＝已交、灰＝未交、紅＝缺交／補交已被占用，這裡提供不衝突的幾種。
+    const CORRECT_COLORS = {
+      brown: { main: '#8a6b4f', soft: '#f4ede5' },
+      indigo: { main: '#3f5aa6', soft: '#e9edf8' },
+      amber: { main: '#c08a1e', soft: '#fbf1dc' },
+      pine: { main: '#2f6b62', soft: '#e6f0ee' },
+      purple: { main: '#6b3fb5', soft: '#f0ebfa' },
+      orange: { main: '#c2571a', soft: '#fdf0e6' }
+    };
+    function applyCorrectColor() {
+      const picked = CORRECT_COLORS[state.settings.correctColor] || CORRECT_COLORS.brown;
+      document.documentElement.style.setProperty('--correcting', picked.main);
+      document.documentElement.style.setProperty('--correcting-soft', picked.soft);
+    }
+
+    /** 顯示格式：科目在前、進度在後，中間空一格。例：「國語 習作20-25」。 */
+    function workLabel(subject, assignment) {
+      return `${subject}${assignment ? ' ' + assignment : ''}`;
+    }
     function boardLabel(board) {
-      return `${board.subject}${board.assignment ? '／' + board.assignment : ''}`;
+      return workLabel(board.subject, board.assignment);
     }
     function renderBoardPickers() {
       $('boardSubjectSelect').innerHTML = enabledSubjects().map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('') || '<option value="">請先到設定啟用科目</option>';
@@ -633,13 +690,22 @@
         wall.innerHTML = '<div class="status-text" style="padding:26px 6px;font-size:17px">尚未新增收件版面。用上方選單選「科目＋作業名稱」後按「＋ 新增收件版面」（最多 6 個）。</div>';
       } else {
         wall.innerHTML = state.boards.map(board => {
+          const missing = [];
           const cells = activeSeats().map(seat => {
             const mark = board.seats[seat] || 'missing';
+            if (mark === 'missing') missing.push(seat);
             return `<button class="hw-seat" type="button" data-board-id="${board.id}" data-seat="${seat}" data-hw="${mark === 'missing' ? '' : mark}">${seat}</button>`;
           });
+          // 未交號碼直接顯示在版面標題，不用再往下看統計表。
+          // 座號方格維持灰色（還沒點到而已），但這裡的摘要要顯眼，老師一眼就知道要找誰。
+          const missingLabel = missing.length
+            ? `<span class="missing-chip">未交 ${missing.length}：${missing.join('、')}</span>`
+            : '<b style="color:var(--ok)">全班都交了 ✅</b>';
           return `<div class="board-card" data-board-card="${board.id}">
             <div class="board-head">
+              <span class="board-date">${escapeHtml(todayLabelShort())}</span>
               <span class="board-title">${escapeHtml(boardLabel(board))}</span>
+              <span class="status-text">${missingLabel}</span>
               <button class="board-all-button" type="button" data-board-all="${board.id}">✅ 全班繳交</button>
               <button class="board-remove" type="button" data-remove-board="${board.id}" title="移除版面">✕</button>
             </div>
@@ -648,25 +714,31 @@
         }).join('');
       }
       renderCorrectBoards();
+      const total = activeSeats().length;
       const rows = state.boards.map(board => {
-        let submitted = 0, resub = 0, corrected = 0;
+        let resub = 0, corrected = 0;
         const missing = [];
         const correcting = [];
         activeSeats().forEach(seat => {
           const mark = board.seats[seat] || 'missing';
-          if (mark === 'submitted') submitted += 1;
-          else if (mark === 'resub') resub += 1;
+          if (mark === 'resub') resub += 1;
           else if (mark === 'correcting') correcting.push(seat);
           else if (mark === 'corrected') corrected += 1;
-          else missing.push(seat);
+          else if (mark !== 'submitted') missing.push(seat);
         });
-        // 待訂正與已訂正都算有交，交件數要把它們加回去。
-        const handedIn = submitted + resub + correcting.length + corrected;
-        return `<tr><th>${escapeHtml(boardLabel(board))}</th><td>已交 ${handedIn}</td><td>補交 ${resub}</td>`
-          + `<td>${correcting.length ? `待訂正 ${correcting.length}（${correcting.join('、')}）` : '待訂正 0'}${corrected ? `／已訂正 ${corrected}` : ''}</td>`
-          + `<td>缺交 ${missing.length}${missing.length ? `（${missing.join('、')}）` : ''}</td></tr>`;
+        // 待訂正與已訂正都算有交
+        const handedIn = total - missing.length;
+        const done = handedIn === total;
+        return `<tr>
+          <th style="white-space:nowrap">${escapeHtml(boardLabel(board))}</th>
+          <td style="white-space:nowrap"><b style="color:${done ? 'var(--ok)' : 'var(--ink)'};font-size:19px">${handedIn}/${total}</b>${resub ? `<span class="status-text">（含補交 ${resub}）</span>` : ''}</td>
+          <td>${missing.length ? `<span class="missing-chip">${missing.join('、')}</span>` : '<span style="color:var(--ok)">全班都交了 ✅</span>'}</td>
+          <td>${correcting.length ? `<span class="correcting-chip">${correcting.join('、')}</span>` : '<span class="status-text">—</span>'}${corrected ? `<span class="status-text">　已完成 ${corrected}</span>` : ''}</td>
+        </tr>`;
       });
-      $('todayStatTable').querySelector('tbody').innerHTML = rows.length ? rows.join('') : '<tr><td class="status-text">尚未有版面。</td></tr>';
+      $('todayStatTable').innerHTML = rows.length
+        ? `<thead><tr><th>版面</th><th>已交</th><th>未交號碼</th><th>待訂正號碼</th></tr></thead><tbody>${rows.join('')}</tbody>`
+        : '<tbody><tr><td class="status-text">尚未有版面。</td></tr></tbody>';
     }
     function addBoard() {
       if (state.boards.length >= 6) return showToast('今日版面已達 6 個上限。', true);
@@ -723,7 +795,8 @@
         $('correctStatTable') && ($('correctStatTable').querySelector('tbody').innerHTML = '');
         return;
       }
-      wall.innerHTML = state.boards.map(board => {
+      let settledCount = 0;
+      const cards = state.boards.map(board => {
         let pending = 0;
         let done = 0;
         const cells = activeSeats().map(seat => {
@@ -736,24 +809,29 @@
             + `${handedIn ? '' : ' disabled title="這位還沒交，請先到「作業繳交」標記已交"'}`
             + ` data-hw="${mark === 'correcting' ? 'correcting' : mark === 'corrected' ? 'corrected' : handedIn ? 'submitted' : ''}">${seat}</button>`;
         });
-        const head = `<div class="board-head">
+        // 訂正全部清完的版面直接不顯示，畫面只留還要處理的；要補標時用下方連結叫回來。
+        // 例外：老師正在這塊版面上一個一個點（sticky），就算剛好點完也先留著，
+        // 不然「最後一位按完成」整塊會在手指底下消失，想再標別人還要去按「顯示已完成」。
+        const settled = !pending && done;
+        const stuck = (state.correct.sticky || []).includes(board.id);
+        if (settled && !stuck) settledCount += 1;
+        if (settled && !stuck && !state.correct.showSettled) return '';
+        return `<div class="board-card${settled ? ' board-settled' : ''}" data-board-card="${board.id}">
+          <div class="board-head">
             <span class="board-date">${escapeHtml(todayLabelShort())}</span>
-            <span class="board-title">${escapeHtml(boardLabel(board))}</span>`;
-        // 訂正過且已全部清完的版面收成一行，不再占滿畫面；需要時可展開再標。
-        if (!pending && done && !state.correct.expanded.has(board.id)) {
-          return `<div class="board-card board-settled" data-board-card="${board.id}">${head}
-            <span class="status-text" style="color:var(--ok);font-weight:900">✅ 訂正完成 ${done} 人</span>
-            <button class="ghost-button" type="button" data-correct-expand="${board.id}">展開</button>
-          </div></div>`;
-        }
-        return `<div class="board-card" data-board-card="${board.id}">${head}
-            <span class="status-text">${pending ? `待訂正 ${pending} 人` : done ? `已完成 ${done} 人` : '尚未標記訂正'}</span>
-            ${done && !pending ? `<button class="ghost-button" type="button" data-correct-collapse="${board.id}">收合</button>` : ''}
+            <span class="board-title">${escapeHtml(boardLabel(board))}</span>
+            <span class="status-text">${pending ? `待訂正 ${pending} 人` : done ? `✅ 訂正完成 ${done} 人` : '尚未標記訂正'}</span>
             <button class="board-all-button" type="button" data-correct-all="${board.id}" style="background:var(--ok)">✅ 全部訂正完成</button>
           </div>
           <div class="board-grid">${cells.join('')}</div>
         </div>`;
       }).join('');
+      const visible = cards.trim();
+      const toggle = settledCount
+        ? `<button class="ghost-button" type="button" id="toggleSettledBoards" style="margin-top:6px">`
+          + `${state.correct.showSettled ? '收起' : '顯示'}已完成的 ${settledCount} 個版面</button>`
+        : '';
+      wall.innerHTML = (visible || '<div class="status-text" style="padding:18px 6px;font-size:17px">🎉 今天的訂正都處理完了。</div>') + toggle;
       renderCorrectStats();   // 標記訂正後，下方日曆與統計同步更新
     }
 
@@ -766,6 +844,8 @@
       if (mark === 'correcting') board.seats[seat] = 'corrected';
       else if (mark === 'corrected') board.seats[seat] = 'correcting';
       else board.seats[seat] = 'correcting';
+      state.correct.sticky = state.correct.sticky || [];
+      if (!state.correct.sticky.includes(boardId)) state.correct.sticky.push(boardId);
       saveTodayState();
       renderBoards();
       scheduleCorrectCloudSave();
@@ -799,7 +879,7 @@
     async function loadCorrectStats() {
       if (!state.settings.className || !state.settings.classroomToken) {
         // 沒設金鑰也要看得到今天的訂正狀況，只是撈不到前幾天的紀錄。
-        $('correctStatus').textContent = '目前只顯示今天的訂正狀況；填入「設定」的班級名稱與教室金鑰後，可一併查看前幾天。';
+        $('correctStatus').textContent = '⚠ 這台電腦還沒填「設定 → 班級名稱＋教室金鑰」，所以只看得到今天這台自己登記的訂正。填好後會自動統計近 ' + state.settings.lookbackDays + ' 天（含前幾天沒訂正完的）。';
         renderCorrectStats();
         return;
       }
@@ -823,6 +903,65 @@
     function correctBadge(count) {
       return `<span style="color:var(--correcting);font-weight:900">待訂正 ${count}</span>`;
     }
+    function correctItemKey(item) {
+      return `${item.date}|${item.subject}|${item.assignment || ''}|${item.seat}`;
+    }
+    /** 找出對應今天版面的那一塊（分科目要跳過去、勾完成要改它）。 */
+    function findBoardFor(subject, assignment) {
+      return state.boards.find(board => board.subject === subject && (board.assignment || '') === (assignment || ''));
+    }
+
+    /** 在統計裡直接把某一筆標成訂正完成。今天的改本機版面，其他日期直接改雲端。 */
+    async function completeCorrectItem(key) {
+      const [date, subject, assignment, seatText] = key.split('|');
+      const seat = Number(seatText);
+      const board = findBoardFor(subject, assignment);
+      if (date === todayKey() && board && board.seats[seat] === 'correcting') {
+        board.seats[seat] = 'corrected';
+        saveTodayState();
+        renderBoards();
+        scheduleCorrectCloudSave();
+        showToast(`✅ ${seat}號 ${subject} 訂正完成。`);
+        return;
+      }
+      if (!state.settings.className || !state.settings.classroomToken) {
+        return showToast('要處理前幾天的訂正，請先在「設定」填入班級名稱與教室金鑰。', true);
+      }
+      try {
+        const result = await callGas({
+          action: 'homework_resubmit', token: state.settings.classroomToken, className: state.settings.className,
+          date, subject, assignment, seat
+        });
+        if (!result.updated) showToast('雲端找不到這一筆（可能已處理過），已從清單移除。');
+        else showToast(`✅ ${seat}號 ${subject} 訂正完成。`);
+        state.correct.items = state.correct.items.filter(item => correctItemKey(item) !== key);
+        renderCorrectStats();
+      } catch (error) {
+        showToast(error.message || '訂正標記失敗', true);
+      }
+    }
+
+    /** 補交分科目點進度 → 切到「作業繳交」分頁，把那塊版面閃給老師看。 */
+    function jumpToHomeworkBoard(boardId) {
+      const tab = document.querySelector('[data-page="homework"]');
+      if (tab) tab.click();
+      const card = document.querySelector(`#boardWall [data-board-card="${boardId}"]`);
+      if (!card) return;
+      card.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      card.classList.add('board-flash');
+      window.setTimeout(() => card.classList.remove('board-flash'), 1600);
+    }
+
+    /** 分科目點標題 → 捲到上面對應的版面並閃一下。 */
+    function jumpToCorrectBoard(boardId) {
+      state.correct.showSettled = true;   // 目標版面可能已清完被藏起來，先叫回來再跳
+      renderCorrectBoards();
+      const card = document.querySelector(`#correctWall [data-board-card="${boardId}"]`);
+      if (!card) return;
+      card.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      card.classList.add('board-flash');
+      window.setTimeout(() => card.classList.remove('board-flash'), 1600);
+    }
     /**
      * 統計用的待訂正清單。資料以雲端為準——大屏在教室、老師可能在別台電腦看，
      * 只有這台正在登記今天作業的機器（本機有版面）才用本機資料覆蓋今天，
@@ -843,66 +982,132 @@
       return [...cloud.filter(item => item.date !== today), ...local];
     }
 
+    /**
+     * 把一群項目的座號集中成一排可點的號碼；點下去就當作處理完成。
+     * 兩個分頁共用：補交是紅色（點＝補交完成），訂正是橘色（點＝訂正完成）。
+     */
+    function seatChipsHtml(list, kind) {
+      const colour = kind === 'correct' ? 'var(--correcting)' : 'var(--missing)';
+      const attr = kind === 'correct' ? 'data-correct-done' : 'data-makeup-done';
+      const keyOf = kind === 'correct' ? correctItemKey : makeupItemKey;
+      const title = kind === 'correct' ? '點一下＝訂正完成' : '點一下＝補交完成';
+      return `<div class="board-grid" style="margin:4px 0 10px">`
+        + list.slice().sort((a, b) => a.seat - b.seat).map(item =>
+          `<button class="hw-seat" type="button" style="background:${colour}" title="${title}" ${attr}="${escapeHtml(keyOf(item))}">${item.seat}</button>`).join('')
+        + '</div>';
+    }
+
+    /** 把項目依某個欄位分組後，各組以「標題＋座號排」呈現。 */
+    function groupedSeatChips(items, labelOf, kind) {
+      const map = {};
+      items.forEach(item => { (map[labelOf(item)] ??= []).push(item); });
+      return Object.keys(map).sort().map(label =>
+        `<div style="margin-top:8px"><strong style="font-size:16px;color:var(--primary-strong)">${escapeHtml(label)}</strong>`
+        + `<span class="status-text">（${map[label].length}）</span>${seatChipsHtml(map[label], kind)}</div>`).join('');
+    }
+
+    /**
+     * 把每一筆待處理項目做成一顆大按鈕，按下去就直接完成——不用再找旁邊的小按鈕。
+     * 兩個分頁共用：補交紅色（按＝已補交）、訂正紫色（按＝訂正完成）。
+     */
+    function itemButtonsHtml(list, kind) {
+      const colour = kind === 'correct' ? 'var(--correcting)' : 'var(--missing)';
+      const attr = kind === 'correct' ? 'data-correct-done' : 'data-makeup-done';
+      const keyOf = kind === 'correct' ? correctItemKey : makeupItemKey;
+      const title = kind === 'correct' ? '點一下＝訂正完成' : '點一下＝已補交';
+      if (!list.length) return '<div class="status-text" style="margin-top:10px">這位目前沒有待處理的項目 ✅</div>';
+      return '<div class="item-button-grid">' + list.map(item =>
+        `<button class="item-button" type="button" style="background:${colour}" title="${title}" ${attr}="${escapeHtml(keyOf(item))}">`
+        + `<span class="d">${escapeHtml(item.date.slice(5).replace('-', '/'))}</span>`
+        + `${escapeHtml(workLabel(item.subject, item.assignment))}</button>`).join('') + '</div>';
+    }
+
+    /** 三種檢視與「作業補交」完全一致：按科目 → 依座號 → 日曆。 */
     function renderCorrectStats() {
       const host = $('correctStatBody');
       if (!host) return;
       const items = correctStatsItems();   // 只含待訂正
-      const group = keyOf => {
-        const map = {};
-        items.forEach(item => { (map[keyOf(item)] ??= []).push(item); });
-        return map;
-      };
-      // 分天是日曆：即使一筆都沒有也要把月曆畫出來（整片空白＝都清完了）。
-      // 分科目／分人是清單，沒資料就只顯示一句話。
-      if (!items.length && state.correct.mode !== 'day') {
-        host.innerHTML = '<div class="status-text" style="padding:16px 4px;font-size:18px">🎉 目前沒有待訂正的項目，全部都清完了。</div>';
-        return;
-      }
+      const mode = state.correct.mode;
 
-      if (state.correct.mode === 'day') {
-        // 日曆：只有還沒訂正完的日子會亮紅；一片空白就代表都清完了。
-        const byDate = group(item => item.date);
-        const focusMonth = /^\d{4}-\d{2}$/.test(state.correct.focus) ? state.correct.focus : todayKey().slice(0, 7);
-        state.correct.focus = focusMonth;
-        const [year, month] = focusMonth.split('-').map(Number);
-        const first = new Date(year, month - 1, 1);
-        const heads = ['日', '一', '二', '三', '四', '五', '六'].map(day => `<div class="makeup-cal-head">${day}</div>`).join('');
-        const cells = [];
-        for (let index = 0; index < 42; index += 1) {
-          const date = new Date(year, month - 1, 1 - first.getDay() + index);
-          const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-          const count = (byDate[key] || []).length;
-          cells.push(`<button class="makeup-cal-day${count ? ' has-correcting' : ''}${date.getMonth() + 1 === month ? '' : ' other'}" type="button" data-correct-day="${key}">${date.getDate()}${count ? `<br>訂正 ${count}` : ''}</button>`);
+      if (mode === 'subject') {
+        if (!items.length) {
+          host.innerHTML = '<div class="status-text" style="padding:24px 6px;font-size:18px">🎉 目前沒有待訂正的項目！</div>';
+          return;
         }
-        const selected = state.correct.selectedDay && byDate[state.correct.selectedDay] ? state.correct.selectedDay : '';
-        const detail = selected
-          ? `<h3 style="margin-top:14px;color:var(--primary-strong)">${selected} 還沒訂正完</h3>`
-            + `<div class="makeup-list">${byDate[selected].sort((a, b) => a.seat - b.seat).map(item =>
-              `<div class="makeup-item"><span class="who">${item.seat}號</span><span>${escapeHtml(item.subject)}${item.assignment ? '／' + escapeHtml(item.assignment) : ''}</span></div>`).join('')}</div>`
-          : items.length
-            ? '<div class="status-text" style="margin-top:12px">點橘色日期看當天還沒訂正完的名單。</div>'
-            : '<div class="status-text" style="margin-top:12px;font-size:17px">🎉 整個月都沒有待訂正的項目。在上方版面點座號標記訂正後，當天就會變橘色。</div>';
-        host.innerHTML = `<div class="mode-row"><button class="ghost-button" type="button" data-correct-month="-1">◀ 上個月</button>`
-          + `<strong style="font-size:18px">${year} 年 ${month} 月</strong>`
-          + `<button class="ghost-button" type="button" data-correct-month="1">下個月 ▶</button></div>`
-          + `<div class="makeup-cal">${heads}${cells.join('')}</div>${detail}`;
+        // 兩層選擇：先挑科目，再挑該科的進度；點進度會直接跳到上面的版面標記。
+        const subjects = [...new Set(items.map(item => item.subject))];
+        if (!subjects.includes(state.correct.focusSubject)) state.correct.focusSubject = subjects[0];
+        const subjectChips = subjects.map(subject =>
+          `<button class="mode-button${subject === state.correct.focusSubject ? ' active' : ''}" type="button" data-correct-subject="${escapeHtml(subject)}">${escapeHtml(subject)}（${items.filter(item => item.subject === subject).length}）</button>`).join('');
+
+        const inSubject = items.filter(item => item.subject === state.correct.focusSubject);
+        const assignments = [...new Set(inSubject.map(item => item.assignment || ''))];
+        if (!assignments.includes(state.correct.focus)) state.correct.focus = assignments[0];
+        const assignChips = assignments.map(assignment => {
+          const board = findBoardFor(state.correct.focusSubject, assignment);
+          return `<button class="mode-button${assignment === state.correct.focus ? ' active' : ''}" type="button"`
+            + ` data-correct-assign="${escapeHtml(assignment)}"${board ? ` data-correct-jump="${board.id}"` : ''}`
+            + ` title="${board ? '點了會跳到上面的版面標記' : '前幾天的紀錄，今天沒有這個版面'}">`
+            + `${escapeHtml(assignment || '（未命名）')}（${inSubject.filter(item => (item.assignment || '') === assignment).length}）`
+            + `${board ? ' ▲' : ''}</button>`;
+        }).join('');
+
+        const picked = inSubject.filter(item => (item.assignment || '') === state.correct.focus);
+        // 同一天的號碼集中成一排，點號碼＝訂正完成
+        const list = groupedSeatChips(picked, item => `${item.date.slice(5).replace('-', '/')}`, 'correct');
+        host.innerHTML = `<div class="mode-row">${subjectChips}</div>`
+          + `<div class="mode-row" style="margin-top:6px">${assignChips}</div>`
+          + `<div class="status-text" style="margin-top:8px">點進度（▲）會跳到上面的版面；點下方號碼＝該生訂正完成。</div>${list}`;
         return;
       }
 
-      if (state.correct.mode === 'subject') {
-        const map = group(item => item.subject + (item.assignment ? '／' + item.assignment : ''));
-        host.innerHTML = Object.keys(map).sort().map(label =>
-          `<div class="makeup-group"><h4>${escapeHtml(label)}　${correctBadge(map[label].length)}</h4>`
-          + `<div class="status-text" style="font-size:15px">${map[label].sort((a, b) => a.seat - b.seat).map(item =>
-            `${item.seat}號（${item.date.slice(5).replace('-', '/')}）`).join('、')}</div></div>`).join('');
+      if (mode === 'seat') {
+        if (!items.length) {
+          host.innerHTML = '<div class="status-text" style="padding:24px 6px;font-size:18px">🎉 目前沒有待訂正的項目！</div>';
+          return;
+        }
+        const seats = [...new Set(items.map(item => item.seat))].sort((a, b) => a - b);
+        if (!seats.includes(Number(state.correct.focus))) state.correct.focus = String(seats[0]);
+        const grid = seats.map(seat =>
+          `<button class="seat correct-seat" type="button" data-correct-focus="${seat}" style="${Number(state.correct.focus) === seat ? 'outline:4px solid #c9b4e8;' : ''}">${seat}<span class="seat-state">${items.filter(item => item.seat === seat).length} 筆</span></button>`).join('');
+        // 每一項做成一顆按鈕，按下去就是訂正完成
+        const picked = items.filter(item => item.seat === Number(state.correct.focus))
+          .sort((a, b) => a.date.localeCompare(b.date));
+        host.innerHTML = `<div class="makeup-seat-grid">${grid}</div>`
+          + `<h3 style="margin-top:14px;color:var(--primary-strong)">${escapeHtml(state.correct.focus)}號要訂正的項目`
+          + `<span class="status-text">　按項目＝訂正完成</span></h3>`
+          + itemButtonsHtml(picked, 'correct');
         return;
       }
 
-      const map = group(item => item.seat);
-      host.innerHTML = Object.keys(map).map(Number).sort((a, b) => a - b).map(seat =>
-        `<div class="makeup-group"><h4>${seat}號　${correctBadge(map[seat].length)}</h4>`
-        + `<div class="status-text" style="font-size:15px">${map[seat].sort((a, b) => a.date.localeCompare(b.date)).map(item =>
-          `${item.date.slice(5).replace('-', '/')} ${item.subject}${item.assignment ? '／' + item.assignment : ''}`).join('、')}</div></div>`).join('');
+      // 日曆：只有還沒訂正完的日子會亮紫；一片空白就代表都清完了。
+      const byDate = {};
+      items.forEach(item => { (byDate[item.date] ??= []).push(item); });
+      const focusMonth = /^\d{4}-\d{2}$/.test(state.correct.focus) ? state.correct.focus : todayKey().slice(0, 7);
+      state.correct.focus = focusMonth;
+      const [year, month] = focusMonth.split('-').map(Number);
+      const first = new Date(year, month - 1, 1);
+      const heads = ['日', '一', '二', '三', '四', '五', '六'].map(day => `<div class="makeup-cal-head">${day}</div>`).join('');
+      const cells = [];
+      // 只畫這個月實際需要的週數（多半 5 週），少一列就少一截高度
+      const cellCount = Math.ceil((first.getDay() + new Date(year, month, 0).getDate()) / 7) * 7;
+      for (let index = 0; index < cellCount; index += 1) {
+        const date = new Date(year, month - 1, 1 - first.getDay() + index);
+        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        const count = (byDate[key] || []).length;
+        cells.push(`<button class="makeup-cal-day${count ? ' has-correcting' : ''}${date.getMonth() + 1 === month ? '' : ' other'}" type="button" data-correct-day="${key}">${date.getDate()}${count ? `<br>訂正 ${count}` : ''}</button>`);
+      }
+      const selectedDay = state.correct.selectedDay && byDate[state.correct.selectedDay] ? state.correct.selectedDay : '';
+      const detail = selectedDay
+        ? `<h3 style="margin-top:14px;color:var(--primary-strong)">${selectedDay} 要訂正的項目　<span class="status-text">點號碼＝訂正完成</span></h3>`
+          + groupedSeatChips(byDate[selectedDay], item => workLabel(item.subject, item.assignment), 'correct')
+        : items.length
+          ? '<div class="status-text" style="margin-top:12px">點有顏色的日期看當天明細。</div>'
+          : '<div class="status-text" style="margin-top:12px;font-size:17px">🎉 整個月都沒有待訂正的項目。在上方版面點座號標記後，當天就會標上顏色。</div>';
+      host.innerHTML = `<div class="mode-row"><button class="ghost-button" type="button" data-correct-month="-1">◀ 上個月</button>`
+        + `<strong style="font-size:18px">${year} 年 ${month} 月</strong>`
+        + `<button class="ghost-button" type="button" data-correct-month="1">下個月 ▶</button></div>`
+        + `<div class="makeup-cal">${heads}${cells.join('')}</div>${detail}`;
     }
 
     // ---------- 送出回報 ----------
@@ -1034,40 +1239,60 @@
       const parts = [];
       if (showSeat) parts.push(`<span class="who">${item.seat}號</span>`);
       if (showDate) parts.push(`<span>${escapeHtml(item.date.slice(5).replace('-', '/'))}</span>`);
-      parts.push(`<span>${escapeHtml(item.subject)}${item.assignment ? '／' + escapeHtml(item.assignment) : ''}</span>`);
+      parts.push(`<span>${escapeHtml(workLabel(item.subject, item.assignment))}</span>`);
       const correcting = item.status === '待訂正';
       if (correcting) parts.push('<span style="color:var(--correcting);font-weight:800">✏️ 待訂正</span>');
       return `<div class="makeup-item">${parts.join('')}<button class="makeup-done" type="button"`
-        + `${correcting ? ' style="background:var(--corrected)"' : ''}`
+        + `${correcting ? ' style="background:var(--ok)"' : ''}`
         + ` data-makeup-done="${escapeHtml(makeupItemKey(item))}">${correcting ? '訂正完成' : '完成'}</button></div>`;
     }
     function renderMakeup() {
       const body = $('makeupBody');
       const items = state.makeup.items;
       if (!state.makeup.loaded) { body.innerHTML = ''; return; }
-      if (!items.length) {
+      const mode = state.makeup.mode;
+      // 日曆即使一筆都沒有也要畫出來（空白月曆＝都清完了）；清單模式才只顯示一句話。
+      if (!items.length && mode !== 'calendar') {
         body.innerHTML = '<div class="status-text" style="padding:24px 6px;font-size:18px">🎉 目前沒有待補交的作業！</div>';
         return;
       }
-      const mode = state.makeup.mode;
       if (mode === 'subject') {
+        // 兩層選擇：先挑科目，再挑該科的進度——跟「作業訂正」完全一樣的操作順序。
         const subjects = [...new Set(items.map(item => item.subject))];
-        if (!subjects.includes(state.makeup.focus)) state.makeup.focus = subjects[0];
-        const chips = subjects.map(subject =>
-          `<button class="mode-button${subject === state.makeup.focus ? ' active' : ''}" type="button" data-makeup-focus="${escapeHtml(subject)}">${escapeHtml(subject)}（${items.filter(item => item.subject === subject).length}）</button>`).join('');
-        const list = items.filter(item => item.subject === state.makeup.focus)
-          .sort((a, b) => a.seat - b.seat || a.date.localeCompare(b.date))
-          .map(item => makeupItemHtml(item)).join('');
-        body.innerHTML = `<div class="mode-row">${chips}</div><div class="makeup-list">${list}</div>`;
+        if (!subjects.includes(state.makeup.focusSubject)) state.makeup.focusSubject = subjects[0];
+        const subjectChips = subjects.map(subject =>
+          `<button class="mode-button${subject === state.makeup.focusSubject ? ' active' : ''}" type="button" data-makeup-subject="${escapeHtml(subject)}">${escapeHtml(subject)}（${items.filter(item => item.subject === subject).length}）</button>`).join('');
+
+        const inSubject = items.filter(item => item.subject === state.makeup.focusSubject);
+        const assignments = [...new Set(inSubject.map(item => item.assignment || ''))];
+        if (!assignments.includes(state.makeup.focus)) state.makeup.focus = assignments[0];
+        const assignChips = assignments.map(assignment => {
+          const board = findBoardFor(state.makeup.focusSubject, assignment);
+          return `<button class="mode-button${assignment === state.makeup.focus ? ' active' : ''}" type="button"`
+            + ` data-makeup-assign="${escapeHtml(assignment)}"${board ? ` data-makeup-jump="${board.id}"` : ''}`
+            + ` title="${board ? '點了會跳到「作業繳交」的版面' : '前幾天的紀錄，今天沒有這個版面'}">`
+            + `${escapeHtml(assignment || '（未命名）')}（${inSubject.filter(item => (item.assignment || '') === assignment).length}）`
+            + `${board ? ' ▲' : ''}</button>`;
+        }).join('');
+
+        const picked = inSubject.filter(item => (item.assignment || '') === state.makeup.focus);
+        // 同一天的號碼集中成一排，點號碼＝補交完成
+        const list = groupedSeatChips(picked, item => `${item.date.slice(5).replace('-', '/')}`, 'makeup');
+        body.innerHTML = `<div class="mode-row">${subjectChips}</div>`
+          + `<div class="mode-row" style="margin-top:6px">${assignChips}</div>`
+          + `<div class="status-text" style="margin-top:8px">點進度（▲）會跳到「作業繳交」的版面；點下方號碼＝該生已補交。</div>${list}`;
       } else if (mode === 'seat') {
         const seats = [...new Set(items.map(item => item.seat))].sort((a, b) => a - b);
         if (!seats.includes(Number(state.makeup.focus))) state.makeup.focus = String(seats[0]);
         const grid = seats.map(seat =>
-          `<button class="seat" type="button" data-status="未到" data-makeup-focus="${seat}" style="${Number(state.makeup.focus) === seat ? 'outline:4px solid #b9d8cf;' : ''}">${seat}<span class="seat-state">${items.filter(item => item.seat === seat).length} 筆</span></button>`).join('');
-        const list = items.filter(item => item.seat === Number(state.makeup.focus))
-          .sort((a, b) => a.date.localeCompare(b.date))
-          .map(item => makeupItemHtml(item, { showSeat: false })).join('');
-        body.innerHTML = `<div class="makeup-seat-grid">${grid}</div><h3 style="margin-top:14px;color:var(--primary-strong)">${escapeHtml(state.makeup.focus)}號的未交明細</h3><div class="makeup-list">${list}</div>`;
+          `<button class="seat makeup-seat" type="button" data-makeup-focus="${seat}" style="${Number(state.makeup.focus) === seat ? 'outline:4px solid #f3b9b0;' : ''}">${seat}<span class="seat-state">${items.filter(item => item.seat === seat).length} 筆</span></button>`).join('');
+        // 每一項做成一顆按鈕，按下去就是補交完成
+        const picked = items.filter(item => item.seat === Number(state.makeup.focus))
+          .sort((a, b) => a.date.localeCompare(b.date));
+        body.innerHTML = `<div class="makeup-seat-grid">${grid}</div>`
+          + `<h3 style="margin-top:14px;color:var(--primary-strong)">${escapeHtml(state.makeup.focus)}號的未交明細`
+          + `<span class="status-text">　按項目＝已補交</span></h3>`
+          + itemButtonsHtml(picked, 'makeup');
       } else {
         const byDate = {};
         items.forEach(item => { (byDate[item.date] ??= []).push(item); });
@@ -1077,7 +1302,9 @@
         const first = new Date(year, month - 1, 1);
         const heads = ['日', '一', '二', '三', '四', '五', '六'].map(day => `<div class="makeup-cal-head">${day}</div>`).join('');
         const cells = [];
-        for (let index = 0; index < 42; index += 1) {
+        // 只畫這個月實際需要的週數（多半 5 週），少一列就少一截高度
+      const cellCount = Math.ceil((first.getDay() + new Date(year, month, 0).getDate()) / 7) * 7;
+      for (let index = 0; index < cellCount; index += 1) {
           const date = new Date(year, month - 1, 1 - first.getDay() + index);
           const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
           const count = (byDate[key] || []).length;
@@ -1085,8 +1312,11 @@
         }
         const selectedDay = state.makeup.selectedDay && byDate[state.makeup.selectedDay] ? state.makeup.selectedDay : '';
         const detail = selectedDay
-          ? `<h3 style="margin-top:14px;color:var(--primary-strong)">${selectedDay} 的缺交明細</h3><div class="makeup-list">${byDate[selectedDay].sort((a, b) => a.seat - b.seat).map(item => makeupItemHtml(item, { showDate: false })).join('')}</div>`
-          : '<div class="status-text" style="margin-top:12px">點紅色日期看當天明細。</div>';
+          ? `<h3 style="margin-top:14px;color:var(--primary-strong)">${selectedDay} 的缺交明細　<span class="status-text">點號碼＝已補交</span></h3>`
+            + groupedSeatChips(byDate[selectedDay], item => workLabel(item.subject, item.assignment), 'makeup')
+          : items.length
+            ? '<div class="status-text" style="margin-top:12px">點紅色日期看當天明細。</div>'
+            : '<div class="status-text" style="margin-top:12px;font-size:17px">🎉 整個月都沒有待補交的作業。</div>';
         body.innerHTML = `<div class="mode-row"><button class="ghost-button" type="button" data-makeup-month="-1">◀ 上個月</button><strong style="font-size:18px">${year} 年 ${month} 月</strong><button class="ghost-button" type="button" data-makeup-month="1">下個月 ▶</button></div><div class="makeup-cal">${heads}${cells.join('')}</div>${detail}`;
       }
     }
@@ -1097,7 +1327,7 @@
         const result = await callGas({ action: 'homework_resubmit', token: state.settings.classroomToken, className: state.settings.className, date: item.date, subject: item.subject, assignment: item.assignment || '', seat: item.seat });
         const wasCorrecting = item.status === '待訂正';
         if (!result.updated) showToast('雲端找不到這筆紀錄（可能已處理過），已從清單移除。');
-        else showToast(`✅ ${item.seat}號 ${item.subject}${item.assignment ? '／' + item.assignment : ''} ${wasCorrecting ? '訂正完成' : '補交完成'}！`);
+        else showToast(`✅ ${item.seat}號 ${workLabel(item.subject, item.assignment)} ${wasCorrecting ? '訂正完成' : '補交完成'}！`);
         state.makeup.items = state.makeup.items.filter(entry => makeupItemKey(entry) !== key);
         const todayBoard = state.boards.find(board => board.subject === item.subject && (board.assignment || '') === (item.assignment || ''));
         if (item.date === todayKey() && todayBoard) {
@@ -1147,13 +1377,13 @@
           if (entry.缺交) parts.push(`<span style="color:var(--missing)">缺${entry.缺交}</span>`);
           if (entry.補交) parts.push(`<span style="color:var(--resub)">補${entry.補交}</span>`);
           if (entry.待訂正) parts.push(`<span style="color:var(--correcting);font-weight:800">訂${entry.待訂正}</span>`);
-          if (entry.已訂正) parts.push(`<span style="color:var(--corrected)">✔${entry.已訂正}</span>`);
+          if (entry.已訂正) parts.push(`<span style="color:var(--ok)">✔${entry.已訂正}</span>`);
           return `<td>${parts.join(' ') || '—'}</td>`;
         }).join('');
         return `<tr><th>${seat}號</th>${cells}</tr>`;
       });
       $('homeworkStats').innerHTML = `<h3>📚 各科作業狀況（分科統計）</h3>`
-        + `<p class="status-text" style="margin:0 0 6px"><span style="color:var(--missing)">缺</span>＝缺交・<span style="color:var(--resub)">補</span>＝補交・<span style="color:var(--correcting);font-weight:800">訂</span>＝待訂正（尚未完成）・<span style="color:var(--corrected)">✔</span>＝已訂正</p>`
+        + `<p class="status-text" style="margin:0 0 6px"><span style="color:var(--missing)">缺</span>＝缺交・<span style="color:var(--resub)">補</span>＝補交・<span style="color:var(--correcting);font-weight:800">訂</span>＝待訂正（尚未完成）・<span style="color:var(--ok)">✔</span>＝已訂正</p>`
         + `<table class="summary-table"><tr><th>座號</th>${stats.subjects.map(subject => `<th>${escapeHtml(subject)}</th>`).join('')}</tr>${homeworkRows.join('') || '<tr><td>區間內沒有待處理紀錄 🎉</td></tr>'}</table>`;
       const rateRows = stats.subjects.map(subject => {
         const collected = stats.collectedDays[subject];
@@ -1172,7 +1402,7 @@
           const absent = data.attendance.filter(row => row.date === date).map(row => `${row.seat}號${row.status}`);
           const perBoard = {};
           data.homework.filter(row => row.date === date).forEach(row => {
-            const key = `${row.subject}${row.assignment ? '／' + row.assignment : ''}`;
+            const key = `${workLabel(row.subject, row.assignment)}`;
             (perBoard[key] ??= []).push(`${row.seat}號${row.status}`);
           });
           $('dayDetailBody').innerHTML = `<p style="font-size:16px;margin:6px 0"><strong>出缺：</strong>${absent.join('、') || '全班到齊'}</p>` +
@@ -1257,6 +1487,8 @@
       $('setupClassName').value = s.className;
       $('setupBoardTitle').value = s.boardTitle;
       $('setupContactFont').value = s.contactFont;
+      $('setupCorrectColor').value = s.correctColor;
+      applyCorrectColor();
       document.querySelector('.chalkboard-inner')?.classList.toggle('chalk-bpmf', s.contactFont === 'bpmf');
       $('setupSeatCount').value = s.seatCount;
       $('setupEmptySeats').value = s.emptySeats.join('、');
@@ -1278,6 +1510,7 @@
       s.className = $('setupClassName').value.trim().slice(0, 20);
       s.boardTitle = $('setupBoardTitle').value.trim().slice(0, 20) || '晨間大屏';
       s.contactFont = $('setupContactFont').value === 'bpmf' ? 'bpmf' : 'default';
+      if (CORRECT_COLORS[$('setupCorrectColor').value]) s.correctColor = $('setupCorrectColor').value;
       s.seatCount = Math.min(60, Math.max(1, Number($('setupSeatCount').value) || 26));
       s.emptySeats = $('setupEmptySeats').value.split(/[、,，;；\s]+/).map(Number).filter(n => n >= 1 && n <= s.seatCount);
       const types = $('setupAssignmentTypes').value.split(/[、,，;；]+/).map(value => value.trim()).filter(Boolean).slice(0, 12);
@@ -1300,7 +1533,13 @@
       document.querySelectorAll('.tab-button').forEach(item => item.classList.toggle('active', item === button));
       document.querySelectorAll('.page').forEach(page => page.classList.toggle('active', page.id === `page-${button.dataset.page}`));
       if (button.dataset.page === 'makeup' && !state.makeup.loaded) loadMakeup();
-      if (button.dataset.page === 'correct' && !state.correct.loaded) loadCorrectStats();
+      if (button.dataset.page === 'correct') {
+        // 重新進到這個分頁＝新的一輪，上次留著的已完成版面收起來
+        state.correct.sticky = [];
+        state.correct.showSettled = false;
+        renderCorrectBoards();
+        if (!state.correct.loaded) loadCorrectStats();
+      }
     }));
     $('rollcallGrid').addEventListener('click', event => {
       const seatButton = event.target.closest('[data-seat]');
@@ -1324,13 +1563,14 @@
       if (seatButton) tapBoardSeat(seatButton.dataset.boardId, Number(seatButton.dataset.seat));
     });
     $('correctWall').addEventListener('click', event => {
-      const expand = event.target.closest('[data-correct-expand]');
-      if (expand) { state.correct.expanded.add(expand.dataset.correctExpand); return renderCorrectBoards(); }
-      const collapse = event.target.closest('[data-correct-collapse]');
-      if (collapse) { state.correct.expanded.delete(collapse.dataset.correctCollapse); return renderCorrectBoards(); }
+      if (event.target.closest('#toggleSettledBoards')) {
+        state.correct.showSettled = !state.correct.showSettled;
+        return renderCorrectBoards();
+      }
       const allButton = event.target.closest('[data-correct-all]');
       if (allButton) {
-        state.correct.expanded.delete(allButton.dataset.correctAll);   // 清完就收起來，不占版面
+        state.correct.showSettled = false;   // 按了「全部訂正完成」就直接把版面收掉
+        state.correct.sticky = (state.correct.sticky || []).filter(id => id !== allButton.dataset.correctAll);
         return markBoardAllCorrected(allButton.dataset.correctAll);
       }
       const seatButton = event.target.closest('[data-correct-board][data-seat]');
@@ -1338,12 +1578,34 @@
     });
     document.querySelectorAll('[data-correct-mode]').forEach(button => button.addEventListener('click', () => {
       state.correct.mode = button.dataset.correctMode;
+      state.correct.focus = '';
+      state.correct.focusSubject = '';
       state.correct.selectedDay = '';
       document.querySelectorAll('[data-correct-mode]').forEach(item => item.classList.toggle('active', item === button));
       renderCorrectStats();
     }));
     $('refreshCorrectButton').addEventListener('click', loadCorrectStats);
     $('correctStatBody').addEventListener('click', event => {
+      const subject = event.target.closest('[data-correct-subject]');
+      if (subject) {
+        state.correct.focusSubject = subject.dataset.correctSubject;
+        state.correct.focus = '';        // 換科目後重新選第一個進度
+        return renderCorrectStats();
+      }
+      const assign = event.target.closest('[data-correct-assign]');
+      if (assign) {
+        state.correct.focus = assign.dataset.correctAssign;
+        renderCorrectStats();
+        // 有對應版面就直接跳上去標記
+        if (assign.dataset.correctJump) jumpToCorrectBoard(assign.dataset.correctJump);
+        return;
+      }
+      const jump = event.target.closest('[data-correct-jump]');
+      if (jump) return jumpToCorrectBoard(jump.dataset.correctJump);
+      const focus = event.target.closest('[data-correct-focus]');
+      if (focus) { state.correct.focus = focus.dataset.correctFocus; return renderCorrectStats(); }
+      const doneButton = event.target.closest('[data-correct-done]');
+      if (doneButton) return completeCorrectItem(doneButton.dataset.correctDone);
       const day = event.target.closest('[data-correct-day]');
       if (day) { state.correct.selectedDay = day.dataset.correctDay; return renderCorrectStats(); }
       const monthNav = event.target.closest('[data-correct-month]');
@@ -1358,6 +1620,8 @@
     document.querySelectorAll('[data-makeup-mode]').forEach(button => button.addEventListener('click', () => {
       state.makeup.mode = button.dataset.makeupMode;
       state.makeup.focus = '';
+      state.makeup.focusSubject = '';
+      state.makeup.selectedDay = '';
       document.querySelectorAll('[data-makeup-mode]').forEach(item => item.classList.toggle('active', item === button));
       renderMakeup();
     }));
@@ -1365,6 +1629,19 @@
     $('makeupBody').addEventListener('click', event => {
       const done = event.target.closest('[data-makeup-done]');
       if (done) return completeMakeupItem(done.dataset.makeupDone);
+      const subject = event.target.closest('[data-makeup-subject]');
+      if (subject) {
+        state.makeup.focusSubject = subject.dataset.makeupSubject;
+        state.makeup.focus = '';        // 換科目後重新選第一個進度
+        return renderMakeup();
+      }
+      const assign = event.target.closest('[data-makeup-assign]');
+      if (assign) {
+        state.makeup.focus = assign.dataset.makeupAssign;
+        renderMakeup();
+        if (assign.dataset.makeupJump) jumpToHomeworkBoard(assign.dataset.makeupJump);
+        return;
+      }
       const focus = event.target.closest('[data-makeup-focus]');
       if (focus) { state.makeup.focus = focus.dataset.makeupFocus; renderMakeup(); return; }
       const day = event.target.closest('[data-makeup-day]');

@@ -483,7 +483,7 @@ function buildRollcallSummaryText_(date, className, attendance, homework, mode) 
   (homework || []).forEach(function (entry) {
     var subject = String((entry && entry.subject) || '').trim();
     if (!subject) return;
-    var label = subject + (String((entry && entry.assignment) || '').trim() ? '／' + String(entry.assignment).trim() : '');
+    var label = subject + (String((entry && entry.assignment) || '').trim() ? ' ' + String(entry.assignment).trim() : '');
     var missing = (Array.isArray(entry.missing) ? entry.missing : []).map(function (seat) { return seat + '號'; });
     var resubmitted = (Array.isArray(entry.resubmitted) ? entry.resubmitted : []).map(function (seat) { return seat + '號'; });
     var correcting = (Array.isArray(entry.correcting) ? entry.correcting : []).map(function (seat) { return seat + '號'; });
@@ -1280,7 +1280,7 @@ function buildSeatLookupReply_(seat) {
     }
     if (missing.length) {
       lines.push('最近缺交：' + missing.slice(-5).map(function (row) {
-        return row.date.slice(5).replace('-', '/') + ' ' + row.subject + (row.assignment ? '／' + row.assignment : '');
+        return row.date.slice(5).replace('-', '/') + ' ' + row.subject + (row.assignment ? ' ' + row.assignment : '');
       }).join('、'));
     }
   } else {
@@ -2056,7 +2056,7 @@ function sendWeeklyHomeworkAlerts() {
 function buildParentHomeworkMessage_(items) {
   var subjectCounts = {};
   items.forEach(function (row) {
-    var label = row.subject + (row.assignment ? '／' + row.assignment : '');
+    var label = row.subject + (row.assignment ? ' ' + row.assignment : '');
     subjectCounts[label] = (subjectCounts[label] || 0) + 1;
   });
   var detail = Object.keys(subjectCounts).map(function (label) {
