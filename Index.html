@@ -4328,14 +4328,27 @@
     function renderContactBookHistory() {
       const host = $('contactBookHistoryList');
       if (!host) return;
-      host.innerHTML = contactBookHistory.filter(entry => !entry.empty).map(entry => {
-        const sourceLabel = entry.source === 'teacher' ? '工作台' : entry.source === 'classroom' ? '教室' : '';
+      const today = calendarDateKey(new Date());
+      const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+      const entries = contactBookHistory.filter(entry => !entry.empty);
+      const upcoming = entries.filter(entry => entry.date > today).sort((a, b) => a.date.localeCompare(b.date));
+      const past = entries.filter(entry => entry.date <= today);
+      const rowHtml = entry => {
+        const sourceLabel = entry.source === 'teacher' ? '工作台' : entry.source === 'classroom' ? '教室' : entry.source === 'line' ? 'LINE' : '';
+        const [y, m, d] = entry.date.split('-').map(Number);
+        const weekday = weekdays[new Date(y, m - 1, d).getDay()];
+        const badge = entry.date > today
+          ? '<span class="note-remind-chip">📅 未來</span>'
+          : entry.date === today ? '<span class="note-remind-chip is-today">今天</span>' : '';
         return `<article class="secretary-note-item" data-contact-history-date="${escapeHtml(entry.date)}" style="cursor:pointer">
-          <div><div class="secretary-note-text"><strong>${escapeHtml(entry.date)}</strong>｜${escapeHtml(entry.preview)}${entry.preview.length >= 50 ? '…' : ''}</div>
+          <div><div class="secretary-note-text">${badge}<strong>${escapeHtml(entry.date)}（${weekday}）</strong>｜${escapeHtml(entry.preview)}${entry.preview.length >= 50 ? '…' : ''}</div>
           <div class="secretary-note-meta">${sourceLabel}輸入・${entry.updatedAt ? new Date(entry.updatedAt).toLocaleString('zh-TW') : ''}</div></div>
           <button class="mini-button" type="button">載入</button>
         </article>`;
-      }).join('') || '';
+      };
+      host.innerHTML = (upcoming.length
+        ? `<div class="secretary-note-meta" style="margin-bottom:4px">📅 尚未到來（${upcoming.length}）——當天大屏一開就會顯示</div>${upcoming.map(rowHtml).join('')}<div class="secretary-note-meta" style="margin:8px 0 4px">已過去與今天</div>`
+        : '') + past.map(rowHtml).join('');
     }
     async function copyLatestContactBookEntry() {
       const target = contactBookHistory.find(entry => !entry.empty);

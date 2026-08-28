@@ -727,6 +727,15 @@ function handleLineEvent_(event, allowedUsers) {
     replyLineMessage_(event.replyToken, buildSeatLookupReply_(Number(seatMatch[1])));
     return;
   }
+  var commitMatch = text.match(/^聯絡本存到\s*(\d{4}-\d{2}-\d{2})$/);
+  if (commitMatch) {
+    replyLineMessage_(event.replyToken, commitPendingContactBook_(commitMatch[1]));
+    return;
+  }
+  if (/^取消聯絡本$/.test(text)) {
+    replyLineMessage_(event.replyToken, cancelPendingContactBook_());
+    return;
+  }
   var fileSearchMatch = text.match(/^(找檔案|找檔|檔案)\s*(.*)$/);
   if (fileSearchMatch) {
     replyLineMessage_(event.replyToken, buildFileSearchReply_(fileSearchMatch[2]));
@@ -746,7 +755,8 @@ function handleLineEvent_(event, allowedUsers) {
     return;
   }
   if (classified.type === 'contactbook') {
-    replyLineMessage_(event.replyToken, writeContactBookFromLine_(classified.content || ''));
+    var contactReply = writeContactBookFromLine_(classified.content || text, event.replyToken);
+    if (contactReply) replyLineMessage_(event.replyToken, contactReply);
     return;
   }
   if (classified.type === 'contact') {
@@ -838,7 +848,8 @@ function handleLineMediaMessage_(event, userId) {
     return;
   }
   if (classified.type === 'contactbook') {
-    replyLineMessage_(event.replyToken, writeContactBookFromLine_(classified.content || classified.transcript || ''));
+    var mediaContactReply = writeContactBookFromLine_(classified.content || classified.transcript || '', event.replyToken);
+    if (mediaContactReply) replyLineMessage_(event.replyToken, mediaContactReply + driveBackupNote_(backup));
     return;
   }
   if (classified.type === 'contact') {
@@ -1332,7 +1343,8 @@ function lineBotHelpText_() {
     '・傳語音 → 自動聽寫再整理（需 Gemini 金鑰）',
     '・拍通知單、黑板 → 自動辨識重點（需 Gemini 金鑰）',
     '・「今天上到哪」「今日任務」→ 回報工作台快照',
-    '・「聯絡本：數習P.20、帶直笛」→ 直接寫入今天的聯絡本（大屏黑板自動顯示）',
+    '・「聯絡本：數習P.20、帶直笛」→ 寫入今天的聯絡本（大屏黑板自動顯示）',
+    '・「聯絡本：下週一 帶泳具」→ 有提到日期時我會先問你要存哪一天，點按鈕確認即可',
     '・「今日點名」→ 回報大屏的出缺與作業登記',
     '・「缺交統計」→ 近 30 天各科缺交天數排行',
     '・「9號」→ 查該座號近 30 天的出缺與缺交（親師溝通前快速掌握）',
@@ -1427,9 +1439,32 @@ function extractRoughDate_(text) {
   function formatDate(dateValue) {
     return Utilities.formatDate(dateValue, Session.getScriptTimeZone(), 'yyyy-MM-dd');
   }
-  if (/今天/.test(text)) return formatDate(today);
-  if (/明天/.test(text)) return formatDate(new Date(today.getTime() + 24 * 3600 * 1000));
+  if (/今天|今日/.test(text)) return formatDate(today);
+  if (/明天|明日/.test(text)) return formatDate(new Date(today.getTime() + 24 * 3600 * 1000));
+  if (/大後天/.test(text)) return formatDate(new Date(today.getTime() + 72 * 3600 * 1000));
   if (/後天/.test(text)) return formatDate(new Date(today.getTime() + 48 * 3600 * 1000));
+  // 星期幾：支援「下週一」「下星期一」「禮拜一」「週三」等寫法。
+  // 台灣講法以「日曆週」為準：週一為一週之始，「下週X」＝下一個日曆週的星期 X。
+  // 例：週五說「下週一」是指 3 天後的那個週一，不是再下一週。
+  var weekdayMatch = text.match(/(下{0,2})\s*(?:個)?\s*(?:週|周|星期|禮拜)\s*([一二三四五六日天1-7])/);
+  if (weekdayMatch) {
+    var map = { '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '日': 0, '天': 0,
+      '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 0 };
+    var targetDay = map[weekdayMatch[2]];
+    if (targetDay !== undefined) {
+      var weekAhead = weekdayMatch[1].length;         // 「下」的數量：0＝最近一次、1＝下週、2＝下下週
+      var diff;
+      if (weekAhead === 0) {
+        diff = (targetDay - today.getDay() + 7) % 7;  // 沒有「下」→ 下一次遇到的那天
+        if (diff === 0) diff = 7;
+      } else {
+        var toNextMonday = (1 - today.getDay() + 7) % 7 || 7;            // 下一個週一
+        var offsetInWeek = (targetDay === 0 ? 6 : targetDay - 1);        // 週一=0 … 週日=6
+        diff = toNextMonday + (weekAhead - 1) * 7 + offsetInWeek;
+      }
+      return formatDate(new Date(today.getTime() + diff * 24 * 3600 * 1000));
+    }
+  }
   var match = text.match(/(\d{1,2})[\/月](\d{1,2})/);
   if (match) {
     var candidate = new Date(today.getFullYear(), Number(match[1]) - 1, Number(match[2]));
@@ -1437,6 +1472,16 @@ function extractRoughDate_(text) {
     return formatDate(candidate);
   }
   return '';
+}
+
+var WEEKDAY_LABELS = ['日', '一', '二', '三', '四', '五', '六'];
+
+/** 把 yyyy-MM-dd 轉成「9/1（一）」這種好讀的樣子。 */
+function formatDateLabel_(dateText) {
+  var parts = String(dateText).split('-');
+  if (parts.length !== 3) return String(dateText);
+  var date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+  return Number(parts[1]) + '/' + Number(parts[2]) + '（' + WEEKDAY_LABELS[date.getDay()] + '）';
 }
 
 function classifyByGemini_(text, apiKey) {
@@ -1605,9 +1650,24 @@ function replyLineMessage_(replyToken, text) {
   replyLineMessages_(replyToken, [text]);
 }
 
-function replyLineMessages_(replyToken, texts) {
+/**
+ * 帶「快速回覆」按鈕的回覆：老師點一下就送出對應指令，不用打字。
+ * options：[{ label: '按鈕文字', text: '點下去會送出的訊息' }]，最多 13 個。
+ */
+function replyLineWithOptions_(replyToken, text, options) {
+  var items = (options || []).slice(0, 13).map(function (option) {
+    return {
+      type: 'action',
+      action: { type: 'message', label: String(option.label).slice(0, 20), text: String(option.text).slice(0, 300) }
+    };
+  });
+  replyLineMessages_(replyToken, [text], items.length ? { items: items } : null);
+}
+
+function replyLineMessages_(replyToken, texts, quickReply) {
   var messages = (texts || []).filter(String).slice(0, 5)
     .map(function (text) { return { type: 'text', text: String(text).slice(0, 4900) }; });
+  if (quickReply && messages.length) messages[messages.length - 1].quickReply = quickReply;
   if (!replyToken || !messages.length) return;
   var accessToken = lineBotProperty_('LINE_CHANNEL_ACCESS_TOKEN');
   if (!accessToken) return;
@@ -1693,19 +1753,81 @@ function saveContactBookRecord_(date, className, text, source) {
   }
 }
 
-/** LINE 傳「聯絡本：…」（文字或語音）→ 追加到今天的聯絡本，大屏黑板一分鐘內自動顯示。 */
-function writeContactBookFromLine_(content) {
-  var items = String(content || '').split(/[\n、;；，,]+/)
-    .map(function (value) { return value.trim(); }).filter(String).slice(0, 20);
-  if (!items.length) return '請在「聯絡本：」後面接上項目，例如：聯絡本：數習 P.20、帶直笛。';
-  var today = lineBotToday_();
-  var existing = getContactBook_({ date: today }, true);
+var PENDING_CONTACTBOOK_KEY = 'PENDING_CONTACTBOOK';
+
+/** 把文字切成聯絡本項目；順手拿掉「下週一」這類日期詞，避免變成項目內容。 */
+function parseContactBookItems_(content) {
+  return String(content || '')
+    .replace(/^\s*(?:下{0,2}\s*(?:個)?\s*(?:週|周|星期|禮拜)\s*[一二三四五六日天1-7]|今天|今日|明天|明日|大後天|後天|\d{1,2}[\/月]\d{1,2}日?)\s*(?:的)?\s*(?:聯絡本|聯絡簿)?\s*[：:，,、]?\s*/, '')
+    .split(/[\n、;；，,]+/)
+    .map(function (value) { return value.trim(); })
+    .filter(String)
+    .slice(0, 20);
+}
+
+/** 實際寫入指定日期的聯絡本（追加在既有內容之後並重新編號）。 */
+function appendContactBookItems_(date, items) {
+  var existing = getContactBook_({ date: date }, true);
   var lines = String(existing.text || '').split('\n')
     .map(function (line) { return line.trim(); }).filter(String);
   items.forEach(function (item) { lines.push(lines.length + 1 + '. ' + item); });
   var text = lines.join('\n').slice(0, 5000);
-  saveContactBookRecord_(today, String(existing.className || ''), text, 'line');
-  return '📖 已寫入今天的聯絡本：\n' + text + '\n\n（大屏黑板一分鐘內自動更新；要修改可到工作台或大屏編輯。）';
+  saveContactBookRecord_(date, String(existing.className || ''), text, 'line');
+  return text;
+}
+
+/**
+ * LINE 傳「聯絡本：…」（文字或語音）→ 寫入聯絡本。
+ * 訊息裡有提到日期（明天／下週一／9/1…）且不是今天時，先問老師要存哪一天，
+ * 由老師點快速回覆按鈕確認，避免把下週的內容誤寫成今天的。
+ */
+function writeContactBookFromLine_(content, replyToken) {
+  var items = parseContactBookItems_(content);
+  if (!items.length) return '請在「聯絡本：」後面接上項目，例如：聯絡本：數習 P.20、帶直笛。';
+  var today = lineBotToday_();
+  var mentioned = extractRoughDate_(String(content || ''));
+
+  if (mentioned && mentioned !== today && replyToken) {
+    PropertiesService.getScriptProperties().setProperty(PENDING_CONTACTBOOK_KEY, JSON.stringify({
+      items: items, date: mentioned, createdAt: new Date().toISOString()
+    }));
+    replyLineWithOptions_(replyToken,
+      '📖 這幾項看起來是 ' + formatDateLabel_(mentioned) + ' 的：\n'
+        + items.map(function (item, index) { return (index + 1) + '. ' + item; }).join('\n')
+        + '\n\n要存到哪一天？',
+      [
+        { label: '存到 ' + formatDateLabel_(mentioned), text: '聯絡本存到 ' + mentioned },
+        { label: '改存今天', text: '聯絡本存到 ' + today },
+        { label: '取消', text: '取消聯絡本' }
+      ]);
+    return '';   // 已用快速回覆答覆，呼叫端不要再回一次
+  }
+
+  var text = appendContactBookItems_(today, items);
+  return '📖 已寫入今天（' + formatDateLabel_(today) + '）的聯絡本：\n' + text
+    + '\n\n（大屏黑板一分鐘內自動更新；要修改可到工作台或大屏編輯。）';
+}
+
+/** 老師點了快速回覆按鈕（或自己傳「聯絡本存到 2026-09-01」）之後的處理。 */
+function commitPendingContactBook_(date) {
+  var props = PropertiesService.getScriptProperties();
+  var pending = null;
+  try { pending = JSON.parse(props.getProperty(PENDING_CONTACTBOOK_KEY) || 'null'); } catch (error) {}
+  if (!pending || !Array.isArray(pending.items) || !pending.items.length) {
+    return '沒有待確認的聯絡本內容。請重新傳一次「聯絡本：……」。';
+  }
+  props.deleteProperty(PENDING_CONTACTBOOK_KEY);
+  var text = appendContactBookItems_(date, pending.items);
+  var isToday = date === lineBotToday_();
+  return '📖 已寫入 ' + formatDateLabel_(date) + ' 的聯絡本：\n' + text + '\n\n'
+    + (isToday
+      ? '（大屏黑板一分鐘內自動更新。）'
+      : '（' + formatDateLabel_(date) + ' 當天大屏一打開就會顯示；隨時可到工作台「聯絡本」選該日期修改。）');
+}
+
+function cancelPendingContactBook_() {
+  PropertiesService.getScriptProperties().deleteProperty(PENDING_CONTACTBOOK_KEY);
+  return '已取消，沒有寫入任何聯絡本內容。';
 }
 
 /** 老師金鑰限定：聯絡本歷史清單（近 limit 筆，新到舊，含內容預覽）。 */
