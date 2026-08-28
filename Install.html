@@ -41,6 +41,18 @@
     a { color:var(--primary-strong); }
     ul,ol { padding-left:22px; }
     li { margin:4px 0; }
+    figure.diagram { margin:14px 0; background:#fbfaf6; border:1.5px solid var(--line); border-radius:12px; padding:14px 12px; overflow-x:auto; }
+    figure.diagram svg { width:100%; height:auto; min-width:560px; display:block; font-family:"Microsoft JhengHei","Noto Sans TC",sans-serif; }
+    figure.diagram figcaption { margin-top:8px; font-size:13px; color:var(--muted); text-align:center; }
+    .d-box { fill:#fff; stroke:var(--line); stroke-width:1.5; }
+    .d-box-primary { fill:var(--soft); stroke:var(--primary); stroke-width:2; }
+    .d-box-warn { fill:var(--warn-bg); stroke:var(--warn-line); stroke-width:1.5; }
+    .d-group { fill:#f2f7f5; stroke:var(--primary); stroke-width:2; stroke-dasharray:6 4; }
+    .d-title { font-size:14px; font-weight:800; fill:var(--primary-strong); }
+    .d-text { font-size:12px; fill:var(--ink); }
+    .d-small { font-size:11px; fill:var(--muted); }
+    .d-line { stroke:var(--primary); stroke-width:2; fill:none; }
+    .d-line-soft { stroke:#a8bfb8; stroke-width:1.5; fill:none; stroke-dasharray:5 4; }
   </style>
 </head>
 <body>
@@ -72,6 +84,62 @@
         <tr><td>② 晨間大屏</td><td>需要先完成 B（因為要雲端同步）</td><td>教室電腦點名、收作業、黑板聯絡本、統計報表</td></tr>
         <tr><td>③ LINE 小幫手</td><td>照本頁 B 部分部署一次（約 40–60 分鐘，只做一次）</td><td>LINE 傳文字／語音／照片建任務、寫聯絡本、每日簡報、家長訊息草稿</td></tr>
       </table>
+      <figure class="diagram">
+        <svg viewBox="0 0 780 330" role="img" aria-label="系統架構圖：手機 LINE、你的 Google 帳號、教師工作台與晨間大屏之間的資料流向">
+          <defs>
+            <marker id="ah" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+              <path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/>
+            </marker>
+          </defs>
+
+          <rect class="d-group" x="248" y="26" width="286" height="278" rx="14"/>
+          <text class="d-title" x="391" y="50" text-anchor="middle">🔐 你自己的 Google 帳號</text>
+          <text class="d-small" x="391" y="68" text-anchor="middle">別人看不到，開發者也拿不到</text>
+
+          <rect class="d-box-primary" x="272" y="84" width="238" height="66" rx="10"/>
+          <text class="d-title" x="391" y="110" text-anchor="middle">📊 Google 試算表</text>
+          <text class="d-small" x="391" y="130" text-anchor="middle">訊息轉運站＋點名／作業／聯絡本紀錄</text>
+
+          <rect class="d-box-primary" x="272" y="166" width="238" height="66" rx="10"/>
+          <text class="d-title" x="391" y="192" text-anchor="middle">☁️ Google 雲端硬碟</text>
+          <text class="d-small" x="391" y="212" text-anchor="middle">照片與檔案自動分類備份</text>
+
+          <rect class="d-box-warn" x="272" y="248" width="238" height="42" rx="10"/>
+          <text class="d-text" x="391" y="274" text-anchor="middle">⚙️ Apps Script＝機器人的大腦</text>
+
+          <rect class="d-box" x="20" y="124" width="164" height="84" rx="12"/>
+          <text class="d-title" x="102" y="154" text-anchor="middle">📱 你的手機</text>
+          <text class="d-text" x="102" y="176" text-anchor="middle">LINE 小幫手</text>
+          <text class="d-small" x="102" y="195" text-anchor="middle">傳訊息／語音／照片</text>
+
+          <rect class="d-box" x="598" y="60" width="164" height="84" rx="12"/>
+          <text class="d-title" x="680" y="90" text-anchor="middle">🗂 教師工作台</text>
+          <text class="d-text" x="680" y="112" text-anchor="middle">你的電腦瀏覽器</text>
+          <text class="d-small" x="680" y="131" text-anchor="middle">任務・日曆・AI 助理</text>
+
+          <rect class="d-box" x="598" y="188" width="164" height="84" rx="12"/>
+          <text class="d-title" x="680" y="218" text-anchor="middle">📺 晨間大屏</text>
+          <text class="d-text" x="680" y="240" text-anchor="middle">教室電腦</text>
+          <text class="d-small" x="680" y="259" text-anchor="middle">點名・收作業・聯絡本</text>
+
+          <path class="d-line" d="M184,166 L242,166" marker-end="url(#ah)"/>
+          <path class="d-line" d="M242,150 L184,150" marker-end="url(#ah)"/>
+          <text class="d-small" x="213" y="140" text-anchor="middle">🔑A</text>
+
+          <path class="d-line" d="M540,120 L592,102" marker-end="url(#ah)"/>
+          <path class="d-line" d="M592,118 L540,136" marker-end="url(#ah)"/>
+          <text class="d-small" x="566" y="152" text-anchor="middle">🔑C</text>
+
+          <path class="d-line" d="M540,210 L592,228" marker-end="url(#ah)"/>
+          <path class="d-line" d="M592,244 L540,226" marker-end="url(#ah)"/>
+          <text class="d-small" x="566" y="196" text-anchor="middle">🔑D</text>
+
+          <path class="d-line-soft" d="M680,144 L680,188"/>
+          <text class="d-small" x="694" y="170">同步</text>
+        </svg>
+        <figcaption>三個入口共用同一份「你自己的」Google 資料；箭頭上的符號就是連接時要貼的鑰匙。</figcaption>
+      </figure>
+
       <div class="box">
         <strong>會用到的名詞（先有個印象就好）：</strong><br>
         ・<strong>Google 試算表</strong>＝像 Excel 的雲端表格，當作 LINE 訊息的「轉運倉庫」。<br>
@@ -90,6 +158,73 @@
           <tr><td><strong>🔑E</strong></td><td>AI 金鑰（選用，Gemini API）</td><td><a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a> 免費申請</td><td>兩處共用同一把：Apps Script「指令碼屬性」的 <code>GEMINI_API_KEY</code>（第 3 關，讓 LINE 能聽語音、看照片）＋工作台「⚙ 設定 → AI 設定 → <strong>🔑E API 金鑰</strong>」欄（開啟 AI 行政助理）</td></tr>
         </table>
       </div>
+
+      <figure class="diagram">
+        <svg viewBox="0 0 780 336" role="img" aria-label="五把金鑰與機器人網址的取得處與貼上位置對照圖">
+          <defs>
+            <marker id="ah2" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+              <path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/>
+            </marker>
+          </defs>
+          <text class="d-title" x="150" y="22" text-anchor="middle">哪裡拿到</text>
+          <text class="d-title" x="620" y="22" text-anchor="middle">貼到哪裡</text>
+
+          <rect class="d-box" x="24" y="34" width="252" height="40" rx="9"/>
+          <text class="d-text" x="150" y="59" text-anchor="middle">LINE Developers 按 Issue</text>
+          <circle cx="390" cy="54" r="19" class="d-box-primary"/>
+          <text class="d-title" x="390" y="59" text-anchor="middle">🔑A</text>
+          <rect class="d-box" x="504" y="34" width="252" height="40" rx="9"/>
+          <text class="d-text" x="630" y="59" text-anchor="middle">指令碼屬性 CHANNEL_ACCESS_TOKEN</text>
+          <path class="d-line" d="M276,54 L368,54" marker-end="url(#ah2)"/>
+          <path class="d-line" d="M411,54 L498,54" marker-end="url(#ah2)"/>
+
+          <rect class="d-box-primary" x="24" y="92" width="252" height="106" rx="9"/>
+          <text class="d-title" x="150" y="120" text-anchor="middle">在 Apps Script 執行</text>
+          <text class="d-title" x="150" y="142" text-anchor="middle">setupLineBot</text>
+          <text class="d-small" x="150" y="163" text-anchor="middle">執行紀錄會一次列出三把</text>
+          <text class="d-small" x="150" y="182" text-anchor="middle">（隨時可再執行查看）</text>
+
+          <circle cx="390" cy="110" r="19" class="d-box-primary"/>
+          <text class="d-title" x="390" y="115" text-anchor="middle">🔑B</text>
+          <rect class="d-box" x="504" y="90" width="252" height="40" rx="9"/>
+          <text class="d-text" x="630" y="115" text-anchor="middle">Webhook 網址結尾 ?hook=</text>
+          <path class="d-line" d="M411,110 L498,110" marker-end="url(#ah2)"/>
+
+          <circle cx="390" cy="166" r="19" class="d-box-primary"/>
+          <text class="d-title" x="390" y="171" text-anchor="middle">🔑C</text>
+          <rect class="d-box" x="504" y="146" width="252" height="40" rx="9"/>
+          <text class="d-text" x="630" y="171" text-anchor="middle">工作台「LINE 小幫手」設定</text>
+          <path class="d-line" d="M411,166 L498,166" marker-end="url(#ah2)"/>
+
+          <circle cx="390" cy="222" r="19" class="d-box-primary"/>
+          <text class="d-title" x="390" y="227" text-anchor="middle">🔑D</text>
+          <rect class="d-box" x="504" y="202" width="252" height="40" rx="9"/>
+          <text class="d-text" x="630" y="227" text-anchor="middle">教室大屏設定（只放這把）</text>
+          <path class="d-line" d="M411,222 L498,222" marker-end="url(#ah2)"/>
+          <path class="d-line-soft" d="M276,145 L368,110"/>
+          <path class="d-line-soft" d="M276,155 L368,166"/>
+          <path class="d-line-soft" d="M276,165 L368,222"/>
+
+          <rect class="d-box" x="24" y="216" width="252" height="40" rx="9"/>
+          <text class="d-text" x="150" y="241" text-anchor="middle">部署後產生的網頁應用程式 URL</text>
+          <circle cx="390" cy="278" r="19" class="d-box-primary"/>
+          <text class="d-title" x="390" y="283" text-anchor="middle">🌐</text>
+          <rect class="d-box" x="504" y="258" width="252" height="40" rx="9"/>
+          <text class="d-text" x="630" y="283" text-anchor="middle">工作台＋大屏＋Webhook 三處</text>
+          <path class="d-line" d="M276,250 L368,272" marker-end="url(#ah2)"/>
+          <path class="d-line" d="M411,278 L498,278" marker-end="url(#ah2)"/>
+
+          <rect class="d-box-warn" x="24" y="274" width="252" height="40" rx="9"/>
+          <text class="d-text" x="150" y="299" text-anchor="middle">Google AI Studio（選用）</text>
+          <circle cx="390" cy="322" r="14" class="d-box-warn"/>
+          <text class="d-text" x="390" y="327" text-anchor="middle">🔑E</text>
+          <rect class="d-box-warn" x="504" y="306" width="252" height="30" rx="9"/>
+          <text class="d-text" x="630" y="326" text-anchor="middle">指令碼屬性＋工作台 AI 設定</text>
+          <path class="d-line-soft" d="M276,300 L374,318"/>
+          <path class="d-line-soft" d="M404,322 L498,322"/>
+        </svg>
+        <figcaption>把每一把都存進記事本並標上符號；系統裡每個要貼的欄位上都印著同樣的符號。</figcaption>
+      </figure>
       <div class="warn">💰 <strong>費用：全部免費。</strong>LINE 官方帳號免費方案＋Google 免費額度就夠用。唯一的量限制：LINE「主動推播」每月 200 則（每日簡報一天 1 則，一個月才用 30 則，很夠）。</div>
     </section>
 
@@ -114,6 +249,37 @@
     <section id="part2">
       <h2>🅱 Part B：部署 LINE 小幫手（40–60 分鐘，一生只做一次）</h2>
       <p class="lead">做完這部分，你會擁有一個「只聽你的話」的 LINE 機器人。過程有 7 關，每一關都很短。</p>
+      <figure class="diagram">
+        <svg viewBox="0 0 780 190" role="img" aria-label="Part B 七關流程：建立官方帳號、貼上程式、插入金鑰、部署、接上 LINE、鎖門、設定自動化">
+          <line x1="70" y1="52" x2="710" y2="52" stroke="#cddcd6" stroke-width="3"/>
+          <line x1="70" y1="140" x2="390" y2="140" stroke="#cddcd6" stroke-width="3"/>
+
+          <circle cx="70" cy="52" r="21" class="d-box-primary"/><text class="d-title" x="70" y="58" text-anchor="middle">1</text>
+          <text class="d-text" x="70" y="92" text-anchor="middle">建立官方帳號</text><text class="d-small" x="70" y="109" text-anchor="middle">拿到 🔑A</text>
+
+          <circle cx="230" cy="52" r="21" class="d-box-primary"/><text class="d-title" x="230" y="58" text-anchor="middle">2</text>
+          <text class="d-text" x="230" y="92" text-anchor="middle">貼上程式</text><text class="d-small" x="230" y="109" text-anchor="middle">拿到 🔑B🔑C🔑D</text>
+
+          <circle cx="390" cy="52" r="21" class="d-box-primary"/><text class="d-title" x="390" y="58" text-anchor="middle">3</text>
+          <text class="d-text" x="390" y="92" text-anchor="middle">插進鑰匙</text><text class="d-small" x="390" y="109" text-anchor="middle">指令碼屬性</text>
+
+          <circle cx="550" cy="52" r="21" class="d-box-primary"/><text class="d-title" x="550" y="58" text-anchor="middle">4</text>
+          <text class="d-text" x="550" y="92" text-anchor="middle">部署</text><text class="d-small" x="550" y="109" text-anchor="middle">拿到 🌐 網址</text>
+
+          <circle cx="710" cy="52" r="21" class="d-box-primary"/><text class="d-title" x="710" y="58" text-anchor="middle">5</text>
+          <text class="d-text" x="710" y="92" text-anchor="middle">接上 LINE</text><text class="d-small" x="710" y="109" text-anchor="middle">🌐?hook=🔑B</text>
+
+          <circle cx="70" cy="140" r="21" class="d-box-primary"/><text class="d-title" x="70" y="146" text-anchor="middle">6</text>
+          <text class="d-text" x="70" y="180" text-anchor="middle">鎖門（我的ID）</text>
+
+          <circle cx="230" cy="140" r="21" class="d-box-primary"/><text class="d-title" x="230" y="146" text-anchor="middle">7</text>
+          <text class="d-text" x="230" y="180" text-anchor="middle">設定自動化</text>
+
+          <circle cx="390" cy="140" r="21" fill="#e3f6ec" stroke="#5fa87f" stroke-width="2"/><text class="d-title" x="390" y="147" text-anchor="middle">✅</text>
+          <text class="d-text" x="390" y="180" text-anchor="middle">傳「推播設定」驗收</text>
+        </svg>
+        <figcaption>第 5 關結束時機器人就會回話了；第 6、7 關是上鎖與排程，做完傳「推播設定」驗收。</figcaption>
+      </figure>
 
       <h3>第 1 關：建立 LINE 官方帳號（＝機器人的身體）</h3>
       <div class="step"><div class="step-no">1</div><div class="step-body">用電腦開 <a href="https://developers.line.biz/console/" target="_blank" rel="noopener">developers.line.biz/console</a>，點「Log in with LINE account」，用你手機 LINE 的帳號密碼登入（手機 LINE →設定→帳號 可以確認/設定 Email 登入）。</div></div>
@@ -221,6 +387,57 @@
 
     <section id="part4">
       <h2>🅳 Part D：每天怎麼用（日常流程）</h2>
+      <figure class="diagram">
+        <svg viewBox="0 0 780 250" role="img" aria-label="一天的自動化時間軸：前一晚寫聯絡本、晨間點名收作業、8:05 自動未到、8:08 推播點名、8:40 推播作業、16:00 選用推播">
+          <defs>
+            <marker id="ah4" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+              <path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/>
+            </marker>
+          </defs>
+          <line x1="40" y1="112" x2="748" y2="112" stroke="#cddcd6" stroke-width="4"/>
+
+          <circle cx="66" cy="112" r="12" class="d-box"/>
+          <text class="d-title" x="66" y="88" text-anchor="middle">前一晚</text>
+          <rect class="d-box" x="14" y="134" width="112" height="56" rx="9"/>
+          <text class="d-text" x="70" y="156" text-anchor="middle">寫明天聯絡本</text>
+          <text class="d-small" x="70" y="176" text-anchor="middle">工作台或 LINE</text>
+
+          <circle cx="212" cy="112" r="12" class="d-box"/>
+          <text class="d-title" x="212" y="88" text-anchor="middle">7:30–8:05</text>
+          <rect class="d-box" x="152" y="134" width="120" height="56" rx="9"/>
+          <text class="d-text" x="212" y="156" text-anchor="middle">大屏點名收作業</text>
+          <text class="d-small" x="212" y="176" text-anchor="middle">黑板同步顯示</text>
+
+          <circle cx="340" cy="112" r="12" class="d-box-warn"/>
+          <text class="d-title" x="340" y="88" text-anchor="middle">8:05</text>
+          <rect class="d-box-warn" x="288" y="134" width="104" height="38" rx="9"/>
+          <text class="d-small" x="340" y="158" text-anchor="middle">未填自動轉未到</text>
+
+          <circle cx="470" cy="112" r="14" class="d-box-primary"/>
+          <text class="d-title" x="470" y="88" text-anchor="middle">8:08</text>
+          <rect class="d-box-primary" x="404" y="16" width="132" height="62" rx="9"/>
+          <text class="d-text" x="470" y="38" text-anchor="middle">📱 LINE 第一則</text>
+          <text class="d-small" x="470" y="56" text-anchor="middle">出缺＋今日課程</text>
+          <text class="d-small" x="470" y="72" text-anchor="middle">任務／記事／逾期</text>
+          <path class="d-line" d="M470,98 L470,82" marker-end="url(#ah4)"/>
+
+          <circle cx="596" cy="112" r="14" class="d-box-primary"/>
+          <text class="d-title" x="596" y="88" text-anchor="middle">8:40</text>
+          <rect class="d-box-primary" x="536" y="134" width="120" height="56" rx="9"/>
+          <text class="d-text" x="596" y="156" text-anchor="middle">📱 LINE 第二則</text>
+          <text class="d-small" x="596" y="176" text-anchor="middle">各科作業繳交</text>
+
+          <circle cx="716" cy="112" r="12" class="d-box"/>
+          <text class="d-title" x="716" y="88" text-anchor="middle">16:00</text>
+          <rect class="d-box" x="666" y="134" width="106" height="56" rx="9" stroke-dasharray="5 4"/>
+          <text class="d-small" x="719" y="156" text-anchor="middle">放學小結等</text>
+          <text class="d-small" x="719" y="176" text-anchor="middle">（預設關閉）</text>
+
+          <text class="d-small" x="390" y="222" text-anchor="middle">白天隨時：對 LINE 說話建任務／查座號／出代課包／傳檔案自動備份（這些都不用額度）</text>
+          <text class="d-small" x="390" y="242" text-anchor="middle">按「💾 存到雲端」只存資料不推播；每 5 分鐘與離開頁面時也會自動存</text>
+        </svg>
+        <figcaption>LINE 一天只主動響兩次（8:08 與 8:40），其餘都是你問它才答。</figcaption>
+      </figure>
       <table>
         <tr><th>時間</th><th>發生什麼</th></tr>
         <tr><td>前一晚</td><td>工作台「聯絡本」用下拉選單快速輸入明天內容 → 儲存到雲端（或隨時對 LINE 說「<code>聯絡本：數習P.20、帶直笛</code>」）</td></tr>
