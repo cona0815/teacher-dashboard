@@ -32,10 +32,20 @@
     /* 聯絡本字體：全部是開源可商用（SIL OFL 1.1 / CC-BY 4.0），從專案 assets 載入。
        單檔攜出（分享包那份）沒有 assets 資料夾，會自動退回系統字體，不會壞掉。
        字型檔較大，第一次切換要等它下載，之後瀏覽器會快取。 */
-    @font-face { font-family: 'BpmfIansui';     src: url('assets/fonts/BpmfIansui-Regular.ttf') format('truetype');     font-display: swap; }
-    @font-face { font-family: 'BpmfHuninn';     src: url('assets/fonts/BpmfHuninn-Regular.ttf') format('truetype');     font-display: swap; }
-    @font-face { font-family: 'Huninn';         src: url('assets/fonts/Huninn-Regular.ttf') format('truetype');         font-display: swap; }
-    @font-face { font-family: 'Iansui';         src: url('assets/fonts/Iansui-Regular.ttf') format('truetype');         font-display: swap; }
+    /* local() 放前面：老師若已自行安裝字型就直接用本機的，完全不下載（省流量也快很多）；
+       沒安裝才回頭抓 assets 裡那份。單檔攜出版兩者都沒有時，退回系統字體。 */
+    @font-face { font-family: 'BpmfIansui'; font-display: swap;
+      src: local('Bpmf Iansui'), local('Bpmf Iansui Regular'), local('BpmfIansui-Regular'),
+           url('assets/fonts/BpmfIansui-Regular.ttf') format('truetype'); }
+    @font-face { font-family: 'BpmfHuninn'; font-display: swap;
+      src: local('Bpmf Huninn'), local('Bpmf Huninn Regular'), local('BpmfHuninn-Regular'),
+           url('assets/fonts/BpmfHuninn-Regular.ttf') format('truetype'); }
+    @font-face { font-family: 'Huninn'; font-display: swap;
+      src: local('Huninn'), local('Huninn Regular'),
+           url('assets/fonts/Huninn-Regular.ttf') format('truetype'); }
+    @font-face { font-family: 'Iansui'; font-display: swap;
+      src: local('Iansui'), local('Iansui Regular'),
+           url('assets/fonts/Iansui-Regular.ttf') format('truetype'); }
     /* 注音體行距要拉開，注音符號才不會擠到上一行 */
     .chalk-bpmf .chalk-content,     .chalk-bpmf .chalk-textarea     { font-family: 'BpmfIansui', 'Microsoft JhengHei', 'Noto Sans TC', sans-serif; line-height: 2.3; }
     .chalk-bpmfhuninn .chalk-content, .chalk-bpmfhuninn .chalk-textarea { font-family: 'BpmfHuninn', 'Microsoft JhengHei', 'Noto Sans TC', sans-serif; line-height: 2.3; }
@@ -320,7 +330,7 @@
               <option value="bpmf">注音芫荽（手寫感）</option>
               <option value="bpmfhuninn">注音粉圓（圓潤，低年級首選）</option>
             </optgroup>
-          </select><div class="status-text" style="margin-top:4px">全部為開源可商用字型（SIL OFL 1.1）。第一次切換要等字型下載（約 4–9 MB），之後就會快取起來。</div></div>
+          </select><div class="status-text" style="margin-top:4px">全部為開源可商用字型（SIL OFL 1.1）。第一次切換要等字型下載（約 4–9 MB），之後瀏覽器會快取。<br>教室電腦要常用的話，建議直接把字型<strong>安裝到 Windows</strong>——裝好之後完全不用下載，開啟也快很多：<a href="https://github.com/ButTaiwan/bpmfvs/releases" target="_blank" rel="noopener">注音字型</a>、<a href="https://github.com/justfont/Huninn/releases" target="_blank" rel="noopener">粉圓 Huninn</a>、<a href="https://github.com/ButTaiwan/iansui/releases" target="_blank" rel="noopener">芫荽 Iansui</a>（下載後點兩下字型檔 → 按「安裝」）。</div></div>
           <div class="field"><label>「待訂正」的顏色</label><select id="setupCorrectColor">
             <option value="brown">米褐（沙褐）— 與介面最和諧</option>
             <option value="indigo">深靛藍 — 冷色穩重</option>
