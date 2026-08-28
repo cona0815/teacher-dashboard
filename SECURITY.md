@@ -50,6 +50,32 @@
 已在 `netlify.toml` 加上 `X-Frame-Options: SAMEORIGIN` 與 CSP `frame-ancestors 'self'`；
 用 `'self'` 而非 `'none'`，是因為安裝教學頁需要以 iframe 嵌入自家的 `Code.gs`。
 
+### 2026-08-29 深度掃描（第三輪：前兩輪沒涵蓋的檔案）
+
+範圍：`Code.gs`、`Board.html`、`Installer.html`、`windows_ocr.ps1`、
+`desktop_pet_preview.py`、`.github/workflows/`、`package.json`、`.gitignore`、`.claspignore`、
+以及整段 git 歷史與實際部署後的回應標頭。
+
+| 項目 | 結果 |
+|---|---|
+| 金鑰是否曾經進過版控 | 掃過全部 57 個 commit 的每一個檔案版本（`AIza*`／`sk-*`／`xai-*`／`ghp_*`／`AKfycb*`）：**零筆**，沒有「先 commit 再刪」殘留 |
+| clasp 憑證 | `.clasp.json`／`.clasprc.json`（含 Google OAuth token）在 `.gitignore` 內，且**從未被 commit 過** |
+| GitHub Actions | 用 `pull_request` 而非 `pull_request_target`（fork PR 拿不到 secrets）；`validate` 只有 `contents: read`，`build` 的 `contents: write` 僅供 tag 發版；未使用任何自訂 secret |
+| npm 供應鏈 | `package.json` **零執行期相依**，`npm test` 只跑本地測試 |
+| `Code.gs` 對外端點 | `doGet` 只吐 HTML 殼，資料函式一律先過 `assertAuthorized_()`；`doPost`（小綿助同步）先驗 `DESKTOP_PET_SYNC_KEY`，單次上限 1000 筆 |
+| GAS 頁框設定 | `setXFrameOptionsMode(DEFAULT)`（限同網域），非 `ALLOWALL` |
+| GAS 樣板注入 | 未使用 `<?!= ?>` 這類不跳脫輸出 |
+| PowerShell 指令注入 | `windows_ocr.ps1` 無 `Invoke-Expression`／`iex`／動態指令組裝 |
+| 桌寵附件路徑穿越 | 檔名經 `[^\w.() -]+` 過濾並加上時間戳與 uuid 前綴，無法逃出附件資料夾 |
+| 文件是否誤貼真實 ID | 未發現真實的 GAS 部署網址、試算表 ID 或 Token；README 的長字串是發版用的 SHA-256 校驗碼 |
+| 部署後標頭實測 | `X-Frame-Options: SAMEORIGIN`、CSP `frame-ancestors 'self'`、`Referrer-Policy: no-referrer` 皆已生效 |
+
+**本輪未發現新漏洞。**
+
+補充說明：`netlify.toml` 的 `publish = "."` 會把所有版控檔案（含 `.md`、`tests/`、
+`desktop_pet_secretary.py`）一併公開。因為 repository 本來就是公開的開源專案，
+這不構成額外外洩；但新增檔案時仍要記得：**放進版控就等於公開發布**。
+
 ### 這一輪確認為「已知取捨」而非漏洞
 
 - **AI 提示詞注入**：AI 助理會讀老師上傳的 PDF／圖片，內容若刻意寫入指示，可能影響
