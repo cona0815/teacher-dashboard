@@ -359,6 +359,17 @@ function handleLineSyncApi_(body) {
   }
 }
 
+/**
+ * 寫進試算表前把自由文字轉成「純文字」。
+ * Google Sheets 會把 = + - @ 開頭的字串當公式執行，例如聯絡本被寫入
+ * =IMAGE("http://...")，老師一打開試算表就會對外連線。加上前導單引號可強制成文字，
+ * 而且 getValue() 讀回來不含那個引號，既有資料與比對邏輯都不受影響。
+ */
+function sheetText_(value) {
+  var text = String(value == null ? '' : value);
+  return /^[=+\-@\t\r]/.test(text) ? "'" + text : text;
+}
+
 function lineBotToday_() {
   return Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
 }
@@ -395,7 +406,7 @@ function submitRollcall_(body) {
       var seat = parseInt(entry && entry.seat, 10);
       var status = String((entry && entry.status) || '');
       if (seat >= 1 && seat <= 99 && LINE_BOT_CONFIG.ATTENDANCE_STATUSES.indexOf(status) !== -1) {
-        rollcallRows.push([date, className, seat, status]);
+        rollcallRows.push([date, sheetText_(className), seat, status]);
       }
     });
     if (rollcallRows.length) {
@@ -409,20 +420,20 @@ function submitRollcall_(body) {
       var assignment = String((entry && entry.assignment) || '').trim().slice(0, 20);
       (Array.isArray(entry.missing) ? entry.missing : []).slice(0, 60).forEach(function (seat) {
         seat = parseInt(seat, 10);
-        if (seat >= 1 && seat <= 99) homeworkRows.push([date, className, subject, assignment, seat, '缺交']);
+        if (seat >= 1 && seat <= 99) homeworkRows.push([date, sheetText_(className), sheetText_(subject), sheetText_(assignment), seat, '缺交']);
       });
       (Array.isArray(entry.resubmitted) ? entry.resubmitted : []).slice(0, 60).forEach(function (seat) {
         seat = parseInt(seat, 10);
-        if (seat >= 1 && seat <= 99) homeworkRows.push([date, className, subject, assignment, seat, '補交']);
+        if (seat >= 1 && seat <= 99) homeworkRows.push([date, sheetText_(className), sheetText_(subject), sheetText_(assignment), seat, '補交']);
       });
       // 訂正：已交但需要訂正／已完成訂正。兩者都代表「有交」，只是訂正進度不同。
       (Array.isArray(entry.correcting) ? entry.correcting : []).slice(0, 60).forEach(function (seat) {
         seat = parseInt(seat, 10);
-        if (seat >= 1 && seat <= 99) homeworkRows.push([date, className, subject, assignment, seat, '待訂正']);
+        if (seat >= 1 && seat <= 99) homeworkRows.push([date, sheetText_(className), sheetText_(subject), sheetText_(assignment), seat, '待訂正']);
       });
       (Array.isArray(entry.corrected) ? entry.corrected : []).slice(0, 60).forEach(function (seat) {
         seat = parseInt(seat, 10);
-        if (seat >= 1 && seat <= 99) homeworkRows.push([date, className, subject, assignment, seat, '已訂正']);
+        if (seat >= 1 && seat <= 99) homeworkRows.push([date, sheetText_(className), sheetText_(subject), sheetText_(assignment), seat, '已訂正']);
       });
     });
     if (homeworkRows.length) {
@@ -1131,7 +1142,7 @@ function refineDriveBackup_(backup, title, tag) {
 function recordDriveBackup_(backup, title) {
   try {
     var sheets = ensureLineBotSheets_(SpreadsheetApp.getActiveSpreadsheet());
-    sheets.files.appendRow([backup.date, backup.type, backup.category, title || '', backup.name, backup.url]);
+    sheets.files.appendRow([backup.date, backup.type, sheetText_(backup.category), sheetText_(title || ''), sheetText_(backup.name), backup.url]);
   } catch (error) {}
 }
 
@@ -1143,7 +1154,7 @@ function updateDriveBackupRecord_(backup, title) {
     var values = sheets.files.getRange(2, 1, lastRow - 1, LINE_BOT_CONFIG.FILES_HEADERS.length).getValues();
     for (var index = values.length - 1; index >= 0; index -= 1) {
       if (String(values[index][5]) === backup.url) {
-        sheets.files.getRange(index + 2, 3, 1, 3).setValues([[backup.category, title, backup.name]]);
+        sheets.files.getRange(index + 2, 3, 1, 3).setValues([[sheetText_(backup.category), sheetText_(title), sheetText_(backup.name)]]);
         return;
       }
     }
@@ -1413,8 +1424,8 @@ function appendLineInboxRow_(classified, text, userId, medium) {
     id,
     new Date(),
     classified.type === 'task' ? 'task' : 'note',
-    text,
-    String(classified.title || '').slice(0, 120),
+    sheetText_(text),
+    sheetText_(String(classified.title || '').slice(0, 120)),
     String(classified.dueDate || ''),
     LINE_BOT_CONFIG.WORK_AXES.indexOf(classified.axis) === -1 ? '' : classified.axis,
     'new',
@@ -1787,7 +1798,7 @@ function saveContactBookRecord_(date, className, text, source) {
   try {
     var sheets = ensureLineBotSheets_(SpreadsheetApp.getActiveSpreadsheet());
     var rowIndex = findContactBookRow_(sheets.contactbook, date);
-    var record = [date, className, String(text).slice(0, 5000), new Date(), source];
+    var record = [date, sheetText_(className), sheetText_(String(text).slice(0, 5000)), new Date(), source];
     if (rowIndex === -1) sheets.contactbook.appendRow(record);
     else sheets.contactbook.getRange(rowIndex, 1, 1, 5).setValues([record]);
   } finally {
