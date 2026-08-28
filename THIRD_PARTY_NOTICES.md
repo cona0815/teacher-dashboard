@@ -24,6 +24,20 @@ The webp mascot icons under `assets/ipas/` were downloaded from [IP as Logo Skil
 - Icons used: classic brown owl, logic owl mech, compass, pencil, mailbox, open book, abacus, star forge, hourglass, timely alarm clock, handbell, rocket, kindness bot
 - The project includes only the icons used by the interface and does not redistribute the collection.
 
+## Contact-book fonts (optional, bundled in `assets/fonts/`)
+
+The morning board offers six contact-book fonts. Every one is open source and cleared for
+commercial use; the license file shipped with each is kept next to the font.
+
+| File | Font | Upstream | License |
+|---|---|---|---|
+| `BpmfHuninn-Regular.ttf` | 注音粉圓 BpmfHuninn | [ButTaiwan/bpmfvs](https://github.com/ButTaiwan/bpmfvs) v1.500, from [justfont/Huninn](https://github.com/justfont/Huninn) (itself from Kosugi Maru / Varela Round) | SIL OFL 1.1 (`LICENSE-BpmfHuninn.txt`) |
+| `BpmfZihiKaiStd-Regular.ttf` | 字嗨注音標楷 BpmfZihiKaiStd | [ButTaiwan/bpmfvs](https://github.com/ButTaiwan/bpmfvs) v1.500, from 全字庫正楷體 (CNS11643, 政府資料開放授權條款) | CC-BY 4.0 / SIL OFL 1.1 (`LICENSE-BpmfZihiKaiStd.txt`) |
+| `Huninn-Regular.ttf` | jf open 粉圓 Huninn | [justfont/Huninn](https://github.com/justfont/Huninn) v1.003 | SIL OFL 1.1 |
+| `Iansui-Regular.ttf` | 芫荽 Iansui | [ButTaiwan/iansui](https://github.com/ButTaiwan/iansui) v1.020 | SIL OFL 1.1 (`LICENSE-Iansui-plain.txt`) |
+
+The Bopomofo IVS specification shared by the Bpmf* fonts is Apache-2.0 (`LICENSE-2.0.txt`, `NOTICE.txt`).
+
 ## BpmfIansui zhuyin font
 
 `assets/fonts/BpmfIansui-Regular.ttf` is the 芫荽注音 (Bpmf Iansui) font from [ButTaiwan/bpmfvs](https://github.com/ButTaiwan/bpmfvs) (v1.500), derived from [Iansui](https://github.com/ButTaiwan/iansui) / Klee One. Licensed under the SIL Open Font License 1.1; commercial use and bundling with software are permitted. The license files (`LICENSE-Iansui.txt`, `LICENSE-2.0.txt`, `NOTICE.txt`) are included alongside the font. Used as the optional 注音 display font for the morning-board contact book (low-grade classes).

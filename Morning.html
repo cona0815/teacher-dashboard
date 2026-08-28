@@ -29,9 +29,20 @@
     .tab-button { border: 2px solid var(--line); background: var(--surface); color: var(--primary-strong); border-radius: 12px 12px 0 0; padding: 8px 18px; font-size: 17px; font-weight: 900; cursor: pointer; }
     .tab-button.active { background: var(--primary); border-color: var(--primary); color: #fff; }
     .tab-icon { width: 22px; height: 22px; border-radius: 6px; vertical-align: -5px; margin-right: 5px; }
-    /* 注音體（芫荽 BpmfIansui，SIL OFL 可商用）：從專案 assets 載入；單檔攜出時自動退回一般字體 */
-    @font-face { font-family: 'BpmfIansui'; src: url('assets/fonts/BpmfIansui-Regular.ttf') format('truetype'); font-display: swap; }
-    .chalk-bpmf .chalk-content, .chalk-bpmf .chalk-textarea { font-family: 'BpmfIansui', 'Microsoft JhengHei', 'Noto Sans TC', sans-serif; line-height: 2.3; }
+    /* 聯絡本字體：全部是開源可商用（SIL OFL 1.1 / CC-BY 4.0），從專案 assets 載入。
+       單檔攜出（分享包那份）沒有 assets 資料夾，會自動退回系統字體，不會壞掉。
+       字型檔較大，第一次切換要等它下載，之後瀏覽器會快取。 */
+    @font-face { font-family: 'BpmfIansui';     src: url('assets/fonts/BpmfIansui-Regular.ttf') format('truetype');     font-display: swap; }
+    @font-face { font-family: 'BpmfHuninn';     src: url('assets/fonts/BpmfHuninn-Regular.ttf') format('truetype');     font-display: swap; }
+    @font-face { font-family: 'BpmfZihiKaiStd'; src: url('assets/fonts/BpmfZihiKaiStd-Regular.ttf') format('truetype'); font-display: swap; }
+    @font-face { font-family: 'Huninn';         src: url('assets/fonts/Huninn-Regular.ttf') format('truetype');         font-display: swap; }
+    @font-face { font-family: 'Iansui';         src: url('assets/fonts/Iansui-Regular.ttf') format('truetype');         font-display: swap; }
+    /* 注音體行距要拉開，注音符號才不會擠到上一行 */
+    .chalk-bpmf .chalk-content,     .chalk-bpmf .chalk-textarea     { font-family: 'BpmfIansui', 'Microsoft JhengHei', 'Noto Sans TC', sans-serif; line-height: 2.3; }
+    .chalk-bpmfhuninn .chalk-content, .chalk-bpmfhuninn .chalk-textarea { font-family: 'BpmfHuninn', 'Microsoft JhengHei', 'Noto Sans TC', sans-serif; line-height: 2.3; }
+    .chalk-bpmfkai .chalk-content,  .chalk-bpmfkai .chalk-textarea  { font-family: 'BpmfZihiKaiStd', 'DFKai-SB', 'Microsoft JhengHei', sans-serif; line-height: 2.3; }
+    .chalk-huninn .chalk-content,   .chalk-huninn .chalk-textarea   { font-family: 'Huninn', 'Microsoft JhengHei', 'Noto Sans TC', sans-serif; line-height: 1.9; }
+    .chalk-iansui .chalk-content,   .chalk-iansui .chalk-textarea   { font-family: 'Iansui', 'DFKai-SB', 'Microsoft JhengHei', sans-serif; line-height: 1.95; }
     main { padding: 10px 18px 72px; }
     .page { display: none; }
     .page.active { display: block; }
@@ -298,7 +309,18 @@
         <div class="form-grid">
           <div class="field"><label>班級名稱（例：601）</label><input id="setupClassName" maxlength="20" placeholder="601"></div>
           <div class="field"><label>大屏標題（顯示在左上角，可自訂）</label><input id="setupBoardTitle" maxlength="20" placeholder="晨間大屏"></div>
-          <div class="field"><label>聯絡本字體（低年級可選注音體）</label><select id="setupContactFont"><option value="default">標準字體</option><option value="bpmf">注音體（芫荽 BpmfIansui）</option></select></div>
+          <div class="field"><label>聯絡本字體（低年級可選注音體）</label><select id="setupContactFont">
+            <optgroup label="一般字體">
+              <option value="default">標準字體（系統內建，最快）</option>
+              <option value="huninn">粉圓體（圓潤好讀）</option>
+              <option value="iansui">芫荽體（手寫楷書感）</option>
+            </optgroup>
+            <optgroup label="注音體（國字旁邊自動標注音）">
+              <option value="bpmf">注音芫荽（手寫感）</option>
+              <option value="bpmfhuninn">注音粉圓（圓潤，低年級首選）</option>
+              <option value="bpmfkai">注音標楷（課本體，檔案較大）</option>
+            </optgroup>
+          </select><div class="status-text" style="margin-top:4px">全部為開源可商用字型（SIL OFL 1.1／CC-BY 4.0）。第一次切換要等字型下載，之後就會快取起來。</div></div>
           <div class="field"><label>「待訂正」的顏色</label><select id="setupCorrectColor">
             <option value="brown">米褐（沙褐）— 與介面最和諧</option>
             <option value="indigo">深靛藍 — 冷色穩重</option>
@@ -354,6 +376,8 @@
     const VISIBLE_CYCLE = ['', '到', '病假', '事假', '未到'];
     const BUILTIN_SUBJECTS = ['國語', '數學', '英語', '自然', '社會', '生活', '健康與體育', '音樂', '視覺藝術', '綜合', '本土語', '聯絡簿', '通知單'];
     const DEFAULT_ENABLED = ['國語', '數學', '英語', '自然', '社會', '聯絡簿', '通知單'];
+    // 聯絡本可選的字體（全部開源可商用）：前三個一般、後三個國字旁自動標注音
+    const CONTACT_FONTS = ['default', 'huninn', 'iansui', 'bpmf', 'bpmfhuninn', 'bpmfkai'];
     const state = {
       settings: {
         className: '', boardTitle: '晨間大屏', contactFont: 'default', correctColor: 'brown', seatCount: 26, emptySeats: [],
@@ -418,7 +442,7 @@
           const s = state.settings;
           s.className = String(saved.className || '');
           s.boardTitle = String(saved.boardTitle || '').trim().slice(0, 20) || '晨間大屏';
-          s.contactFont = saved.contactFont === 'bpmf' ? 'bpmf' : 'default';
+          s.contactFont = CONTACT_FONTS.includes(saved.contactFont) ? saved.contactFont : 'default';
           if (CORRECT_COLORS[saved.correctColor]) s.correctColor = saved.correctColor;
           s.seatCount = Math.min(60, Math.max(1, Number(saved.seatCount) || 26));
           s.emptySeats = Array.isArray(saved.emptySeats) ? saved.emptySeats.map(Number).filter(n => n >= 1) : [];
@@ -1489,7 +1513,10 @@
       $('setupContactFont').value = s.contactFont;
       $('setupCorrectColor').value = s.correctColor;
       applyCorrectColor();
-      document.querySelector('.chalkboard-inner')?.classList.toggle('chalk-bpmf', s.contactFont === 'bpmf');
+      const chalkboard = document.querySelector('.chalkboard-inner');
+      if (chalkboard) {
+        CONTACT_FONTS.forEach(name => chalkboard.classList.toggle('chalk-' + name, s.contactFont === name));
+      }
       $('setupSeatCount').value = s.seatCount;
       $('setupEmptySeats').value = s.emptySeats.join('、');
       $('setupAssignmentTypes').value = s.assignmentTypes.join('、');
@@ -1509,7 +1536,7 @@
       const s = state.settings;
       s.className = $('setupClassName').value.trim().slice(0, 20);
       s.boardTitle = $('setupBoardTitle').value.trim().slice(0, 20) || '晨間大屏';
-      s.contactFont = $('setupContactFont').value === 'bpmf' ? 'bpmf' : 'default';
+      s.contactFont = CONTACT_FONTS.includes($('setupContactFont').value) ? $('setupContactFont').value : 'default';
       if (CORRECT_COLORS[$('setupCorrectColor').value]) s.correctColor = $('setupCorrectColor').value;
       s.seatCount = Math.min(60, Math.max(1, Number($('setupSeatCount').value) || 26));
       s.emptySeats = $('setupEmptySeats').value.split(/[、,，;；\s]+/).map(Number).filter(n => n >= 1 && n <= s.seatCount);
