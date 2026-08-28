@@ -57,6 +57,7 @@
     <a href="#part2">B. LINE 小幫手</a>
     <a href="#part3">C. 晨間大屏</a>
     <a href="#part4">D. 每天怎麼用</a>
+    <a href="#partUpdate">🔄 系統更新</a>
     <a href="#part5">E. 疑難排解</a>
     <a href="#part6">F. 備份與安全</a>
     <a href="#part7">版權</a>
@@ -133,7 +134,7 @@
         <div class="copyrow"><code id="urlGs">（載入中…）</code><button class="copy-btn" data-copy="#urlGs">複製</button> <a href="LineBot.gs" target="_blank" rel="noopener"><button class="copy-btn" type="button">直接開啟</button></a></div>
         在那頁按 <span class="kbd">Ctrl</span>＋<span class="kbd">A</span> 全選 → <span class="kbd">Ctrl</span>＋<span class="kbd">C</span> 複製。
       </div></div>
-      <div class="step"><div class="step-no">4</div><div class="step-body">回到 Apps Script 編輯器：把裡面原本那幾行 <code>function myFunction()...</code> 全選刪掉 → <span class="kbd">Ctrl</span>＋<span class="kbd">V</span> 貼上 → <span class="kbd">Ctrl</span>＋<span class="kbd">S</span> 儲存。<br><span class="lead">✔ 檢查：左側捲到最底，行數約 1,200 行、最後一行是單獨的「}」。若只有兩三百行代表沒複製完整，重做一次。</span></div></div>
+      <div class="step"><div class="step-no">4</div><div class="step-body">回到 Apps Script 編輯器：把裡面原本那幾行 <code>function myFunction()...</code> 全選刪掉 → <span class="kbd">Ctrl</span>＋<span class="kbd">V</span> 貼上 → <span class="kbd">Ctrl</span>＋<span class="kbd">S</span> 儲存。<br><span class="lead">✔ 檢查：左側捲到最底，行數約 1,600 行、最後一行是單獨的「}」。若只有兩三百行代表沒複製完整，重做一次。</span></div></div>
       <div class="step"><div class="step-no">5</div><div class="step-body">編輯器上方有個函式下拉選單（在「執行／偵錯」旁邊）→ 選 <code>setupLineBot</code> → 按「<strong>執行</strong>」。<br>第一次會跳出授權：選你的帳號 → 看到「Google 尚未驗證這個應用程式」<strong>不用怕</strong>（因為這程式是你自己貼的）→ 點小字「<strong>進階</strong>」→「<strong>前往…（不安全）</strong>」→「<strong>允許</strong>」。</div></div>
       <div class="step"><div class="step-no">6</div><div class="step-body">下方「執行紀錄」會列出三串金鑰，<strong>全部複製到記事本</strong>：<br>・Webhook 驗證參數 ＝ <strong>🔑B</strong><br>・工作台同步金鑰 ＝ <strong>🔑C</strong><br>・教室大屏金鑰 ＝ <strong>🔑D</strong></div></div>
 
@@ -162,11 +163,32 @@
       <div class="step"><div class="step-no">2</div><div class="step-body">回 Apps Script「指令碼屬性」新增：屬性 <code>LINE_ALLOWED_USER_IDS</code>、值＝那串 U 開頭的字。從此陌生人加這個機器人都不會有任何反應。</div></div>
 
       <h3>第 7 關：設定自動化（執行一個函式就好）</h3>
-      <div class="step"><div class="step-no">1</div><div class="step-body">Apps Script 編輯器上方函式選單改選 <code>setupTriggers</code> → 按「執行」→ 完成！自動建立三個排程：<strong>每日簡報</strong>（每天 8–9 點）、<strong>未點名提醒</strong>（8:20 起智慧檢查）、<strong>每週家長關懷</strong>（週五下午）。</div></div>
+      <div class="step"><div class="step-no">1</div><div class="step-body">Apps Script 編輯器上方函式選單改選 <code>setupTriggers</code> → 按「執行」。<br>
+        自動建立 4 個排程：<strong>每日簡報備援</strong>（8–9 點，預設關閉）、<strong>未點名提醒</strong>（8:20 起智慧檢查）、<strong>下午整合推播</strong>（16–17 點，三項功能共用，預設全關）、<strong>每週家長關懷</strong>（週五下午）。<br>
+        <span class="lead">⚠️ 若這是「更新程式碼後」再執行，會跳出授權畫面（因為新版要用到雲端硬碟備份功能）→ 一樣點「進階 → 前往…（不安全）→ 允許」即可。</span></div></div>
+      <div class="step"><div class="step-no">2</div><div class="step-body">
+        <strong class="t">🎉 驗收：用手機對機器人傳「<code>推播設定</code>」</strong>
+        <p>成功的話它會回覆一份清單，長這樣：</p>
+        <div class="box" style="font-family:monospace;font-size:13px;line-height:1.8">
+          📢 推播設定<br>
+          本月推播已用 12／200 則<br><br>
+          ✅ 點名推播｜早上出缺＋今日課程／任務／記事／逾期<br>
+          ✅ 作業推播｜收完作業後的點名＋各科繳交情況<br>
+          ✅ 未點名提醒｜當天沒收到大屏回報才發<br>
+          ✅ 週五家長關懷｜缺交達門檻的家長訊息草稿<br>
+          ⬜ 每日簡報備援｜沒在用大屏的人才需要<br>
+          ⬜ 早期缺交預警｜同一科連續缺交就提早通知<br>
+          ⬜ 到期前一天提醒｜明天到期的任務先提醒<br>
+          ⬜ 放學小結｜下午回顧今天並提醒明天
+        </div>
+        <p><strong>看到這 8 項與本月用量，就代表全部設定成功了。</strong>✅ 是開啟、⬜ 是關閉；想調整就傳「<code>開啟 放學小結</code>」或「<code>關閉 作業推播</code>」。</p>
+        <p class="lead">沒回應？請檢查：① 程式碼是否貼完整並存檔 ② 是否已重新「部署 → 管理部署 → 新版本」 ③ <code>LINE_ALLOWED_USER_IDS</code> 是否填了你自己的 ID。</p>
+      </div></div>
 
       <h3>最後：把工作台接上機器人</h3>
       <div class="step"><div class="step-no">1</div><div class="step-body">回工作台網頁 →「⚙ 設定 → <strong>LINE 小幫手</strong>」→ 勾「啟用」→ 「<strong>🌐 Apps Script 部署網址</strong>」欄貼 🌐、「<strong>🔑C 同步金鑰</strong>」欄貼 🔑C（欄位上印著同樣符號，照符號貼就對了）→ 按「<strong>測試連線</strong>」→ 成功後按「<strong>立即同步</strong>」。</div></div>
       <div class="ok">✅ 完成！教師工具箱會出現「LINE 收件匣」與「聯絡本」按鈕。用手機傳「明天要收回條」再按立即同步，收件匣就有東西了。</div>
+
     </section>
 
     <section id="part3">
@@ -223,7 +245,8 @@
         LINE 免費方案的則數只算「小幫手<strong>主動推播</strong>」；<strong>你問它答完全免費、無上限</strong>。<br>
         會用到額度的只有：點名推播、作業推播、未點名提醒、週五家長關懷，以及預設關閉的
         每日簡報備援、早期缺交預警、到期前一天提醒、放學小結。<br>
-        在 LINE 傳「<strong>推播設定</strong>」可看到目前開關與<strong>本月真實用量</strong>，傳「開啟 放學小結」「關閉 作業推播」即可切換。
+        在 LINE 傳「<strong>推播設定</strong>」可看到 8 項開關與<strong>本月真實用量</strong>（這也是安裝或更新後的<strong>驗收指令</strong>），
+        傳「開啟 放學小結」「關閉 作業推播」即可切換。
         用量接近上限時，系統會自動只保留點名推播，不會突然爆量。<br>
         <span class="lead">⚠️ 額度是按收件人計算：若把兩支手機或同事的 ID 都加進 <code>LINE_ALLOWED_USER_IDS</code>，用量會加倍。</span>
       </div>
@@ -247,13 +270,53 @@
       </div>
     </section>
 
+    <section id="partUpdate">
+      <h2>🔄 系統更新（已經裝好的老師才需要看）</h2>
+      <div class="box">
+        <strong>還沒裝過 LINE 小幫手的老師請跳過這一段</strong>，直接照上面的 Part B 從第 1 關做起就好。<br>
+        這一段是給<strong>已經完成部署、想要換上新版程式</strong>的老師用的，約 5 分鐘。
+      </div>
+      <p class="lead">網頁部分（工作台、大屏、本教學）會自動更新，<strong>不用做任何事</strong>；只有 LINE 小幫手的 Google 程式需要手動換新版。</p>
+
+      <div class="step"><div class="step-no">1</div><div class="step-body">
+        <strong class="t">取得最新程式碼</strong>
+        <p>開啟本站的程式檔（會顯示一整頁文字）→ 在那頁按 <span class="kbd">Ctrl</span>＋<span class="kbd">A</span> 全選 → <span class="kbd">Ctrl</span>＋<span class="kbd">C</span> 複製。</p>
+        <div class="copyrow"><code id="urlGs2">（載入中…）</code><button class="copy-btn" data-copy="#urlGs2">複製</button> <a href="LineBot.gs" target="_blank" rel="noopener"><button class="copy-btn" type="button">直接開啟</button></a></div>
+      </div></div>
+
+      <div class="step"><div class="step-no">2</div><div class="step-body">
+        <strong class="t">貼進 Apps Script</strong>
+        <p>開你的試算表 →「擴充功能 → Apps Script」→ 把裡面<strong>舊的程式碼全部刪掉</strong> → <span class="kbd">Ctrl</span>＋<span class="kbd">V</span> 貼上 → <span class="kbd">Ctrl</span>＋<span class="kbd">S</span> 存檔。</p>
+        <p class="lead">✔ 檢查：捲到最底，行數約 1,600 行、最後一行是單獨的「}」。只有兩三百行代表沒複製完整，重做一次。</p>
+      </div></div>
+
+      <div class="step"><div class="step-no">3</div><div class="step-body">
+        <strong class="t">執行 <code>setupTriggers</code>（順便完成新權限授權）</strong>
+        <p>函式選單選 <code>setupTriggers</code> → 按「執行」。</p>
+        <p class="lead">若跳出授權畫面（新版用到新權限時會跳，例如雲端硬碟備份功能）→ 選你的帳號 →「<strong>進階</strong>」→「<strong>前往…（不安全）</strong>」→「<strong>允許</strong>」。這是因為程式是你自己貼的，Google 一律會這樣提醒。</p>
+      </div></div>
+
+      <div class="step"><div class="step-no">4</div><div class="step-body">
+        <strong class="t">重新部署（關鍵！網址才不會變）</strong>
+        <p><strong>部署 → 管理部署 → ✏️ 編輯 → 版本選「新版本」→ 部署。</strong></p>
+        <div class="warn">⚠️ 一定要用「<strong>管理部署 → 編輯 → 新版本</strong>」。若用「新增部署」會產生<strong>不同的網址</strong>，工作台與大屏就連不上了，還要重新設定。</div>
+      </div></div>
+
+      <div class="step"><div class="step-no">5</div><div class="step-body">
+        <strong class="t">🎉 驗收</strong>
+        <p>用手機對機器人傳「<code>推播設定</code>」，看到 <strong>8 項開關與本月用量</strong>就代表更新成功。</p>
+        <p class="lead">沒回應？① 程式碼是否貼完整並存檔 ② 是否漏了第 4 步的「新版本」重新部署 ③ 舊版指令（今日點名、說明）是否還有回應——若舊指令也沒反應，多半是程式碼沒貼完整。</p>
+      </div></div>
+      <div class="ok">✅ 更新完成。原本的資料、金鑰、設定都會保留，不需要重設；試算表也不會被覆蓋。</div>
+    </section>
+
     <section id="part5">
       <h2>🅴 Part E：疑難排解</h2>
       <table>
         <tr><th>症狀</th><th>解法</th></tr>
         <tr><td>Webhook Verify 失敗</td><td>網址結尾少了 <code>?hook=🔑B</code>；或部署的存取權不是「任何人」</td></tr>
         <tr><td>機器人已讀不回</td><td>①「自動回覆訊息」沒關 ② Use webhook 開關沒開 ③ <code>LINE_ALLOWED_USER_IDS</code> 填錯（先清空該屬性測試）</td></tr>
-        <tr><td>貼程式時出現語法錯誤</td><td>複製不完整。重開程式檔頁面 Ctrl+A 全選重貼，確認約 1,200 行</td></tr>
+        <tr><td>貼程式時出現語法錯誤</td><td>複製不完整。重開程式檔頁面 Ctrl+A 全選重貼，確認約 1,600 行</td></tr>
         <tr><td>授權視窗一閃就關</td><td>瀏覽器擴充功能擋掉了。改用無痕視窗（Ctrl+Shift+N）登入 Google 重做</td></tr>
         <tr><td>工作台「測試連線」失敗</td><td>🔑C 貼錯、網址不是 /exec 結尾、或改過程式忘了「新版本」重新部署</td></tr>
         <tr><td>大屏送出失敗</td><td>教室金鑰 🔑D 貼錯，或班級名稱空白</td></tr>
@@ -299,6 +362,7 @@
       set('urlIndex', origin + '/Index.html');
       set('urlMorning', origin + '/Morning.html');
       set('urlGs', origin + '/LineBot.gs');
+      set('urlGs2', origin + '/LineBot.gs');
       set('kioskCmd', 'start chrome --kiosk "' + origin + '/Morning.html"');
       const toast = document.getElementById('toast');
       document.querySelectorAll('.copy-btn[data-copy]').forEach(button => button.addEventListener('click', async () => {
