@@ -209,7 +209,9 @@ function lineBotToday_() {
 
 /**
  * 大屏送出當日回報。同一天同一班重送會整批覆蓋。
- * payload: { date, className, attendance: [{seat, status}], homework: [{subject, missing: [], resubmitted: []}] }
+ * payload: { date, className, attendance: [{seat, status}], homework: [{subject, missing: [], resubmitted: []}], push }
+ * push：'none' 只存雲端不推播（大屏按送出、自動存檔用）｜'attendance' 只推點名｜'full' 點名＋作業。
+ * 省略時預設 'full'，保留舊版大屏的行為。
  */
 function submitRollcall_(body) {
   var date = String(body.date || '');
@@ -218,6 +220,8 @@ function submitRollcall_(body) {
   if (!className) throw new Error('缺少班級名稱');
   var attendance = Array.isArray(body.attendance) ? body.attendance : [];
   var homework = Array.isArray(body.homework) ? body.homework : [];
+  var pushMode = String(body.push || 'full');
+  if (['none', 'attendance', 'full'].indexOf(pushMode) === -1) pushMode = 'full';
 
   var lock = LockService.getScriptLock();
   lock.waitLock(10000);
@@ -259,11 +263,15 @@ function submitRollcall_(body) {
     lock.releaseLock();
   }
 
-  var summaryText = buildRollcallSummaryText_(date, className, attendance, homework);
+  // 大屏按「送出」與自動存檔都是 push:'none'：資料存進試算表，但不打擾老師的 LINE。
+  if (pushMode === 'none') return { ok: true, pushed: 0, saved: true };
+
+  var summaryText = buildRollcallSummaryText_(
+    date, className, attendance, pushMode === 'attendance' ? [] : homework, pushMode);
   var users = lineBotProperty_('LINE_ALLOWED_USER_IDS')
     .split(',').map(function (value) { return value.trim(); }).filter(String);
   users.forEach(function (userId) { pushLineMessage_(userId, summaryText); });
-  return { ok: true, pushed: users.length };
+  return { ok: true, pushed: users.length, saved: true };
 }
 
 function deleteRowsByDateClass_(sheet, date, className, dateColumn) {
@@ -277,9 +285,10 @@ function deleteRowsByDateClass_(sheet, date, className, dateColumn) {
   }
 }
 
-function buildRollcallSummaryText_(date, className, attendance, homework) {
+function buildRollcallSummaryText_(date, className, attendance, homework, mode) {
   var time = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'M/d HH:mm');
-  var lines = ['📋 ' + className + ' 晨間回報（' + time + '）'];
+  var title = mode === 'attendance' ? ' 晨間點名回報（' : ' 晨間回報（';
+  var lines = ['📋 ' + className + title + time + '）'];
   var byStatus = {};
   (attendance || []).forEach(function (entry) {
     var status = String((entry && entry.status) || '');

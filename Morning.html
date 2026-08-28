@@ -249,7 +249,8 @@
           </div>
           <div class="field"><label>遲到界線（此時間後點到校＝記遲到）</label><input id="setupLateTime" type="time" value="08:00"></div>
           <div class="field"><label>自動缺席（未填自動轉未到）</label><input id="setupAutoAbsentTime" type="time" value="08:05"></div>
-          <div class="field"><label>自動回報（自動送出並推播 LINE）</label><input id="setupAutoNotifyTime" type="time" value="08:08"></div>
+          <div class="field"><label>① 點名推播（只傳出缺到 LINE）</label><input id="setupAutoNotifyTime" type="time" value="08:08"></div>
+          <div class="field"><label>② 作業推播（點名＋作業繳交到 LINE）</label><input id="setupAutoHomeworkNotifyTime" type="time" value="08:40"></div>
           <div class="field"><label>補交回溯天數</label><input id="setupLookbackDays" type="number" min="1" max="60" value="30"></div>
           <div class="field" style="grid-column:1/-1"><label>🌐 Apps Script 部署網址（/exec 結尾，與 LINE 小幫手同一份）＝教學裡的「🌐 機器人網址」　<a href="Install.html#part2" target="_blank" rel="noopener" style="font-weight:700">還沒有？看申請教學 📖</a></label><input id="setupGasUrl" type="url" placeholder="貼上 🌐 機器人網址：https://script.google.com/macros/s/……/exec"></div>
           <div class="field" style="grid-column:1/-1"><label>🔑D 教室大屏金鑰＝教學裡的「教室大屏金鑰」（執行 setupLineBot 後取得的 CLASSROOM_TOKEN）　<a href="Install.html#part2" target="_blank" rel="noopener" style="font-weight:700">如何取得？📖</a></label><input id="setupClassroomToken" type="password" autocomplete="off" placeholder="貼上 🔑D（教室只放這把；老師金鑰 🔑C 不要貼這裡）"></div>
@@ -259,7 +260,9 @@
           ・第一次設定？<a href="Install.html" target="_blank" rel="noopener"><strong>📖 開啟新手安裝教學</strong></a>（含金鑰怎麼取得、開機自動開大屏教學）。<br>
           ・設定保存在這台電腦的瀏覽器；只使用座號，不輸入學生姓名。<br>
           ・點名預設全部未填。遲到界線後點「到校」，大屏顯示「到」，但資料記為遲到——遲到只有老師在 LINE 與查詢統計看得到。<br>
-          ・自動缺席時間一到，仍未填的座號自動轉「未到」；自動回報時間一到，本頁會自動送出並推播老師 LINE（教室電腦需開著本頁）。<br>
+          ・「💾 存到雲端」只把資料存進試算表，<strong>不會</strong>推播 LINE；每 5 分鐘與離開頁面時也會自動存一次。<br>
+          ・LINE 只在兩個時間推播：① 點名推播（只報出缺）② 作業推播（點名＋各科繳交）。教室電腦需開著本頁。<br>
+          ・自動缺席時間一到，仍未填的座號自動轉「未到」。<br>
           ・可在 Apps Script 另設 sendRollcallReminder 每日觸發器作雲端備援：當天沒回報時 LINE 提醒老師。<br>
           ・教室金鑰權限受限：只能回報當天、讀取近期缺交、把缺交標成補交；歷史統計需要老師金鑰，別把老師金鑰存在教室電腦。
         </p>
@@ -268,8 +271,8 @@
   </main>
 
   <div class="submit-bar">
-    <button class="primary-button" type="button" id="submitButton">📤 送出</button>
-    <span class="status-text" id="submitStatus">尚未送出。</span>
+    <button class="primary-button" type="button" id="submitButton">💾 存到雲端</button>
+    <span class="status-text" id="submitStatus">尚未存到雲端（每 5 分鐘與離開頁面時會自動存；LINE 只在設定的推播時間通知）。</span>
   </div>
   <div class="toast" id="toast"></div>
 
@@ -285,14 +288,16 @@
         className: '', boardTitle: '晨間大屏', contactFont: 'default', seatCount: 26, emptySeats: [],
         subjects: [], assignmentTypes: ['習作', '試卷', '作業本', '學習單', '其他'],
         gasUrl: '', classroomToken: '',
-        lateTime: '08:00', autoAbsentTime: '08:05', autoNotifyTime: '08:08', lookbackDays: 30
+        lateTime: '08:00', autoAbsentTime: '08:05', autoNotifyTime: '08:08', autoHomeworkNotifyTime: '08:40', lookbackDays: 30
       },
       attendance: {},        // {seat: 到|遲到|病假|事假|未到}（遲到畫面顯示為「到」）
       boards: [],            // [{id, subject, assignment, seats:{seat:'submitted'|'resub'}}]（未標=缺交）
-      flags: { autoAbsentDone: false, autoNotifyDone: false },
+      flags: { autoAbsentDone: false, autoNotifyDone: false, autoHomeworkNotifyDone: false },
       makeup: { items: [], loaded: false, mode: 'subject', focus: '' },
       countdown: { remaining: 0, running: false },
-      submitting: false
+      submitting: false,
+      dirty: false,          // 有未存到雲端的異動；每 5 分鐘與離開頁面時自動存檔
+      lastCloudSaveAt: ''
     };
     const $ = id => document.getElementById(id);
 
@@ -354,6 +359,7 @@
           if (timeOk(saved.lateTime)) s.lateTime = saved.lateTime;
           if (timeOk(saved.autoAbsentTime)) s.autoAbsentTime = saved.autoAbsentTime;
           if (timeOk(saved.autoNotifyTime)) s.autoNotifyTime = saved.autoNotifyTime;
+          if (timeOk(saved.autoHomeworkNotifyTime)) s.autoHomeworkNotifyTime = saved.autoHomeworkNotifyTime;
           s.lookbackDays = Math.min(60, Math.max(1, Number(saved.lookbackDays) || 30));
         }
       } catch (error) {}
@@ -377,7 +383,11 @@
         if (saved && typeof saved === 'object') {
           state.attendance = saved.attendance && typeof saved.attendance === 'object' ? saved.attendance : {};
           state.boards = Array.isArray(saved.boards) ? saved.boards.filter(board => board && board.subject) : [];
-          state.flags = { autoAbsentDone: saved.flags?.autoAbsentDone === true, autoNotifyDone: saved.flags?.autoNotifyDone === true };
+          state.flags = {
+            autoAbsentDone: saved.flags?.autoAbsentDone === true,
+            autoNotifyDone: saved.flags?.autoNotifyDone === true,
+            autoHomeworkNotifyDone: saved.flags?.autoHomeworkNotifyDone === true
+          };
         }
       } catch (error) {}
       for (let index = localStorage.length - 1; index >= 0; index -= 1) {
@@ -386,6 +396,7 @@
       }
     }
     function saveTodayState() {
+      state.dirty = true;   // 有異動就標記；autoCloudSaveTick 會在 5 分鐘內存到雲端（不推播）
       localStorage.setItem(STATE_PREFIX + todayKey(), JSON.stringify({ attendance: state.attendance, boards: state.boards, flags: state.flags }));
     }
 
@@ -425,12 +436,13 @@
       const now = nowHhmm();
       // 自動化只在晨間時段（自動缺席時間～12:00）執行；中午後開頁不補做，避免測試或下午使用時誤轉未到、誤推播。
       if (now >= '12:00') {
-        if (!state.flags.autoAbsentDone || !state.flags.autoNotifyDone) {
+        if (!state.flags.autoAbsentDone || !state.flags.autoNotifyDone || !state.flags.autoHomeworkNotifyDone) {
           state.flags.autoAbsentDone = true;
           state.flags.autoNotifyDone = true;
+          state.flags.autoHomeworkNotifyDone = true;
           saveTodayState();
         }
-        $('autoStatus').textContent = `自動化：已過晨間時段（${state.settings.autoAbsentTime} 未填轉未到、${state.settings.autoNotifyTime} 自動回報只在中午前執行）。可隨時手動「送出回報」。`;
+        $('autoStatus').textContent = `自動化：已過晨間時段（${state.settings.autoAbsentTime} 未填轉未到、${state.settings.autoNotifyTime} 點名推播、${state.settings.autoHomeworkNotifyTime} 作業推播只在中午前執行）。「送出」仍可隨時存到雲端。`;
         return;
       }
       let changed = false;
@@ -440,13 +452,19 @@
         changed = true;
         showToast(`已到 ${state.settings.autoAbsentTime}，未填座號自動轉「未到」。`);
       }
+      // 兩段式推播：第一段只報點名（老師最急著知道誰沒到），第二段補上作業繳交情況。
       if (!state.flags.autoNotifyDone && now >= state.settings.autoNotifyTime) {
         state.flags.autoNotifyDone = true;
         changed = true;
-        submitReport({ auto: true });
+        submitReport({ auto: true, push: 'attendance' });
+      }
+      if (!state.flags.autoHomeworkNotifyDone && now >= state.settings.autoHomeworkNotifyTime) {
+        state.flags.autoHomeworkNotifyDone = true;
+        changed = true;
+        submitReport({ auto: true, push: 'full' });
       }
       if (changed) { saveTodayState(); renderRollcall(); }
-      $('autoStatus').textContent = `自動化：${state.settings.lateTime} 後點到校記遲到（大屏不顯示）｜${state.settings.autoAbsentTime} 未填轉未到${state.flags.autoAbsentDone ? '（已執行）' : ''}｜${state.settings.autoNotifyTime} 自動回報 LINE${state.flags.autoNotifyDone ? '（已執行）' : ''}`;
+      $('autoStatus').textContent = `自動化：${state.settings.lateTime} 後點到校記遲到（大屏不顯示）｜${state.settings.autoAbsentTime} 未填轉未到${state.flags.autoAbsentDone ? '（已執行）' : ''}｜${state.settings.autoNotifyTime} 推播點名${state.flags.autoNotifyDone ? '（已執行）' : ''}｜${state.settings.autoHomeworkNotifyTime} 推播點名＋作業${state.flags.autoHomeworkNotifyDone ? '（已執行）' : ''}`;
     }
 
     // ---------- 點名 ----------
@@ -633,7 +651,7 @@
     }
 
     // ---------- 送出回報 ----------
-    function buildSubmitPayload() {
+    function buildSubmitPayload(push = 'none') {
       const attendance = Object.entries(state.attendance)
         .filter(([seat]) => !state.settings.emptySeats.includes(Number(seat)))
         .filter(([, status]) => ['病假', '事假', '遲到', '未到'].includes(status))
@@ -648,7 +666,7 @@
         });
         return { subject: board.subject, assignment: board.assignment, missing, resubmitted };
       });
-      return { action: 'rollcall_submit', token: state.settings.classroomToken, date: todayKey(), className: state.settings.className, attendance, homework };
+      return { action: 'rollcall_submit', token: state.settings.classroomToken, date: todayKey(), className: state.settings.className, attendance, homework, push };
     }
     async function callGas(payload) {
       const gasUrl = state.settings.gasUrl.trim();
@@ -667,27 +685,64 @@
         return result;
       } finally { window.clearTimeout(timeout); }
     }
-    async function submitReport({ auto = false } = {}) {
+    /**
+     * 送出到雲端。push 決定要不要推播老師 LINE：
+     * 'none'（預設）＝只存資料；'attendance'＝點名推播；'full'＝點名＋作業推播。
+     */
+    async function submitReport({ auto = false, push = 'none', silent = false } = {}) {
       if (state.submitting) return;
-      if (!state.settings.className) return auto ? undefined : showToast('請先在「設定」填入班級名稱。', true);
-      if (!state.settings.classroomToken) return auto ? undefined : showToast('請先在「設定」填入教室大屏金鑰。', true);
+      if (!state.settings.className) return auto || silent ? undefined : showToast('請先在「設定」填入班級名稱。', true);
+      if (!state.settings.classroomToken) return auto || silent ? undefined : showToast('請先在「設定」填入教室大屏金鑰。', true);
       const blanks = activeSeats().filter(seat => !state.attendance[seat]).length;
-      if (!auto && blanks > 0 && !window.confirm(`還有 ${blanks} 個座號未填（不會列入缺席）。確定送出？`)) return;
+      if (!auto && !silent && blanks > 0 && !window.confirm(`還有 ${blanks} 個座號未填（不會列入缺席）。確定存到雲端？`)) return;
       state.submitting = true;
       $('submitButton').disabled = true;
-      $('submitStatus').textContent = auto ? '自動回報中……' : '送出中……';
+      if (!silent) $('submitStatus').textContent = auto ? '自動回報中……' : '存到雲端中……';
       try {
-        const result = await callGas(buildSubmitPayload());
+        const result = await callGas(buildSubmitPayload(push));
         const time = new Date().toLocaleTimeString('zh-TW', { hour12: false });
-        $('submitStatus').textContent = `已送出（${time}${auto ? '・自動' : ''}）${result.pushed ? '，並推播到老師 LINE' : ''}。同一天重送會覆蓋更新。`;
-        showToast(auto ? '⏰ 已自動回報並推播老師 LINE。' : '✅ 回報完成！');
+        state.dirty = false;
+        state.lastCloudSaveAt = time;
+        const pushedNote = result.pushed
+          ? `，並推播到老師 LINE（${push === 'attendance' ? '點名' : '點名＋作業'}）`
+          : '';
+        $('submitStatus').textContent = silent
+          ? `已自動存到雲端（${time}）。`
+          : `已存到雲端（${time}${auto ? '・自動' : ''}）${pushedNote}。同一天重存會覆蓋更新。`;
+        if (!silent) showToast(auto ? '⏰ 已自動回報並推播老師 LINE。' : '✅ 已存到雲端（不會打擾 LINE）。');
       } catch (error) {
-        $('submitStatus').textContent = `送出失敗：${error.message}`;
-        if (!auto) showToast(error.message || '送出失敗', true);
+        $('submitStatus').textContent = `${silent ? '自動存檔' : '存到雲端'}失敗：${error.message}`;
+        if (!auto && !silent) showToast(error.message || '存到雲端失敗', true);
       } finally {
         state.submitting = false;
         $('submitButton').disabled = false;
       }
+    }
+
+    function markDirty() {
+      state.dirty = true;
+    }
+
+    /** 每 5 分鐘自動存檔一次；只有真的有異動才連線，不推播 LINE。 */
+    function autoCloudSaveTick() {
+      if (!state.dirty || state.submitting) return;
+      if (!state.settings.className || !state.settings.classroomToken || !state.settings.gasUrl) return;
+      submitReport({ silent: true, push: 'none' });
+    }
+
+    /** 關閉分頁或切走時保底存一次；用 keepalive 讓請求在頁面卸載後仍能送達。 */
+    function flushCloudSaveOnExit() {
+      if (!state.dirty || !state.settings.className || !state.settings.classroomToken) return;
+      const gasUrl = state.settings.gasUrl.trim();
+      if (!/^https:\/\/script\.google\.com\/macros\//.test(gasUrl)) return;
+      try {
+        fetch(gasUrl, {
+          method: 'POST', keepalive: true, redirect: 'follow', cache: 'no-store',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(buildSubmitPayload('none'))
+        }).catch(() => {});
+        state.dirty = false;
+      } catch (error) {}
     }
 
     // ---------- 作業補交 ----------
@@ -931,6 +986,7 @@
       $('setupLateTime').value = s.lateTime;
       $('setupAutoAbsentTime').value = s.autoAbsentTime;
       $('setupAutoNotifyTime').value = s.autoNotifyTime;
+      $('setupAutoHomeworkNotifyTime').value = s.autoHomeworkNotifyTime;
       $('setupLookbackDays').value = s.lookbackDays;
       $('setupGasUrl').value = s.gasUrl;
       $('setupClassroomToken').value = s.classroomToken;
@@ -952,6 +1008,7 @@
       if (timeOk($('setupLateTime').value)) s.lateTime = $('setupLateTime').value;
       if (timeOk($('setupAutoAbsentTime').value)) s.autoAbsentTime = $('setupAutoAbsentTime').value;
       if (timeOk($('setupAutoNotifyTime').value)) s.autoNotifyTime = $('setupAutoNotifyTime').value;
+      if (timeOk($('setupAutoHomeworkNotifyTime').value)) s.autoHomeworkNotifyTime = $('setupAutoHomeworkNotifyTime').value;
       s.lookbackDays = Math.min(60, Math.max(1, Number($('setupLookbackDays').value) || 30));
       s.gasUrl = $('setupGasUrl').value.trim();
       s.classroomToken = $('setupClassroomToken').value.trim();
@@ -1086,6 +1143,10 @@
     loadContactBook();
     // 聯絡本每分鐘自動同步（編輯中暫停，避免蓋掉正在打的字）
     window.setInterval(() => { if (!state.contact.editing) loadContactBook(); }, 60000);
+    // 每 5 分鐘自動把點名與作業存到雲端（不推播 LINE）；切走或關閉分頁時再保底存一次。
+    window.setInterval(autoCloudSaveTick, 5 * 60 * 1000);
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushCloudSaveOnExit(); });
+    window.addEventListener('pagehide', flushCloudSaveOnExit);
   </script>
 </body>
 </html>
