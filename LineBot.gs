@@ -75,6 +75,59 @@ function setupLineBot() {
   return summary;
 }
 
+// ---------------------------------------------------------------------------
+// 範本副本模式：老師用「建立副本」取得這份試算表後，直接用上方
+// 「🤖 LINE 小幫手」選單操作，不必進 Apps Script 編輯器找函式。
+// （試算表副本會帶著程式一起複製；指令碼屬性與金鑰不會複製，
+//   每位老師按「① 初始化」都會產生自己全新的金鑰。）
+// ---------------------------------------------------------------------------
+
+function onOpen() {
+  try {
+    SpreadsheetApp.getUi()
+      .createMenu('🤖 LINE 小幫手')
+      .addItem('① 初始化（建資料表＋產生金鑰）', 'menuSetupLineBot')
+      .addItem('② 顯示我的金鑰', 'menuShowKeys')
+      .addItem('③ 設定自動化排程（提醒／關懷）', 'menuSetupTriggers')
+      .addToUi();
+  } catch (error) {}
+}
+
+function menuShowDialog_(title, text) {
+  var safe = String(text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  var html = HtmlService.createHtmlOutput(
+    '<textarea readonly style="width:100%;height:330px;box-sizing:border-box;font:13px/1.7 Consolas,monospace;white-space:pre;">' + safe + '</textarea>' +
+    '<p style="font:12px sans-serif;color:#666;margin:8px 0 0">請點入框內按 Ctrl+A 全選、Ctrl+C 複製到記事本保存。</p>'
+  ).setWidth(580).setHeight(430);
+  SpreadsheetApp.getUi().showModalDialog(html, title);
+}
+
+function menuSetupLineBot() {
+  menuShowDialog_('✅ LINE 小幫手初始化完成', setupLineBot());
+}
+
+function menuShowKeys() {
+  var properties = PropertiesService.getScriptProperties();
+  if (!properties.getProperty('LINE_SYNC_TOKEN')) { menuSetupLineBot(); return; }
+  menuShowDialog_('我的金鑰', [
+    'Webhook 驗證參數 🔑B（接在機器人網址後：?hook=🔑B）：',
+    '  ' + properties.getProperty('LINE_WEBHOOK_TOKEN'),
+    '',
+    '工作台同步金鑰 🔑C（貼到工作台「⚙ 設定 → LINE 小幫手」）：',
+    '  ' + properties.getProperty('LINE_SYNC_TOKEN'),
+    '',
+    '教室大屏金鑰 🔑D（貼到晨間大屏「⚙ 設定」）：',
+    '  ' + properties.getProperty('CLASSROOM_TOKEN')
+  ].join('\n'));
+}
+
+function menuSetupTriggers() {
+  var summary;
+  try { summary = String(setupTriggers() || '✅ 自動化排程設定完成。'); }
+  catch (error) { summary = '設定失敗：' + error; }
+  menuShowDialog_('自動化排程', summary);
+}
+
 function ensureLineBotSheets_(spreadsheet) {
   var inbox = spreadsheet.getSheetByName(LINE_BOT_CONFIG.INBOX_SHEET);
   if (!inbox) {
