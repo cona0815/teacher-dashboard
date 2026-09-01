@@ -293,6 +293,275 @@
       </div>
     </section>
 
+    <section class="page" id="page-tools">
+      <style>
+        /* ---- 班級工具（純本機）專用樣式，前綴隔離避免影響其他分頁 ---- */
+        .tool-tabs { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+        .tool-tab { border: 2px solid var(--line); background: var(--surface); border-radius: 12px; padding: 10px 20px; font-size: 18px; font-weight: 900; cursor: pointer; color: var(--muted); font-family: inherit; }
+        .tool-tab.active { background: var(--primary-strong); border-color: var(--primary-strong); color: #fff; }
+        .tool-opts { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; margin: 10px 0; font-size: 14.5px; font-weight: 700; }
+        .tool-opts label { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+        /* 抽籤 */
+        .lottery-stage { position: relative; min-height: 300px; border: 2px solid var(--line); border-radius: 16px; background: linear-gradient(180deg, #f8fbf9, #eef4f1); display: flex; align-items: center; justify-content: center; gap: 46px; overflow: hidden; padding: 16px; flex-wrap: wrap; }
+        .lot-anim { width: 220px; height: 250px; position: relative; flex: 0 0 auto; }
+        .lot-result { font-size: 96px; font-weight: 900; color: var(--gold, #b9852f); min-width: 210px; text-align: center; font-variant-numeric: tabular-nums; line-height: 1.1; word-break: break-all; }
+        .lot-result.reveal { animation: lotPop .6s cubic-bezier(.2,1.6,.4,1); }
+        .lot-result small { display: block; font-size: 20px; color: var(--primary-strong); }
+        @keyframes lotPop { 0% { transform: scale(.2); opacity: 0; } 70% { transform: scale(1.15); } 100% { transform: scale(1); opacity: 1; } }
+        /* 轉盤（Canvas 繪製，指針落點對準真實座號） */
+        .lot-wheel-wrap { position: relative; width: 300px; height: 300px; margin: 0 auto; }
+        .lot-wheel-wrap canvas { display: block; width: 100%; height: 100%; filter: drop-shadow(0 6px 12px rgba(30,50,40,.28)); }
+        .lot-wheel-pointer { position: absolute; top: -6px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid #cf4433; z-index: 3; filter: drop-shadow(0 2px 3px rgba(0,0,0,.3)); transform-origin: 50% 0; }
+        .lot-wheel-pointer.tick { animation: pointerTick .09s ease; }
+        @keyframes pointerTick { 50% { transform: translateX(-50%) rotate(9deg); } }
+        .lot-wheel-hub { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 74px; height: 74px; border-radius: 50%; background: #fff; border: 5px solid #7c5330; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 900; color: var(--primary-strong); z-index: 2; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+        /* 扭蛋機 */
+        .lot-gacha { width: 200px; }
+        .lot-gacha-globe { width: 168px; height: 168px; border-radius: 50%; margin: 0 auto; background: radial-gradient(circle at 32% 28%, rgba(255,255,255,.95), rgba(225,238,245,.55) 55%, rgba(190,210,220,.5)); border: 7px solid #7c5330; position: relative; overflow: hidden; box-shadow: inset -6px -10px 18px rgba(0,0,0,.12), 0 5px 12px rgba(40,30,15,.25); }
+        .lot-gacha-globe::after { content: ""; position: absolute; top: 12px; left: 20px; width: 46px; height: 24px; border-radius: 50%; background: rgba(255,255,255,.75); transform: rotate(-24deg); }
+        .lot-gacha-ball { position: absolute; width: 32px; height: 32px; border-radius: 50%; box-shadow: inset -4px -5px 6px rgba(0,0,0,.22), inset 3px 4px 5px rgba(255,255,255,.55); }
+        .lot-gacha.shaking .lot-gacha-globe { animation: gachaShake .16s linear 12; }
+        @keyframes gachaShake { 0%,100% { transform: translateX(0) rotate(0); } 25% { transform: translateX(-6px) rotate(-3deg); } 75% { transform: translateX(6px) rotate(3deg); } }
+        .lot-gacha-base { width: 150px; height: 84px; margin: -6px auto 0; background: linear-gradient(180deg, #c0564a, #a34339); border-radius: 12px 12px 16px 16px; position: relative; box-shadow: 0 5px 12px rgba(40,30,15,.28); }
+        .lot-gacha-knob { position: absolute; left: 22px; top: 22px; width: 38px; height: 38px; border-radius: 50%; background: #f4f1e6; border: 5px solid #7c5330; transition: transform 1.6s cubic-bezier(.4,0,.4,1); }
+        .lot-gacha-knob::after { content: ""; position: absolute; top: 50%; left: 50%; width: 24px; height: 7px; margin: -3.5px 0 0 -12px; background: #7c5330; border-radius: 4px; }
+        .lot-gacha.shaking .lot-gacha-knob { transform: rotate(720deg); }
+        .lot-gacha-chute { position: absolute; right: 20px; bottom: 10px; width: 52px; height: 44px; border-radius: 10px; background: rgba(0,0,0,.28); box-shadow: inset 0 4px 8px rgba(0,0,0,.4); }
+        .lot-gacha-capsule { position: absolute; right: 24px; bottom: 14px; width: 46px; height: 46px; transform: translateY(-130px) scale(.3); opacity: 0; z-index: 2; }
+        .lot-gacha.dropped .lot-gacha-capsule { animation: capsuleDrop .8s cubic-bezier(.34,1.4,.5,1) forwards; }
+        @keyframes capsuleDrop { 0% { transform: translateY(-130px) scale(.35) rotate(-120deg); opacity: 0; } 30% { opacity: 1; } 70% { transform: translateY(6px) scale(1.06) rotate(8deg); } 100% { transform: translateY(0) scale(1) rotate(0); opacity: 1; } }
+        .cap-top, .cap-bottom { position: absolute; left: 0; width: 46px; height: 23px; transition: transform .45s cubic-bezier(.3,1.5,.5,1), opacity .45s; }
+        .cap-top { top: 0; background: #e05a4e; border-radius: 23px 23px 0 0; border: 3px solid #7c5330; border-bottom: none; }
+        .cap-bottom { bottom: 0; background: #fff; border-radius: 0 0 23px 23px; border: 3px solid #7c5330; border-top: none; }
+        .lot-gacha.opened .cap-top { transform: translate(-16px, -34px) rotate(-38deg); }
+        .lot-gacha.opened .cap-bottom { transform: translate(14px, 10px) rotate(24deg); }
+        .lot-gacha-prize { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; color: var(--primary-strong); opacity: 0; transform: scale(.3); transition: transform .4s cubic-bezier(.2,1.6,.4,1) .15s, opacity .3s .15s; }
+        .lot-gacha.opened .lot-gacha-prize { opacity: 1; transform: scale(1.35) translateY(-8px); }
+        /* 抓娃娃機 */
+        .lot-claw { width: 240px; }
+        .lot-claw-frame { width: 240px; height: 268px; margin: 0 auto; border: 7px solid #4f8fd0; border-radius: 14px; position: relative; background: linear-gradient(180deg, rgba(235,244,250,.9), rgba(214,232,244,.75)); overflow: hidden; box-shadow: 0 5px 14px rgba(30,50,80,.25); }
+        .lot-claw-rail { position: absolute; top: 8px; left: 6px; right: 6px; height: 8px; background: #64756f; border-radius: 4px; }
+        .lot-claw-carriage { position: absolute; top: 4px; left: 50%; width: 30px; height: 16px; margin-left: -15px; background: #4a5a54; border-radius: 5px; transition: transform 1.1s cubic-bezier(.45,0,.25,1); z-index: 2; }
+        .lot-claw-arm { position: absolute; top: 14px; left: 50%; width: 5px; height: 26px; margin-left: -2.5px; background: repeating-linear-gradient(180deg, #64756f 0 8px, #8a9a94 8px 12px); transition: height 1s cubic-bezier(.5,0,.3,1); }
+        .lot-claw-hand { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); width: 44px; height: 24px; }
+        .lot-claw-hand::before, .lot-claw-hand::after { content: ""; position: absolute; top: 0; width: 16px; height: 22px; border: 5px solid #64756f; border-top: none; transition: transform .3s ease; }
+        .lot-claw-hand::before { left: 1px; border-right: none; border-radius: 0 0 0 14px; transform-origin: top right; transform: rotate(14deg); }
+        .lot-claw-hand::after { right: 1px; border-left: none; border-radius: 0 0 14px 0; transform-origin: top left; transform: rotate(-14deg); }
+        .lot-claw.closed .lot-claw-hand::before { transform: rotate(-14deg); }
+        .lot-claw.closed .lot-claw-hand::after { transform: rotate(14deg); }
+        .lot-claw-held { position: absolute; top: calc(100% + 2px); left: 50%; transform: translateX(-50%); width: 34px; height: 34px; border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 15px; font-weight: 900; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.4); box-shadow: inset -4px -5px 6px rgba(0,0,0,.25); }
+        .lot-claw-balls { position: absolute; inset: 0; pointer-events: none; }
+        .lot-claw-balls span { position: absolute; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 900; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.45); box-shadow: inset -4px -5px 6px rgba(0,0,0,.28), inset 3px 4px 5px rgba(255,255,255,.35); transition: opacity .2s; }
+        .lot-claw-chute { position: absolute; left: 10px; bottom: 8px; width: 44px; height: 52px; border-radius: 8px 8px 4px 4px; background: rgba(0,0,0,.3); box-shadow: inset 0 5px 10px rgba(0,0,0,.4); z-index: 1; }
+        .lot-claw-chute::after { content: "🎁"; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); font-size: 15px; opacity: .8; }
+        /* 五彩紙屑畫布 */
+        .lot-confetti { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
+        .lot-drawn { margin-top: 12px; font-size: 15px; font-weight: 700; color: var(--primary-strong); line-height: 2; }
+        .lot-drawn b { color: var(--gold, #b9852f); }
+        /* 檢核板 */
+        .check-wall { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; }
+        .check-card { border: 2px solid var(--line); border-radius: 14px; background: #fffefb; padding: 12px; }
+        .check-head { display: flex; gap: 6px; align-items: center; margin-bottom: 9px; }
+        .check-head select { flex: 1; min-width: 0; border: 2px solid var(--line); border-radius: 9px; padding: 7px 8px; font-size: 15px; font-weight: 700; font-family: inherit; }
+        .check-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); gap: 6px; }
+        .check-seat { border: 1.5px solid var(--line); background: var(--surface); border-radius: 8px; padding: 9px 2px; font-size: 16px; font-weight: 900; cursor: pointer; color: var(--ink); font-family: inherit; }
+        .check-seat.done { background: var(--resub, #2273c9); border-color: var(--resub, #2273c9); color: #fff; }
+        .check-seat.miss { background: var(--missing, #cf4433); border-color: var(--missing, #cf4433); color: #fff; }
+        .check-actions { display: flex; gap: 6px; margin-top: 9px; align-items: center; }
+        .check-missing-btn { border: 0; background: var(--missing, #cf4433); color: #fff; border-radius: 8px; padding: 7px 14px; font-size: 13.5px; font-weight: 900; cursor: pointer; font-family: inherit; }
+        /* 計分板 */
+        .score-wall { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+        .score-card { border: 2px solid var(--line); border-radius: 16px; background: #fffefb; padding: 14px 10px; text-align: center; }
+        .score-name { font-size: 19px; font-weight: 900; color: var(--primary-strong); padding: 3px 8px; border-radius: 8px; }
+        .score-name:focus { outline: 2px solid var(--primary); background: var(--surface); }
+        .score-value { font-size: 74px; font-weight: 900; color: var(--gold, #b9852f); line-height: 1.15; font-variant-numeric: tabular-nums; }
+        .score-value.bump { animation: lotPop .4s ease; }
+        .score-buttons { display: flex; gap: 8px; justify-content: center; margin-top: 6px; }
+        .score-buttons button { border: 0; border-radius: 12px; width: 66px; height: 48px; font-size: 26px; font-weight: 900; cursor: pointer; color: #fff; font-family: inherit; }
+        .score-plus { background: var(--ok, #1d9e5f); }
+        .score-minus { background: var(--muted, #64756f); }
+        /* 分組 */
+        .group-wall { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 12px; }
+        .group-card { border: 2px solid var(--line); border-radius: 14px; background: #fffefb; padding: 12px; opacity: 0; transform: translateY(14px); animation: groupIn .45s ease forwards; }
+        @keyframes groupIn { to { opacity: 1; transform: none; } }
+        .group-card h4 { margin: 0 0 8px; font-size: 17px; color: var(--primary-strong); }
+        .group-card .members { display: flex; flex-wrap: wrap; gap: 6px; }
+        .group-card .members span { background: var(--soft, #e8f2ee); color: var(--primary-strong); border-radius: 9px; padding: 6px 12px; font-size: 18px; font-weight: 900; }
+        /* 安靜偵測 */
+        .quiet-meter { height: 42px; border: 2px solid var(--line); border-radius: 12px; background: var(--surface); position: relative; overflow: hidden; margin: 14px 0; }
+        .quiet-bar { position: absolute; inset: 0 auto 0 0; width: 0%; background: linear-gradient(90deg, #1d9e5f, #f2b53c 65%, #cf4433 90%); transition: width .12s linear; }
+        .quiet-line { position: absolute; top: 0; bottom: 0; width: 3px; background: var(--danger, #cf4433); }
+        .quiet-face { text-align: center; font-size: 46px; font-weight: 900; margin: 8px 0; color: var(--primary-strong); }
+        .quiet-overlay { position: fixed; inset: 0; background: rgba(207, 68, 51, .92); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 90px; font-weight: 900; z-index: 90; animation: lotPop .4s ease; }
+        @media (prefers-reduced-motion: reduce) { .lot-wheel-disc, .lot-gacha.shaking .lot-gacha-globe, .lot-result.reveal, .group-card { animation: none; transition: none; opacity: 1; transform: none; } }
+        /* 顯示縮放（聯絡本字級與座號大小，由班級工具腳本控制） */
+        .chalk-content { font-size: calc(24px * var(--chalk-scale, 1)) !important; }
+        .chalk-textarea { font-size: calc(21px * var(--chalk-scale, 1)) !important; }
+        .seat-grid .seat { font-size: calc(30px * var(--seat-scale, 1)) !important; padding: calc(15px * var(--seat-scale, 1)) 4px !important; }
+        .seat-grid .seat .seat-state { font-size: calc(14px * var(--seat-scale, 1)) !important; }
+        .scale-btns { display: inline-flex; gap: 4px; margin-left: 8px; }
+        .scale-btns button { border: 1.5px solid var(--line); background: var(--surface); border-radius: 8px; padding: 3px 11px; font-size: 14px; font-weight: 900; cursor: pointer; font-family: inherit; color: var(--primary-strong); }
+        /* 定評小幫手 */
+        .exam-board { text-align: center; padding: 8px 0 4px; }
+        .exam-clock { font-size: clamp(80px, 16vw, 190px); font-weight: 900; line-height: 1.05; font-variant-numeric: tabular-nums; letter-spacing: .02em;
+          background: linear-gradient(90deg, #2457e6, #7b2ff7, #a832e0); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .exam-date { font-size: 22px; font-weight: 700; color: var(--muted); margin: 2px 0 20px; }
+        .exam-cards { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 14px; }
+        .exam-card { background: var(--surface); border: 2px solid var(--line); border-radius: 16px; padding: 16px 22px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 8px rgba(40,60,50,.08); }
+        .exam-label { font-size: 22px; font-weight: 900; color: var(--primary-strong); }
+        .exam-num { width: 110px; border: 2px solid var(--line); border-radius: 12px; font-size: 44px; font-weight: 900; text-align: center; padding: 4px 6px; font-family: inherit; font-variant-numeric: tabular-nums; color: var(--ink); background: #f8fbf9; }
+        .exam-absent-card { max-width: 560px; flex-wrap: wrap; }
+        .exam-absent { font-size: 30px; font-weight: 900; color: var(--missing, #cf4433); display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+        .exam-absent .ok-all { color: var(--ok, #1d9e5f); }
+        .exam-board:fullscreen { background: var(--bg); display: flex; flex-direction: column; justify-content: center; padding: 4vh 4vw; overflow: auto; }
+        .exam-board:fullscreen .exam-clock { font-size: clamp(120px, 24vw, 340px); }
+        .exam-board:fullscreen .exam-date { font-size: 34px; }
+        .exam-board:fullscreen .exam-label { font-size: 32px; }
+        .exam-board:fullscreen .exam-num { font-size: 60px; width: 140px; }
+        .exam-board:fullscreen .exam-absent { font-size: 42px; }
+      </style>
+      <div class="panel">
+        <div class="tool-tabs" id="toolTabs">
+          <button class="tool-tab active" type="button" data-tool="lottery">🎡 抽籤機</button>
+          <button class="tool-tab" type="button" data-tool="check">✅ 檢核板</button>
+          <button class="tool-tab" type="button" data-tool="score">🏆 計分板</button>
+          <button class="tool-tab" type="button" data-tool="group">👥 隨機分組</button>
+          <button class="tool-tab" type="button" data-tool="quiet">🔇 安靜偵測</button>
+          <button class="tool-tab" type="button" data-tool="exam">📝 定評小幫手</button>
+          <span class="status-text">全部只存這台電腦、不進雲端統計；抽籤與分組的座號池自動沿用「設定」（略過空號）。</span>
+        </div>
+
+        <div class="tool-panel" data-tool-panel="lottery">
+          <div class="tool-opts">
+            <button class="mode-button active" type="button" data-lottery-mode="wheel">🎡 轉盤</button>
+            <button class="mode-button" type="button" data-lottery-mode="gacha">🎰 扭蛋機</button>
+            <button class="mode-button" type="button" data-lottery-mode="claw">🕹️ 抓娃娃機</button>
+            <label><input type="checkbox" id="lotExcludeAbsent" checked>排除今日缺席</label>
+            <label><input type="checkbox" id="lotSound" checked>音效</label>
+            <label><input type="checkbox" id="lotCustom">自訂名單</label>
+            <input class="inline-select" id="lotCustomList" placeholder="以、分隔，例：第1組、第2組、第3組" style="max-width:280px" hidden>
+          </div>
+          <div class="lottery-stage" id="lotteryStage">
+            <div class="lot-anim" id="lotWheel" style="width:300px;height:300px">
+              <div class="lot-wheel-wrap">
+                <div class="lot-wheel-pointer" id="lotPointer"></div>
+                <canvas id="lotWheelCanvas" width="600" height="600"></canvas>
+                <div class="lot-wheel-hub" id="lotWheelHub">🎯</div>
+              </div>
+            </div>
+            <div class="lot-anim lot-gacha" id="lotGacha" hidden>
+              <div class="lot-gacha-globe" id="lotGachaGlobe"></div>
+              <div class="lot-gacha-base">
+                <div class="lot-gacha-knob"></div>
+                <div class="lot-gacha-chute"></div>
+                <div class="lot-gacha-capsule"><div class="cap-bottom"></div><div class="lot-gacha-prize" id="lotGachaPrize"></div><div class="cap-top"></div></div>
+              </div>
+            </div>
+            <div class="lot-anim lot-claw" id="lotClaw" hidden style="width:240px;height:268px">
+              <div class="lot-claw-frame">
+                <div class="lot-claw-rail"></div>
+                <div class="lot-claw-carriage" id="lotClawCarriage">
+                  <div class="lot-claw-arm" id="lotClawArm"><div class="lot-claw-hand"></div><div class="lot-claw-held" id="lotClawHeld"></div></div>
+                </div>
+                <div class="lot-claw-chute"></div>
+                <div class="lot-claw-balls" id="lotClawBalls"></div>
+              </div>
+            </div>
+            <div class="lot-result" id="lotResult">？</div>
+            <canvas class="lot-confetti" id="lotConfetti"></canvas>
+          </div>
+          <div class="tool-opts">
+            <button class="primary-button" type="button" id="lotDrawButton" style="font-size:24px;padding:12px 44px">🎯 抽！</button>
+            <button class="ghost-button" type="button" id="lotResetButton">🔄 重新開始</button>
+            <span class="status-text" id="lotStatus"></span>
+          </div>
+          <div class="lot-drawn" id="lotDrawnList"></div>
+        </div>
+
+        <div class="tool-panel" data-tool-panel="check" hidden>
+          <div class="tool-opts">
+            <button class="ghost-button" type="button" id="checkAddButton">＋ 新增檢核板（最多 4）</button>
+            <button class="ghost-button" type="button" id="checkNamesButton">✏️ 管理常用名稱</button>
+            <span class="status-text">點座號＝已點（藍）；按「未點」把沒點的亮紅反查；隔天自動歸零、不留紀錄。</span>
+          </div>
+          <div class="tool-opts" id="checkNamesEditor" hidden>
+            <input class="inline-select" id="checkNamesInput" style="flex:1;min-width:260px" placeholder="以、分隔，例：定考簽名、交回條、量體溫、檢查用具">
+            <button class="ghost-button" type="button" id="checkNamesSaveButton">儲存名稱</button>
+          </div>
+          <div class="check-wall" id="checkWall"></div>
+        </div>
+
+        <div class="tool-panel" data-tool-panel="score" hidden>
+          <div class="tool-opts">
+            <label>組數
+              <select class="inline-select" id="scoreTeamCount"><option>2</option><option>3</option><option selected>4</option><option>5</option><option>6</option></select>
+            </label>
+            <button class="ghost-button" type="button" id="scoreResetButton">🔄 全部歸零</button>
+            <label><input type="checkbox" id="scoreSound" checked>音效</label>
+            <span class="status-text">組名可直接點著改；分數隔天自動歸零。</span>
+          </div>
+          <div class="score-wall" id="scoreWall"></div>
+        </div>
+
+        <div class="tool-panel" data-tool-panel="group" hidden>
+          <div class="tool-opts">
+            <label>每組 <input class="inline-select" id="groupSize" type="number" min="2" max="10" value="4" style="width:74px"> 人</label>
+            <button class="primary-button" type="button" id="groupGoButton" style="font-size:19px;padding:10px 30px">🎲 分組！</button>
+            <label><input type="checkbox" id="groupExcludeAbsent" checked>排除今日缺席</label>
+            <span class="status-text">用座號洗牌均分；除不盡的餘數平均塞進前幾組。</span>
+          </div>
+          <div class="group-wall" id="groupWall"></div>
+        </div>
+
+        <div class="tool-panel" data-tool-panel="quiet" hidden>
+          <div class="tool-opts">
+            <button class="primary-button" type="button" id="quietStartButton" style="font-size:19px;padding:10px 26px">🎙 開始偵測</button>
+            <label>警戒值 <input type="range" id="quietThreshold" min="20" max="95" value="60" style="width:180px"> <span id="quietThresholdValue">60</span></label>
+            <span class="status-text">需要允許使用麥克風；聲音只在這台電腦即時分析，不錄音、不上傳。</span>
+          </div>
+          <div class="quiet-meter"><div class="quiet-bar" id="quietBar"></div><div class="quiet-line" id="quietLine" style="left:60%"></div></div>
+          <div class="quiet-face" id="quietFace">😴 尚未開始偵測</div>
+        </div>
+
+        <div class="tool-panel" data-tool-panel="exam" hidden>
+          <div class="exam-board">
+            <div class="exam-clock" id="examClock">--:--:--</div>
+            <div class="exam-date" id="examDate"></div>
+            <div class="exam-cards">
+              <div class="exam-card">
+                <label class="exam-label" for="examPeriod">節次</label>
+                <select class="inline-select" id="examPeriod" style="font-size:26px;font-weight:900;padding:8px 14px">
+                  <option value="第一節">第一節</option>
+                  <option value="第二節">第二節</option>
+                  <option value="第三節">第三節</option>
+                  <option value="第四節">第四節</option>
+                </select>
+              </div>
+              <div class="exam-card">
+                <label class="exam-label" for="examSubject">科目</label>
+                <select class="inline-select" id="examSubject" style="font-size:26px;font-weight:900;padding:8px 14px"></select>
+              </div>
+              <div class="exam-card">
+                <span class="exam-label">應到</span>
+                <input class="exam-num" id="examExpected" type="number" min="0" max="99">
+                <span class="exam-label">實到</span>
+                <input class="exam-num" id="examPresent" type="number" min="0" max="99">
+              </div>
+              <div class="exam-card exam-absent-card">
+                <span class="exam-label">未到</span>
+                <span id="examAbsent" class="exam-absent">—</span>
+              </div>
+            </div>
+            <div class="tool-opts" style="justify-content:center">
+              <button class="ghost-button" type="button" id="examSyncButton">🔄 從點名帶入（應到／實到／未到）</button>
+              <button class="ghost-button" type="button" id="examFullscreenButton">⛶ 全螢幕播放</button>
+              <span class="status-text">帶入後仍可手動修改數字；全螢幕時按 Esc 或再按一次按鈕離開。</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="page" id="page-query">
       <div class="panel">
         <div class="query-controls">
@@ -367,7 +636,8 @@
           ・LINE 只在兩個時間推播：① 點名推播（出缺，並附上工作台的今日課程、任務、記事與逾期提醒）② 作業推播（點名＋各科繳交）。教室電腦需開著本頁。<br>
           ・自動缺席時間一到，仍未填的座號自動轉「未到」。<br>
           ・可在 Apps Script 另設 sendRollcallReminder 每日觸發器作雲端備援：當天沒回報時 LINE 提醒老師。<br>
-          ・教室金鑰權限受限：只能回報當天、讀取近期缺交、把缺交標成補交；歷史統計需要老師金鑰，別把老師金鑰存在教室電腦。
+          ・教室金鑰權限受限：只能回報當天、讀取近期缺交、把缺交標成補交；歷史統計需要老師金鑰，別把老師金鑰存在教室電腦。<br>
+          ・完整的使用情境教學與資安說明請看 <a href="About.html" target="_blank" rel="noopener">📚 系統說明與資安</a>。
         </p>
       </div>
     </section>
@@ -1793,5 +2063,732 @@
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushCloudSaveOnExit(); });
     window.addEventListener('pagehide', flushCloudSaveOnExit);
   </script>
+<script>
+'use strict';
+// =====================================================================
+// 🧰 班級工具（純本機）＋顯示縮放
+// 獨立掛載：注入分頁按鈕、六個小工具與字級調整，全部只碰自己的
+// localStorage 鍵，不動雲端、不動既有分頁的任何狀態。
+// =====================================================================
+(function () {
+  const CONFIG_KEY = 'morningToolsConfig';
+  const DAY_PREFIX = 'morningToolsDay:';
+  const SCALE_KEY = 'morningDisplayScale';
+  const DEFAULT_CHECK_NAMES = ['定考簽名', '交回條', '量體溫', '檢查用具', '帶齊課本'];
+  const EXAM_BASE_SUBJECTS = ['國語', '數學', '英語', '自然', '社會', '生活'];
+
+  const config = loadJson(CONFIG_KEY, {});
+  config.checkNames = Array.isArray(config.checkNames) && config.checkNames.length ? config.checkNames : DEFAULT_CHECK_NAMES.slice();
+  config.teamNames = Array.isArray(config.teamNames) ? config.teamNames : [];
+  const day = loadJson(DAY_PREFIX + todayKey(), {});
+  day.drawn = Array.isArray(day.drawn) ? day.drawn : [];
+  day.boards = Array.isArray(day.boards) ? day.boards : [{ name: config.checkNames[0], done: {}, showMiss: false }];
+  day.scores = Array.isArray(day.scores) ? day.scores : [];
+  cleanupOldDays();
+
+  function loadJson(key, fallback) {
+    try { const v = JSON.parse(localStorage.getItem(key) || 'null'); return v && typeof v === 'object' ? v : fallback; }
+    catch (e) { return fallback; }
+  }
+  function saveConfig() { try { localStorage.setItem(CONFIG_KEY, JSON.stringify(config)); } catch (e) {} }
+  function saveDay() { try { localStorage.setItem(DAY_PREFIX + todayKey(), JSON.stringify(day)); } catch (e) {} }
+  function cleanupOldDays() {
+    for (let i = localStorage.length - 1; i >= 0; i -= 1) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(DAY_PREFIX) && key.slice(DAY_PREFIX.length) < shiftDate(todayKey(), -7)) localStorage.removeItem(key);
+    }
+  }
+
+  // ---------- 音效（第一次點擊時才建立 AudioContext） ----------
+  let audioCtx = null;
+  function beep(freq, dur, type, volume) {
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type || 'sine'; osc.frequency.value = freq;
+      gain.gain.value = volume || 0.16;
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + (dur || 0.3));
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(); osc.stop(audioCtx.currentTime + (dur || 0.3));
+    } catch (e) {}
+  }
+  function fanfare() { beep(523, .18); setTimeout(() => beep(659, .18), 140); setTimeout(() => beep(784, .34), 280); }
+
+  // ---------- 分頁按鈕注入 ----------
+  const setupTab = document.querySelector('.tab-button[data-page="setup"]');
+  const toolsTab = document.createElement('button');
+  toolsTab.className = 'tab-button'; toolsTab.type = 'button'; toolsTab.dataset.page = 'tools';
+  toolsTab.textContent = '🧰 班級工具';
+  if (setupTab) setupTab.parentNode.insertBefore(toolsTab, setupTab);
+  toolsTab.addEventListener('click', () => {
+    document.querySelectorAll('.tab-button').forEach(item => item.classList.toggle('active', item === toolsTab));
+    document.querySelectorAll('.page').forEach(page => page.classList.toggle('active', page.id === 'page-tools'));
+    renderCheckWall(); renderScoreWall(); updateLotStatus();
+  });
+  document.querySelectorAll('#toolTabs .tool-tab').forEach(tab => tab.addEventListener('click', () => {
+    document.querySelectorAll('#toolTabs .tool-tab').forEach(item => item.classList.toggle('active', item === tab));
+    document.querySelectorAll('.tool-panel').forEach(panel => { panel.hidden = panel.dataset.toolPanel !== tab.dataset.tool; });
+    if (tab.dataset.tool !== 'quiet') stopQuiet();
+  }));
+
+  // ---------- 共用座號池 ----------
+  function absentSeatSet() {
+    const absent = new Set();
+    activeSeats().forEach(seat => {
+      if (['病假', '事假', '未到'].includes(state.attendance[seat] || '')) absent.add(seat);
+    });
+    return absent;
+  }
+  function seatPool(excludeAbsent) {
+    const absent = excludeAbsent ? absentSeatSet() : new Set();
+    return activeSeats().filter(seat => !absent.has(seat)).map(String);
+  }
+
+  // ================================================================
+  // 🎡 抽籤機（天花板版：Canvas 轉盤＋紙屑＋機械動畫）
+  // ================================================================
+  const LOT_COLORS = ['#e57368', '#f2b53c', '#79c281', '#5f9fe0', '#b784d9'];
+  const REDUCED_MOTION = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let lotteryMode = 'wheel';
+  let lotteryBusy = false;
+
+  document.querySelectorAll('[data-lottery-mode]').forEach(btn => btn.addEventListener('click', () => {
+    if (lotteryBusy) return;
+    lotteryMode = btn.dataset.lotteryMode;
+    document.querySelectorAll('[data-lottery-mode]').forEach(item => item.classList.toggle('active', item === btn));
+    $('lotWheel').hidden = lotteryMode !== 'wheel';
+    $('lotGacha').hidden = lotteryMode !== 'gacha';
+    $('lotClaw').hidden = lotteryMode !== 'claw';
+    if (lotteryMode === 'wheel') drawWheel(wheelRotation);
+    if (lotteryMode === 'claw') layoutClawBalls(null);
+  }));
+  $('lotCustom').addEventListener('change', () => { $('lotCustomList').hidden = !$('lotCustom').checked; updateLotStatus(); });
+  $('lotCustomList').value = String(config.customPool || '');
+  $('lotCustomList').addEventListener('input', () => { config.customPool = $('lotCustomList').value; saveConfig(); updateLotStatus(); });
+  $('lotExcludeAbsent').addEventListener('change', updateLotStatus);
+
+  function lotteryPool() {
+    if ($('lotCustom').checked) {
+      return String($('lotCustomList').value || '').split(/[、,，\s]+/).map(v => v.trim()).filter(Boolean);
+    }
+    return seatPool($('lotExcludeAbsent').checked);
+  }
+  function remainingPool() { return lotteryPool().filter(item => !day.drawn.includes(item)); }
+  function updateLotStatus() {
+    const remaining = remainingPool();
+    $('lotStatus').textContent = `剩 ${remaining.length} 個可抽`;
+    $('lotDrawnList').innerHTML = day.drawn.length
+      ? '已抽出：' + day.drawn.map(v => `<b>${escapeHtml(v)}</b>`).join('、')
+      : '還沒抽過，按「🎯 抽！」開始。';
+    drawWheel(wheelRotation);
+    if (lotteryMode === 'claw') layoutClawBalls(null);
+  }
+
+  // ---- 五彩紙屑（Canvas 粒子） ----
+  const confettiCanvas = $('lotConfetti');
+  const confettiCtx = confettiCanvas.getContext('2d');
+  let confettiParts = [], confettiRaf = 0;
+  function burstConfetti() {
+    const stage = $('lotteryStage');
+    confettiCanvas.width = stage.clientWidth;
+    confettiCanvas.height = stage.clientHeight;
+    const resultRect = $('lotResult').getBoundingClientRect();
+    const stageRect = stage.getBoundingClientRect();
+    const x = resultRect.left - stageRect.left + resultRect.width / 2;
+    const y = resultRect.top - stageRect.top + resultRect.height / 2;
+    for (let i = 0; i < 140; i += 1) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 3.5 + Math.random() * 7.5;
+      confettiParts.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 3.5,
+        life: 65 + Math.random() * 35, color: LOT_COLORS[i % LOT_COLORS.length],
+        w: 5 + Math.random() * 5, r: Math.random() * Math.PI, vr: (Math.random() - .5) * .35 });
+    }
+    if (!confettiRaf) confettiTick();
+  }
+  function confettiTick() {
+    confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+    confettiParts = confettiParts.filter(p => p.life > 0 && p.y < confettiCanvas.height + 30);
+    confettiParts.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.vy += .24; p.vx *= .99; p.r += p.vr; p.life -= 1;
+      confettiCtx.save();
+      confettiCtx.translate(p.x, p.y); confettiCtx.rotate(p.r);
+      confettiCtx.globalAlpha = Math.min(1, p.life / 28);
+      confettiCtx.fillStyle = p.color;
+      confettiCtx.fillRect(-p.w / 2, -p.w / 2, p.w, p.w * .62);
+      confettiCtx.restore();
+    });
+    confettiRaf = confettiParts.length ? requestAnimationFrame(confettiTick) : 0;
+  }
+
+  // ---- 轉盤：把剩餘座號真的畫在盤面上，指針落點＝抽中的人 ----
+  const wheelCanvas = $('lotWheelCanvas');
+  const wctx = wheelCanvas.getContext('2d');
+  let wheelRotation = 0;
+  function drawWheel(rotation, highlightIndex = -1) {
+    const pool = remainingPool();
+    const n = pool.length;
+    wctx.clearRect(0, 0, 600, 600);
+    wctx.save();
+    wctx.translate(300, 300);
+    if (!n) {
+      wctx.fillStyle = '#e8f2ee'; wctx.beginPath(); wctx.arc(0, 0, 286, 0, Math.PI * 2); wctx.fill();
+      wctx.fillStyle = '#657570'; wctx.font = '900 34px "Microsoft JhengHei"'; wctx.textAlign = 'center';
+      wctx.fillText('抽完了 🎉', 0, 12);
+      wctx.restore(); return;
+    }
+    const seg = Math.PI * 2 / n;
+    wctx.rotate(rotation);
+    for (let i = 0; i < n; i += 1) {
+      const start = -Math.PI / 2 + i * seg;
+      // 相鄰不同色；總數不是色數倍數時最後一格可能撞色，往後借一色避開
+      let color = LOT_COLORS[i % LOT_COLORS.length];
+      if (i === n - 1 && n > 1 && color === LOT_COLORS[0]) color = LOT_COLORS[2];
+      wctx.fillStyle = i === highlightIndex ? '#ffe9a8' : color;
+      wctx.beginPath(); wctx.moveTo(0, 0); wctx.arc(0, 0, 286, start, start + seg); wctx.closePath(); wctx.fill();
+      wctx.strokeStyle = 'rgba(255,255,255,.85)'; wctx.lineWidth = n > 30 ? 1.5 : 3; wctx.stroke();
+      // 座號文字
+      wctx.save();
+      wctx.rotate(start + seg / 2);
+      wctx.textAlign = 'right'; wctx.textBaseline = 'middle';
+      const fontSize = n <= 10 ? 44 : n <= 16 ? 36 : n <= 26 ? 28 : n <= 40 ? 20 : 14;
+      wctx.font = `900 ${fontSize}px "Microsoft JhengHei"`;
+      wctx.fillStyle = i === highlightIndex ? '#7c5330' : '#ffffff';
+      wctx.shadowColor = 'rgba(0,0,0,.35)'; wctx.shadowBlur = 3;
+      const label = String(pool[i]).length > 4 ? String(pool[i]).slice(0, 4) + '…' : String(pool[i]);
+      wctx.fillText(label, 258, 0);
+      wctx.restore();
+    }
+    wctx.restore();
+    // 外框
+    wctx.beginPath(); wctx.arc(300, 300, 291, 0, Math.PI * 2);
+    wctx.lineWidth = 12; wctx.strokeStyle = '#7c5330'; wctx.stroke();
+  }
+  function spinWheel(pickedIndex, poolSize, done) {
+    const seg = Math.PI * 2 / poolSize;
+    const targetMod = ((-(pickedIndex * seg + seg / 2)) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+    const currentMod = ((wheelRotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+    let delta = targetMod - currentMod;
+    if (delta <= 0) delta += Math.PI * 2;
+    const jitter = (Math.random() - .5) * seg * .55;   // 不要每次都停在正中央
+    const target = wheelRotation + Math.PI * 2 * 6 + delta + jitter;
+    const startRotation = wheelRotation;
+    const total = target - startRotation;
+    const duration = 4300;
+    const startTime = performance.now();
+    let lastTickIndex = -1;
+    const pointer = $('lotPointer');
+    const frame = now => {
+      const t = Math.min(1, (now - startTime) / duration);
+      const eased = 1 - Math.pow(1 - t, 4);   // easeOutQuart：後段緩慢滑行、充滿懸念
+      wheelRotation = startRotation + total * eased;
+      drawWheel(wheelRotation);
+      const pointerIndex = Math.floor(((((-Math.PI / 2 - wheelRotation) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2)) / seg + .5);
+      if (pointerIndex !== lastTickIndex) {
+        lastTickIndex = pointerIndex;
+        pointer.classList.remove('tick'); void pointer.offsetWidth; pointer.classList.add('tick');
+        if ($('lotSound').checked && t < .96) beep(1180, .035, 'square', .05);
+      }
+      if (t < 1) { requestAnimationFrame(frame); }
+      else { drawWheel(wheelRotation, pickedIndex); done(); }
+    };
+    requestAnimationFrame(frame);
+  }
+
+  // ---- 扭蛋機：小球翻滾 → 轉柄 → 膠囊掉落 → 彈開 ----
+  const gachaBalls = [];
+  (function buildGachaBalls() {
+    const globe = $('lotGachaGlobe');
+    for (let i = 0; i < 14; i += 1) {
+      const el = document.createElement('span');
+      el.className = 'lot-gacha-ball';
+      el.style.background = LOT_COLORS[i % LOT_COLORS.length];
+      globe.appendChild(el);
+      gachaBalls.push({ el, x: 20 + Math.random() * 110, y: 70 + Math.random() * 60, vx: 0, vy: 0 });
+      el.style.transform = `translate(${gachaBalls[i].x}px, ${gachaBalls[i].y}px)`;
+    }
+  })();
+  let gachaTumbleRaf = 0;
+  function gachaTumble(active) {
+    if (!active) { if (gachaTumbleRaf) cancelAnimationFrame(gachaTumbleRaf); gachaTumbleRaf = 0; return; }
+    const step = () => {
+      gachaBalls.forEach(ball => {
+        ball.vx += (Math.random() - .5) * 3.4;
+        ball.vy += (Math.random() - .5) * 3.4 + .5;
+        ball.vx *= .86; ball.vy *= .86;
+        ball.x += ball.vx; ball.y += ball.vy;
+        // 圓形玻璃罩邊界（圓心 77,77、半徑 62）
+        const dx = ball.x + 16 - 77, dy = ball.y + 16 - 77;
+        const dist = Math.hypot(dx, dy);
+        if (dist > 60) { ball.x -= dx / dist * (dist - 60); ball.y -= dy / dist * (dist - 60); ball.vx *= -.5; ball.vy *= -.5; }
+        ball.el.style.transform = `translate(${ball.x}px, ${ball.y}px)`;
+      });
+      gachaTumbleRaf = requestAnimationFrame(step);
+    };
+    step();
+  }
+  function runGacha(picked, done) {
+    const gacha = $('lotGacha');
+    gacha.classList.remove('dropped', 'opened');
+    const prize = $('lotGachaPrize');
+    prize.textContent = String(picked).length > 3 ? String(picked).slice(0, 3) : picked;
+    prize.style.fontSize = String(picked).length > 2 ? '15px' : '24px';
+    gacha.classList.add('shaking');
+    gachaTumble(true);
+    if ($('lotSound').checked) { let c = 0; const tickInt = setInterval(() => { beep(240 + Math.random() * 120, .05, 'square', .05); if (++c > 10) clearInterval(tickInt); }, 170); }
+    setTimeout(() => {
+      gacha.classList.remove('shaking');
+      gachaTumble(false);
+      gacha.classList.add('dropped');
+      if ($('lotSound').checked) beep(180, .22, 'square', .14);
+    }, 1900);
+    setTimeout(() => {
+      gacha.classList.add('opened');
+      if ($('lotSound').checked) beep(880, .14);
+    }, 2850);
+    setTimeout(done, 3250);
+  }
+
+  // ---- 抓娃娃機：移動 → 下爪 → 夾起 → 送到洞口投下 ----
+  /**
+   * 把「所有還沒抽到的」座號通通堆進機台：由下往上一層層疊成球池，
+   * 抽中的那顆一定放在最上層（爪子從上面夾，合理又好抓）。
+   */
+  function layoutClawBalls(picked) {
+    const container = $('lotClawBalls');
+    const pool = remainingPool();
+    const others = pool.filter(v => v !== picked);
+    for (let i = others.length - 1; i > 0; i -= 1) { const j = Math.floor(Math.random() * (i + 1)); [others[i], others[j]] = [others[j], others[i]]; }
+    const size = pool.length > 30 ? 24 : pool.length > 18 ? 28 : 34;
+    const frameW = 240, chuteW = 54, margin = 8;
+    const step = size + 2;
+    // 產生堆疊格位：最底層避開左側洞口，越往上層可用寬度不變、數量遞減看起來像山形
+    const slots = [];
+    let row = 0;
+    while (slots.length < pool.length) {
+      const rowLeft = row < 2 ? margin + chuteW : margin;   // 底部兩層讓開洞口
+      const cols = Math.floor((frameW - rowLeft - margin) / step);
+      const used = Math.max(1, cols - (row > 1 ? row - 1 : 0));  // 上層略窄成堆狀
+      const offset = rowLeft + (frameW - rowLeft - margin - used * step) / 2;
+      for (let c = 0; c < used && slots.length < pool.length + used; c += 1) {
+        slots.push({ x: offset + c * step + (Math.random() * 4 - 2), y: margin + row * Math.round(size * .82), row });
+      }
+      row += 1;
+      if (row > 8) break;
+    }
+    const needed = slots.slice(0, pool.length);
+    const topRow = Math.max(...needed.map(s => s.row));
+    const topSlots = needed.filter(s => s.row === topRow);
+    const pickedSlot = picked != null ? topSlots[Math.floor(Math.random() * topSlots.length)] : null;
+    let otherIndex = 0;
+    container.innerHTML = needed.map((slot, i) => {
+      const value = slot === pickedSlot ? picked : others[otherIndex++];
+      if (value == null) return '';
+      const label = String(value).length > 3 ? String(value).slice(0, 3) : value;
+      return `<span data-claw-value="${escapeHtml(value)}" style="left:${slot.x}px;bottom:${slot.y}px;width:${size}px;height:${size}px;font-size:${Math.round(size * .46)}px;background:${LOT_COLORS[i % LOT_COLORS.length]};z-index:${slot.row}">${escapeHtml(label)}</span>`;
+    }).join('');
+  }
+  function runClaw(picked, done) {
+    const claw = $('lotClaw');
+    const carriage = $('lotClawCarriage');
+    const arm = $('lotClawArm');
+    const held = $('lotClawHeld');
+    claw.classList.remove('closed');
+    held.style.display = 'none'; held.style.transition = ''; held.style.transform = 'translateX(-50%)'; held.style.opacity = '1';
+    layoutClawBalls(picked);
+    const frame = claw.querySelector('.lot-claw-frame');
+    const target = claw.querySelector(`[data-claw-value="${window.CSS && CSS.escape ? CSS.escape(picked) : picked}"]`);
+    const frameRect = frame.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    const dx = (targetRect.left + targetRect.width / 2) - (frameRect.left + frameRect.width / 2);
+    // 依球堆高度計算下爪深度：夾到目標球的上緣再深一點點
+    const armDepth = Math.max(60, Math.round(targetRect.top - frameRect.top) - 14 - 24 + 12);
+    const sound = $('lotSound').checked;
+    carriage.style.transform = `translateX(${dx}px)`;
+    if (sound) beep(392, .12);
+    setTimeout(() => { arm.style.height = armDepth + 'px'; if (sound) beep(320, .3, 'sine', .08); }, 1150);
+    setTimeout(() => {
+      claw.classList.add('closed');
+      target.style.opacity = '0';
+      held.style.background = target.style.background;
+      held.textContent = target.textContent;
+      held.style.display = 'flex';
+      if (sound) beep(660, .1, 'square', .1);
+    }, 2200);
+    setTimeout(() => { arm.style.height = '26px'; }, 2550);
+    setTimeout(() => { carriage.style.transform = 'translateX(-88px)'; }, 3600);
+    setTimeout(() => {
+      claw.classList.remove('closed');
+      held.style.transition = 'transform .5s cubic-bezier(.5,0,.8,.5), opacity .45s .1s';
+      held.style.transform = 'translateX(-50%) translateY(170px)';
+      held.style.opacity = '0';
+      if (sound) { beep(520, .08); setTimeout(() => beep(300, .16, 'square', .12), 320); }
+    }, 4750);
+    setTimeout(() => { carriage.style.transform = 'translateX(0)'; done(); }, 5350);
+  }
+
+  function revealLottery(picked) {
+    const result = $('lotResult');
+    const isNumber = /^\d+$/.test(picked);
+    result.innerHTML = isNumber ? `${escapeHtml(picked)}<small>號！🎉</small>` : `${escapeHtml(picked)}<small>🎉</small>`;
+    result.classList.add('reveal');
+    if (lotteryMode === 'wheel') $('lotWheelHub').textContent = isNumber ? picked : '🎉';
+    if ($('lotSound').checked) fanfare();
+    burstConfetti();
+    day.drawn.push(picked);
+    saveDay();
+    const remaining = remainingPool();
+    $('lotStatus').textContent = `剩 ${remaining.length} 個可抽`;
+    $('lotDrawnList').innerHTML = '已抽出：' + day.drawn.map(v => `<b>${escapeHtml(v)}</b>`).join('、');
+    if (lotteryMode !== 'wheel') drawWheel(wheelRotation);   // 轉盤保留停格畫面到下一次抽
+    lotteryBusy = false;
+  }
+  $('lotDrawButton').addEventListener('click', () => {
+    if (lotteryBusy) return;
+    const remaining = remainingPool();
+    if (!remaining.length) { showToast('都抽完了！按「重新開始」可以再來一輪。', true); return; }
+    const pickedIndex = Math.floor(Math.random() * remaining.length);
+    const picked = remaining[pickedIndex];
+    lotteryBusy = true;
+    const result = $('lotResult');
+    result.classList.remove('reveal');
+    result.innerHTML = '…';
+    if (REDUCED_MOTION) { setTimeout(() => revealLottery(picked), 350); return; }
+    if (lotteryMode === 'wheel') spinWheel(pickedIndex, remaining.length, () => revealLottery(picked));
+    else if (lotteryMode === 'gacha') runGacha(picked, () => revealLottery(picked));
+    else runClaw(picked, () => revealLottery(picked));
+  });
+  $('lotResetButton').addEventListener('click', () => {
+    if (lotteryBusy) return;
+    if (day.drawn.length && !window.confirm('清空已抽名單、重新開始？')) return;
+    day.drawn = []; saveDay();
+    $('lotResult').textContent = '？';
+    $('lotResult').classList.remove('reveal');
+    $('lotWheelHub').textContent = '🎯';
+    $('lotGacha').classList.remove('dropped', 'opened');
+    updateLotStatus();
+  });
+
+  // ================================================================
+  // ✅ 檢核板
+  // ================================================================
+  function checkNameOptions(selected) {
+    return [...config.checkNames.map(name =>
+      `<option value="${escapeHtml(name)}"${name === selected ? ' selected' : ''}>${escapeHtml(name)}</option>`),
+      `<option value="__custom__">✏️ 自訂輸入…</option>`].join('');
+  }
+  function renderCheckWall() {
+    const wall = $('checkWall');
+    if (!wall) return;
+    wall.innerHTML = day.boards.map((board, index) => {
+      const seats = activeSeats();
+      const doneCount = seats.filter(seat => board.done[seat]).length;
+      const cells = seats.map(seat => {
+        const done = !!board.done[seat];
+        const miss = board.showMiss && !done;
+        return `<button class="check-seat${done ? ' done' : ''}${miss ? ' miss' : ''}" type="button" data-check-board="${index}" data-check-seat="${seat}">${seat}</button>`;
+      }).join('');
+      return `<div class="check-card">
+        <div class="check-head">
+          <select data-check-name="${index}">${checkNameOptions(board.name)}</select>
+          <button class="board-remove" type="button" data-check-remove="${index}" title="移除">✕</button>
+        </div>
+        <div class="check-grid">${cells}</div>
+        <div class="check-actions">
+          <button class="ghost-button" type="button" data-check-reset="${index}" style="padding:6px 14px;font-size:13.5px">重設</button>
+          <button class="check-missing-btn" type="button" data-check-miss="${index}">${board.showMiss ? '關閉反查' : `未點 ${activeSeats().length - doneCount} 人`}</button>
+          <span class="status-text">已點 ${doneCount}／${seats.length}</span>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  $('checkAddButton').addEventListener('click', () => {
+    if (day.boards.length >= 4) { showToast('最多同時 4 面檢核板。', true); return; }
+    day.boards.push({ name: config.checkNames[0], done: {}, showMiss: false });
+    saveDay(); renderCheckWall();
+  });
+  $('checkNamesButton').addEventListener('click', () => {
+    const editor = $('checkNamesEditor');
+    editor.hidden = !editor.hidden;
+    if (!editor.hidden) $('checkNamesInput').value = config.checkNames.join('、');
+  });
+  $('checkNamesSaveButton').addEventListener('click', () => {
+    const names = $('checkNamesInput').value.split(/[、,，;；]+/).map(v => v.trim()).filter(Boolean).slice(0, 20);
+    if (names.length) { config.checkNames = names; saveConfig(); renderCheckWall(); showToast('常用名稱已更新。'); }
+    $('checkNamesEditor').hidden = true;
+  });
+  $('checkWall').addEventListener('click', event => {
+    const seatBtn = event.target.closest('[data-check-seat]');
+    if (seatBtn) {
+      const board = day.boards[Number(seatBtn.dataset.checkBoard)];
+      const seat = seatBtn.dataset.checkSeat;
+      if (board.done[seat]) delete board.done[seat]; else board.done[seat] = true;
+      saveDay(); renderCheckWall(); return;
+    }
+    const missBtn = event.target.closest('[data-check-miss]');
+    if (missBtn) {
+      const board = day.boards[Number(missBtn.dataset.checkMiss)];
+      board.showMiss = !board.showMiss;
+      saveDay(); renderCheckWall(); return;
+    }
+    const resetBtn = event.target.closest('[data-check-reset]');
+    if (resetBtn) {
+      const board = day.boards[Number(resetBtn.dataset.checkReset)];
+      board.done = {}; board.showMiss = false;
+      saveDay(); renderCheckWall(); return;
+    }
+    const removeBtn = event.target.closest('[data-check-remove]');
+    if (removeBtn) {
+      if (day.boards.length <= 1) { showToast('至少保留一面檢核板。', true); return; }
+      day.boards.splice(Number(removeBtn.dataset.checkRemove), 1);
+      saveDay(); renderCheckWall();
+    }
+  });
+  $('checkWall').addEventListener('change', event => {
+    const select = event.target.closest('[data-check-name]');
+    if (!select) return;
+    const board = day.boards[Number(select.dataset.checkName)];
+    if (select.value === '__custom__') {
+      const name = window.prompt('檢核板名稱：', board.name);
+      if (name && name.trim()) {
+        board.name = name.trim().slice(0, 12);
+        if (!config.checkNames.includes(board.name)) { config.checkNames.push(board.name); saveConfig(); }
+      }
+    } else {
+      board.name = select.value;
+    }
+    saveDay(); renderCheckWall();
+  });
+
+  // ================================================================
+  // 🏆 計分板
+  // ================================================================
+  function teamCount() { return Math.min(6, Math.max(2, Number(config.teamCount) || 4)); }
+  function ensureScores() {
+    while (day.scores.length < teamCount()) day.scores.push(0);
+  }
+  function renderScoreWall() {
+    const wall = $('scoreWall');
+    if (!wall) return;
+    ensureScores();
+    $('scoreTeamCount').value = String(teamCount());
+    wall.innerHTML = Array.from({ length: teamCount() }, (_, i) => {
+      const name = config.teamNames[i] || `第 ${i + 1} 組`;
+      return `<div class="score-card">
+        <span class="score-name" contenteditable="true" data-score-name="${i}" spellcheck="false">${escapeHtml(name)}</span>
+        <div class="score-value" id="scoreValue${i}">${day.scores[i] || 0}</div>
+        <div class="score-buttons">
+          <button class="score-plus" type="button" data-score-delta="1" data-score-team="${i}">＋</button>
+          <button class="score-minus" type="button" data-score-delta="-1" data-score-team="${i}">−</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  $('scoreTeamCount').addEventListener('change', () => {
+    config.teamCount = Number($('scoreTeamCount').value); saveConfig(); renderScoreWall();
+  });
+  $('scoreResetButton').addEventListener('click', () => {
+    if (!window.confirm('全部分數歸零？')) return;
+    day.scores = day.scores.map(() => 0); saveDay(); renderScoreWall();
+  });
+  $('scoreWall').addEventListener('click', event => {
+    const btn = event.target.closest('[data-score-team]');
+    if (!btn) return;
+    const i = Number(btn.dataset.scoreTeam);
+    const delta = Number(btn.dataset.scoreDelta);
+    ensureScores();
+    day.scores[i] = Math.max(0, (day.scores[i] || 0) + delta);
+    saveDay();
+    const value = $(`scoreValue${i}`);
+    value.textContent = day.scores[i];
+    value.classList.remove('bump'); void value.offsetWidth; value.classList.add('bump');
+    if ($('scoreSound').checked) beep(delta > 0 ? 740 : 262, .2, delta > 0 ? 'sine' : 'square');
+  });
+  $('scoreWall').addEventListener('blur', event => {
+    const nameEl = event.target.closest('[data-score-name]');
+    if (!nameEl) return;
+    const i = Number(nameEl.dataset.scoreName);
+    config.teamNames[i] = nameEl.textContent.trim().slice(0, 8) || `第 ${i + 1} 組`;
+    saveConfig();
+  }, true);
+
+  // ================================================================
+  // 👥 隨機分組
+  // ================================================================
+  $('groupGoButton').addEventListener('click', () => {
+    const pool = seatPool($('groupExcludeAbsent').checked);
+    if (pool.length < 2) { showToast('可分組的人數不足。', true); return; }
+    const size = Math.min(10, Math.max(2, Number($('groupSize').value) || 4));
+    const shuffled = pool.slice();
+    for (let i = shuffled.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    const groupCount = Math.max(1, Math.round(shuffled.length / size));
+    const base = Math.floor(shuffled.length / groupCount);
+    let remainder = shuffled.length % groupCount;
+    const groups = [];
+    let cursor = 0;
+    for (let g = 0; g < groupCount; g += 1) {
+      const take = base + (remainder > 0 ? 1 : 0);
+      if (remainder > 0) remainder -= 1;
+      groups.push(shuffled.slice(cursor, cursor + take));
+      cursor += take;
+    }
+    $('groupWall').innerHTML = groups.map((members, i) =>
+      `<div class="group-card" style="animation-delay:${i * 0.13}s">
+        <h4>第 ${i + 1} 組（${members.length} 人）</h4>
+        <div class="members">${members.map(m => `<span>${escapeHtml(m)}</span>`).join('')}</div>
+      </div>`).join('');
+    if ($('lotSound').checked) fanfare();
+  });
+
+  // ================================================================
+  // 🔇 安靜偵測
+  // ================================================================
+  let quietStream = null, quietCtx = null, quietRaf = 0, overSince = 0, overlayCooldown = 0;
+  $('quietThreshold').value = String(config.quietThreshold || 60);
+  $('quietThresholdValue').textContent = $('quietThreshold').value;
+  $('quietLine').style.left = $('quietThreshold').value + '%';
+  $('quietThreshold').addEventListener('input', () => {
+    config.quietThreshold = Number($('quietThreshold').value); saveConfig();
+    $('quietThresholdValue').textContent = $('quietThreshold').value;
+    $('quietLine').style.left = $('quietThreshold').value + '%';
+  });
+  async function startQuiet() {
+    try {
+      quietStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (e) {
+      showToast('無法使用麥克風：請在瀏覽器網址列允許麥克風權限。', true);
+      return;
+    }
+    quietCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = quietCtx.createMediaStreamSource(quietStream);
+    const analyser = quietCtx.createAnalyser();
+    analyser.fftSize = 1024;
+    source.connect(analyser);
+    const data = new Uint8Array(analyser.fftSize);
+    $('quietStartButton').textContent = '⏹ 停止偵測';
+    const tick = () => {
+      analyser.getByteTimeDomainData(data);
+      let sum = 0;
+      for (let i = 0; i < data.length; i += 1) { const v = (data[i] - 128) / 128; sum += v * v; }
+      const level = Math.min(100, Math.round(Math.sqrt(sum / data.length) * 320));
+      $('quietBar').style.width = level + '%';
+      const threshold = Number($('quietThreshold').value);
+      const face = $('quietFace');
+      if (level < threshold - 15) face.textContent = '😊 很安靜，繼續保持！';
+      else if (level < threshold) face.textContent = '😐 有點聲音囉…';
+      else face.textContent = '😫 太吵了！';
+      const now = Date.now();
+      if (level >= threshold) {
+        if (!overSince) overSince = now;
+        if (now - overSince > 700 && now > overlayCooldown) {
+          overlayCooldown = now + 3200;
+          const overlay = document.createElement('div');
+          overlay.className = 'quiet-overlay';
+          overlay.textContent = '🤫 太吵囉！';
+          document.body.appendChild(overlay);
+          setTimeout(() => overlay.remove(), 1500);
+          beep(196, .5, 'sawtooth', .1);
+        }
+      } else {
+        overSince = 0;
+      }
+      quietRaf = requestAnimationFrame(tick);
+    };
+    tick();
+  }
+  function stopQuiet() {
+    if (quietRaf) cancelAnimationFrame(quietRaf); quietRaf = 0;
+    if (quietStream) { quietStream.getTracks().forEach(t => t.stop()); quietStream = null; }
+    if (quietCtx) { try { quietCtx.close(); } catch (e) {} quietCtx = null; }
+    const btn = $('quietStartButton');
+    if (btn) btn.textContent = '🎙 開始偵測';
+    const face = $('quietFace');
+    if (face && !quietStream) face.textContent = '😴 尚未開始偵測';
+    const bar = $('quietBar');
+    if (bar) bar.style.width = '0%';
+    overSince = 0;
+  }
+  $('quietStartButton').addEventListener('click', () => { quietStream ? stopQuiet() : startQuiet(); });
+
+  // ================================================================
+  // 📝 定評小幫手
+  // ================================================================
+  (function initExam() {
+    const extras = (typeof enabledSubjects === 'function' ? enabledSubjects() : [])
+      .filter(name => !EXAM_BASE_SUBJECTS.includes(name) && name !== '聯絡簿' && name !== '通知單');
+    const subjects = EXAM_BASE_SUBJECTS.concat(extras);
+    $('examSubject').innerHTML = subjects.map(name =>
+      `<option value="${escapeHtml(name)}"${name === config.examSubject ? ' selected' : ''}>${escapeHtml(name)}</option>`).join('');
+    $('examSubject').addEventListener('change', () => { config.examSubject = $('examSubject').value; saveConfig(); });
+    if (config.examPeriod) $('examPeriod').value = config.examPeriod;
+    $('examPeriod').addEventListener('change', () => { config.examPeriod = $('examPeriod').value; saveConfig(); });
+    const weekdayLabels = ['日', '一', '二', '三', '四', '五', '六'];
+    const tickExam = () => {
+      const now = new Date();
+      $('examClock').textContent = now.toLocaleTimeString('zh-TW', { hour12: false });
+      $('examDate').textContent = `${now.getMonth() + 1}月 ${now.getDate()}日　星期${weekdayLabels[now.getDay()]}`;
+    };
+    tickExam();
+    window.setInterval(tickExam, 1000);
+    const syncExam = () => {
+      const expected = activeSeats().length;
+      const absent = [];
+      activeSeats().forEach(seat => {
+        const status = state.attendance[seat] || '';
+        if (['病假', '事假', '未到'].includes(status)) absent.push({ seat, status });
+      });
+      $('examExpected').value = expected;
+      $('examPresent').value = expected - absent.length;
+      $('examAbsent').innerHTML = absent.length
+        ? absent.map(item => `<span title="${escapeHtml(item.status)}">${item.seat}號</span>`).join('')
+        : '<span class="ok-all">全到 🎉</span>';
+    };
+    $('examSyncButton').addEventListener('click', syncExam);
+    syncExam();
+    const examBoard = document.querySelector('.exam-board');
+    $('examFullscreenButton').addEventListener('click', () => {
+      if (document.fullscreenElement) document.exitFullscreen();
+      else if (examBoard.requestFullscreen) examBoard.requestFullscreen().catch(() => showToast('這個瀏覽器不支援全螢幕。', true));
+    });
+    document.addEventListener('fullscreenchange', () => {
+      $('examFullscreenButton').textContent = document.fullscreenElement ? '⛶ 離開全螢幕' : '⛶ 全螢幕播放';
+    });
+  })();
+
+  // ================================================================
+  // 顯示縮放：聯絡本字級（Ａ−／Ａ＋）與座號大小
+  // ================================================================
+  const scale = loadJson(SCALE_KEY, {});
+  scale.chalk = Number(scale.chalk) || 1;
+  scale.seat = Number(scale.seat) || 1;
+  function applyScale() {
+    document.documentElement.style.setProperty('--chalk-scale', scale.chalk);
+    document.documentElement.style.setProperty('--seat-scale', scale.seat);
+    try { localStorage.setItem(SCALE_KEY, JSON.stringify(scale)); } catch (e) {}
+  }
+  function makeScaleButtons(label, key) {
+    const holder = document.createElement('span');
+    holder.className = 'scale-btns';
+    holder.innerHTML = `<button type="button" title="${label}縮小">${label}−</button><button type="button" title="${label}放大">${label}＋</button>`;
+    const [minus, plus] = holder.querySelectorAll('button');
+    minus.addEventListener('click', () => { scale[key] = Math.max(0.7, Math.round((scale[key] - 0.15) * 100) / 100); applyScale(); });
+    plus.addEventListener('click', () => { scale[key] = Math.min(1.75, Math.round((scale[key] + 0.15) * 100) / 100); applyScale(); });
+    return holder;
+  }
+  const contactRefresh = $('contactRefreshButton');
+  if (contactRefresh) contactRefresh.parentNode.insertBefore(makeScaleButtons('字', 'chalk'), contactRefresh);
+  const rollcallHint = $('rollcallHint');
+  if (rollcallHint) rollcallHint.parentNode.appendChild(makeScaleButtons('號', 'seat'));
+  applyScale();
+
+  // 初始渲染
+  updateLotStatus();
+  renderCheckWall();
+  renderScoreWall();
+})();
+</script>
 </body>
 </html>

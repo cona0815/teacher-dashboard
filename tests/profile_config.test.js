@@ -311,6 +311,22 @@ assert.doesNotMatch(morningHtml, /placeholder="[^"]*姓名/, "晨間大屏不得
 assert.match(indexHtml, /grade6RollcallStats/, "工作台應保存大屏統計快取");
 assert.match(indexHtml, /rollcallBadgeFor\(key\)/, "工作台日曆應顯示出缺與缺交摘要");
 
+// 班級工具（純本機）與說明頁契約
+for (const tool of ["抽籤機", "檢核板", "計分板", "隨機分組", "安靜偵測", "定評小幫手", "排除今日缺席"]) {
+  assert.match(morningHtml, new RegExp(tool), `班級工具缺少「${tool}」`);
+}
+assert.doesNotMatch(
+  morningHtml.slice(morningHtml.indexOf("班級工具（純本機）＋顯示縮放")),
+  /callGas\(/,
+  "班級工具腳本不得呼叫雲端（純本機原則）",
+);
+const aboutHtml = fs.readFileSync(path.join(projectRoot, "About.html"), "utf8");
+for (const aboutFeature of ["使用情境", "授權逐條", "LINE小幫手備份", "只用座號", "DRIVE_BACKUP_TYPES", "金鑰權限邊界"]) {
+  assert.match(aboutHtml, new RegExp(aboutFeature), `說明頁缺少「${aboutFeature}」`);
+}
+assert.match(indexHtml, /About\.html/, "工作台資安分頁應連到說明頁");
+assert.match(morningHtml, /About\.html/, "大屏設定應連到說明頁");
+
 const netlifyConfig = fs.readFileSync(path.join(projectRoot, "netlify.toml"), "utf8");
 for (const header of ["Content-Security-Policy", "X-Content-Type-Options", "Referrer-Policy", "Permissions-Policy"]) {
   assert.match(netlifyConfig, new RegExp(header), `Netlify 應設定 ${header}`);

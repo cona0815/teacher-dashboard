@@ -591,6 +591,23 @@
     .line-inbox-original { color: var(--muted); font-size: 11px; white-space: pre-wrap; word-break: break-word; }
     .line-inbox-controls { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
     .line-inbox-controls .select, .line-inbox-controls .input { max-width: 160px; min-height: 32px; padding: 4px 8px; font-size: 11px; }
+    /* 聯絡本直覺化編輯：左逐項編輯、右迷你黑板即時預覽 */
+    .cb-layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(280px, 1fr); gap: 16px; align-items: start; margin-top: 8px; }
+    @media (max-width: 860px) { .cb-layout { grid-template-columns: 1fr; } }
+    .cb-items { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; min-height: 44px; }
+    .cb-item { display: flex; align-items: center; gap: 6px; border: 1.5px solid var(--line); border-radius: 11px; background: #fffefb; padding: 6px 8px 6px 12px; }
+    .cb-item-no { flex: 0 0 auto; font-size: 13px; font-weight: 900; color: var(--primary-strong); min-width: 20px; }
+    .cb-item-text { flex: 1; min-width: 0; border: 0; background: transparent; font-family: inherit; font-size: 14px; color: var(--ink); padding: 4px 2px; }
+    .cb-item-text:focus { outline: 2px solid var(--primary); border-radius: 6px; background: #fff; }
+    .cb-item button { flex: 0 0 auto; border: 1.2px solid var(--line); background: var(--surface); border-radius: 7px; width: 26px; height: 26px; font-size: 12px; font-weight: 900; cursor: pointer; color: var(--muted); line-height: 1; }
+    .cb-item button:hover { color: var(--primary-strong); border-color: var(--primary); }
+    .cb-item .cb-del:hover { color: #a34339; border-color: #a34339; }
+    .cb-empty { color: var(--muted); font-size: 13px; padding: 10px 4px; }
+    .cb-board { background: linear-gradient(145deg, #96683c, #7c5330); border-radius: 14px; padding: 10px; box-shadow: 0 3px 8px rgba(40,30,15,.3); }
+    .cb-board-in { background: #2e4a3d; border-radius: 8px; padding: 12px 16px 16px; color: #f4f1e6; box-shadow: inset 0 0 20px rgba(0,0,0,.28); }
+    .cb-board-date { text-align: right; font-size: 13px; font-weight: 800; letter-spacing: 1px; border-bottom: 1px solid rgba(244,241,230,.35); padding-bottom: 6px; margin-bottom: 10px; }
+    .cb-board-text { font-size: 17px; font-weight: 700; line-height: 1.85; white-space: pre-wrap; word-break: break-word; min-height: 120px; }
+    .cb-board-text .dim { color: rgba(244,241,230,.5); font-size: 14px; }
     .calendar-rollcall { display: block; width: 100%; margin: 2px 0; padding: 2px 5px; border: 0; border-radius: 7px; background: #fdeee9; color: #8a3d31; font-size: 10px; font-weight: 800; text-align: left; cursor: pointer; }
     .calendar-rollcall.all-clear { background: #e3f6ec; color: #1c6b45; }
     /* 摘要卡改用清楚的 emoji 圖示 */
@@ -1538,23 +1555,45 @@
         </div>
       </div>
       <div class="secretary-notes-body">
-        <div class="secretary-note-actions" style="align-items:center;flex-wrap:wrap">
-          <input class="input" id="contactBookDate" type="date" style="max-width:170px">
-          <button class="mini-button" type="button" id="contactBookLoadButton">讀取</button>
-          <button class="mini-button" type="button" id="contactBookSaveButton">儲存到雲端</button>
-          <span class="secretary-note-meta" id="contactBookMeta">選日期後按「讀取」。儲存後大屏一分鐘內自動更新。</span>
+        <div class="secretary-note-actions cb-datebar" style="align-items:center;flex-wrap:wrap">
+          <button class="mini-button" type="button" id="cbPrevDayButton">‹ 前一天</button>
+          <input class="input" id="contactBookDate" type="date" style="max-width:160px">
+          <strong id="cbWeekday" style="font-size:13px;color:var(--primary-strong)"></strong>
+          <button class="mini-button" type="button" id="cbNextDayButton">後一天 ›</button>
+          <button class="mini-button" type="button" id="cbTodayButton">回今天</button>
+          <button class="mini-button" type="button" id="contactBookLoadButton">🔄 重新讀取</button>
+          <span class="secretary-note-meta" id="contactBookMeta">切換日期會自動讀取；儲存後大屏一分鐘內自動更新。</span>
         </div>
-        <div class="secretary-note-actions contact-quick-add" style="align-items:center;flex-wrap:wrap;margin-top:8px">
-          <select class="select" id="contactCategorySelect" style="max-width:120px"></select>
-          <select class="select" id="contactPresetSelect" style="max-width:220px"></select>
-          <input class="input" id="contactExtraInput" maxlength="60" placeholder="補充（頁數、範圍、金額…）" style="max-width:220px">
-          <button class="mini-button" type="button" id="contactAddLineButton">＋ 加入</button>
-          <button class="mini-button" type="button" id="contactRenumberButton">重新編號</button>
+        <div class="cb-layout">
+          <div class="cb-edit">
+            <div class="secretary-note-actions contact-quick-add" style="align-items:center;flex-wrap:wrap">
+              <select class="select" id="contactCategorySelect" style="max-width:110px"></select>
+              <select class="select" id="contactPresetSelect" style="max-width:200px"></select>
+              <input class="input" id="contactExtraInput" maxlength="60" placeholder="補充（頁數、範圍…）" style="max-width:180px">
+              <button class="mini-button" type="button" id="contactAddLineButton">＋ 加入</button>
+              <button class="mini-button" type="button" id="contactRenumberButton" hidden>重新編號</button>
+            </div>
+            <div class="cb-items" id="contactItemList"></div>
+            <div class="secretary-note-actions" style="align-items:center;flex-wrap:wrap;margin-top:8px">
+              <button class="mini-button" type="button" id="cbAddCustomButton">＋ 自行輸入一行</button>
+              <details style="font-size:12px">
+                <summary style="cursor:pointer;color:var(--muted)">純文字模式（進階）</summary>
+                <textarea class="textarea" id="contactBookInput" maxlength="5000" rows="6" style="margin-top:6px" placeholder="1. 數習 p.20&#10;2. 帶直笛"></textarea>
+              </details>
+            </div>
+            <button class="button button-dark" type="button" id="contactBookSaveButton" style="margin-top:10px">💾 儲存到雲端（大屏黑板一分鐘內更新）</button>
+          </div>
+          <div class="cb-preview">
+            <div class="cb-board"><div class="cb-board-in">
+              <div class="cb-board-date" id="cbPreviewDate"></div>
+              <div class="cb-board-text" id="cbPreviewText"></div>
+            </div></div>
+            <div class="secretary-note-meta" style="text-align:center;margin-top:6px">👆 存出去後，教室大屏的黑板就是這個樣子</div>
+          </div>
         </div>
-        <textarea class="textarea" id="contactBookInput" maxlength="5000" rows="7" placeholder="今日聯絡本：&#10;1. 數習 p.20&#10;2. 帶直笛&#10;3. 明天校外教學穿運動服"></textarea>
-        <div class="secretary-note-actions" style="align-items:center;flex-wrap:wrap;margin-top:10px">
+        <div class="secretary-note-actions" style="align-items:center;flex-wrap:wrap;margin-top:12px">
           <strong style="font-size:12px;color:var(--primary-strong)">📚 歷史清單</strong>
-          <button class="mini-button" type="button" id="contactBookListButton">載入清單</button>
+          <button class="mini-button" type="button" id="contactBookListButton">重新整理</button>
           <button class="mini-button" type="button" id="contactBookCopyPrevButton">複製最近一筆到目前日期</button>
           <span class="secretary-note-meta" id="contactBookListMeta"></span>
         </div>
@@ -2057,6 +2096,7 @@
 
       <section class="settings-panel" data-settings-panel="security">
         <p class="settings-note">本系統採本機優先：不需登入、不需 GAS。任務與設定預設留在目前瀏覽器；桌面小綿助資料留在目前 Windows 帳號的 AppData。</p>
+        <p style="margin:0 0 12px"><a class="settings-link" href="About.html" target="_blank" rel="noopener"><strong>📚 完整版：系統說明與資安（含使用情境教學、每個授權的逐條白話解釋）→</strong></a>　可直接把該頁連結傳給同事或資訊組長。</p>
         <div class="backup-grid">
           <article class="backup-card"><h3>網頁資料</h3><p>任務、教學進度、記事與偏好以瀏覽器本機儲存保存。不同瀏覽器、不同 Windows 帳號或不同網站網域各自獨立；清除網站資料前請先下載 JSON 備份。</p></article>
           <article class="backup-card"><h3>小綿助本機橋接</h3><p>桌面程式只綁定 <code>127.0.0.1:8767</code>，不接受區域網路或外網直接連入；限制請求來源、方法與 5 MB 大小，且不提供任意檔案路徑讀取。</p></article>
@@ -4280,12 +4320,57 @@
       lines.push(`${lines.length + 1}. ${text}`);
       input.value = lines.join('\n');
       $('contactExtraInput').value = '';
+      renderContactVisual();
     }
 
     function renumberContactBookLines() {
       const input = $('contactBookInput');
       const lines = input.value.split('\n').map(line => line.replace(/^\s*\d+[\.、]\s*/, '').trim()).filter(Boolean);
       input.value = lines.map((line, index) => `${index + 1}. ${line}`).join('\n');
+      renderContactVisual();
+    }
+
+    // ---- 聯絡本直覺化：逐項編輯列 + 迷你黑板即時預覽 ----
+    const CB_WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六'];
+    function cbLines() {
+      return $('contactBookInput').value.split('\n')
+        .map(line => line.replace(/^\s*\d+[\.、]\s*/, '').trim()).filter(Boolean);
+    }
+    function cbWrite(lines) {
+      $('contactBookInput').value = lines.map((line, i) => `${i + 1}. ${line}`).join('\n');
+      renderContactVisual();
+    }
+    function renderContactVisual() {
+      const lines = cbLines();
+      const list = $('contactItemList');
+      if (list) {
+        list.innerHTML = lines.length ? lines.map((text, i) => `
+          <div class="cb-item" data-cb-index="${i}">
+            <span class="cb-item-no">${i + 1}.</span>
+            <input class="cb-item-text" value="${escapeHtml(text)}" maxlength="120">
+            <button type="button" class="cb-up" title="上移">↑</button>
+            <button type="button" class="cb-down" title="下移">↓</button>
+            <button type="button" class="cb-del" title="刪除">✕</button>
+          </div>`).join('')
+          : '<div class="cb-empty">還沒有內容——用上面的下拉快速加入，或按「＋ 自行輸入一行」。</div>';
+      }
+      const dateValue = $('contactBookDate')?.value;
+      const d = dateValue ? new Date(dateValue + 'T12:00:00') : new Date();
+      if ($('cbWeekday')) $('cbWeekday').textContent = `週${CB_WEEKDAYS[d.getDay()]}`;
+      if ($('cbPreviewDate')) $('cbPreviewDate').textContent = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 星期${CB_WEEKDAYS[d.getDay()]}`;
+      if ($('cbPreviewText')) {
+        $('cbPreviewText').innerHTML = lines.length
+          ? lines.map((line, i) => escapeHtml(`${i + 1}. ${line}`)).join('\n')
+          : '<span class="dim">（黑板目前是空的）</span>';
+      }
+    }
+    function cbShiftDay(offset) {
+      const input = $('contactBookDate');
+      const base = input.value || calendarDateKey(new Date());
+      const d = new Date(base + 'T12:00:00');
+      d.setDate(d.getDate() + offset);
+      input.value = calendarDateKey(d);
+      loadContactBookEntry();
     }
     async function loadContactBookEntry() {
       const date = $('contactBookDate')?.value;
@@ -4294,11 +4379,13 @@
       try {
         const result = await callLineBridge('contactbook_get', { date });
         $('contactBookInput').value = result.text || '';
+        renderContactVisual();
         const sourceLabel = result.source === 'teacher' ? '工作台' : result.source === 'classroom' ? '教室大屏' : result.source === 'line' ? 'LINE' : '';
         $('contactBookMeta').textContent = result.updatedAt
           ? `最後更新 ${new Date(result.updatedAt).toLocaleString('zh-TW')}（${sourceLabel}）`
           : '這一天還沒有聯絡本內容。';
       } catch (error) {
+        renderContactVisual();
         $('contactBookMeta').textContent = `讀取失敗：${error.message}`;
       }
     }
@@ -4360,6 +4447,7 @@
       try {
         const result = await callLineBridge('contactbook_get', { date: target.date });
         $('contactBookInput').value = result.text || '';
+        renderContactVisual();
         showToast(`已把 ${target.date} 的內容複製到編輯區（日期 ${$('contactBookDate').value}），修改後記得儲存。`);
       } catch (error) {
         showToast(error.message || '複製失敗', true);
@@ -4380,6 +4468,48 @@
         renderContactPresetOptions();
       });
       $('contactBookLoadButton')?.addEventListener('click', loadContactBookEntry);
+      // 直覺化編輯：日期快切自動讀取、項目列操作、純文字同步預覽
+      $('cbPrevDayButton')?.addEventListener('click', () => cbShiftDay(-1));
+      $('cbNextDayButton')?.addEventListener('click', () => cbShiftDay(1));
+      $('cbTodayButton')?.addEventListener('click', () => { $('contactBookDate').value = calendarDateKey(new Date()); loadContactBookEntry(); });
+      contactDate?.addEventListener('change', loadContactBookEntry);
+      $('cbAddCustomButton')?.addEventListener('click', () => {
+        const lines = cbLines();
+        lines.push('新項目');
+        cbWrite(lines);
+        const inputs = $('contactItemList').querySelectorAll('.cb-item-text');
+        const last = inputs[inputs.length - 1];
+        if (last) { last.focus(); last.select(); }
+      });
+      $('contactItemList')?.addEventListener('change', event => {
+        const field = event.target.closest('.cb-item-text');
+        if (!field) return;
+        const index = Number(field.closest('.cb-item').dataset.cbIndex);
+        const lines = cbLines();
+        const value = field.value.trim();
+        if (value) lines[index] = value; else lines.splice(index, 1);
+        cbWrite(lines);
+      });
+      $('contactItemList')?.addEventListener('click', event => {
+        const button = event.target.closest('button');
+        if (!button) return;
+        const index = Number(button.closest('.cb-item').dataset.cbIndex);
+        const lines = cbLines();
+        if (button.classList.contains('cb-del')) lines.splice(index, 1);
+        else if (button.classList.contains('cb-up') && index > 0) [lines[index - 1], lines[index]] = [lines[index], lines[index - 1]];
+        else if (button.classList.contains('cb-down') && index < lines.length - 1) [lines[index + 1], lines[index]] = [lines[index], lines[index + 1]];
+        else return;
+        cbWrite(lines);
+      });
+      $('contactBookInput')?.addEventListener('input', renderContactVisual);
+      // 第一次打開聯絡本面板：自動讀今天＋載入歷史清單
+      document.querySelector('[data-toolbox-target="contactBookSection"]')?.addEventListener('click', () => {
+        if (!wireLineBridgeUi.cbOpened) {
+          wireLineBridgeUi.cbOpened = true;
+          if (lineBridgeState.settings.enabled) { loadContactBookEntry(); loadContactBookList(); }
+        }
+      });
+      renderContactVisual();
       $('contactBookSaveButton')?.addEventListener('click', async () => { await saveContactBookEntry(); if (contactBookHistory.length) loadContactBookList(); });
       $('contactBookListButton')?.addEventListener('click', loadContactBookList);
       $('contactBookCopyPrevButton')?.addEventListener('click', copyLatestContactBookEntry);

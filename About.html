@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <title>系統說明與資安｜教師工作台</title>
+  <style>
+    :root { --bg:#f3f6f4; --surface:#fff; --ink:#1c302d; --muted:#657570; --line:#d5e1dc; --primary:#1f514a; --primary-strong:#173f3a; --soft:#e8f2ee; --gold:#b9852f; --gold-soft:#fff7e6; --danger:#a34339; --ok:#1d9e5f; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:"Microsoft JhengHei","Noto Sans TC",sans-serif; background:var(--bg); color:var(--ink); line-height:1.9; font-size:16px; }
+    header { background:var(--primary-strong); color:#fff; padding:28px 20px; }
+    .wrap { max-width:860px; margin:0 auto; padding:0 16px; }
+    header h1 { font-size:26px; }
+    header p { opacity:.9; margin-top:6px; font-size:15px; }
+    nav.toc { background:var(--surface); border-bottom:2px solid var(--line); padding:10px 0; position:sticky; top:0; z-index:10; }
+    nav.toc .wrap { display:flex; gap:8px; flex-wrap:wrap; }
+    nav.toc a { text-decoration:none; color:var(--primary-strong); font-weight:800; font-size:13px; background:var(--soft); border-radius:999px; padding:5px 13px; }
+    main { padding:26px 0 80px; }
+    section { background:var(--surface); border:2px solid var(--line); border-radius:16px; padding:22px 24px; margin:0 16px 22px; }
+    @media (min-width:900px){ section{ margin-left:auto; margin-right:auto; max-width:860px; } }
+    h2 { color:var(--primary-strong); font-size:22px; margin-bottom:6px; }
+    h3 { color:var(--primary-strong); font-size:17px; margin:20px 0 6px; }
+    .lead { color:var(--muted); font-size:14px; margin-bottom:10px; }
+    .scene { border:1.5px solid var(--line); border-radius:13px; padding:13px 16px; margin:12px 0; background:#fbfaf6; }
+    .scene h4 { font-size:16px; color:var(--primary-strong); margin-bottom:5px; }
+    .scene .where { display:inline-block; font-size:11.5px; font-weight:900; border-radius:999px; padding:1px 10px; margin-left:8px; vertical-align:2px; background:var(--soft); color:var(--primary-strong); }
+    .scene p { font-size:14.5px; margin:4px 0; }
+    .ex { background:var(--gold-soft); border-radius:9px; padding:7px 12px; font-size:13.5px; margin-top:7px; }
+    .ex::before { content:"👉 例："; font-weight:900; color:var(--gold); }
+    table { width:100%; border-collapse:collapse; font-size:14px; margin:10px 0; }
+    th,td { border:1px solid var(--line); padding:8px 10px; text-align:left; vertical-align:top; }
+    th { background:var(--soft); white-space:nowrap; }
+    code { font-family:Consolas,monospace; font-size:.92em; background:var(--soft); border-radius:5px; padding:1px 6px; }
+    .warn { background:var(--gold-soft); border:1.5px solid #d9c58e; border-radius:12px; padding:10px 14px; margin:10px 0; font-size:14px; }
+    .ok { background:#e3f6ec; border:1.5px solid #9fd4b8; border-radius:12px; padding:10px 14px; margin:10px 0; font-size:14px; }
+    figure { margin:14px 0; background:#fbfaf6; border:1.5px solid var(--line); border-radius:12px; padding:14px 12px; overflow-x:auto; }
+    figure svg { width:100%; height:auto; min-width:560px; display:block; font-family:"Microsoft JhengHei","Noto Sans TC",sans-serif; color:var(--ink); }
+    figcaption { margin-top:8px; font-size:13px; color:var(--muted); text-align:center; }
+    a { color:var(--primary-strong); }
+    ul,ol { padding-left:22px; } li { margin:4px 0; }
+    .perm { border:2px solid var(--line); border-radius:13px; margin:14px 0; overflow:hidden; }
+    .perm-head { background:var(--soft); padding:10px 16px; font-weight:900; color:var(--primary-strong); font-size:15.5px; }
+    .perm-body { padding:12px 16px; font-size:14.5px; }
+    .perm-body dt { font-weight:900; color:var(--gold); margin-top:8px; font-size:13px; }
+    .perm-body dd { margin:2px 0 0 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>📚 系統說明與資安</h1>
+      <p>這一頁回答兩件事：<strong>這套系統每天怎麼用</strong>（依情境、附實例），以及<strong>你的資料到底在哪裡、每個授權在做什麼</strong>（逐條白話）。可直接把本頁連結傳給同事或資訊組長。</p>
+    </div>
+  </header>
+
+  <nav class="toc"><div class="wrap">
+    <a href="#overview">系統是什麼</a>
+    <a href="#scenes">📖 使用情境教學</a>
+    <a href="#where">資料在哪裡</a>
+    <a href="#perms">🔐 授權逐條說明</a>
+    <a href="#keys">金鑰邊界</a>
+    <a href="#faq">常見疑慮 QA</a>
+  </div></nav>
+
+  <main>
+    <section id="overview">
+      <h2>🧭 系統是什麼：三層，用多少裝多少</h2>
+      <table>
+        <tr><th>層級</th><th>裝什麼</th><th>做什麼</th></tr>
+        <tr><td>① 工作台網頁</td><td>不用裝，開網址就能用</td><td>任務、日曆、教學進度、記事、聯絡本管理、備份</td></tr>
+        <tr><td>② 晨間大屏</td><td>教室電腦開網址</td><td>點名、收作業、黑板聯絡本、班級工具（抽籤、檢核、計分、分組、安靜偵測、定評小幫手）、統計</td></tr>
+        <tr><td>③ LINE 小幫手</td><td>部署一次（見<a href="Install.html">安裝教學</a>）</td><td>LINE 傳文字／語音／照片建任務、寫聯絡本、推播簡報、家長訊息草稿、代課包、檔案歸檔</td></tr>
+      </table>
+      <p class="lead">核心設計：<strong>資料正本在你自己手上</strong>——工作台資料存你的瀏覽器，雲端部分存你自己的 Google 帳號。沒有中央伺服器，開發者收不到、也看不到任何一位老師的資料。</p>
+    </section>
+
+    <section id="scenes">
+      <h2>📖 使用情境教學：老師的一天</h2>
+      <p class="lead">照時間軸排列；每個情境都附具體例子。標籤代表在哪個裝置操作。</p>
+
+      <div class="scene"><h4>🌙 前一晚｜把明天的聯絡本先寫好<span class="where">工作台</span></h4>
+        <p>教師工具箱 → 聯絡本 → 日期選<strong>明天</strong> → 用快速輸入下拉組內容 → 「儲存到雲端」。明早大屏一開機，黑板就自動顯示。</p>
+        <div class="ex">分類選「作業」→ 項目選「國習 P.」→ 補充欄打「20-21」→ 按「＋加入」→ 出現「1. 國習 P.20-21」；再加「帶直笛」「明天國語聽寫」，儲存。</div>
+      </div>
+
+      <div class="scene"><h4>🌅 早上 7:50｜教室大屏開機就緒<span class="where">大屏</span></h4>
+        <p>大屏自動顯示今天的聯絡本（字太小就按「字＋」放大）。學生陸續到校——<strong>不用點「到」</strong>，只點例外：請假的點成病假／事假。</p>
+        <div class="ex">08:00 後才進教室的學生點「到校」會自動記為遲到（大屏不顯示，只有老師的 LINE 與統計看得到）；08:05 還空白的座號自動轉「未到」；08:08 出缺結果自動推播到你的 LINE。</div>
+      </div>
+
+      <div class="scene"><h4>📚 早自習｜收作業<span class="where">大屏</span></h4>
+        <p>作業繳交 → 選科目＋作業名稱（可加補充）→「＋新增收件版面」→ 按「全班繳交」一鍵全綠 → 把沒交的點回缺交 → 「📤 送出」。</p>
+        <div class="ex">「國語」＋「習作」＋「11-15」→ 版面「國語／習作 11-15」；3 號 7 號沒交就點他們兩下取消。08:40 各科繳交情況自動推播 LINE。</div>
+      </div>
+
+      <div class="scene"><h4>🎓 課堂中｜班級經營小工具<span class="where">大屏</span></h4>
+        <p>「🧰 班級工具」分頁：抽籤機（轉盤／扭蛋／抓娃娃，抽完不放回、可排除今日缺席）、小組計分板、隨機分組、安靜偵測。全部只存教室電腦，不進任何統計。</p>
+        <div class="ex">抽人回答：勾「排除今日缺席」→ 按「🎯 抽！」→ 轉盤轉 3 秒 →「17 號！🎉」。定期評量日改用「📝 定評小幫手」：大時鐘＋科目下拉＋按「從點名帶入」自動填應到／實到／未到。</div>
+      </div>
+
+      <div class="scene"><h4>🖊 下課十分鐘｜批改與補交<span class="where">平板或大屏</span></h4>
+        <p>拿平板開同一個大屏網址 → 「作業補交」分頁：誰補交了就點那一筆的「完成」，<strong>即時寫回雲端</strong>，教室大屏重新整理就同步。需要訂正的用「作業訂正」分頁登記。</p>
+      </div>
+
+      <div class="scene"><h4>🚶 走廊上想到一件事<span class="where">手機 LINE</span></h4>
+        <p>直接打字或按著麥克風講給 LINE 小幫手聽，AI 自動整理成任務草稿；回到電腦在工作台「LINE 收件匣」按「轉為任務」確認。</p>
+        <div class="ex">傳「下週三前要交校外教學調查表」→ 小幫手回：任務「繳交校外教學調查表」、到期日自動算好、主軸「行政」。傳錯了打「撤回」即可。</div>
+      </div>
+
+      <div class="scene"><h4>📄 收到通知單<span class="where">手機 LINE</span></h4>
+        <p>拍照傳給小幫手：AI 讀出重點、自動存進你雲端硬碟的「LINE小幫手備份」並依內容分類命名。接著傳「照片轉聯絡本」，重點直接寫進今天的黑板。</p>
+        <div class="ex">之後要找：傳「找檔案 校外教學」→ 附上雲端連結。</div>
+      </div>
+
+      <div class="scene"><h4>🌇 放學前｜清點與公告<span class="where">大屏＋手機</span></h4>
+        <p>班級工具「✅ 檢核板」清點回條（點過的變藍、按「未點」紅色反查）；要通知家長群時對 LINE 傳「聯絡簿：…」，小幫手回一則排版好的公告，長按轉發。</p>
+      </div>
+
+      <div class="scene"><h4>📮 週五下午｜家長關懷（全自動）<span class="where">自動＋工作台</span></h4>
+        <p>系統統計本週缺交，達門檻（預設 5 次）的學生自動產生<strong>委婉的家長訊息草稿</strong>放進 LINE 收件匣，並通知你。到工作台把「（老師補充：孩子的優點）」填上，再轉發給家長。</p>
+      </div>
+
+      <div class="scene"><h4>🤒 臨時請假<span class="where">手機 LINE</span></h4>
+        <p>傳「明天請假」→ 小幫手立刻整理出代課交接包：明天的課程進度、聯絡本、需留意的座號，長按轉發給代課老師或學年主任。</p>
+      </div>
+
+      <div class="scene"><h4>💻 換電腦或清了瀏覽器資料<span class="where">工作台</span></h4>
+        <p>平常用「⚙ 設定 → 備份與還原」的雲端備份（存進你自己的試算表，保留最近 10 份）；新電腦連上後選最新一份還原，任務、進度、記事全部回來。</p>
+      </div>
+    </section>
+
+    <section id="where">
+      <h2>🗄 你的資料存在哪裡</h2>
+      <table>
+        <tr><th>資料</th><th>存放位置</th><th>誰看得到</th></tr>
+        <tr><td>任務、教學進度、記事、設定</td><td>你電腦的瀏覽器（localStorage）</td><td>只有這台電腦的這個瀏覽器</td></tr>
+        <tr><td>點名、作業、聯絡本、LINE 收件匣、雲端備份</td><td><strong>你自己的</strong> Google 試算表</td><td>只有你的 Google 帳號</td></tr>
+        <tr><td>LINE 傳的照片與檔案</td><td><strong>你自己的</strong>雲端硬碟「LINE小幫手備份」資料夾</td><td>只有你的 Google 帳號</td></tr>
+        <tr><td>金鑰（LINE Token、Gemini、同步金鑰）</td><td>你自己的 Apps Script「指令碼屬性」</td><td>只有你的 Google 帳號</td></tr>
+      </table>
+      <div class="ok">整套系統<strong>沒有開發者的伺服器</strong>：網站只是靜態網頁（Netlify 只送出頁面檔案），程式跑在你的瀏覽器和你的 Google 帳號裡。開發者無法讀取任何老師的任何資料。學生個資方面：全系統<strong>只用座號，從不輸入學生姓名</strong>。</div>
+    </section>
+
+    <section id="perms">
+      <h2>🔐 授權逐條白話說明</h2>
+      <p class="lead">部署 LINE 小幫手時，Google 會列出幾個看起來很嚇人的授權。那些文字是 Google 對「權限範圍上限」的制式描述；<strong>實際做什麼由程式碼決定</strong>，而程式碼完整公開（<a href="LineBot.gs" target="_blank" rel="noopener">點此逐行檢視</a>），任何人都能稽核。</p>
+
+      <div class="perm">
+        <div class="perm-head">授權一：「查看、編輯、建立及刪除您的所有 Google 試算表」</div>
+        <div class="perm-body"><dl>
+          <dt>白話翻譯</dt><dd>允許程式操作試算表。</dd>
+          <dt>程式實際只做</dt><dd>讀寫<strong>它所綁定的那一份</strong>試算表（LINE收件匣、點名紀錄、作業紀錄、聯絡本、檔案備份、工作台備份這幾張工作表）。程式用 <code>getActiveSpreadsheet()</code> 取表——這個指令只能拿到綁定的那份，<strong>技術上就碰不到你其他的試算表</strong>。</dd>
+        </dl></div>
+      </div>
+
+      <div class="perm">
+        <div class="perm-head">授權二：「查看、編輯、建立及刪除您的所有 Google 雲端硬碟檔案」⭐ 最多人擔心</div>
+        <div class="perm-body">
+          <dl>
+            <dt>白話翻譯</dt><dd>允許程式操作雲端硬碟。</dd>
+            <dt>程式實際只做</dt><dd>① 建立「LINE小幫手備份」資料夾（不存在才建）② 把你從 LINE 傳的照片／檔案存進去 ③ AI 辨識後重新命名、搬移<strong>它自己存的那些檔案</strong>。程式碼中<strong>不存在</strong>讀取、修改或刪除你原有檔案的任何指令。</dd>
+            <dt>不想授權？</dt><dd>指令碼屬性設 <code>DRIVE_BACKUP_TYPES</code> ＝ <code>off</code>，檔案備份功能完全停用，其餘功能照常。</dd>
+          </dl>
+          <figure>
+            <svg viewBox="0 0 760 300" role="img" aria-label="程式對雲端硬碟的實際行為：只在自己建立的 LINE小幫手備份資料夾內寫入與整理檔案；您原有的檔案與程式之間沒有任何連線">
+              <defs><marker id="ar" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="currentColor"/></marker></defs>
+              <rect x="20" y="98" width="150" height="52" rx="10" fill="none" stroke="currentColor" stroke-width="1.6"/>
+              <text x="95" y="120" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">你傳到 LINE 的</text>
+              <text x="95" y="138" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">照片／檔案</text>
+              <rect x="220" y="98" width="140" height="52" rx="10" fill="none" stroke="currentColor" stroke-width="1.6"/>
+              <text x="290" y="120" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">你自己的</text>
+              <text x="290" y="138" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">Apps Script</text>
+              <line x1="170" y1="124" x2="212" y2="124" stroke="currentColor" stroke-width="1.6" marker-end="url(#ar)"/>
+              <rect x="410" y="22" width="330" height="256" rx="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="7 5"/>
+              <text x="575" y="46" text-anchor="middle" font-size="13.5" font-weight="900" fill="currentColor">你的 Google 雲端硬碟</text>
+              <rect x="432" y="62" width="286" height="106" rx="10" fill="none" stroke="#1d9e5f" stroke-width="2.4"/>
+              <text x="575" y="86" text-anchor="middle" font-size="13" font-weight="900" fill="#1d9e5f">📁 LINE小幫手備份（程式自己建立）</text>
+              <text x="575" y="110" text-anchor="middle" font-size="12" fill="currentColor">2026-08／通知單與回條／…</text>
+              <text x="575" y="132" text-anchor="middle" font-size="12" fill="currentColor">只在這裡：存檔、改名、搬移</text>
+              <text x="575" y="154" text-anchor="middle" font-size="12" fill="currentColor">（也僅限它自己存進來的檔案）</text>
+              <line x1="360" y1="115" x2="424" y2="115" stroke="#1d9e5f" stroke-width="2.2" marker-end="url(#ar)"/>
+              <text x="392" y="104" text-anchor="middle" font-size="11.5" fill="#1d9e5f" font-weight="700">只寫入</text>
+              <rect x="432" y="188" width="286" height="70" rx="10" fill="none" stroke="currentColor" stroke-width="1.4"/>
+              <text x="575" y="214" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">你原有的所有檔案與資料夾</text>
+              <text x="575" y="238" text-anchor="middle" font-size="12" fill="currentColor">程式碼中沒有任何指令讀取、修改或刪除</text>
+              <line x1="360" y1="223" x2="424" y2="223" stroke="currentColor" stroke-width="1.6" stroke-dasharray="3 5"/>
+              <text x="390" y="212" text-anchor="middle" font-size="12" font-weight="900" fill="currentColor">✕ 無連線</text>
+            </svg>
+            <figcaption>綠色是程式唯一觸碰的區域。你原有的檔案與程式之間<strong>不存在任何箭頭</strong>——不是「不會去動」，是程式裡根本沒有那些指令。</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="perm">
+        <div class="perm-head">授權三：「連線至外部服務」</div>
+        <div class="perm-body"><dl>
+          <dt>白話翻譯</dt><dd>允許程式對外連網。</dd>
+          <dt>程式實際只連</dt><dd>兩個地方：<strong>LINE 官方 API</strong>（收發你的訊息）與 <strong>Google Gemini API</strong>（辨識你傳的語音／照片，選用）。沒有其他任何網址。</dd>
+          <dt>不想用 AI？</dt><dd>不填 <code>GEMINI_API_KEY</code> 即可；改用「任務：」「記：」等前綴規則，功能不中斷。</dd>
+        </dl></div>
+      </div>
+
+      <h3>為什麼會看到「Google 尚未驗證這個應用程式」？</h3>
+      <p>因為這程式是<strong>你自己</strong>貼進<strong>你自己</strong>帳號的（不是上架商店的產品），Google 對所有這類自建程式一律顯示此警告。點「進階 → 前往 → 允許」即可；授權對象是你自己的程式，不是任何第三方。</p>
+    </section>
+
+    <section id="keys">
+      <h2>🗝 金鑰權限邊界</h2>
+      <table>
+        <tr><th>金鑰</th><th>放在哪</th><th>權限範圍</th><th>外洩了怎麼辦</th></tr>
+        <tr><td>🔑A LINE Token</td><td>指令碼屬性</td><td>用你的官方帳號收發訊息</td><td>LINE Developers 按 Reissue 換發即可，舊的立刻失效</td></tr>
+        <tr><td>🔑B Webhook 參數</td><td>Webhook 網址內</td><td>驗證訊息確實來自 LINE 轉送</td><td>刪除指令碼屬性後重新執行初始化，換新網址參數</td></tr>
+        <tr><td>🔑C 工作台同步金鑰</td><td>老師自己的電腦</td><td>讀寫收件匣、聯絡本、備份、<strong>歷史統計</strong></td><td>同上重生；<strong>絕不要存在教室電腦</strong></td></tr>
+        <tr><td>🔑D 教室大屏金鑰</td><td>教室電腦</td><td><strong>只能</strong>回報「今天」的點名／作業、標補交、讀當日與近期缺交清單——學生玩到也拿不到歷史資料與任何設定</td><td>同上重生後更新大屏設定</td></tr>
+        <tr><td>🔑E Gemini 金鑰（選用）</td><td>指令碼屬性＋工作台</td><td>呼叫 AI 辨識</td><td>AI Studio 刪除重建</td></tr>
+      </table>
+      <div class="warn">習慣上請把金鑰記在自己的記事本並標好符號；<strong>不要</strong>貼到公開群組、不要寫進共用文件。本系統的網站程式碼與教學頁面都經過檢查，不含任何人的真實金鑰。</div>
+    </section>
+
+    <section id="faq">
+      <h2>❓ 常見疑慮 QA</h2>
+      <table>
+        <tr><th>疑慮</th><th>答案</th></tr>
+        <tr><td>會刪掉我雲端硬碟原有的檔案嗎？</td><td><strong>不會。</strong>見上方授權二：程式只在自己建立的備份資料夾內活動，對你原有檔案沒有任何指令。</td></tr>
+        <tr><td>開發者看得到我的資料嗎？</td><td><strong>看不到。</strong>沒有中央伺服器；試算表、雲端硬碟、金鑰全在你自己的 Google 帳號，程式碼公開可稽核。</td></tr>
+        <tr><td>學生亂玩教室大屏會怎樣？</td><td>最多改到「今天」的點名畫面（重新整理前）。教室金鑰 🔑D 碰不到歷史資料、金鑰與老師工作台；設定分頁另有保護。</td></tr>
+        <tr><td>陌生人加我的 LINE 機器人？</td><td>設定 <code>LINE_ALLOWED_USER_IDS</code> 後，機器人只回應你本人，其他人完全沒有反應、也不會被記錄。</td></tr>
+        <tr><td>LINE 推播額度會爆嗎？</td><td>你問我答完全免費；主動推播每月 200 則，系統內建額度保護——接近上限時自動只保留最重要的點名推播。傳「推播設定」隨時查用量。</td></tr>
+        <tr><td>學生個資安全嗎？</td><td>全系統只用<strong>座號</strong>；點名、作業、統計、家長訊息草稿都不含姓名。給家長的訊息由老師確認後才發送。</td></tr>
+        <tr><td>不想用某個功能？</td><td>都可以關：AI 不填金鑰即停用；雲端硬碟備份 <code>DRIVE_BACKUP_TYPES=off</code>；各推播在 LINE 傳「關閉 ○○」；LINE 小幫手整個不裝也不影響工作台與大屏以外的功能。</td></tr>
+      </table>
+      <p class="lead">程式碼公開位置：<a href="LineBot.gs" target="_blank" rel="noopener">LineBot.gs（雲端程式）</a>｜<a href="https://github.com/cona0815/teacher-dashboard" target="_blank" rel="noopener">GitHub 完整原始碼</a>（MIT 授權）。<a href="Install.html">← 回安裝教學</a>｜<a href="Index.html">開啟工作台</a></p>
+    </section>
+  </main>
+</body>
+</html>
