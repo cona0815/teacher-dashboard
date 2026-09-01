@@ -349,9 +349,31 @@
       <div class="step"><div class="step-no">3</div><div class="step-body">複製產生的「<strong>網頁應用程式 URL</strong>」（<code>https://script.google.com/macros/s/…/exec</code> 結尾）＝ <strong>🌐 你的機器人網址</strong>，存到記事本。<br><span class="lead">✔ 檢查：把這網址貼到瀏覽器打開，看到 <code>{"ok":true,…}</code> 就代表機器人活著。</span><br><span class="lead">🔁 以後更新程式：要用「部署 → 管理部署 → ✏️ 編輯 → 版本選『新版本』→ 部署」，網址才不會變。</span></div></div>
 
       <h3>第 5 關：接上 LINE（Webhook）</h3>
-      <div class="step"><div class="step-no">1</div><div class="step-body"><strong style="color:#1d9e5f">🟩 網站①</strong>｜回 LINE Developers 的「Messaging API」分頁，找到「<strong>Webhook URL</strong>」→ 按 Edit，貼上：<br><code>🌐你的機器人網址?hook=🔑B</code><br><span class="lead">（把兩段接起來、中間不能有空格。例：<code>https://script.google.com/macros/s/AKfy…/exec?hook=a1b2c3…</code>）</span></div></div>
-      <div class="step"><div class="step-no">2</div><div class="step-body">開啟「<strong>Use webhook</strong>」開關 → 按「<strong>Verify</strong>」→ 顯示 Success ✅。</div></div>
-      <div class="step"><div class="step-no">3</div><div class="step-body">🎉 <strong>見證時刻</strong>：用手機對機器人傳「<code>說明</code>」→ 它會回你一整段使用說明。有回話就是全線打通了！</div></div>
+      <div class="step"><div class="step-no">1</div><div class="step-body">
+        <strong class="t">先在記事本把網址「拼」好（最容易出錯的一步，慢慢來）</strong><br>
+        開記事本，照順序拼出一整串：<br>
+        ① 貼上 <strong>🌐 機器人網址</strong>（<code>…/exec</code> 結尾那串）<br>
+        ② 緊接著打 <code>?hook=</code>（問號、h、o、o、k、等號，共 6 個字元）<br>
+        ③ 緊接著貼上 <strong>🔑B</strong>（初始化彈窗裡「Webhook 驗證參數」那串亂碼）<br>
+        拼好會長這樣（一整行、中間沒有任何空格或換行）：
+        <div class="box" style="font-family:Consolas,monospace;font-size:13px;word-break:break-all">https://script.google.com/macros/s/AKfy…很長一串…/exec<strong style="color:#a34339">?hook=</strong>a1b2c3d4e5…</div>
+        <span class="lead">✔ 檢查：整串裡有一個「?」、沒有空格；<code>exec</code> 跟 <code>?hook=</code> 是黏在一起的。確認後全選（<span class="kbd">Ctrl</span>＋<span class="kbd">A</span>）複製（<span class="kbd">Ctrl</span>＋<span class="kbd">C</span>）。</span>
+      </div></div>
+      <div class="step"><div class="step-no">2</div><div class="step-body">
+        <strong style="color:#1d9e5f">🟩 網站①</strong>｜<strong class="t">走回 Webhook 設定的位置</strong><br>
+        開 <a href="https://developers.line.biz/console/" target="_blank" rel="noopener">developers.line.biz/console</a> → 點你的 <strong>Provider</strong>（例：我的教師工具）→ 點你的 <strong>channel</strong>（例：班級小幫手）→ 點上方的「<strong>Messaging API</strong>」分頁。
+      </div></div>
+      <div class="step"><div class="step-no">3</div><div class="step-body">
+        <strong style="color:#1d9e5f">🟩 網站①</strong>｜<strong class="t">貼上網址</strong><br>
+        頁面往下捲，找到「<strong>Webhook settings（Webhook 設定）</strong>」區塊 → 「Webhook URL」右邊按「<strong>Edit（編輯）</strong>」→ 貼上剛剛拼好的整串（<span class="kbd">Ctrl</span>＋<span class="kbd">V</span>）→ 按「<strong>Update（更新）</strong>」儲存。<br>
+        <span class="lead">✔ 檢查：儲存後顯示的網址結尾應該看得到 <code>?hook=</code> 開頭的那段（欄位太窄時按 End 鍵看結尾）。</span>
+      </div></div>
+      <div class="step"><div class="step-no">4</div><div class="step-body">
+        <strong style="color:#1d9e5f">🟩 網站①</strong>｜<strong class="t">打開開關</strong><br>
+        同一個區塊裡，把「<strong>Use webhook</strong>」的開關撥成<strong>開啟</strong>（變綠色）。<br>
+        <span class="lead">按「Verify」若跳出「<strong>302 Found</strong>」的 Error <strong>是正常的，直接按 OK 關掉</strong>——Google Apps Script 的網址天生會先轉址一次，LINE 的檢查按鈕不吃轉址所以誤報；實際傳訊息完全正常，以下一步的手機實測為準。</span>
+      </div></div>
+      <div class="step"><div class="step-no">5</div><div class="step-body">🎉 <strong>見證時刻</strong>：用手機對機器人傳「<code>說明</code>」→ 它會回你一整段使用說明。有回話就是全線打通了！<br><span class="lead">沒回話？最常見三個原因：①網址拼錯（回到第 1 步重拼）②「Use webhook」開關沒開 ③官方帳號的「自動回覆訊息」沒關（第 1 關第 7 步）。</span></div></div>
 
       <h3>第 6 關：鎖門（只聽你的話）</h3>
       <div class="step"><div class="step-no">1</div><div class="step-body">對機器人傳「<code>我的ID</code>」→ 它回一串 <code>U</code> 開頭的字 → 複製。</div></div>
@@ -540,7 +562,8 @@
       <h2>🅴 Part E：疑難排解</h2>
       <table>
         <tr><th>症狀</th><th>解法</th></tr>
-        <tr><td>Webhook Verify 失敗</td><td>網址結尾少了 <code>?hook=🔑B</code>；或部署的存取權不是「任何人」</td></tr>
+        <tr><td>Webhook Verify 顯示「302 Found」</td><td><strong>正常現象，可忽略</strong>——GAS 網址天生會轉址，LINE 檢查按鈕不吃轉址；用手機傳「說明」實測為準，有回覆就沒問題</td></tr>
+        <tr><td>Verify 錯誤且手機傳「說明」也沒回應</td><td>①網址結尾少了 <code>?hook=🔑B</code> ②部署的存取權不是「任何人」③「Use webhook」開關沒開 ④官方帳號的「自動回覆訊息」沒關</td></tr>
         <tr><td>機器人已讀不回</td><td>①「自動回覆訊息」沒關 ② Use webhook 開關沒開 ③ <code>LINE_ALLOWED_USER_IDS</code> 填錯（先清空該屬性測試）</td></tr>
         <tr><td>貼程式時出現語法錯誤</td><td>複製不完整。重開程式檔頁面 Ctrl+A 全選重貼，確認約 1,600 行</td></tr>
         <tr><td>授權視窗一閃就關</td><td>瀏覽器擴充功能擋掉了。改用無痕視窗（Ctrl+Shift+N）登入 Google 重做</td></tr>
