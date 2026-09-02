@@ -133,18 +133,49 @@
     let refreshTimer = null;
 
     if (!window.google || !window.google.script || !window.google.script.run) {
-      const mockTasks = [
-        { name: '【學年】整理學年會議待決議事項', category: '學年協調', priority: '高', status: '進行中', dueDate: '2026-08-02', dueTime: '09:30', nextAction: '彙整各班需求，確認共同議題' },
-        { name: '【導師】檢視本班出缺席與生活適應', category: '班級經營', priority: '高', status: '進行中', dueDate: '2026-08-02', dueTime: '10:20', nextAction: '關心未到校學生並完成必要聯繫' },
-        { name: '【學年】回報段考日期與共同評量分工', category: '課務組・共同評量', priority: '中', status: '等待他人', dueDate: '2026-08-04', dueTime: '', nextAction: '等待各領域教師回覆' },
-        { name: '【導師】整理親師聯絡重點', category: '親師溝通', priority: '中', status: '待處理', dueDate: '2026-08-03', dueTime: '', nextAction: '更新需要個別聯繫的學生清單' }
-      ];
-      const mockData = {
-        title: '六年級學年主任＋導師', office: { schoolName: '臺南市○○國民小學', name: '六年級學年', roleName: '學年主任兼導師' },
-        refreshMinutes: 10, tasks: mockTasks, timeline: mockTasks.filter(task => task.dueDate === '2026-08-02' && task.dueTime),
-        summary: { urgent: 2, waiting: 1, dueToday: 2, doneToday: 1, active: 10 }, serverTime: '2026/08/02 10:30（模擬）'
+      // 非 GAS 環境：直接讀「同一個瀏覽器」裡教師工作台的真實任務（localStorage 同網域共用）。
+      const readLocal = key => { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch (error) { return null; } };
+      const localDateKey = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      const buildLocalBoardData = () => {
+        const all = (readLocal('grade6PreviewTasks') || []).filter(task => task && task.name && task.status !== '封存');
+        const settings = readLocal('grade6AssistantSettings') || {};
+        const today = localDateKey(new Date());
+        const active = all.filter(task => !['已完成', '取消'].includes(task.status));
+        const shown = active
+          .filter(task => task.boardDisplay !== '隱藏')
+          .sort((a, b) => {
+            const forceDiff = (b.boardDisplay === '強制顯示' ? 1 : 0) - (a.boardDisplay === '強制顯示' ? 1 : 0);
+            if (forceDiff) return forceDiff;
+            const overdueDiff = ((a.dueDate && a.dueDate < today) ? 0 : 1) - ((b.dueDate && b.dueDate < today) ? 0 : 1);
+            if (overdueDiff) return overdueDiff;
+            const priorityDiff = (a.priority === '高' ? 0 : 1) - (b.priority === '高' ? 0 : 1);
+            if (priorityDiff) return priorityDiff;
+            return String(a.dueDate || '9999').localeCompare(String(b.dueDate || '9999'));
+          })
+          .slice(0, 8);
+        return {
+          office: {
+            schoolName: settings.workspace && settings.workspace.title ? settings.workspace.title : '教師工作台',
+            name: settings.teacher && settings.teacher.title ? settings.teacher.title : '',
+            roleName: '本機資料・與工作台同步'
+          },
+          refreshMinutes: 5,
+          tasks: shown,
+          timeline: active.filter(task => task.dueDate === today && task.dueTime)
+            .sort((a, b) => String(a.dueTime).localeCompare(String(b.dueTime))),
+          summary: {
+            urgent: active.filter(task => task.priority === '高').length,
+            waiting: active.filter(task => ['等待他人', '待確認', '等待回覆'].includes(task.status)).length,
+            dueToday: active.filter(task => task.dueDate === today).length,
+            doneToday: all.filter(task => task.status === '已完成').length,
+            active: active.length
+          },
+          sourceName: '本機教師工作台（此瀏覽器）',
+          serverTime: new Date().toLocaleString('zh-TW', { hour12: false }),
+          emptyHint: all.length ? '' : '這個瀏覽器還沒有工作台資料——請先在同一台電腦、同一個瀏覽器開啟 Index.html 建立任務。'
+        };
       };
-      const previewRun = { _success: null, _failure: null, withSuccessHandler(fn) { this._success = fn; return this; }, withFailureHandler(fn) { this._failure = fn; return this; }, getBoardData() { setTimeout(() => this._success && this._success(mockData), 80); } };
+      const previewRun = { _success: null, _failure: null, withSuccessHandler(fn) { this._success = fn; return this; }, withFailureHandler(fn) { this._failure = fn; return this; }, getBoardData() { setTimeout(() => this._success && this._success(buildLocalBoardData()), 60); } };
       window.google = { script: { run: previewRun } };
     }
 
@@ -154,7 +185,7 @@
     function dueText(task) { if (!task.dueDate) return '尚未設定'; const parts = task.dueDate.split('-'); const date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 12); const now = new Date(); const today = date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() === now.getDate(); const time = task.dueTime ? ` ${task.dueTime}` : ''; return today ? `今天${time}` : `${Number(parts[1])}/${Number(parts[2])}${time}`; }
     function renderTasks(tasks) { if (!tasks.length) { $('taskList').innerHTML = '<div class="empty">今天沒有需要顯示的任務，辛苦了！</div>'; return; } $('taskList').innerHTML = tasks.map((task, index) => { const urgentClass = task.priority === '高' ? 'urgent' : ''; const waitingClass = ['等待他人', '等待回覆'].includes(task.status) ? 'waiting' : ''; const detail = task.nextAction || task.progress || '確認內容並完成下一步'; return `<article class="task-row ${urgentClass}"><div class="rank">${String.fromCharCode(65 + index)}</div><div class="task-main"><h3 class="task-name">${escapeHtml(task.name)}</h3><div class="task-detail"><span class="category">${escapeHtml(task.category)}</span><span class="detail-text">${escapeHtml(detail)}</span></div></div><div class="task-side"><span class="status ${waitingClass}">${escapeHtml(task.status)}</span><div class="due">${escapeHtml(dueText(task))}</div></div></article>`; }).join(''); }
     function renderTimeline(items) { if (!items.length) { $('timelineList').innerHTML = '<article class="timeline-item"><div class="timeline-time">—</div><div class="timeline-title">今天沒有設定時間的工作</div><div class="timeline-note">可從管理台補上截止時間</div></article>'; return; } $('timelineList').innerHTML = items.map(task => `<article class="timeline-item"><div class="timeline-time">${escapeHtml(task.dueTime)}</div><div class="timeline-title">${escapeHtml(task.name)}</div><div class="timeline-note">${escapeHtml(task.category)}・${escapeHtml(task.status)}</div></article>`).join(''); }
-    function render(data) { const tasks = data.tasks || []; const summary = data.summary || {}; const office = data.office || {}; $('title').textContent = '六年級學年主任＋導師｜每日看板'; $('eyebrow').textContent = [office.schoolName, office.name, office.roleName].filter(Boolean).join(' / ') || 'GRADE 6 TEAM LEAD & HOMEROOM'; $('urgent').textContent = summary.urgent || 0; $('waiting').textContent = summary.waiting || 0; $('dueToday').textContent = summary.dueToday || 0; $('doneToday').textContent = summary.doneToday || 0; $('focusCount').textContent = tasks.length; $('taskMeta').textContent = `${tasks.length} 項看板任務・共 ${summary.active || 0} 項進行中`; $('focusText').textContent = tasks.length ? `${tasks[0].name}${tasks[0].nextAction ? `：${tasks[0].nextAction}` : ''}` : '今天沒有急件，可以安心處理教學與班級事務。'; $('source').textContent = `資料來源：Workspace 任務系統｜更新 ${data.serverTime || ''}`; renderTasks(tasks); renderTimeline(data.timeline || []); scheduleRefresh(Number(data.refreshMinutes) || 10); updateClock(); }
+    function render(data) { const tasks = data.tasks || []; const summary = data.summary || {}; const office = data.office || {}; $('title').textContent = '六年級學年主任＋導師｜每日看板'; $('eyebrow').textContent = [office.schoolName, office.name, office.roleName].filter(Boolean).join(' / ') || 'GRADE 6 TEAM LEAD & HOMEROOM'; $('urgent').textContent = summary.urgent || 0; $('waiting').textContent = summary.waiting || 0; $('dueToday').textContent = summary.dueToday || 0; $('doneToday').textContent = summary.doneToday || 0; $('focusCount').textContent = tasks.length; $('taskMeta').textContent = `${tasks.length} 項看板任務・共 ${summary.active || 0} 項進行中`; $('focusText').textContent = tasks.length ? `${tasks[0].name}${tasks[0].nextAction ? `：${tasks[0].nextAction}` : ''}` : (data.emptyHint || '今天沒有急件，可以安心處理教學與班級事務。'); $('source').textContent = `資料來源：${data.sourceName || 'Workspace 任務系統'}｜更新 ${data.serverTime || ''}`; renderTasks(tasks); renderTimeline(data.timeline || []); scheduleRefresh(Number(data.refreshMinutes) || 10); updateClock(); }
     function scheduleRefresh(minutes) { window.clearTimeout(refreshTimer); refreshTimer = window.setTimeout(loadBoard, Math.max(minutes, 1) * 60 * 1000); }
     async function loadBoard() { $('source').textContent = '資料來源：正在同步 Workspace 任務系統…'; try { render(await serverCall('getBoardData')); } catch (error) { $('source').textContent = `讀取失敗：${error.message}`; $('taskList').innerHTML = `<div class="empty">${escapeHtml(error.message)}<br>請稍後重新整理。</div>`; scheduleRefresh(3); } }
     $('refreshButton').addEventListener('click', loadBoard); updateClock(); window.setInterval(updateClock, 60 * 1000); loadBoard();

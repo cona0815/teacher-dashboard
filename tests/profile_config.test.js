@@ -327,6 +327,17 @@ for (const aboutFeature of ["使用情境", "授權逐條", "LINE小幫手備份
 assert.match(indexHtml, /About\.html/, "工作台資安分頁應連到說明頁");
 assert.match(morningHtml, /About\.html/, "大屏設定應連到說明頁");
 
+// 重複紀錄修復與安裝中心契約
+assert.match(lineBotSource, /function cellDate_/, "日期儲存格必須正規化後才能比對（重複紀錄修復）");
+assert.match(lineBotSource, /cellDate_\(values\[index\]\[0\]\) === date/, "覆蓋刪除必須用正規化日期比對");
+assert.match(lineBotSource, /function cleanupDuplicateRecords/, "應提供一次性重複資料清理");
+assert.match(lineBotSource, /安裝總表/, "選單應能產生安裝總表");
+assert.match(lineBotSource, /menuSetTokenA/, "選單應可直接填入 LINE Token");
+assert.match(lineBotSource, /menuSetUserId/, "選單應可直接填入 userId");
+const boardHtml = fs.readFileSync(path.join(projectRoot, "Board.html"), "utf8");
+assert.match(boardHtml, /grade6PreviewTasks/, "每日看板離線時應讀取工作台真實任務");
+assert.doesNotMatch(boardHtml, /（模擬）/, "每日看板不得再顯示模擬資料戳記");
+
 const netlifyConfig = fs.readFileSync(path.join(projectRoot, "netlify.toml"), "utf8");
 for (const header of ["Content-Security-Policy", "X-Content-Type-Options", "Referrer-Policy", "Permissions-Policy"]) {
   assert.match(netlifyConfig, new RegExp(header), `Netlify 應設定 ${header}`);

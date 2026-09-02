@@ -86,11 +86,105 @@ function onOpen() {
   try {
     SpreadsheetApp.getUi()
       .createMenu('🤖 LINE 小幫手')
-      .addItem('① 初始化（建資料表＋產生金鑰）', 'menuSetupLineBot')
-      .addItem('② 顯示我的金鑰', 'menuShowKeys')
-      .addItem('③ 設定自動化排程（提醒／關懷）', 'menuSetupTriggers')
+      .addItem('① 初始化（建資料表＋產生金鑰＋安裝總表）', 'menuSetupLineBot')
+      .addItem('② 填入 LINE Token（🔑A）', 'menuSetTokenA')
+      .addItem('③ 填入我的 LINE userId（鎖門）', 'menuSetUserId')
+      .addItem('④ 填入 Gemini 金鑰（🔑E，選填）', 'menuSetGeminiKey')
+      .addItem('⑤ 設定自動化排程（提醒／關懷）', 'menuSetupTriggers')
+      .addSeparator()
+      .addItem('📋 更新安裝總表（看進度與代號）', 'menuBuildSetupSheet')
+      .addItem('🔑 顯示我的金鑰', 'menuShowKeys')
+      .addItem('🧹 清理重複資料（修統計）', 'menuCleanupDuplicates')
       .addToUi();
   } catch (error) {}
+}
+
+/** 用彈窗把值寫進指令碼屬性，老師不必進「專案設定」。 */
+function menuSetProperty_(title, hint, propertyKey, validator) {
+  var ui = SpreadsheetApp.getUi();
+  var response = ui.prompt(title, hint, ui.ButtonSet.OK_CANCEL);
+  if (response.getSelectedButton() !== ui.Button.OK) return;
+  var value = String(response.getResponseText() || '').trim();
+  if (!value) { ui.alert('沒有輸入內容，未做任何變更。'); return; }
+  if (validator && !validator(value)) { ui.alert('格式看起來不對，請確認後再試一次。\n（可用「🔑 顯示我的金鑰」與安裝總表核對）'); return; }
+  PropertiesService.getScriptProperties().setProperty(propertyKey, value);
+  buildSetupSheet_();
+  ui.alert('✅ 已儲存！安裝總表的狀態也更新了。');
+}
+
+function menuSetTokenA() {
+  menuSetProperty_('② 填入 LINE Token（🔑A）',
+    '貼上 LINE Developers「Messaging API」分頁最下方 Issue 發行的 Channel access token（一串很長的英數字）：',
+    'LINE_CHANNEL_ACCESS_TOKEN',
+    function (value) { return value.length > 60; });
+}
+
+function menuSetUserId() {
+  menuSetProperty_('③ 填入我的 LINE userId',
+    '先在 LINE 對機器人傳「我的ID」，把它回覆的 U 開頭字串貼進來（多人以逗號分隔）。\n設定後機器人只回應這裡列出的人：',
+    'LINE_ALLOWED_USER_IDS',
+    function (value) { return /^U[0-9a-f]{32}(\s*,\s*U[0-9a-f]{32})*$/i.test(value); });
+}
+
+function menuSetGeminiKey() {
+  menuSetProperty_('④ 填入 Gemini 金鑰（🔑E）',
+    '貼上 Google AI Studio 申請的 API 金鑰（AIza 開頭）。\n不填也能用，只是語音、照片與自然語言分類會停用：',
+    'GEMINI_API_KEY',
+    function (value) { return value.indexOf('AIza') === 0; });
+}
+
+function menuCleanupDuplicates() {
+  menuShowDialog_('🧹 清理重複資料', cleanupDuplicateRecords());
+}
+
+function menuBuildSetupSheet() {
+  buildSetupSheet_();
+  SpreadsheetApp.getUi().alert('📋 「安裝總表」已更新，請看試算表最前面的分頁。');
+}
+
+/**
+ * 📋 安裝總表：把系統需要的每一筆資料自動列成一張表——
+ * 產生得出來的直接填好（含完整 Webhook 網址可直接複製），
+ * 需要老師動手的標出代號、取得處、貼到哪裡與目前狀態。
+ */
+function buildSetupSheet_() {
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  var name = '📋 安裝總表';
+  var sheet = spreadsheet.getSheetByName(name);
+  if (!sheet) sheet = spreadsheet.insertSheet(name, 0);
+  sheet.clear();
+  var props = PropertiesService.getScriptProperties();
+  var hookToken = String(props.getProperty('LINE_WEBHOOK_TOKEN') || '');
+  var execUrl = '';
+  try { execUrl = String(ScriptApp.getService().getUrl() || ''); } catch (error) {}
+  var deployed = execUrl.indexOf('/exec') !== -1;
+  var webhookUrl = deployed && hookToken ? execUrl + '?hook=' + hookToken : '';
+  var hasA = Boolean(props.getProperty('LINE_CHANNEL_ACCESS_TOKEN'));
+  var hasUser = Boolean(props.getProperty('LINE_ALLOWED_USER_IDS'));
+  var hasE = Boolean(props.getProperty('GEMINI_API_KEY'));
+  var mask = function (filled) { return filled ? '✅ 已填' : '⬜ 未填'; };
+
+  var rows = [
+    ['代號', '這是什麼', '值（可直接複製）', '取得處', '要貼到哪裡', '狀態'],
+    ['🔑A', 'LINE Channel Token', hasA ? '（已安全存入，不顯示）' : '【請用選單②填入】', 'LINE Developers → Messaging API → Issue', '本表選單「② 填入 LINE Token」', mask(hasA)],
+    ['🔑B', 'Webhook 驗證參數', hookToken || '【請先執行選單①】', '選單① 自動產生', '不用單獨貼；已組進下方 Webhook 網址', hookToken ? '✅ 已產生' : '⬜'],
+    ['🌐', '機器人網址（/exec）', deployed ? execUrl : '【尚未部署：部署→新增部署→網頁應用程式→任何人】', '部署後產生', '工作台與大屏的「🌐」欄位', deployed ? '✅ 已部署' : '⬜ 未部署'],
+    ['🔗', 'Webhook 完整網址', webhookUrl || '（等 🌐 部署完成後按選單📋更新，會自動組好）', '本表自動組合', 'LINE 的 Webhook URL 欄（貼上→儲存→開啟 Use webhook）', webhookUrl ? '✅ 可複製' : '⬜'],
+    ['🔑C', '工作台同步金鑰', String(props.getProperty('LINE_SYNC_TOKEN') || '【請先執行選單①】'), '選單① 自動產生', '教師工作台「⚙ 設定 → LINE 小幫手 → 🔑C」', props.getProperty('LINE_SYNC_TOKEN') ? '✅ 已產生' : '⬜'],
+    ['🔑D', '教室大屏金鑰', String(props.getProperty('CLASSROOM_TOKEN') || '【請先執行選單①】'), '選單① 自動產生', '晨間大屏「⚙ 設定 → 🔑D」（教室電腦只放這把）', props.getProperty('CLASSROOM_TOKEN') ? '✅ 已產生' : '⬜'],
+    ['👤', '我的 LINE userId', hasUser ? '（已設定，機器人只回應你）' : '【對機器人傳「我的ID」後用選單③填入】', 'LINE 傳「我的ID」', '本表選單「③ 填入我的 LINE userId」', mask(hasUser)],
+    ['🔑E', 'Gemini 金鑰（選填）', hasE ? '（已安全存入，不顯示）' : '【選填：用選單④填入】', 'aistudio.google.com/app/apikey', '本表選單「④ 填入 Gemini 金鑰」＋工作台 AI 設定', hasE ? '✅ 已填' : '⬜ 未填（可先跳過）']
+  ];
+  sheet.getRange(1, 1, rows.length, 6).setValues(rows);
+  sheet.getRange(1, 1, 1, 6).setFontWeight('bold').setBackground('#e8f2ee');
+  sheet.setColumnWidth(1, 50); sheet.setColumnWidth(2, 150); sheet.setColumnWidth(3, 420);
+  sheet.setColumnWidth(4, 250); sheet.setColumnWidth(5, 300); sheet.setColumnWidth(6, 110);
+  sheet.getRange(2, 1, rows.length - 1, 6).setWrap(true).setVerticalAlignment('top');
+  sheet.setFrozenRows(1);
+  var note = sheet.getRange(rows.length + 2, 1, 1, 6);
+  sheet.getRange(rows.length + 2, 1).setValue('💡 每完成一步就回來按選單「📋 更新安裝總表」——狀態全部變 ✅ 就大功告成。金鑰請勿分享給其他老師。');
+  note.merge().setFontColor('#657570');
+  return sheet;
 }
 
 function menuShowDialog_(title, text) {
@@ -103,7 +197,9 @@ function menuShowDialog_(title, text) {
 }
 
 function menuSetupLineBot() {
-  menuShowDialog_('✅ LINE 小幫手初始化完成', setupLineBot());
+  var summary = setupLineBot();
+  buildSetupSheet_();
+  menuShowDialog_('✅ LINE 小幫手初始化完成', summary + '\n\n📋 已同時建立「安裝總表」分頁（試算表最前面）——之後照總表逐格補齊、用選單②③④直接填入即可。');
 }
 
 function menuShowKeys() {
@@ -517,15 +613,52 @@ function submitRollcall_(body) {
   return { ok: true, pushed: users.length, saved: true };
 }
 
+/** 把儲存格的日期正規化成 yyyy-MM-dd（Sheets 會把日期字串自動轉成日期格）。 */
+function cellDate_(value) {
+  return value instanceof Date
+    ? Utilities.formatDate(value, Session.getScriptTimeZone(), 'yyyy-MM-dd')
+    : String(value);
+}
+
 function deleteRowsByDateClass_(sheet, date, className, dateColumn) {
   var lastRow = sheet.getLastRow();
   if (lastRow <= 1) return;
   var values = sheet.getRange(2, 1, lastRow - 1, 2).getValues();
   for (var index = values.length - 1; index >= 0; index -= 1) {
-    if (String(values[index][0]) === date && String(values[index][1]) === className) {
+    // 修正：第一欄可能是日期格而非文字，直接 String() 永遠比不中，
+    // 導致「覆蓋更新」變成「一直新增」——這就是重複紀錄的元兇。
+    if (cellDate_(values[index][0]) === date && String(values[index][1]) === className) {
       sheet.deleteRow(index + 2);
     }
   }
+}
+
+/**
+ * 🧹 一次性清理：把「點名紀錄」「作業紀錄」中完全相同的重複列去除（各保留一筆）。
+ * 舊版覆蓋比對失效期間累積的重複資料，執行一次即可修復；統計會立刻恢復正常。
+ * 可從試算表選單「🤖 LINE 小幫手 → 清理重複資料」執行。
+ */
+function cleanupDuplicateRecords() {
+  var sheets = ensureLineBotSheets_(SpreadsheetApp.getActiveSpreadsheet());
+  var removedRollcall = dedupeSheetRows_(sheets.rollcall, 4);
+  var removedHomework = dedupeSheetRows_(sheets.homework, 6);
+  var summary = '🧹 清理完成：點名紀錄移除 ' + removedRollcall + ' 列重複、作業紀錄移除 ' + removedHomework + ' 列重複。\n統計數字已恢復正常。';
+  Logger.log(summary);
+  return summary;
+}
+
+function dedupeSheetRows_(sheet, columnCount) {
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return 0;
+  var values = sheet.getRange(2, 1, lastRow - 1, columnCount).getValues();
+  var seen = {};
+  var removed = 0;
+  for (var index = values.length - 1; index >= 0; index -= 1) {
+    var key = values[index].map(function (cell, i) { return i === 0 ? cellDate_(cell) : String(cell); }).join('');
+    if (seen[key]) { sheet.deleteRow(index + 2); removed += 1; }
+    else seen[key] = true;
+  }
+  return removed;
 }
 
 function buildRollcallSummaryText_(date, className, attendance, homework, mode) {
