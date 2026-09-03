@@ -1,8 +1,0 @@
-﻿請將 6 張學校人物姿勢圖（每張 2 列 × 4 個姿勢）存成以下檔名：
-  boy_3d.png      男孩・立體公仔風
-  boy_sketch.png  男孩・手繪Q版
-  boy_crayon.png  男孩・蠟筆塗鴉風
-  girl_3d.png     女孩・立體公仔風
-  girl_sketch.png 女孩・手繪Q版
-  girl_crayon.png 女孩・蠟筆塗鴉風
-存好後，教材小工場「海報宣傳單」的學校人物選單就會直接生效。
