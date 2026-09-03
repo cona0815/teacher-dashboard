@@ -1264,6 +1264,7 @@
           <button class="toolbox-button" type="button" data-toolbox-target="secretaryNotesSection" aria-expanded="false">小綿助記事</button>
           <button class="toolbox-button" type="button" data-toolbox-target="aiAssistantSection" data-ai-only aria-expanded="false" hidden>AI 行政助理</button>
           <button class="toolbox-button" type="button" data-toolbox-target="teachingProgressPanel" data-role-only="teacher" aria-expanded="false">教學進度</button>
+          <a class="toolbox-button" href="Studio.html" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center">🎨 教材小工場</a>
         </div>
       </div>
       <div class="teacher-toolbox-content" id="teacherToolboxContent" hidden>
@@ -1520,6 +1521,7 @@
           <button class="mini-button note-filter-chip" type="button" data-note-filter="dated">有提醒日</button>
           <button class="button button-light" type="button" id="importSecretaryNotesButton">匯入桌面記事</button>
           <button class="button button-light" type="button" id="toggleDoneNotesButton">顯示已完成</button>
+          <button class="button button-light" type="button" id="syncGoogleTasksButton" title="與 Google Tasks「小綿助記事」清單雙向同步（需已設定 LINE 小幫手）">🔄 Google Tasks</button>
           <input id="secretaryNotesFileInput" type="file" accept="application/json,.json" hidden>
         </div>
         <div class="secretary-note-list" id="secretaryNoteList"></div>
@@ -3627,7 +3629,8 @@
         source: note.source === 'desktop' || source === 'desktop' ? 'desktop'
           : note.source === 'line' || source === 'line' ? 'line' : 'web',
         done: note.done === true,
-        remindDate: /^\d{4}-\d{2}-\d{2}$/.test(String(note.remindDate || note.remind_date || '')) ? String(note.remindDate || note.remind_date) : ''
+        remindDate: /^\d{4}-\d{2}-\d{2}$/.test(String(note.remindDate || note.remind_date || '')) ? String(note.remindDate || note.remind_date) : '',
+        gtaskId: String(note.gtaskId || '').slice(0, 120)
       };
     }
 
@@ -3719,6 +3722,47 @@
       if (note.remindDate === next) return;
       note.remindDate = next;
       saveSecretaryNotes(next ? `提醒日已設為 ${next.replace(/-/g, '/')}。` : '已清除提醒日。');
+    }
+
+    // 記事 ↔ Google Tasks 雙向同步（經老師自己的 GAS，用 🔑C）
+    async function syncNotesWithGoogleTasksClient() {
+      const button = $('syncGoogleTasksButton');
+      button.disabled = true;
+      const originalText = button.textContent;
+      button.textContent = '⏳ 同步中…';
+      try {
+        const payloadNotes = secretaryNotesState.notes.slice(0, 300).map(note => ({
+          id: note.id, text: note.text.slice(0, 1000), done: note.done,
+          remindDate: note.remindDate || '', gtaskId: note.gtaskId || ''
+        }));
+        const result = await callLineBridge('notes_tasks_sync', { notes: payloadNotes });
+        let added = 0, completedFromRemote = 0;
+        (result.remote || []).forEach(item => {
+          if (result.mapping && item.noteId && result.mapping[item.noteId]) return; // 剛推上去的
+          const local = item.noteId ? secretaryNotesState.notes.find(note => note.id === item.noteId) : null;
+          if (local) {
+            if (!local.gtaskId) local.gtaskId = item.gtaskId;
+            if (item.done && !local.done) { local.done = true; completedFromRemote++; }
+          } else if (!item.noteId && item.title) {
+            // 在 Google Tasks 手動新增的項目 → 帶回來變成記事
+            const exists = secretaryNotesState.notes.some(note => note.gtaskId === item.gtaskId);
+            if (!exists) {
+              const note = normalizeSecretaryNote({ text: item.title, remindDate: item.due, done: item.done, gtaskId: item.gtaskId }, 'web');
+              if (note) { secretaryNotesState.notes.unshift(note); added++; }
+            }
+          }
+        });
+        Object.entries(result.mapping || {}).forEach(([noteId, gtaskId]) => {
+          const note = secretaryNotesState.notes.find(item => item.id === noteId);
+          if (note) note.gtaskId = gtaskId;
+        });
+        saveSecretaryNotes(`✅ 同步完成：推送 ${result.pushed || 0}、更新 ${result.updated || 0}、從 Google 帶回 ${added} 則${completedFromRemote ? `、遠端完成 ${completedFromRemote} 則` : ''}。`);
+      } catch (error) {
+        showToast(error.message || 'Google Tasks 同步失敗。', true);
+      } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+      }
     }
 
     function renderTodayNotesStrip() {
@@ -4702,6 +4746,9 @@
         const detailLink = task.detailUrl
           ? `<a class="mini-button" href="${escapeHtml(task.detailUrl)}" target="_blank" rel="noopener">資料</a>`
           : '';
+        const gcalLink = task.dueDate
+          ? `<button class="mini-button" type="button" data-action="gcal" data-id="${escapeHtml(task.taskId)}" title="在 Google 日曆開啟預填好的新增畫面">📅</button>`
+          : '';
         const isChild = Boolean(task.parentTaskId);
         const archiveLink = task.status === '已完成' && !isChild
           ? `<button class="mini-button mini-button-danger" type="button" data-action="archive" data-id="${escapeHtml(task.taskId)}">封存</button>`
@@ -4734,6 +4781,7 @@
                 <button class="mini-button" type="button" data-action="status" data-status="${escapeHtml(quickStatus)}" data-id="${escapeHtml(task.taskId)}">${task.status === '已完成' ? '重開' : '完成'}</button>
                 ${archiveLink}
                 ${detailLink}
+                ${gcalLink}
               </div>
             </td>
           </tr>
@@ -8240,7 +8288,34 @@
       if (button.dataset.action === 'edit' && task) openTaskModal(task);
       if (button.dataset.action === 'status') quickStatus(button.dataset.id, button.dataset.status);
       if (button.dataset.action === 'archive') archiveTaskById(button.dataset.id);
+      if (button.dataset.action === 'gcal' && task) openGoogleCalendarTemplate(task);
     });
+
+    // 方案①：免金鑰、免授權——開 Google 日曆的預填新增頁，老師按一下儲存即可
+    function openGoogleCalendarTemplate(task) {
+      if (!task.dueDate) return showToast('這筆任務沒有期限日，請先設定。', true);
+      const compact = String(task.dueDate).replace(/-/g, '');
+      let dates;
+      if (/^\d{2}:\d{2}$/.test(String(task.dueTime || ''))) {
+        const start = task.dueTime.replace(':', '') + '00';
+        const endDate = new Date(`${task.dueDate}T${task.dueTime}:00`);
+        endDate.setHours(endDate.getHours() + 1);
+        const pad = n => String(n).padStart(2, '0');
+        const end = `${endDate.getFullYear()}${pad(endDate.getMonth() + 1)}${pad(endDate.getDate())}T${pad(endDate.getHours())}${pad(endDate.getMinutes())}00`;
+        dates = `${compact}T${start}/${end}`;
+      } else {
+        const next = new Date(`${task.dueDate}T00:00:00`);
+        next.setDate(next.getDate() + 1);
+        dates = `${compact}/${calendarDateKey(next).replace(/-/g, '')}`;
+      }
+      const details = [task.nextAction || task.progress || '', `來自教師工作台（${task.taskId}）`].filter(Boolean).join('\n');
+      const url = 'https://calendar.google.com/calendar/render?action=TEMPLATE'
+        + `&text=${encodeURIComponent(String(task.name || '任務').slice(0, 120))}`
+        + `&dates=${dates}`
+        + `&details=${encodeURIComponent(details.slice(0, 500))}`;
+      window.open(url, '_blank', 'noopener');
+      showToast('已開啟 Google 日曆，按「儲存」即完成。');
+    }
 
     $('calendarGrid').addEventListener('click', event => {
       if (calendarDropJustFinished) return;
@@ -8335,6 +8410,7 @@
       if (!body.hidden) $('secretaryNoteInput').focus();
     });
     $('addSecretaryNoteButton').addEventListener('click', addSecretaryNote);
+    $('syncGoogleTasksButton').addEventListener('click', syncNotesWithGoogleTasksClient);
     $('secretaryNoteInput').addEventListener('keydown', event => {
       if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') addSecretaryNote();
     });

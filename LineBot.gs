@@ -502,9 +502,146 @@ function handleLineSyncApi_(body) {
       if (!isTeacher) return lineBotJson_({ ok: false, error: '歷史清單需要老師金鑰' });
       return lineBotJson_(listContactBook_(body));
     }
+    if (action === 'notes_tasks_sync') {
+      if (!isTeacher) return lineBotJson_({ ok: false, error: '記事同步需要老師金鑰' });
+      return lineBotJson_(syncNotesWithGoogleTasks_(body));
+    }
+    if (action === 'form_create') {
+      if (!isTeacher) return lineBotJson_({ ok: false, error: '建立表單需要老師金鑰' });
+      return lineBotJson_(createGoogleForm_(body));
+    }
     return lineBotJson_({ ok: false, error: '未知的動作：' + action });
   } catch (error) {
     return lineBotJson_({ ok: false, error: String(error && error.message ? error.message : error) });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 記事 ↔ Google Tasks 雙向同步
+// 需要在 Apps Script 編輯器左側「服務 ＋」加入「Tasks API」才會生效；
+// 沒加的話會回傳友善說明，不會壞掉其他功能。
+// ---------------------------------------------------------------------------
+var NOTES_TASKLIST_NAME = '小綿助記事';
+
+function ensureNotesTaskList_() {
+  var lists = Tasks.Tasklists.list({ maxResults: 100 });
+  var items = (lists && lists.items) || [];
+  for (var i = 0; i < items.length; i++) {
+    if (items[i].title === NOTES_TASKLIST_NAME) return items[i].id;
+  }
+  return Tasks.Tasklists.insert({ title: NOTES_TASKLIST_NAME }).id;
+}
+
+function syncNotesWithGoogleTasks_(body) {
+  if (typeof Tasks === 'undefined') {
+    return { ok: false, error: '尚未啟用 Tasks 服務：請開 Apps Script 編輯器，左側「服務」按「＋」→ 選「Tasks API」→ 新增，然後「管理部署 → 編輯 → 新版本」重新部署一次。' };
+  }
+  var notes = Array.isArray(body.notes) ? body.notes.slice(0, 300) : [];
+  var listId = ensureNotesTaskList_();
+  var mapping = {};
+  var pushed = 0, updated = 0;
+  notes.forEach(function (note) {
+    var noteId = String(note.id || '').slice(0, 100);
+    if (!noteId || !String(note.text || '').trim()) return;
+    var payload = {
+      title: String(note.text).slice(0, 120),
+      notes: '教師工作台記事 id:' + noteId,
+      status: note.done === true ? 'completed' : 'needsAction'
+    };
+    if (/^\d{4}-\d{2}-\d{2}$/.test(String(note.remindDate || ''))) payload.due = note.remindDate + 'T00:00:00.000Z';
+    try {
+      if (note.gtaskId) {
+        Tasks.Tasks.patch(payload, listId, String(note.gtaskId));
+        updated++;
+      } else {
+        var created = Tasks.Tasks.insert(payload, listId);
+        mapping[noteId] = created.id;
+        pushed++;
+      }
+    } catch (error) {
+      // 該筆在 Google 端被刪除等狀況：改為重新建立
+      if (!note.gtaskId) return;
+      try { var recreated = Tasks.Tasks.insert(payload, listId); mapping[noteId] = recreated.id; pushed++; } catch (ignored) {}
+    }
+  });
+  // 讀回整份清單：帶回 Google 端狀態與「在 Google 新增的項目」
+  var remote = [];
+  var pageToken = null;
+  do {
+    var page = Tasks.Tasks.list(listId, { maxResults: 100, showCompleted: true, showHidden: true, pageToken: pageToken });
+    (page.items || []).forEach(function (task) {
+      var match = String(task.notes || '').match(/教師工作台記事 id:(\S+)/);
+      remote.push({
+        gtaskId: task.id,
+        noteId: match ? match[1] : '',
+        title: String(task.title || '').slice(0, 1000),
+        done: task.status === 'completed',
+        due: task.due ? String(task.due).slice(0, 10) : ''
+      });
+    });
+    pageToken = page.nextPageToken;
+  } while (pageToken);
+  return { ok: true, mapping: mapping, remote: remote, pushed: pushed, updated: updated };
+}
+
+// ---------------------------------------------------------------------------
+// Google 表單產生器：建立表單＋（可選）填完自動寄副本給填表者
+// ---------------------------------------------------------------------------
+function createGoogleForm_(body) {
+  var title = String(body.title || '').trim().slice(0, 200);
+  if (!title) return { ok: false, error: '請提供表單標題' };
+  var questions = Array.isArray(body.questions) ? body.questions.slice(0, 30) : [];
+  if (!questions.length) return { ok: false, error: '請至少提供一題' };
+  var form = FormApp.create(title);
+  if (body.description) form.setDescription(String(body.description).slice(0, 1000));
+  var sendCopy = body.sendCopy === true;
+  if (sendCopy) form.setCollectEmail(true);
+  questions.forEach(function (question) {
+    var qTitle = String(question.title || '').trim().slice(0, 300);
+    if (!qTitle) return;
+    var options = (Array.isArray(question.options) ? question.options : [])
+      .map(function (option) { return String(option || '').trim().slice(0, 120); })
+      .filter(function (option) { return option; })
+      .slice(0, 20);
+    var type = String(question.type || 'text');
+    var item;
+    if (type === 'choice' && options.length) item = form.addMultipleChoiceItem().setChoiceValues(options);
+    else if (type === 'checkbox' && options.length) item = form.addCheckboxItem().setChoiceValues(options);
+    else if (type === 'dropdown' && options.length) item = form.addListItem().setChoiceValues(options);
+    else if (type === 'paragraph') item = form.addParagraphTextItem();
+    else item = form.addTextItem();
+    item.setTitle(qTitle);
+    if (question.required === true && item.setRequired) item.setRequired(true);
+  });
+  if (sendCopy) {
+    PropertiesService.getScriptProperties().setProperty('FORM_COPY_' + form.getId(), title);
+    ScriptApp.newTrigger('lineBotFormSubmitCopy').forForm(form).onFormSubmit().create();
+  }
+  return { ok: true, formUrl: form.getPublishedUrl(), editUrl: form.getEditUrl(), formId: form.getId(), sendCopy: sendCopy };
+}
+
+// 表單提交觸發器：寄一份回覆副本給填表者（需表單有收集 Email）
+function lineBotFormSubmitCopy(e) {
+  try {
+    var response = e && e.response;
+    var form = e && e.source;
+    if (!response || !form) return;
+    var flag = PropertiesService.getScriptProperties().getProperty('FORM_COPY_' + form.getId());
+    if (!flag) return;
+    var email = response.getRespondentEmail();
+    if (!email) return;
+    var lines = ['您好，這是您填寫「' + form.getTitle() + '」的回覆副本：', ''];
+    response.getItemResponses().forEach(function (itemResponse) {
+      var answer = itemResponse.getResponse();
+      if (Array.isArray(answer)) answer = answer.join('、');
+      lines.push('■ ' + itemResponse.getItem().getTitle());
+      lines.push('　' + String(answer == null ? '' : answer));
+      lines.push('');
+    });
+    lines.push('（此信由老師的表單系統自動寄出，直接回覆即可聯繫老師。）');
+    MailApp.sendEmail(email, '【回覆副本】' + form.getTitle(), lines.join('\n'));
+  } catch (error) {
+    // 寄信失敗不影響表單本身
   }
 }
 
