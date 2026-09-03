@@ -419,20 +419,6 @@
         .exam-board:fullscreen .exam-label { font-size: 32px; }
         .exam-board:fullscreen .exam-num { font-size: 60px; width: 140px; }
         .exam-board:fullscreen .exam-absent { font-size: 42px; }
-        /* 🍅 番茄鐘 */
-        .tomato-board { text-align: center; padding: 14px 0 6px; }
-        .tomato-face { width: min(340px, 72vw); aspect-ratio: 1; margin: 0 auto 16px; border-radius: 50%; border: 10px solid var(--line); background: var(--surface); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color .4s, transform .4s, box-shadow .4s; box-shadow: 0 4px 16px rgba(40,60,50,.10); }
-        .tomato-face.running { border-color: #1d9e5f; transform: scale(1.04); box-shadow: 0 8px 26px rgba(29,158,95,.25); }
-        .tomato-face.finished { border-color: #cf4433; animation: tomatoShake .5s ease-in-out 3; box-shadow: 0 0 24px rgba(207,68,51,.4); }
-        @keyframes tomatoShake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-7px); } 75% { transform: translateX(7px); } }
-        .tomato-time { font-size: clamp(64px, 13vw, 110px); font-weight: 900; font-variant-numeric: tabular-nums; color: var(--ink); letter-spacing: .02em; }
-        .tomato-face.finished .tomato-time { color: #cf4433; }
-        .tomato-edit { display: flex; align-items: center; gap: 6px; }
-        .tomato-edit input { width: 96px; font-size: 44px; font-weight: 900; text-align: center; border: 0; border-bottom: 3px solid #1d9e5f; background: transparent; font-family: inherit; color: var(--ink); }
-        .tomato-edit span { font-size: 40px; font-weight: 900; }
-        .tomato-board:fullscreen { background: var(--bg); display: flex; flex-direction: column; justify-content: center; overflow: auto; }
-        .tomato-board:fullscreen .tomato-face { width: min(56vh, 80vw); }
-        .tomato-board:fullscreen .tomato-time { font-size: clamp(90px, 20vh, 220px); }
       </style>
       <div class="panel">
         <div class="tool-tabs" id="toolTabs">
@@ -442,7 +428,6 @@
           <button class="tool-tab" type="button" data-tool="group">👥 隨機分組</button>
           <button class="tool-tab" type="button" data-tool="quiet">🔇 安靜偵測</button>
           <button class="tool-tab" type="button" data-tool="exam">📝 定評小幫手</button>
-          <button class="tool-tab" type="button" data-tool="tomato">🍅 番茄鐘</button>
           <span class="status-text">全部只存這台電腦、不進雲端統計；抽籤與分組的座號池自動沿用「設定」（略過空號）。</span>
         </div>
 
@@ -571,31 +556,6 @@
               <button class="ghost-button" type="button" id="examSyncButton">🔄 從點名帶入（應到／實到／未到）</button>
               <button class="ghost-button" type="button" id="examFullscreenButton">⛶ 全螢幕播放</button>
               <span class="status-text">帶入後仍可手動修改數字；全螢幕時按 Esc 或再按一次按鈕離開。</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="tool-panel" data-tool-panel="tomato" hidden>
-          <div class="tomato-board" id="tomatoBoard">
-            <div class="tomato-face" id="tomatoFace">
-              <div class="tomato-time" id="tomatoTime">25:00</div>
-              <div class="tomato-edit" id="tomatoEdit" hidden>
-                <input id="tomatoMin" type="number" min="0" max="180" value="25"><span>:</span><input id="tomatoSec" type="number" min="0" max="59" value="00">
-                <button class="ghost-button" type="button" id="tomatoConfirmButton">確認</button>
-              </div>
-            </div>
-            <div class="tool-opts" style="justify-content:center">
-              <button class="mode-button active" type="button" data-tomato-mode="focus">🔥 專注 25</button>
-              <button class="mode-button" type="button" data-tomato-mode="short">☕ 短休 5</button>
-              <button class="mode-button" type="button" data-tomato-mode="long">💤 長休 15</button>
-              <button class="mode-button" type="button" data-tomato-mode="custom">⚙️ 自訂</button>
-            </div>
-            <div class="tool-opts" style="justify-content:center">
-              <button class="primary-button" type="button" id="tomatoStartButton" style="font-size:22px;padding:12px 40px">▶ 開始</button>
-              <button class="ghost-button" type="button" id="tomatoResetButton">🔄 重設</button>
-              <label><input type="checkbox" id="tomatoSound" checked>提示音</label>
-              <button class="ghost-button" type="button" id="tomatoFullscreenButton">⛶ 全螢幕播放</button>
-              <span class="status-text">點大錶面可直接改分秒；時間到會輕聲提醒（純本機、不上傳）。</span>
             </div>
           </div>
         </div>
@@ -2823,92 +2783,6 @@
   const rollcallHint = $('rollcallHint');
   if (rollcallHint) rollcallHint.parentNode.appendChild(makeScaleButtons('號', 'seat'));
   applyScale();
-
-  // ================================================================
-  // 🍅 專注番茄鐘（移植自使用者的「讀書進度檢核」，純本機）
-  // ================================================================
-  (() => {
-    const MODES = { focus: 25 * 60, short: 5 * 60, long: 15 * 60, custom: 25 * 60 };
-    let mode = 'focus', remain = MODES.focus, running = false, timerId = null;
-    const face = $('tomatoFace'), timeEl = $('tomatoTime'), editEl = $('tomatoEdit');
-    const startBtn = $('tomatoStartButton');
-    const fmt = t => `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
-    function paint() {
-      timeEl.textContent = fmt(remain);
-      face.classList.toggle('running', running);
-      startBtn.textContent = running ? '⏸ 暫停' : '▶ 開始';
-    }
-    function chime() {
-      if (!$('tomatoSound').checked) return;
-      try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const t = ctx.currentTime;
-        [[523.25, 0, 1.2], [783.99, 0.2, 1.5]].forEach(([freq, delay, stop]) => {
-          const osc = ctx.createOscillator(), gain = ctx.createGain();
-          osc.connect(gain); gain.connect(ctx.destination);
-          osc.type = 'sine'; osc.frequency.setValueAtTime(freq, t + delay);
-          gain.gain.setValueAtTime(0, t + delay);
-          gain.gain.linearRampToValueAtTime(0.2, t + delay + 0.05);
-          gain.gain.exponentialRampToValueAtTime(0.001, t + stop);
-          osc.start(t + delay); osc.stop(t + stop);
-        });
-      } catch (e) {}
-    }
-    function stopTimer() { running = false; clearInterval(timerId); timerId = null; paint(); }
-    function tick() {
-      remain -= 1;
-      if (remain <= 0) {
-        remain = 0; stopTimer();
-        face.classList.add('finished');
-        chime();
-        if (navigator.vibrate) navigator.vibrate([300, 100, 300]);
-        setTimeout(() => face.classList.remove('finished'), 2200);
-      }
-      paint();
-    }
-    startBtn.addEventListener('click', () => {
-      if (running) { stopTimer(); return; }
-      if (remain <= 0) remain = MODES[mode] || 25 * 60;
-      editEl.hidden = true; timeEl.hidden = false;
-      face.classList.remove('finished');
-      running = true; timerId = setInterval(tick, 1000); paint();
-    });
-    $('tomatoResetButton').addEventListener('click', () => {
-      stopTimer(); face.classList.remove('finished');
-      remain = MODES[mode] || 25 * 60; editEl.hidden = true; timeEl.hidden = false; paint();
-    });
-    function openEdit() {
-      stopTimer();
-      $('tomatoMin').value = Math.floor(remain / 60);
-      $('tomatoSec').value = String(remain % 60).padStart(2, '0');
-      timeEl.hidden = true; editEl.hidden = false;
-    }
-    document.querySelectorAll('[data-tomato-mode]').forEach(btn => btn.addEventListener('click', () => {
-      document.querySelectorAll('[data-tomato-mode]').forEach(item => item.classList.toggle('active', item === btn));
-      mode = btn.dataset.tomatoMode;
-      stopTimer(); face.classList.remove('finished');
-      if (mode === 'custom') { openEdit(); }
-      else { remain = MODES[mode]; editEl.hidden = true; timeEl.hidden = false; paint(); }
-    }));
-    face.addEventListener('click', e => { if (!editEl.hidden || e.target.closest('.tomato-edit')) return; openEdit(); });
-    $('tomatoConfirmButton').addEventListener('click', e => {
-      e.stopPropagation();
-      const total = (parseInt($('tomatoMin').value, 10) || 0) * 60 + (parseInt($('tomatoSec').value, 10) || 0);
-      MODES.custom = total > 0 ? total : 25 * 60;
-      remain = MODES.custom; mode = 'custom';
-      document.querySelectorAll('[data-tomato-mode]').forEach(item => item.classList.toggle('active', item.dataset.tomatoMode === 'custom'));
-      editEl.hidden = true; timeEl.hidden = false; paint();
-    });
-    const board = $('tomatoBoard');
-    $('tomatoFullscreenButton').addEventListener('click', () => {
-      if (document.fullscreenElement) document.exitFullscreen();
-      else if (board.requestFullscreen) board.requestFullscreen().catch(() => showToast('這個瀏覽器不支援全螢幕。', true));
-    });
-    document.addEventListener('fullscreenchange', () => {
-      $('tomatoFullscreenButton').textContent = document.fullscreenElement === board ? '⛶ 離開全螢幕' : '⛶ 全螢幕播放';
-    });
-    paint();
-  })();
 
   // 初始渲染
   updateLotStatus();

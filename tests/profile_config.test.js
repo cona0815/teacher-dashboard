@@ -143,7 +143,7 @@ assert.deepEqual(
 assert.ok(options.類型.includes("舊制自訂類型"), "切換處室時應保留既有任務類型");
 assert.equal(options.類型.filter((value) => value === "課程教學").length, 1);
 
-for (const htmlName of ["Installer.html", "Index.html", "Board.html", "Morning.html", "Install.html", "Studio.html"]) {
+for (const htmlName of ["Installer.html", "Index.html", "Board.html", "Morning.html", "Install.html"]) {
   const html = fs.readFileSync(path.join(projectRoot, htmlName), "utf8");
   const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((match) => match[1]);
   assert.ok(scripts.length > 0, `${htmlName} 缺少前端程式`);
@@ -337,30 +337,6 @@ assert.match(lineBotSource, /menuSetUserId/, "選單應可直接填入 userId");
 const boardHtml = fs.readFileSync(path.join(projectRoot, "Board.html"), "utf8");
 assert.match(boardHtml, /grade6PreviewTasks/, "每日看板離線時應讀取工作台真實任務");
 assert.doesNotMatch(boardHtml, /（模擬）/, "每日看板不得再顯示模擬資料戳記");
-
-// 教材小工場（Studio.html）
-const studioHtml = fs.readFileSync(path.join(projectRoot, "Studio.html"), "utf8");
-assert.match(studioHtml, /grade6AssistantApiKey/, "教材小工場應沿用工作台已存的 Gemini 金鑰");
-assert.match(studioHtml, /generativelanguage\.googleapis\.com/, "教材小工場應直連 Gemini（不經任何中繼伺服器）");
-assert.match(studioHtml, /data-page="ws"/, "教材小工場應有學習單分頁");
-assert.match(studioHtml, /差異化雙版本/, "學習單應支援基礎＋進階差異化");
-assert.match(studioHtml, /教師解答卷/, "學習單應可附教師解答卷");
-assert.match(studioHtml, /家長回條/, "家長通知單應含裁切回條");
-assert.match(studioHtml, /data-page="mm"/, "教材小工場應有心智圖分頁");
-assert.match(studioHtml, /data-page="cm"/, "教材小工場應有評語小幫手分頁");
-assert.match(studioHtml, /data-page="mask"/, "教材小工場應有敏感資料遮蔽分頁");
-assert.match(studioHtml, /100% 本機處理，不會上傳/, "遮蔽工具應標明純本機處理");
-assert.match(studioHtml, /\[A-Z\]\[12\]\\d\{8\}/, "文字遮蔽應能辨識身分證字號");
-assert.match(studioHtml, /data-page="poster"/, "教材小工場應有行政海報分頁");
-assert.match(studioHtml, /data-page="award"/, "教材小工場應有獎狀分頁");
-assert.match(studioHtml, /data-page="seat"/, "教材小工場應有座位表分頁");
-assert.match(studioHtml, /island4/, "座位表應支援小組島排法（分組座位）");
-assert.match(studioHtml, /兩人一組（雙併桌）/, "座位表應支援兩人雙併排法");
-assert.match(studioHtml, /不會儲存、不會上傳/, "獎狀姓名應標明僅本機列印、不儲存不上傳");
-assert.match(indexHtml, /href="Studio\.html"/, "教師工具箱應有教材小工場入口");
-assert.match(indexHtml, /toolbox-button" href="Studio\.html"/, "教材小工場應放在教師工具箱按鈕列");
-assert.match(morningHtml, /data-tool="tomato"/, "班級工具應含番茄鐘分頁");
-assert.match(morningHtml, /tomatoFullscreenButton/, "番茄鐘應支援全螢幕播放");
 
 const netlifyConfig = fs.readFileSync(path.join(projectRoot, "netlify.toml"), "utf8");
 for (const header of ["Content-Security-Policy", "X-Content-Type-Options", "Referrer-Policy", "Permissions-Policy"]) {
