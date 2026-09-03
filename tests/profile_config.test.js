@@ -174,11 +174,10 @@ assert.match(indexHtml, /github\.com\/mihozip\/school-admin-daily-dashboard/, "�
 assert.match(indexHtml, /facebook\.com\/albert\.peng\.56/, "授權分頁應標示原作者 Facebook");
 assert.match(indexHtml, /github\.com\/mihozip\/DeskPet/, "授權分頁應標示 DeskPet 流程參考來源");
 assert.match(indexHtml, /本修改版介面插圖/, "授權分頁應記錄本修改版介面插圖來源");
-assert.match(
-  indexHtml,
-  /raw\.githubusercontent\.com\/cona0815\/teacher-dashboard\/main\/assets\/pet\//,
-  "正式環境的小綿助素材應由本專案 repository 提供",
-);
+// 2026-09-04 契約反轉：Netlify 上本站就有 assets/pet/，外連 GitHub 會被
+// CSP img-src 'self' 擋下刷 console 錯誤——素材一律走本站相對路徑。
+assert.doesNotMatch(indexHtml, /raw\.githubusercontent\.com/, "小綿助素材不得外連 GitHub（CSP 只允許本站圖片）");
+assert.match(indexHtml, /deskpetAssetRoot = 'assets\/pet\/'/, "小綿助素材應使用本站相對路徑");
 assert.match(indexHtml, /project-child \.task-name\.is-completed/, "完成的子任務應以刪除線標示該項目");
 assert.match(indexHtml, /子任務.*已完成；主任務狀態維持不變/, "完成子任務時應保留主任務狀態");
 assert.match(indexHtml, /主任務與下面的 .*項子任務/, "封存主任務前應明確提示會連同子任務處理");
