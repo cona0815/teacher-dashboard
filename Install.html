@@ -72,6 +72,7 @@
     <a href="#part4">D. 每天怎麼用</a>
     <a href="#part5">E. 疑難排解</a>
     <a href="#part6">F. 備份與安全</a>
+    <a href="#partv2" style="font-weight:900">🆕 第2版更新</a>
     <a href="About.html">📚 說明與資安</a>
     <a href="#part7">版權</a>
   </div></nav>
@@ -593,6 +594,38 @@
       </ul>
     </section>
 
+    <section id="partv2">
+      <h2>🆕 第 2 版來了！已經在用第 1 版的老師看這裡</h2>
+      <p class="lead">2026 年 9 月起網站升級為<strong>第 2 版</strong>。如果你是全新安裝，照上面 A→B→C 做就是第 2 版，這段可以跳過；<strong>已經裝好第 1 版的老師</strong>，照下面做 5～10 分鐘就升級完成。</p>
+
+      <h3>第 2 版多了什麼？</h3>
+      <table>
+        <tr><th>在哪裡</th><th>新功能</th></tr>
+        <tr><td>🎨 教材小工場<br>（工作台「教師工具箱」新按鈕）</td><td>學習單（差異化雙版本＋解答卷）、家長通知單（含裁切回條）、心智圖、<strong>作文引導單</strong>（審題→心智圖→段落鷹架→佳句→四格漫畫）、<strong>作文批改</strong>（會考六級分規準、可拍照/PDF/貼圖）、海報宣傳單（8 配色×4 版型×直橫）、座位表（四種排法＋拖拉換位）、Google 表單產生器（填完可自動寄回覆副本）、LINE 圖文選單產生器、敏感資料遮蔽（純本機）</td></tr>
+        <tr><td>🧰 大屏班級工具</td><td>🍅 番茄鐘（呼吸動畫＋LO-FI 音樂角：匯入 MP3、貼 YouTube）、📣 大屏提示（22 句班級經營句＋插圖，<strong>工作台或 LINE 傳「提示 排隊」就能遠端切換</strong>）、安靜偵測角色互動（安靜集 ⭐）、計分板改為手動歸零</td></tr>
+        <tr><td>📅 Google 整合</td><td>任務一鍵加入 Google 日曆、小綿助記事 ↔ Google Tasks 雙向同步</td></tr>
+      </table>
+
+      <h3>升級三步驟（原網址、原金鑰、原資料通通不變）</h3>
+      <ol class="steps">
+        <li><strong>網站免更新</strong>：網頁版會自動是最新版，重新整理（F5）就好。書籤、金鑰、本機資料全部照舊。</li>
+        <li><strong>更新 LINE 小幫手程式（有裝 B 部分的老師才要做）</strong>：
+          <ol>
+            <li>開你的「line小幫手」試算表 → 擴充功能 → Apps Script</li>
+            <li>全選刪掉舊程式，貼上新版 <code>LineBot.gs</code>（跟第 1 版取得方式相同：分享包裡的「02_LineBot程式碼」）→ 儲存 💾</li>
+            <li><strong>部署 → 管理部署 → ✏️ 編輯 → 版本選「新版本」→ 部署</strong>（⚠️ 千萬不要按「新增部署」，網址會變）</li>
+          </ol></li>
+        <li><strong>重新授權一次（正常現象，不是壞掉）</strong>：第 2 版多了「建立表單、寄信、圖文選單」等能力，<strong>第一次使用這些新功能</strong>時 Google 會再跳一次授權視窗——跟第 1 版安裝時一樣按「進階 → 前往（不安全）→ 允許」即可，只會問這一次。</li>
+      </ol>
+
+      <div class="box">
+        <strong>選配：記事同步 Google Tasks</strong>（想在手機 Google 日曆看到記事的老師才要做）<br>
+        Apps Script 編輯器<strong>左側「服務」按「＋」→ 選「Tasks API」→ 新增</strong>，然後再做一次上面的「管理部署 → 新版本」。沒做這步其他功能完全不受影響，按同步鈕時會告訴你怎麼開。
+      </div>
+      <div class="warn">🧹 <strong>從很舊的版本升上來？</strong>如果曾遇到「同一天點名被記很多筆」，升級後請按試算表選單「🤖 LINE 小幫手 → 🧹 清理重複資料（修統計）」一次，統計就會恢復正常。</div>
+      <div class="ok">✅ 升級驗收：對機器人傳「<code>說明</code>」有回覆、傳「<code>提示</code>」看得到大屏提示指令清單，就代表新版部署成功。</div>
+    </section>
+
     <section id="part7">
       <h2>©️ 版權與授權資料</h2>
       <p>本系統為開源軟體，採 <strong>MIT License</strong> 授權，可自由使用、修改與分享（需保留授權聲明）。分享給其他老師時，請一併保留本說明。</p>
@@ -603,6 +636,7 @@
         <tr><td>介面吉祥物圖示</td><td><a href="https://ipaslogo.com/" target="_blank" rel="noopener">IP as Logo Skill</a>（MIT License，可免費商用）</td></tr>
         <tr><td>注音字型</td><td><a href="https://github.com/ButTaiwan/bpmfvs" target="_blank" rel="noopener">芫荽注音 BpmfIansui</a>（SIL OFL 1.1）</td></tr>
         <tr><td>部分介面圖示</td><td><a href="https://koboyo.com/icons" target="_blank" rel="noopener">Koboyo Icons</a>（依其授權條款使用）</td></tr>
+        <tr><td>大屏與海報插圖</td><td><a href="https://www.irasutoya.com/" target="_blank" rel="noopener">いらすとや（Irasutoya）</a>（依其條款於單一作品 20 張內使用）</td></tr>
       </table>
       <p class="lead">完整第三方聲明見專案內 THIRD_PARTY_NOTICES.md。開發過程之設計參考聲明見專案 README。</p>
     </section>

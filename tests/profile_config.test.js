@@ -398,6 +398,18 @@ assert.match(morningHtml, /config\.scores/, "計分板分數應永久保存（�
 assert.doesNotMatch(morningHtml, /分數隔天自動歸零/, "計分板不得再自動歸零");
 const noticesText = fs.readFileSync(path.join(projectRoot, "THIRD_PARTY_NOTICES.md"), "utf8");
 assert.match(noticesText, /irasutoya/i, "第三方聲明應記錄いらすとや授權");
+
+// 第 2 版文件同步：安裝教學更新指南、About 新情境、Intro 介紹
+assert.match(installHtml, /id="partv2"/, "安裝教學應有第 2 版更新指南分頁");
+assert.match(installHtml, /管理部署 → ✏️ 編輯 → 版本選「新版本」/, "更新指南應強調管理部署而非新增部署");
+assert.match(installHtml, /重新授權一次/, "更新指南應預告新權限的重新授權");
+assert.match(installHtml, /Tasks API/, "更新指南應說明 Tasks 服務選配啟用");
+assert.match(aboutHtml, /教材小工場一條龍/, "About 應新增備課夜情境");
+assert.match(aboutHtml, /會考寫作六級分規準/, "About 應說明作文批改採會考規準");
+assert.match(aboutHtml, /提示 排隊/, "About 應示範大屏提示 LINE 遙控");
+const introHtml = fs.readFileSync(path.join(projectRoot, "Intro.html"), "utf8");
+assert.match(introHtml, /教材小工場（第 2 版新登場）/, "Intro 應介紹教材小工場");
+assert.match(introHtml, /大屏提示/, "Intro 班級工具應含大屏提示");
 assert.match(morningHtml, /data-tool="tomato"/, "班級工具應含番茄鐘分頁");
 assert.match(morningHtml, /tomatoFullscreenButton/, "番茄鐘應支援全螢幕播放");
 
