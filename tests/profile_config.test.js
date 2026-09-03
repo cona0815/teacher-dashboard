@@ -315,11 +315,11 @@ assert.match(indexHtml, /rollcallBadgeFor\(key\)/, "工作台日曆應顯示出�
 for (const tool of ["抽籤機", "檢核板", "計分板", "隨機分組", "安靜偵測", "定評小幫手", "排除今日缺席"]) {
   assert.match(morningHtml, new RegExp(tool), `班級工具缺少「${tool}」`);
 }
-assert.doesNotMatch(
-  morningHtml.slice(morningHtml.indexOf("班級工具（純本機）＋顯示縮放")),
-  /callGas\(/,
-  "班級工具腳本不得呼叫雲端（純本機原則）",
-);
+// 純本機原則的唯一例外：大屏提示的唯讀輪詢 prompt_get（使用者 2026-09-04 核定的遠端切換功能）
+const toolsScriptSlice = morningHtml
+  .slice(morningHtml.indexOf("班級工具（純本機）＋顯示縮放"))
+  .replace(/callGas\(\{ action: 'prompt_get'[^}]*\}\)/g, "");
+assert.doesNotMatch(toolsScriptSlice, /callGas\(/, "班級工具除 prompt_get 輪詢外不得呼叫雲端");
 const aboutHtml = fs.readFileSync(path.join(projectRoot, "About.html"), "utf8");
 for (const aboutFeature of ["使用情境", "授權逐條", "LINE小幫手備份", "只用座號", "DRIVE_BACKUP_TYPES", "金鑰權限邊界"]) {
   assert.match(aboutHtml, new RegExp(aboutFeature), `說明頁缺少「${aboutFeature}」`);
@@ -351,12 +351,11 @@ assert.match(studioHtml, /data-page="cm"/, "教材小工場應有評語小幫手
 assert.match(studioHtml, /data-page="mask"/, "教材小工場應有敏感資料遮蔽分頁");
 assert.match(studioHtml, /100% 本機處理，不會上傳/, "遮蔽工具應標明純本機處理");
 assert.match(studioHtml, /\[A-Z\]\[12\]\\d\{8\}/, "文字遮蔽應能辨識身分證字號");
-assert.match(studioHtml, /data-page="poster"/, "教材小工場應有行政海報分頁");
-assert.match(studioHtml, /data-page="award"/, "教材小工場應有獎狀分頁");
+assert.match(studioHtml, /data-page="poster"/, "教材小工場應有海報宣傳單分頁");
+assert.doesNotMatch(studioHtml, /data-page="award"/, "獎狀已依使用者指示移除");
 assert.match(studioHtml, /data-page="seat"/, "教材小工場應有座位表分頁");
 assert.match(studioHtml, /island4/, "座位表應支援小組島排法（分組座位）");
 assert.match(studioHtml, /兩人一組（雙併桌）/, "座位表應支援兩人雙併排法");
-assert.match(studioHtml, /不會儲存、不會上傳/, "獎狀姓名應標明僅本機列印、不儲存不上傳");
 assert.match(indexHtml, /href="Studio\.html"/, "教師工具箱應有教材小工場入口");
 assert.match(indexHtml, /toolbox-button" href="Studio\.html"/, "教材小工場應放在教師工具箱按鈕列");
 
@@ -372,6 +371,28 @@ assert.match(lineBotSource, /尚未啟用 Tasks 服務/, "未啟用 Tasks 服務
 assert.match(studioHtml, /data-page="gform"/, "教材小工場應有 Google 表單產生器分頁");
 assert.match(studioHtml, /form_create/, "表單產生器應透過 GAS form_create 建立");
 assert.match(studioHtml, /https:\/\/script\.google\.com/, "Studio CSP 應放行 GAS 連線");
+
+// 2026-09-04 驗收前批次：作文批改、圖文選單、座位表升級、文件匯出、提示遙控
+assert.match(studioHtml, /data-page="essay"/, "教材小工場應有作文批改分頁");
+assert.match(studioHtml, /data-page="richmenu"/, "教材小工場應有 LINE 圖文選單分頁");
+assert.match(studioHtml, /richmenu_apply/, "圖文選單應透過 GAS richmenu_apply 套用");
+assert.match(studioHtml, /data-page="cm" hidden/, "評語小幫手分頁暫時收起（使用者指示先不用）");
+assert.match(studioHtml, /function downloadPreview/, "文件產出應可下載 Word／Excel");
+assert.match(studioHtml, /id="stNames"/, "座位表應支援自訂名單");
+assert.match(studioHtml, /id="stDirection"/, "座位表應支援排列方向");
+assert.match(studioHtml, /dragstart/, "座位表應支援拖拉移動座位");
+assert.match(lineBotSource, /handleScreenPromptCommand_/, "LINE 應可用「提示 ○○」切換大屏提示");
+assert.match(lineBotSource, /applyRichMenu_/, "GAS 應可建立並套用 LINE 圖文選單");
+assert.ok((lineBotSource.match(/key: '/g) || []).length >= 20, "大屏提示內建句至少 20 句");
+assert.match(morningHtml, /data-tool="prompt"/, "班級工具應含大屏提示分頁");
+assert.match(morningHtml, /prompt_get/, "大屏提示應輪詢 GAS 取得遠端指令");
+assert.match(morningHtml, /assets\/irasutoya\//, "大屏應使用本機 irasutoya 插圖（CSP 不允許外連圖）");
+assert.match(morningHtml, /tomatoBreathe/, "番茄鐘跑動時應有呼吸動畫");
+assert.match(morningHtml, /youtube-nocookie\.com/, "番茄鐘音樂角應支援 YouTube 內嵌");
+assert.match(morningHtml, /config\.scores/, "計分板分數應永久保存（只有手動歸零）");
+assert.doesNotMatch(morningHtml, /分數隔天自動歸零/, "計分板不得再自動歸零");
+const noticesText = fs.readFileSync(path.join(projectRoot, "THIRD_PARTY_NOTICES.md"), "utf8");
+assert.match(noticesText, /irasutoya/i, "第三方聲明應記錄いらすとや授權");
 assert.match(morningHtml, /data-tool="tomato"/, "班級工具應含番茄鐘分頁");
 assert.match(morningHtml, /tomatoFullscreenButton/, "番茄鐘應支援全螢幕播放");
 

@@ -477,7 +477,7 @@ function handleLineSyncApi_(body) {
   var isTeacher = Boolean(teacherToken) && provided === teacherToken;
   var isClassroom = Boolean(classroomToken) && provided === classroomToken;
   // 教室金鑰權限受限：只能回報與讀取「當日」的點名與作業；歷史查詢需要老師金鑰。
-  var classroomActions = ['ping', 'rollcall_submit', 'classroom_today', 'classroom_missing', 'homework_resubmit', 'contactbook_get', 'contactbook_save'];
+  var classroomActions = ['ping', 'rollcall_submit', 'classroom_today', 'classroom_missing', 'homework_resubmit', 'contactbook_get', 'contactbook_save', 'prompt_get'];
   if (!isTeacher && !(isClassroom && classroomActions.indexOf(action) !== -1)) {
     return lineBotJson_({ ok: false, error: '金鑰不正確或權限不足' });
   }
@@ -502,6 +502,15 @@ function handleLineSyncApi_(body) {
       if (!isTeacher) return lineBotJson_({ ok: false, error: '歷史清單需要老師金鑰' });
       return lineBotJson_(listContactBook_(body));
     }
+    if (action === 'prompt_get') return lineBotJson_(getScreenPrompt_());
+    if (action === 'prompt_set') {
+      if (!isTeacher) return lineBotJson_({ ok: false, error: '設定大屏提示需要老師金鑰' });
+      return lineBotJson_(setScreenPromptApi_(body));
+    }
+    if (action === 'richmenu_apply') {
+      if (!isTeacher) return lineBotJson_({ ok: false, error: '套用圖文選單需要老師金鑰' });
+      return lineBotJson_(applyRichMenu_(body));
+    }
     if (action === 'notes_tasks_sync') {
       if (!isTeacher) return lineBotJson_({ ok: false, error: '記事同步需要老師金鑰' });
       return lineBotJson_(syncNotesWithGoogleTasks_(body));
@@ -514,6 +523,134 @@ function handleLineSyncApi_(body) {
   } catch (error) {
     return lineBotJson_({ ok: false, error: String(error && error.message ? error.message : error) });
   }
+}
+
+// ---------------------------------------------------------------------------
+// 📣 大屏提示：老師在工作台或 LINE 下指令，晨間大屏輪詢後跟著切換
+// ---------------------------------------------------------------------------
+var SCREEN_PROMPTS = [
+  // 🪑 上課秩序
+  { key: '上課', text: '上課囉！眼睛看老師', img: 'class_focus.png' },
+  { key: '坐正', text: '坐姿端正，抬頭挺胸', img: 'class_focus.png' },
+  { key: '坐好', text: '動作快，三秒內坐好', img: 'class_focus.png' },
+  { key: '舉手', text: '發言請舉手，輪流說', img: 'raise_hand.png' },
+  { key: '安靜', text: '安靜！音量零級', img: 'quiet_usagi.png' },
+  { key: '討論', text: '輕聲討論，別吵到隔壁組', img: 'quiet_cat.png' },
+  // 📚 作業與學習
+  { key: '收作業', text: '收作業囉，交給小組長', img: 'homework.png' },
+  { key: '訂正', text: '訂正完拿給老師檢查', img: 'homework.png' },
+  { key: '檢查', text: '寫完的同學自己再檢查一遍', img: 'homework.png' },
+  { key: '閱讀', text: '閱讀時間，安靜看書', img: 'reading.png' },
+  { key: '自習', text: '自習時間，完成自己的進度', img: 'reading.png' },
+  { key: '發問', text: '不會的先圈起來，等一下問', img: 'raise_hand.png' },
+  // 🍱 生活作息
+  { key: '喝水', text: '下課先喝水、上廁所', img: 'drink_water.png' },
+  { key: '吃飯', text: '吃飯不說話，細嚼慢嚥', img: 'quiet_cat.png' },
+  { key: '午休', text: '午休時間，趴下休息', img: 'nap.png' },
+  { key: '打掃', text: '打掃時間，責任區掃乾淨', img: 'cleaning.png' },
+  { key: '整理', text: '整理書包，檢查抽屜', img: 'cleaning.png' },
+  // 🚶 集合與移動
+  { key: '排隊', text: '排隊囉！快、靜、齊', img: 'line_up.png' },
+  { key: '走廊', text: '到走廊排隊，不推不擠', img: 'line_up.png' },
+  { key: '樓梯', text: '上下樓梯靠右走、不奔跑', img: 'line_up.png' },
+  { key: '專科', text: '專科教室集合，帶課本鉛筆盒', img: 'line_up.png' },
+  { key: '放學', text: '準備放學：桌面清空、帶齊物品', img: 'cleaning.png' }
+];
+
+function saveScreenPrompt_(text, img) {
+  PropertiesService.getScriptProperties().setProperty('SCREEN_PROMPT', JSON.stringify({
+    text: String(text).slice(0, 60), img: String(img || 'class_focus.png'), updatedAt: new Date().toISOString()
+  }));
+}
+
+function getScreenPrompt_() {
+  var raw = PropertiesService.getScriptProperties().getProperty('SCREEN_PROMPT');
+  if (!raw) return { ok: true, prompt: null };
+  try { return { ok: true, prompt: JSON.parse(raw) }; } catch (e) { return { ok: true, prompt: null }; }
+}
+
+function setScreenPromptApi_(body) {
+  if (body.clear === true) {
+    PropertiesService.getScriptProperties().deleteProperty('SCREEN_PROMPT');
+    return { ok: true, cleared: true };
+  }
+  var text = String(body.text || '').trim();
+  if (!text) return { ok: false, error: '請提供提示文字' };
+  saveScreenPrompt_(text, body.img);
+  return getScreenPrompt_();
+}
+
+function handleScreenPromptCommand_(input) {
+  input = String(input || '').trim();
+  if (!input || input === '清單' || input === '?' || input === '？') {
+    return '📣 大屏提示指令：\n' +
+      SCREEN_PROMPTS.map(function (p) { return '・提示 ' + p.key + ' → ' + p.text; }).join('\n') +
+      '\n・提示 （自己打的話）→ 直接顯示那句話\n・提示 關 → 清除提示';
+  }
+  if (/^(關|關閉|清除|取消)$/.test(input)) {
+    PropertiesService.getScriptProperties().deleteProperty('SCREEN_PROMPT');
+    return '✅ 已清除大屏提示。';
+  }
+  var preset = null;
+  for (var i = 0; i < SCREEN_PROMPTS.length; i++) {
+    if (input === SCREEN_PROMPTS[i].key || input === SCREEN_PROMPTS[i].text) { preset = SCREEN_PROMPTS[i]; break; }
+  }
+  if (preset) { saveScreenPrompt_(preset.text, preset.img); return '📣 大屏已切換：' + preset.text; }
+  saveScreenPrompt_(input, 'class_focus.png');
+  return '📣 大屏已切換為自訂提示：' + input.slice(0, 60) + '\n（大屏約 20 秒內更新）';
+}
+
+// ---------------------------------------------------------------------------
+// 📱 LINE 圖文選單：工作台畫好選單圖與按鈕 → 這裡呼叫 LINE API 套用
+// ---------------------------------------------------------------------------
+function applyRichMenu_(body) {
+  var token = lineBotProperty_('LINE_CHANNEL_ACCESS_TOKEN');
+  if (!token) return { ok: false, error: '尚未設定 🔑A Channel Token（選單②）' };
+  var areas = Array.isArray(body.areas) ? body.areas.slice(0, 20) : [];
+  if (!areas.length) return { ok: false, error: '請至少設定一個按鈕' };
+  var width = Number(body.width) === 2500 ? 2500 : 2500;
+  var height = Number(body.height) === 843 ? 843 : 1686;
+  var menu = {
+    size: { width: width, height: height },
+    selected: true,
+    name: String(body.name || '教師工作台選單').slice(0, 100),
+    chatBarText: String(body.chatBarText || '功能選單').slice(0, 14),
+    areas: areas.map(function (area) {
+      return {
+        bounds: { x: Math.round(area.x), y: Math.round(area.y), width: Math.round(area.w), height: Math.round(area.h) },
+        action: { type: 'message', text: String(area.text || '說明').slice(0, 100) }
+      };
+    })
+  };
+  var headers = { Authorization: 'Bearer ' + token };
+  var createResponse = UrlFetchApp.fetch('https://api.line.me/v2/bot/richmenu', {
+    method: 'post', contentType: 'application/json', headers: headers,
+    payload: JSON.stringify(menu), muteHttpExceptions: true
+  });
+  if (createResponse.getResponseCode() !== 200) {
+    return { ok: false, error: '建立選單失敗：' + createResponse.getContentText().slice(0, 200) };
+  }
+  var richMenuId = JSON.parse(createResponse.getContentText()).richMenuId;
+  var imageBytes = Utilities.base64Decode(String(body.imageBase64 || ''));
+  var uploadResponse = UrlFetchApp.fetch('https://api-data.line.me/v2/bot/richmenu/' + richMenuId + '/content', {
+    method: 'post', contentType: 'image/png', headers: headers,
+    payload: imageBytes, muteHttpExceptions: true
+  });
+  if (uploadResponse.getResponseCode() !== 200) {
+    return { ok: false, error: '上傳選單圖片失敗：' + uploadResponse.getContentText().slice(0, 200) };
+  }
+  UrlFetchApp.fetch('https://api.line.me/v2/bot/user/all/richmenu/' + richMenuId, {
+    method: 'post', headers: headers, muteHttpExceptions: true
+  });
+  var props = PropertiesService.getScriptProperties();
+  var previous = props.getProperty('RICHMENU_LAST');
+  if (previous && previous !== richMenuId) {
+    UrlFetchApp.fetch('https://api.line.me/v2/bot/richmenu/' + previous, {
+      method: 'delete', headers: headers, muteHttpExceptions: true
+    });
+  }
+  props.setProperty('RICHMENU_LAST', richMenuId);
+  return { ok: true, richMenuId: richMenuId };
 }
 
 // ---------------------------------------------------------------------------
@@ -1084,6 +1221,11 @@ function handleLineEvent_(event, allowedUsers) {
   }
   if (/^(推播設定|推播|用量|額度)$/.test(text)) {
     replyLineMessage_(event.replyToken, buildPushSettingsReply_());
+    return;
+  }
+  var promptMatch = text.match(/^(提示|大屏提示|大屏)\s*(.*)$/);
+  if (promptMatch) {
+    replyLineMessage_(event.replyToken, handleScreenPromptCommand_(promptMatch[2]));
     return;
   }
   var toggleMatch = text.match(/^(開啟|關閉)\s*(.+)$/);

@@ -1542,6 +1542,14 @@
         </div>
       </div>
       <div class="secretary-notes-body">
+        <div class="secretary-note-actions" style="align-items:center;gap:8px">
+          <span style="font-weight:900;font-size:13px">📣 大屏提示遙控</span>
+          <select class="input" id="screenPromptSelect" style="max-width:220px;padding:6px 8px"></select>
+          <input class="input" id="screenPromptCustom" placeholder="或自訂一句…" style="max-width:180px;padding:6px 8px">
+          <button class="mini-button" type="button" id="screenPromptSendButton">送到大屏</button>
+          <button class="mini-button" type="button" id="screenPromptClearButton">清除</button>
+          <span class="secretary-note-meta">大屏約 20 秒內切換；LINE 傳「提示 排隊」也有同樣效果，「提示」看全部指令。</span>
+        </div>
         <div class="secretary-note-meta" id="lineInboxStatus">尚未同步。</div>
         <div class="secretary-note-list" id="lineInboxList"></div>
       </div>
@@ -8411,6 +8419,62 @@
     });
     $('addSecretaryNoteButton').addEventListener('click', addSecretaryNote);
     $('syncGoogleTasksButton').addEventListener('click', syncNotesWithGoogleTasksClient);
+
+    // 📣 大屏提示遙控（與 LineBot.gs 的 SCREEN_PROMPTS 同步）
+    const SCREEN_PROMPT_GROUPS = [
+      { label: '🪑 上課秩序', items: [
+        { text: '上課囉！眼睛看老師', img: 'class_focus.png' },
+        { text: '坐姿端正，抬頭挺胸', img: 'class_focus.png' },
+        { text: '動作快，三秒內坐好', img: 'class_focus.png' },
+        { text: '發言請舉手，輪流說', img: 'raise_hand.png' },
+        { text: '安靜！音量零級', img: 'quiet_usagi.png' },
+        { text: '輕聲討論，別吵到隔壁組', img: 'quiet_cat.png' }
+      ] },
+      { label: '📚 作業與學習', items: [
+        { text: '收作業囉，交給小組長', img: 'homework.png' },
+        { text: '訂正完拿給老師檢查', img: 'homework.png' },
+        { text: '寫完的同學自己再檢查一遍', img: 'homework.png' },
+        { text: '閱讀時間，安靜看書', img: 'reading.png' },
+        { text: '自習時間，完成自己的進度', img: 'reading.png' },
+        { text: '不會的先圈起來，等一下問', img: 'raise_hand.png' }
+      ] },
+      { label: '🍱 生活作息', items: [
+        { text: '下課先喝水、上廁所', img: 'drink_water.png' },
+        { text: '吃飯不說話，細嚼慢嚥', img: 'quiet_cat.png' },
+        { text: '午休時間，趴下休息', img: 'nap.png' },
+        { text: '打掃時間，責任區掃乾淨', img: 'cleaning.png' },
+        { text: '整理書包，檢查抽屜', img: 'cleaning.png' }
+      ] },
+      { label: '🚶 集合與移動', items: [
+        { text: '排隊囉！快、靜、齊', img: 'line_up.png' },
+        { text: '到走廊排隊，不推不擠', img: 'line_up.png' },
+        { text: '上下樓梯靠右走、不奔跑', img: 'line_up.png' },
+        { text: '專科教室集合，帶課本鉛筆盒', img: 'line_up.png' },
+        { text: '準備放學：桌面清空、帶齊物品', img: 'cleaning.png' }
+      ] }
+    ];
+    const SCREEN_PROMPT_PRESETS = SCREEN_PROMPT_GROUPS.flatMap(group => group.items);
+    let screenPromptIndex = 0;
+    $('screenPromptSelect').innerHTML = SCREEN_PROMPT_GROUPS.map(group =>
+      `<optgroup label="${escapeHtml(group.label)}">${group.items.map(item =>
+        `<option value="${screenPromptIndex++}">${escapeHtml(item.text)}</option>`).join('')}</optgroup>`).join('');
+    $('screenPromptSendButton').addEventListener('click', async () => {
+      const custom = $('screenPromptCustom').value.trim();
+      const preset = SCREEN_PROMPT_PRESETS[Number($('screenPromptSelect').value)] || SCREEN_PROMPT_PRESETS[0];
+      try {
+        await callLineBridge('prompt_set', custom
+          ? { text: custom, img: 'class_focus.png' }
+          : { text: preset.text, img: preset.img });
+        showToast(`📣 已送出：「${custom || preset.text}」，大屏約 20 秒內切換。`);
+        $('screenPromptCustom').value = '';
+      } catch (error) { showToast(error.message || '送出失敗。', true); }
+    });
+    $('screenPromptClearButton').addEventListener('click', async () => {
+      try {
+        await callLineBridge('prompt_set', { clear: true });
+        showToast('已清除大屏提示。');
+      } catch (error) { showToast(error.message || '清除失敗。', true); }
+    });
     $('secretaryNoteInput').addEventListener('keydown', event => {
       if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') addSecretaryNote();
     });

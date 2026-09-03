@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' https://script.google.com https://script.googleusercontent.com; frame-src https://www.youtube-nocookie.com https://www.youtube.com; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
   <title>晨間大屏｜點名與作業繳交</title>
   <style>
     :root {
@@ -420,19 +420,54 @@
         .exam-board:fullscreen .exam-num { font-size: 60px; width: 140px; }
         .exam-board:fullscreen .exam-absent { font-size: 42px; }
         /* 🍅 番茄鐘 */
+        .tomato-wrap { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(260px, 380px); gap: 18px; align-items: start; }
+        @media (max-width: 900px) { .tomato-wrap { grid-template-columns: 1fr; } }
         .tomato-board { text-align: center; padding: 14px 0 6px; }
-        .tomato-face { width: min(340px, 72vw); aspect-ratio: 1; margin: 0 auto 16px; border-radius: 50%; border: 10px solid var(--line); background: var(--surface); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color .4s, transform .4s, box-shadow .4s; box-shadow: 0 4px 16px rgba(40,60,50,.10); }
-        .tomato-face.running { border-color: #1d9e5f; transform: scale(1.04); box-shadow: 0 8px 26px rgba(29,158,95,.25); }
+        .tomato-face { width: min(340px, 72vw); aspect-ratio: 1; margin: 0 auto 16px; border-radius: 50%; border: 10px solid var(--line); background: var(--surface); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color .4s, box-shadow .4s; box-shadow: 0 4px 16px rgba(40,60,50,.10); overflow: hidden; }
+        .tomato-face.running { border-color: #1d9e5f; animation: tomatoBreathe 4s ease-in-out infinite; }
+        @keyframes tomatoBreathe {
+          0%, 100% { transform: scale(1); box-shadow: 0 6px 20px rgba(29,158,95,.18); }
+          50% { transform: scale(1.035); box-shadow: 0 10px 34px rgba(29,158,95,.34); }
+        }
         .tomato-face.finished { border-color: #cf4433; animation: tomatoShake .5s ease-in-out 3; box-shadow: 0 0 24px rgba(207,68,51,.4); }
         @keyframes tomatoShake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-7px); } 75% { transform: translateX(7px); } }
-        .tomato-time { font-size: clamp(64px, 13vw, 110px); font-weight: 900; font-variant-numeric: tabular-nums; color: var(--ink); letter-spacing: .02em; }
+        .tomato-time { font-size: clamp(52px, 9vw, 88px); font-weight: 900; font-variant-numeric: tabular-nums; color: var(--ink); letter-spacing: .02em; white-space: nowrap; }
         .tomato-face.finished .tomato-time { color: #cf4433; }
-        .tomato-edit { display: flex; align-items: center; gap: 6px; }
-        .tomato-edit input { width: 96px; font-size: 44px; font-weight: 900; text-align: center; border: 0; border-bottom: 3px solid #1d9e5f; background: transparent; font-family: inherit; color: var(--ink); }
-        .tomato-edit span { font-size: 40px; font-weight: 900; }
+        .tomato-edit { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .tomato-edit-row { display: flex; align-items: center; gap: 6px; }
+        .tomato-edit input { width: 84px; font-size: 38px; font-weight: 900; text-align: center; border: 0; border-bottom: 3px solid #1d9e5f; background: transparent; font-family: inherit; color: var(--ink); }
+        .tomato-edit span { font-size: 34px; font-weight: 900; }
         .tomato-board:fullscreen { background: var(--bg); display: flex; flex-direction: column; justify-content: center; overflow: auto; }
         .tomato-board:fullscreen .tomato-face { width: min(56vh, 80vw); }
-        .tomato-board:fullscreen .tomato-time { font-size: clamp(90px, 20vh, 220px); }
+        .tomato-board:fullscreen .tomato-time { font-size: clamp(80px, 16vh, 180px); }
+        /* 音樂角（奶油色，介面參考使用者的讀書進度檢核） */
+        .tomato-music { background: #f6f1e3; border: 2px solid #e5dcc3; border-radius: 16px; padding: 14px; }
+        .tomato-music-title { font-size: 16px; font-weight: 900; color: #796e5b; letter-spacing: .1em; margin-bottom: 10px; }
+        .tomato-yt { width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 12px; background: #2c3444; margin-bottom: 8px; }
+        .tomato-playlist { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; max-height: 150px; overflow: auto; }
+        .tomato-track { text-align: left; border: 1.5px solid #e5dcc3; background: #fffdf6; border-radius: 9px; padding: 6px 10px; font-size: 13px; font-weight: 700; color: #5e5244; cursor: pointer; font-family: inherit; }
+        .tomato-track.active { border-color: #b9852f; background: #fff3d6; }
+        /* 安靜偵測：いらすとや角色互動 */
+        .quiet-stage { text-align: center; padding: 6px 0 2px; }
+        .quiet-img { max-height: 230px; max-width: 90%; transition: transform .35s ease, filter .35s ease; }
+        .quiet-img.is-calm { animation: quietFloat 3s ease-in-out infinite; }
+        .quiet-img.is-warn { transform: rotate(-4deg) scale(1.03); }
+        .quiet-img.is-loud { animation: quietShake .3s linear infinite; filter: drop-shadow(0 0 18px rgba(207,68,51,.55)); }
+        @keyframes quietFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes quietShake { 0%,100% { transform: translateX(0) rotate(0); } 25% { transform: translateX(-8px) rotate(-2deg); } 75% { transform: translateX(8px) rotate(2deg); } }
+        .quiet-streak { font-size: 22px; font-weight: 900; color: #1d9e5f; margin-top: 6px; }
+        .quiet-streak b { font-size: 30px; font-variant-numeric: tabular-nums; }
+        .quiet-stars { font-size: 34px; letter-spacing: .12em; min-height: 44px; }
+        /* 📣 大屏提示 */
+        .prompt-board { text-align: center; padding: 8px 0 4px; }
+        .prompt-clock { font-size: clamp(64px, 12vw, 150px); font-weight: 900; line-height: 1.05; font-variant-numeric: tabular-nums;
+          background: linear-gradient(90deg, #1d9e5f, #2457e6); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .prompt-message { font-size: clamp(40px, 7vw, 92px); font-weight: 900; color: var(--primary-strong); line-height: 1.4; margin: 8px 0; letter-spacing: .05em; }
+        .prompt-img { max-height: 32vh; max-width: 88%; margin-top: 6px; animation: quietFloat 3.4s ease-in-out infinite; }
+        .prompt-board:fullscreen { background: var(--bg); display: flex; flex-direction: column; justify-content: center; overflow: auto; padding: 3vh 4vw; }
+        .prompt-board:fullscreen .prompt-clock { font-size: clamp(90px, 18vh, 240px); }
+        .prompt-board:fullscreen .prompt-message { font-size: clamp(56px, 12vh, 160px); }
+        .prompt-board:fullscreen .prompt-img { max-height: 38vh; }
       </style>
       <div class="panel">
         <div class="tool-tabs" id="toolTabs">
@@ -443,6 +478,7 @@
           <button class="tool-tab" type="button" data-tool="quiet">🔇 安靜偵測</button>
           <button class="tool-tab" type="button" data-tool="exam">📝 定評小幫手</button>
           <button class="tool-tab" type="button" data-tool="tomato">🍅 番茄鐘</button>
+          <button class="tool-tab" type="button" data-tool="prompt">📣 大屏提示</button>
           <span class="status-text">全部只存這台電腦、不進雲端統計；抽籤與分組的座號池自動沿用「設定」（略過空號）。</span>
         </div>
 
@@ -513,7 +549,7 @@
             </label>
             <button class="ghost-button" type="button" id="scoreResetButton">🔄 全部歸零</button>
             <label><input type="checkbox" id="scoreSound" checked>音效</label>
-            <span class="status-text">組名可直接點著改；分數隔天自動歸零。</span>
+            <span class="status-text">組名可直接點著改；分數會一直保留，只有按「🔄 全部歸零」才會歸零。</span>
           </div>
           <div class="score-wall" id="scoreWall"></div>
         </div>
@@ -535,7 +571,13 @@
             <span class="status-text">需要允許使用麥克風；聲音只在這台電腦即時分析，不錄音、不上傳。</span>
           </div>
           <div class="quiet-meter"><div class="quiet-bar" id="quietBar"></div><div class="quiet-line" id="quietLine" style="left:60%"></div></div>
-          <div class="quiet-face" id="quietFace">😴 尚未開始偵測</div>
+          <div class="quiet-stage" id="quietStage">
+            <img class="quiet-img" id="quietImg" src="assets/irasutoya/quiet_usagi.png" alt="安靜小衛兵" hidden>
+            <div class="quiet-face" id="quietFace">😴 尚未開始偵測</div>
+            <div class="quiet-streak" id="quietStreak" hidden>🌟 連續安靜 <b id="quietStreakSeconds">0</b> 秒</div>
+            <div class="quiet-stars" id="quietStars" title="每連續安靜 30 秒獲得一顆星"></div>
+          </div>
+          <div class="status-text" style="text-align:center;display:block">安靜就換可愛動物站崗、太吵會換成吵翻天的教室；連續安靜 30 秒集一顆 ⭐。插圖：<a href="https://www.irasutoya.com/" target="_blank" rel="noopener">いらすとや</a></div>
         </div>
 
         <div class="tool-panel" data-tool-panel="exam" hidden>
@@ -576,28 +618,64 @@
         </div>
 
         <div class="tool-panel" data-tool-panel="tomato" hidden>
-          <div class="tomato-board" id="tomatoBoard">
-            <div class="tomato-face" id="tomatoFace">
-              <div class="tomato-time" id="tomatoTime">25:00</div>
-              <div class="tomato-edit" id="tomatoEdit" hidden>
-                <input id="tomatoMin" type="number" min="0" max="180" value="25"><span>:</span><input id="tomatoSec" type="number" min="0" max="59" value="00">
-                <button class="ghost-button" type="button" id="tomatoConfirmButton">確認</button>
+          <div class="tomato-wrap">
+            <div class="tomato-board" id="tomatoBoard">
+              <div class="tomato-face" id="tomatoFace">
+                <div class="tomato-time" id="tomatoTime">25:00</div>
+                <div class="tomato-edit" id="tomatoEdit" hidden>
+                  <div class="tomato-edit-row">
+                    <input id="tomatoMin" type="number" min="0" max="180" value="25"><span>:</span><input id="tomatoSec" type="number" min="0" max="59" value="00">
+                  </div>
+                  <button class="ghost-button" type="button" id="tomatoConfirmButton">確認</button>
+                </div>
+              </div>
+              <div class="tool-opts" style="justify-content:center">
+                <button class="mode-button active" type="button" data-tomato-mode="focus">🔥 專注 25</button>
+                <button class="mode-button" type="button" data-tomato-mode="short">☕ 短休 5</button>
+                <button class="mode-button" type="button" data-tomato-mode="long">💤 長休 15</button>
+                <button class="mode-button" type="button" data-tomato-mode="custom">⚙️ 自訂</button>
+              </div>
+              <div class="tool-opts" style="justify-content:center">
+                <button class="primary-button" type="button" id="tomatoStartButton" style="font-size:22px;padding:12px 40px">▶ 開始</button>
+                <button class="ghost-button" type="button" id="tomatoResetButton">🔄 重設</button>
+                <label><input type="checkbox" id="tomatoSound" checked>提示音</label>
+                <button class="ghost-button" type="button" id="tomatoFullscreenButton">⛶ 全螢幕播放</button>
+                <span class="status-text">點大錶面可直接改分秒；時間到會輕聲提醒（純本機、不上傳）。</span>
               </div>
             </div>
-            <div class="tool-opts" style="justify-content:center">
-              <button class="mode-button active" type="button" data-tomato-mode="focus">🔥 專注 25</button>
-              <button class="mode-button" type="button" data-tomato-mode="short">☕ 短休 5</button>
-              <button class="mode-button" type="button" data-tomato-mode="long">💤 長休 15</button>
-              <button class="mode-button" type="button" data-tomato-mode="custom">⚙️ 自訂</button>
-            </div>
-            <div class="tool-opts" style="justify-content:center">
-              <button class="primary-button" type="button" id="tomatoStartButton" style="font-size:22px;padding:12px 40px">▶ 開始</button>
-              <button class="ghost-button" type="button" id="tomatoResetButton">🔄 重設</button>
-              <label><input type="checkbox" id="tomatoSound" checked>提示音</label>
-              <button class="ghost-button" type="button" id="tomatoFullscreenButton">⛶ 全螢幕播放</button>
-              <span class="status-text">點大錶面可直接改分秒；時間到會輕聲提醒（純本機、不上傳）。</span>
+            <div class="tomato-music">
+              <div class="tomato-music-title">🎧 LO-FI 音樂角</div>
+              <iframe id="tomatoYt" class="tomato-yt" hidden allow="autoplay; encrypted-media" allowfullscreen title="背景音樂"></iframe>
+              <audio id="tomatoAudio" controls hidden style="width:100%"></audio>
+              <div id="tomatoPlaylist" class="tomato-playlist"></div>
+              <div class="tool-opts" style="margin-top:8px">
+                <button class="ghost-button" type="button" id="tomatoMp3Button">⬆ 匯入 MP3 音樂</button>
+                <input id="tomatoMp3Input" type="file" accept="audio/*" multiple hidden>
+              </div>
+              <div class="tool-opts">
+                <input class="inline-select" id="tomatoYtInput" placeholder="貼上 YouTube 連結…" style="flex:1;min-width:170px">
+                <button class="ghost-button" type="button" id="tomatoYtButton">▶ 加入</button>
+              </div>
+              <span class="status-text">音樂只在這台電腦播放；MP3 檔不會上傳、關掉頁面就消失。</span>
             </div>
           </div>
+        </div>
+
+        <div class="tool-panel" data-tool-panel="prompt" hidden>
+          <div class="tool-opts" style="justify-content:center">
+            <label>提示句
+              <select class="inline-select" id="promptSelect" style="font-size:18px;font-weight:900;max-width:340px"></select>
+            </label>
+            <input class="inline-select" id="promptCustomText" placeholder="或自己打一句…" style="max-width:240px">
+            <label><input type="checkbox" id="promptShowClock" checked>顯示時鐘</label>
+            <button class="ghost-button" type="button" id="promptFullscreenButton">⛶ 全螢幕播放</button>
+          </div>
+          <div class="prompt-board" id="promptBoard">
+            <div class="prompt-clock" id="promptClock">--:--</div>
+            <div class="prompt-message" id="promptMessage">上課囉！眼睛看老師</div>
+            <img class="prompt-img" id="promptImg" src="assets/irasutoya/class_focus.png" alt="">
+          </div>
+          <div class="status-text" style="text-align:center;display:block">內建常用班級經營句，也可自訂文字；插圖：<a href="https://www.irasutoya.com/" target="_blank" rel="noopener">いらすとや</a>。純本機、不上傳。</div>
         </div>
       </div>
     </section>
@@ -605,7 +683,7 @@
     <section class="page" id="page-query">
       <div class="panel">
         <div class="query-controls">
-          <div class="field"><label>🔑C 老師查詢金鑰（＝教學裡的「工作台同步金鑰」，只留在此分頁）</label><input type="password" id="teacherTokenInput" autocomplete="off" placeholder="貼上 🔑C（不是教室金鑰 🔑D）；輸入後可查歷史統計"></div>
+          <div class="field"><label>🔑C 老師查詢金鑰</label><div class="status-text" style="padding:9px 0">已統一放在「⚙ 設定」分頁（🌐 網址與 🔑D 旁邊）；填好儲存後這裡直接查。</div></div>
           <div class="field"><label>起始日</label><input type="date" id="queryFrom"></div>
           <div class="field"><label>結束日</label><input type="date" id="queryTo"></div>
           <button class="ghost-button" type="button" data-range="week">本週</button>
@@ -666,6 +744,7 @@
           <div class="field"><label>補交回溯天數</label><input id="setupLookbackDays" type="number" min="1" max="60" value="30"></div>
           <div class="field" style="grid-column:1/-1"><label>🌐 Apps Script 部署網址（/exec 結尾，與 LINE 小幫手同一份）＝教學裡的「🌐 機器人網址」　<a href="Install.html#part2" target="_blank" rel="noopener" style="font-weight:700">還沒有？看申請教學 📖</a></label><input id="setupGasUrl" type="url" placeholder="貼上 🌐 機器人網址：https://script.google.com/macros/s/……/exec"></div>
           <div class="field" style="grid-column:1/-1"><label>🔑D 教室大屏金鑰＝教學裡的「教室大屏金鑰」（執行 setupLineBot 後取得的 CLASSROOM_TOKEN）　<a href="Install.html#part2" target="_blank" rel="noopener" style="font-weight:700">如何取得？📖</a></label><input id="setupClassroomToken" type="password" autocomplete="off" placeholder="貼上 🔑D（教室只放這把；老師金鑰 🔑C 不要貼這裡）"></div>
+          <div class="field" style="grid-column:1/-1"><label>🔑C 老師查詢金鑰（選填；填了才能用「查詢」分頁看歷史統計。⚠️ 教室公用電腦建議不要填）</label><input id="setupTeacherToken" type="password" autocomplete="off" placeholder="貼上 🔑C 工作台同步金鑰（老師自己的電腦才填）"></div>
         </div>
         <button class="primary-button" type="button" id="saveSetupButton" style="margin-top:14px;font-size:18px;padding:12px 26px">儲存設定</button>
         <p class="note">
@@ -703,7 +782,7 @@
         className: '', boardTitle: '晨間大屏', contactFont: 'default', correctColor: 'brown', seatCount: 26, emptySeats: [],
         setupPin: '1234',
         subjects: [], assignmentTypes: ['習作', '試卷', '作業本', '學習單', '其他'],
-        gasUrl: '', classroomToken: '',
+        gasUrl: '', classroomToken: '', teacherToken: '',
         lateTime: '08:00', autoAbsentTime: '08:05', autoNotifyTime: '08:08', autoHomeworkNotifyTime: '08:40', lookbackDays: 30
       },
       attendance: {},        // {seat: 到|遲到|病假|事假|未到}（遲到畫面顯示為「到」）
@@ -777,6 +856,7 @@
           if (Array.isArray(saved.assignmentTypes) && saved.assignmentTypes.length) s.assignmentTypes = saved.assignmentTypes.map(String);
           s.gasUrl = String(saved.gasUrl || '');
           s.classroomToken = String(saved.classroomToken || '');
+          s.teacherToken = String(saved.teacherToken || '');
           const timeOk = value => /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(String(value || ''));
           if (timeOk(saved.lateTime)) s.lateTime = saved.lateTime;
           if (timeOk(saved.autoAbsentTime)) s.autoAbsentTime = saved.autoAbsentTime;
@@ -1760,10 +1840,11 @@
       }
     }
     async function runQuery() {
-      const token = $('teacherTokenInput').value.trim();
+      // 金鑰統一放在「設定」分頁（使用者 2026-09-04 指示）；此處僅讀取
+      const token = (state.settings.teacherToken || '').trim();
       const from = $('queryFrom').value;
       const to = $('queryTo').value;
-      if (!token) return showToast('請輸入老師查詢金鑰。', true);
+      if (!token) return showToast('請先到「設定」分頁填入 🔑C 老師查詢金鑰。', true);
       if (!from || !to || from > to) return showToast('請選擇正確的日期區間。', true);
       $('queryStatus').textContent = '查詢中……';
       try {
@@ -1851,6 +1932,7 @@
       $('setupLookbackDays').value = s.lookbackDays;
       $('setupGasUrl').value = s.gasUrl;
       $('setupClassroomToken').value = s.classroomToken;
+      $('setupTeacherToken').value = s.teacherToken || '';
       renderSubjectManager();
       renderBoardPickers();
       renderRollcall();
@@ -1875,6 +1957,7 @@
       s.lookbackDays = Math.min(60, Math.max(1, Number($('setupLookbackDays').value) || 30));
       s.gasUrl = $('setupGasUrl').value.trim();
       s.classroomToken = $('setupClassroomToken').value.trim();
+      s.teacherToken = $('setupTeacherToken').value.trim();
       saveSettings();
       applySettingsToUi();
       showToast('設定已儲存。');
@@ -2124,6 +2207,8 @@
   day.drawn = Array.isArray(day.drawn) ? day.drawn : [];
   day.boards = Array.isArray(day.boards) ? day.boards : [{ name: config.checkNames[0], done: {}, showMiss: false }];
   day.scores = Array.isArray(day.scores) ? day.scores : [];
+  // 計分板分數改為永久保存（使用者要求：只有手動歸零）；舊版存在當日鍵的分數搬過來一次
+  config.scores = Array.isArray(config.scores) ? config.scores : (day.scores.length ? day.scores.slice() : []);
   cleanupOldDays();
 
   function loadJson(key, fallback) {
@@ -2605,7 +2690,7 @@
   // ================================================================
   function teamCount() { return Math.min(6, Math.max(2, Number(config.teamCount) || 4)); }
   function ensureScores() {
-    while (day.scores.length < teamCount()) day.scores.push(0);
+    while (config.scores.length < teamCount()) config.scores.push(0);
   }
   function renderScoreWall() {
     const wall = $('scoreWall');
@@ -2616,7 +2701,7 @@
       const name = config.teamNames[i] || `第 ${i + 1} 組`;
       return `<div class="score-card">
         <span class="score-name" contenteditable="true" data-score-name="${i}" spellcheck="false">${escapeHtml(name)}</span>
-        <div class="score-value" id="scoreValue${i}">${day.scores[i] || 0}</div>
+        <div class="score-value" id="scoreValue${i}">${config.scores[i] || 0}</div>
         <div class="score-buttons">
           <button class="score-plus" type="button" data-score-delta="1" data-score-team="${i}">＋</button>
           <button class="score-minus" type="button" data-score-delta="-1" data-score-team="${i}">−</button>
@@ -2629,7 +2714,7 @@
   });
   $('scoreResetButton').addEventListener('click', () => {
     if (!window.confirm('全部分數歸零？')) return;
-    day.scores = day.scores.map(() => 0); saveDay(); renderScoreWall();
+    config.scores = config.scores.map(() => 0); saveConfig(); renderScoreWall();
   });
   $('scoreWall').addEventListener('click', event => {
     const btn = event.target.closest('[data-score-team]');
@@ -2637,10 +2722,10 @@
     const i = Number(btn.dataset.scoreTeam);
     const delta = Number(btn.dataset.scoreDelta);
     ensureScores();
-    day.scores[i] = Math.max(0, (day.scores[i] || 0) + delta);
-    saveDay();
+    config.scores[i] = Math.max(0, (config.scores[i] || 0) + delta);
+    saveConfig();
     const value = $(`scoreValue${i}`);
-    value.textContent = day.scores[i];
+    value.textContent = config.scores[i];
     value.classList.remove('bump'); void value.offsetWidth; value.classList.add('bump');
     if ($('scoreSound').checked) beep(delta > 0 ? 740 : 262, .2, delta > 0 ? 'sine' : 'square');
   });
@@ -2687,6 +2772,7 @@
   // 🔇 安靜偵測
   // ================================================================
   let quietStream = null, quietCtx = null, quietRaf = 0, overSince = 0, overlayCooldown = 0;
+  let quietCalmSince = 0, quietStarCount = 0;
   $('quietThreshold').value = String(config.quietThreshold || 60);
   $('quietThresholdValue').textContent = $('quietThreshold').value;
   $('quietLine').style.left = $('quietThreshold').value + '%';
@@ -2717,11 +2803,35 @@
       $('quietBar').style.width = level + '%';
       const threshold = Number($('quietThreshold').value);
       const face = $('quietFace');
-      if (level < threshold - 15) face.textContent = '😊 很安靜，繼續保持！';
-      else if (level < threshold) face.textContent = '😐 有點聲音囉…';
-      else face.textContent = '😫 太吵了！';
+      const img = $('quietImg');
+      img.hidden = false;
+      const setCharacter = (src, cls) => {
+        if (!img.src.endsWith(src)) img.src = 'assets/irasutoya/' + src;
+        img.className = 'quiet-img ' + cls;
+      };
+      if (level < threshold - 25) { setCharacter('quiet_usagi.png', 'is-calm'); face.textContent = '😊 超安靜！兔兔為你們驕傲'; }
+      else if (level < threshold - 12) { setCharacter('quiet_cat.png', 'is-calm'); face.textContent = '🐱 噓——保持這個音量'; }
+      else if (level < threshold) { setCharacter('quiet_kuma.png', 'is-warn'); face.textContent = '🐻 有點聲音囉，小心！'; }
+      else { setCharacter('too_noisy.png', 'is-loud'); face.textContent = '😫 太吵了！教室要翻掉啦！'; }
       const now = Date.now();
+      // 連續安靜集星星：低於警戒就累積，破表歸零
+      if (level < threshold) {
+        if (!quietCalmSince) quietCalmSince = now;
+        const seconds = Math.floor((now - quietCalmSince) / 1000);
+        $('quietStreak').hidden = false;
+        $('quietStreakSeconds').textContent = seconds;
+        const stars = Math.min(10, Math.floor(seconds / 30));
+        if (stars !== quietStarCount) {
+          quietStarCount = stars;
+          $('quietStars').textContent = '⭐'.repeat(stars);
+          if (stars > 0) beep(880, .18, 'sine', .08);
+        }
+      }
       if (level >= threshold) {
+        quietCalmSince = 0;
+        if (quietStarCount || $('quietStreak').hidden === false) {
+          $('quietStreakSeconds').textContent = '0';
+        }
         if (!overSince) overSince = now;
         if (now - overSince > 700 && now > overlayCooldown) {
           overlayCooldown = now + 3200;
@@ -2749,6 +2859,13 @@
     if (face && !quietStream) face.textContent = '😴 尚未開始偵測';
     const bar = $('quietBar');
     if (bar) bar.style.width = '0%';
+    const img = $('quietImg');
+    if (img) { img.hidden = true; img.className = 'quiet-img'; }
+    const streak = $('quietStreak');
+    if (streak) streak.hidden = true;
+    const stars = $('quietStars');
+    if (stars) stars.textContent = '';
+    quietCalmSince = 0; quietStarCount = 0;
     overSince = 0;
   }
   $('quietStartButton').addEventListener('click', () => { quietStream ? stopQuiet() : startQuiet(); });
@@ -2829,12 +2946,15 @@
   // ================================================================
   (() => {
     const MODES = { focus: 25 * 60, short: 5 * 60, long: 15 * 60, custom: 25 * 60 };
-    let mode = 'focus', remain = MODES.focus, running = false, timerId = null;
+    let mode = 'focus', remain = MODES.focus, running = false, timerId = null, editing = false;
     const face = $('tomatoFace'), timeEl = $('tomatoTime'), editEl = $('tomatoEdit');
     const startBtn = $('tomatoStartButton');
     const fmt = t => `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
     function paint() {
       timeEl.textContent = fmt(remain);
+      // 錶面內只能有一種東西：編輯模式顯示輸入框，否則顯示倒數
+      timeEl.hidden = editing;
+      editEl.hidden = !editing;
       face.classList.toggle('running', running);
       startBtn.textContent = running ? '⏸ 暫停' : '▶ 開始';
     }
@@ -2868,36 +2988,77 @@
     }
     startBtn.addEventListener('click', () => {
       if (running) { stopTimer(); return; }
+      if (editing) { commitEdit(); }
       if (remain <= 0) remain = MODES[mode] || 25 * 60;
-      editEl.hidden = true; timeEl.hidden = false;
       face.classList.remove('finished');
       running = true; timerId = setInterval(tick, 1000); paint();
     });
     $('tomatoResetButton').addEventListener('click', () => {
       stopTimer(); face.classList.remove('finished');
-      remain = MODES[mode] || 25 * 60; editEl.hidden = true; timeEl.hidden = false; paint();
+      editing = false; remain = MODES[mode] || 25 * 60; paint();
     });
     function openEdit() {
       stopTimer();
       $('tomatoMin').value = Math.floor(remain / 60);
       $('tomatoSec').value = String(remain % 60).padStart(2, '0');
-      timeEl.hidden = true; editEl.hidden = false;
+      editing = true; paint();
+    }
+    function commitEdit() {
+      const total = (parseInt($('tomatoMin').value, 10) || 0) * 60 + (parseInt($('tomatoSec').value, 10) || 0);
+      MODES.custom = total > 0 ? total : 25 * 60;
+      remain = MODES.custom; mode = 'custom'; editing = false;
+      document.querySelectorAll('[data-tomato-mode]').forEach(item => item.classList.toggle('active', item.dataset.tomatoMode === 'custom'));
+      paint();
     }
     document.querySelectorAll('[data-tomato-mode]').forEach(btn => btn.addEventListener('click', () => {
       document.querySelectorAll('[data-tomato-mode]').forEach(item => item.classList.toggle('active', item === btn));
       mode = btn.dataset.tomatoMode;
       stopTimer(); face.classList.remove('finished');
       if (mode === 'custom') { openEdit(); }
-      else { remain = MODES[mode]; editEl.hidden = true; timeEl.hidden = false; paint(); }
+      else { editing = false; remain = MODES[mode]; paint(); }
     }));
-    face.addEventListener('click', e => { if (!editEl.hidden || e.target.closest('.tomato-edit')) return; openEdit(); });
-    $('tomatoConfirmButton').addEventListener('click', e => {
-      e.stopPropagation();
-      const total = (parseInt($('tomatoMin').value, 10) || 0) * 60 + (parseInt($('tomatoSec').value, 10) || 0);
-      MODES.custom = total > 0 ? total : 25 * 60;
-      remain = MODES.custom; mode = 'custom';
-      document.querySelectorAll('[data-tomato-mode]').forEach(item => item.classList.toggle('active', item.dataset.tomatoMode === 'custom'));
-      editEl.hidden = true; timeEl.hidden = false; paint();
+    face.addEventListener('click', e => { if (editing || e.target.closest('.tomato-edit')) return; openEdit(); });
+    $('tomatoConfirmButton').addEventListener('click', e => { e.stopPropagation(); commitEdit(); });
+
+    // 🎧 音樂角：匯入 MP3（純本機）＋貼 YouTube 連結
+    const audio = $('tomatoAudio');
+    let playlist = [], trackIndex = -1;
+    function renderPlaylist() {
+      $('tomatoPlaylist').innerHTML = playlist.map((track, index) =>
+        `<button class="tomato-track${index === trackIndex ? ' active' : ''}" type="button" data-track="${index}">${index === trackIndex ? '▶ ' : ''}${escapeHtml(track.name)}</button>`).join('');
+    }
+    function playTrack(index) {
+      if (!playlist[index]) return;
+      trackIndex = index;
+      audio.src = playlist[index].url;
+      audio.hidden = false;
+      audio.play().catch(() => {});
+      renderPlaylist();
+    }
+    $('tomatoMp3Button').addEventListener('click', () => $('tomatoMp3Input').click());
+    $('tomatoMp3Input').addEventListener('change', () => {
+      const wasEmpty = !playlist.length;
+      [...$('tomatoMp3Input').files].forEach(file => {
+        playlist.push({ name: file.name.replace(/\.[^.]+$/, ''), url: URL.createObjectURL(file) });
+      });
+      $('tomatoMp3Input').value = '';
+      renderPlaylist();
+      if (wasEmpty && playlist.length) playTrack(0);
+    });
+    audio.addEventListener('ended', () => { if (playlist.length) playTrack((trackIndex + 1) % playlist.length); });
+    $('tomatoPlaylist').addEventListener('click', e => {
+      const btn = e.target.closest('[data-track]');
+      if (btn) playTrack(Number(btn.dataset.track));
+    });
+    $('tomatoYtButton').addEventListener('click', () => {
+      const url = $('tomatoYtInput').value.trim();
+      const match = url.match(/(?:youtu\.be\/|v=|shorts\/|embed\/|live\/)([\w-]{11})/);
+      if (!match) { showToast('看不懂這個 YouTube 連結，請貼影片網址。', true); return; }
+      const frame = $('tomatoYt');
+      frame.src = `https://www.youtube-nocookie.com/embed/${match[1]}?autoplay=1&loop=1&playlist=${match[1]}`;
+      frame.hidden = false;
+      $('tomatoYtInput').value = '';
+      showToast('🎧 已載入 YouTube 音樂，會自動循環播放。');
     });
     const board = $('tomatoBoard');
     $('tomatoFullscreenButton').addEventListener('click', () => {
@@ -2908,6 +3069,100 @@
       $('tomatoFullscreenButton').textContent = document.fullscreenElement === board ? '⛶ 離開全螢幕' : '⛶ 全螢幕播放';
     });
     paint();
+  })();
+
+  // ================================================================
+  // 📣 大屏提示（內建班級經營句＋いらすとや插圖，純本機）
+  // ================================================================
+  (() => {
+    const PROMPT_GROUPS = [
+      { label: '🪑 上課秩序', items: [
+        { text: '上課囉！眼睛看老師', img: 'class_focus.png' },
+        { text: '坐姿端正，抬頭挺胸', img: 'class_focus.png' },
+        { text: '動作快，三秒內坐好', img: 'class_focus.png' },
+        { text: '發言請舉手，輪流說', img: 'raise_hand.png' },
+        { text: '安靜！音量零級', img: 'quiet_usagi.png' },
+        { text: '輕聲討論，別吵到隔壁組', img: 'quiet_cat.png' }
+      ] },
+      { label: '📚 作業與學習', items: [
+        { text: '收作業囉，交給小組長', img: 'homework.png' },
+        { text: '訂正完拿給老師檢查', img: 'homework.png' },
+        { text: '寫完的同學自己再檢查一遍', img: 'homework.png' },
+        { text: '閱讀時間，安靜看書', img: 'reading.png' },
+        { text: '自習時間，完成自己的進度', img: 'reading.png' },
+        { text: '不會的先圈起來，等一下問', img: 'raise_hand.png' }
+      ] },
+      { label: '🍱 生活作息', items: [
+        { text: '下課先喝水、上廁所', img: 'drink_water.png' },
+        { text: '吃飯不說話，細嚼慢嚥', img: 'quiet_cat.png' },
+        { text: '午休時間，趴下休息', img: 'nap.png' },
+        { text: '打掃時間，責任區掃乾淨', img: 'cleaning.png' },
+        { text: '整理書包，檢查抽屜', img: 'cleaning.png' }
+      ] },
+      { label: '🚶 集合與移動', items: [
+        { text: '排隊囉！快、靜、齊', img: 'line_up.png' },
+        { text: '到走廊排隊，不推不擠', img: 'line_up.png' },
+        { text: '上下樓梯靠右走、不奔跑', img: 'line_up.png' },
+        { text: '專科教室集合，帶課本鉛筆盒', img: 'line_up.png' },
+        { text: '準備放學：桌面清空、帶齊物品', img: 'cleaning.png' }
+      ] }
+    ];
+    const PROMPTS = PROMPT_GROUPS.flatMap(group => group.items);
+    const select = $('promptSelect');
+    let promptIndex = 0;
+    select.innerHTML = PROMPT_GROUPS.map(group =>
+      `<optgroup label="${group.label}">${group.items.map(item =>
+        `<option value="${promptIndex++}">${item.text}</option>`).join('')}</optgroup>`).join('');
+    function applyPrompt() {
+      const custom = $('promptCustomText').value.trim();
+      const preset = PROMPTS[Number(select.value)] || PROMPTS[0];
+      $('promptMessage').textContent = custom || preset.text;
+      $('promptImg').src = 'assets/irasutoya/' + preset.img;
+    }
+    select.addEventListener('change', () => { $('promptCustomText').value = ''; applyPrompt(); });
+    $('promptCustomText').addEventListener('input', applyPrompt);
+    function tickPromptClock() {
+      const now = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      $('promptClock').textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+      $('promptClock').hidden = !$('promptShowClock').checked;
+    }
+    setInterval(tickPromptClock, 1000);
+    tickPromptClock();
+    $('promptShowClock').addEventListener('change', tickPromptClock);
+    const promptBoard = $('promptBoard');
+    $('promptFullscreenButton').addEventListener('click', () => {
+      if (document.fullscreenElement) document.exitFullscreen();
+      else if (promptBoard.requestFullscreen) promptBoard.requestFullscreen().catch(() => showToast('這個瀏覽器不支援全螢幕。', true));
+    });
+    document.addEventListener('fullscreenchange', () => {
+      $('promptFullscreenButton').textContent = document.fullscreenElement === promptBoard ? '⛶ 離開全螢幕' : '⛶ 全螢幕播放';
+    });
+    applyPrompt();
+
+    // 遠端切換：老師在工作台或 LINE 下「提示 ○○」指令 → 這裡每 20 秒輪詢一次
+    // （只在提示分頁開著或全螢幕時輪詢，不浪費額度；本機下拉隨時可蓋過）
+    let promptRemoteStamp = '';
+    async function pollRemotePrompt() {
+      try {
+        if (typeof callGas !== 'function' || typeof state !== 'object') return;
+        const settings = state.settings || {};
+        if (!settings.gasUrl || !settings.classroomToken) return;
+        const panelOpen = !document.querySelector('[data-tool-panel="prompt"]').hidden
+          || document.fullscreenElement === promptBoard;
+        if (!panelOpen) return;
+        const result = await callGas({ action: 'prompt_get', token: settings.classroomToken });
+        const prompt = result && result.prompt;
+        if (prompt && prompt.updatedAt && prompt.updatedAt !== promptRemoteStamp) {
+          promptRemoteStamp = prompt.updatedAt;
+          $('promptCustomText').value = '';
+          $('promptMessage').textContent = prompt.text;
+          $('promptImg').src = 'assets/irasutoya/' + (prompt.img || 'class_focus.png');
+        }
+      } catch (e) {}
+    }
+    setInterval(pollRemotePrompt, 20000);
+    pollRemotePrompt();
   })();
 
   // 初始渲染

@@ -56,3 +56,17 @@ These files are distributed as part of this application, not as a standalone ill
 ## 小綿助
 
 The original sheep character design, source frames and animation files under `assets/pet/` were created or generated specifically for this modified project and supplied by the project owner. They replace the former DeskPet white-cat artwork. No DeskPet white-cat artwork is included or loaded by the current interface, and the production fallback URL points only to this project's own `cona0815/teacher-dashboard` repository.
+
+## Irasutoya illustrations
+
+The illustrations under `assets/irasutoya/` (12 files) were obtained from
+[Irasutoya (いらすとや)](https://www.irasutoya.com/) by Takashi Mifune.
+
+Irasutoya permits free use of its illustrations in personal and commercial
+works (websites, documents, presentations, etc.) within 20 images per work
+without attribution or fee, provided the images are not redistributed as a
+standalone material collection or used in ways prohibited by the terms.
+This project uses 12 images as decorative UI elements inside a larger work,
+which is within the permitted scope.
+
+- Terms: https://www.irasutoya.com/p/terms.html
