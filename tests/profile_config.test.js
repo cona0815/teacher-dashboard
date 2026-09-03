@@ -374,6 +374,11 @@ assert.match(studioHtml, /https:\/\/script\.google\.com/, "Studio CSP 應放行 
 
 // 2026-09-04 驗收前批次：作文批改、圖文選單、座位表升級、文件匯出、提示遙控
 assert.match(studioHtml, /data-page="essay"/, "教材小工場應有作文批改分頁");
+assert.match(studioHtml, /data-page="guide"/, "教材小工場應有作文引導單分頁");
+assert.match(studioHtml, /function buildMindmapSvg/, "心智圖繪製應為共用函式（引導單重用）");
+assert.match(studioHtml, /四格情境漫畫/, "作文引導單應含四格情境漫畫頁");
+assert.match(studioHtml, /段落鷹架|段落設計圖/, "作文引導單應含段落鷹架");
+assert.match(studioHtml, /名言佳句/, "作文引導單應含名言佳句");
 assert.match(studioHtml, /data-page="richmenu"/, "教材小工場應有 LINE 圖文選單分頁");
 assert.match(studioHtml, /richmenu_apply/, "圖文選單應透過 GAS richmenu_apply 套用");
 assert.match(studioHtml, /data-page="cm" hidden/, "評語小幫手分頁暫時收起（使用者指示先不用）");

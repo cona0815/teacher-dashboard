@@ -145,6 +145,7 @@
     <button class="tab-button" type="button" data-page="cm" hidden>💬 評語小幫手</button>
     <button class="tab-button" type="button" data-page="poster">📢 海報宣傳單</button>
     <button class="tab-button" type="button" data-page="seat">🪑 座位表</button>
+    <button class="tab-button" type="button" data-page="guide">🧭 作文引導單</button>
     <button class="tab-button" type="button" data-page="essay">✍️ 作文批改</button>
     <button class="tab-button" type="button" data-page="gform">📋 Google 表單</button>
     <button class="tab-button" type="button" data-page="richmenu">📱 LINE 圖文選單</button>
@@ -381,6 +382,37 @@
       </div>
     </section>
 
+    <!-- 🧭 作文引導單（備課用：審題→心智圖→段落鷹架→佳句→情境漫畫） -->
+    <section class="page" id="page-guide">
+      <div class="workbench">
+        <div class="panel">
+          <div class="field"><label>年級</label>
+            <select class="select" id="gdGrade"><option value="一">一年級</option><option value="二">二年級</option><option value="三">三年級</option><option value="四">四年級</option><option value="五" selected>五年級</option><option value="六">六年級</option></select></div>
+          <div class="field"><label>作文主題</label>
+            <input class="input" id="gdTopic" placeholder="例：難忘的運動會／我的家人／如果我有一雙翅膀"></div>
+          <div class="field"><label>文體</label>
+            <select class="select" id="gdGenre"><option>記敘文</option><option>抒情文</option><option>說明文</option><option>應用文（書信/日記）</option><option>想像文</option></select></div>
+          <div class="field"><label>要包含的內容（可複選）</label>
+            <div class="check-row">
+              <label><input type="checkbox" id="gdMindmap" checked>示範心智圖</label>
+              <label><input type="checkbox" id="gdComic" checked>四格情境漫畫頁</label>
+              <label><input type="checkbox" id="gdTeacher" checked>教師教學參考頁</label>
+            </div></div>
+          <button class="go-button" type="button" id="gdGoButton">🧭 生成引導單</button>
+          <div class="status" id="gdStatus"></div>
+          <div class="hint">產出最多三頁：①學生引導單（審題六何＋心智圖＋段落鷹架＋好詞佳句＋感官提醒）②四格情境漫畫頁（分鏡引導，學生自己畫）③教師教學參考（教學流程＋提問話術＋建議）。</div>
+        </div>
+        <div class="panel">
+          <div class="preview-bar">
+            <button class="mini" type="button" onclick="window.print()">🖨 列印／存 PDF</button>
+            <button class="mini" type="button" onclick="downloadPreview('gdPreview','作文引導單','doc')">⬇ Word</button>
+            <span class="status" id="gdMeta"></span>
+          </div>
+          <div class="preview-host" id="gdPreview"></div>
+        </div>
+      </div>
+    </section>
+
     <!-- ✍️ 作文批改 -->
     <section class="page" id="page-essay">
       <div class="workbench">
@@ -389,8 +421,9 @@
             <select class="select" id="esGrade"><option value="一">一年級</option><option value="二">二年級</option><option value="三">三年級</option><option value="四">四年級</option><option value="五" selected>五年級</option><option value="六">六年級</option></select></div>
           <div class="field"><label>作文題目</label>
             <input class="input" id="esTopic" placeholder="例：我的家人／難忘的校外教學"></div>
-          <div class="field"><label>拍作文照片（可選 1–3 張，跨頁就多拍幾張）</label>
-            <input class="input" type="file" id="esImages" accept="image/*" multiple></div>
+          <div class="field"><label>作文檔案（圖片或 PDF，最多 3 個；也可以直接在這頁 Ctrl+V 貼上截圖）</label>
+            <input class="input" type="file" id="esImages" accept="image/*,.pdf,application/pdf" multiple>
+            <div id="esPasteList" class="check-row" style="margin-top:6px"></div></div>
           <div class="field"><label>或直接貼上作文文字</label>
             <textarea class="textarea" id="esText" placeholder="拍照或貼文字擇一即可"></textarea></div>
           <div class="field"><label>批改重點（可複選）</label>
@@ -402,7 +435,12 @@
               <label><input type="checkbox" class="esFocus" value="內容與感受">內容深度</label>
             </div></div>
           <div class="field"><label>評分方式</label>
-            <select class="select" id="esScoring"><option value="等第">等第（優／甲／乙／丙）</option><option value="分數">分數（0–100）</option><option value="不評分">不評分（只給回饋）</option></select></div>
+            <select class="select" id="esScoring">
+              <option value="六級分" selected>六級分（國中會考寫作評分規準，依年級調整期待）</option>
+              <option value="等第">等第（優／甲／乙／丙）</option>
+              <option value="分數">分數（0–100）</option>
+              <option value="不評分">不評分（只給回饋）</option>
+            </select></div>
           <button class="go-button" type="button" id="esGoButton">✍️ 開始批改</button>
           <div class="status" id="esStatus"></div>
           <div class="warn">AI 批改是<strong>老師的助手草稿</strong>——分數與評語請老師確認調整後再回饋給學生；照片請避免拍到姓名（可先用遮蔽工具處理）。</div>
@@ -792,9 +830,9 @@
       return root;
     }
     const MM_COLORS = ['#e57368', '#f2b53c', '#79c281', '#5f9fe0', '#b784d9', '#e08b5c'];
-    function renderMindmap() {
-      const md = $('mmMarkdown').value;
-      if (!md.trim()) { $('mmSvgHost').innerHTML = ''; return; }
+    // 共用：把 Markdown 大綱畫成心智圖 SVG（心智圖分頁與作文引導單都用）
+    function buildMindmapSvg(md, svgId) {
+      if (!md || !md.trim()) return '';
       const root = parseOutline(md);
       // 佈局：root 在左、往右展開的水平樹
       const NODE_H = 34, GAP_Y = 10, LEVEL_W = [0, 200, 200, 180];
@@ -826,7 +864,10 @@
         });
       };
       draw(root, MM_COLORS[0]);
-      $('mmSvgHost').innerHTML = `<svg id="mmSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family="Microsoft JhengHei, sans-serif" style="background:#fff">${links.join('')}${shapes.join('')}</svg>`;
+      return `<svg${svgId ? ` id="${svgId}"` : ''} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family="Microsoft JhengHei, sans-serif" style="background:#fff;max-width:100%;height:auto">${links.join('')}${shapes.join('')}</svg>`;
+    }
+    function renderMindmap() {
+      $('mmSvgHost').innerHTML = buildMindmapSvg($('mmMarkdown').value, 'mmSvg');
       $('mmMeta').textContent = '';
     }
     $('mmDownloadButton').addEventListener('click', () => {
@@ -1073,41 +1114,165 @@
     });
 
     // ============================================================
+    // 🧭 作文引導單（審題六何→心智圖→段落鷹架→佳句→情境漫畫）
+    // ============================================================
+    $('gdGoButton').dataset.label = $('gdGoButton').textContent;
+    $('gdGoButton').addEventListener('click', async () => {
+      const topic = $('gdTopic').value.trim();
+      if (!topic) return showToast('請輸入作文主題。', true);
+      const grade = $('gdGrade').value, genre = $('gdGenre').value;
+      const prompt = [
+        `你是資深臺灣國小${grade}年級國語老師，為${genre}「${topic}」設計一份作文教學引導材料，解決孩子「空白稿紙焦慮」。`,
+        '設計原則：審題用六何法、取材用心智圖、每段給句型鷹架、好詞佳句要貼合主題與年級、感官摹寫提示具體。',
+        '只回傳 JSON：{',
+        '"questions":["審題引導問題×4（六何法，口語、能勾起回憶）"],',
+        `"mindmap":"- ${topic}\\n  - 分支（3層心智圖 Markdown，4-5個分支、每分支2-3個關鍵詞，每節點12字內）",`,
+        '"paragraphs":[{"name":"第一段·開頭","hint":"這段要寫什麼（給學生看的一句話）","starter":"開頭句型範例（留＿＿讓學生填）"}（共4段：開頭/發展/高潮或細節/結尾）],',
+        '"words":{"adjectives":["貼題形容詞×8"],"verbs":["貼題動詞×6"],"idioms":["貼題成語×6"]},',
+        '"quotes":[{"text":"名言佳句（適合國小、貼合主題）","author":"出處或作者"}×5],',
+        '"sensory":["視覺：提示","聽覺：提示","嗅/味覺：提示","觸覺：提示","心情：提示"],',
+        '"comic":[{"scene":"第N格畫面描述（給學生畫的分鏡）","caption":"格子下方的引導句"}×4],',
+        '"teacherFlow":["教學流程步驟×5（每步含時間建議，例：①口頭腦力激盪 10分—…）"]}',
+        '繁體中文、臺灣用語。'
+      ].join('\n');
+      busy($('gdGoButton'), true);
+      try {
+        const data = extractJson(await callGemini(prompt, null, $('gdStatus')));
+        const chips = list => (list || []).map(w => `<span style="display:inline-block;border:1.5px solid #999;border-radius:999px;padding:1px 12px;margin:3px 4px;font-size:14px">${escapeHtml(w)}</span>`).join('');
+        const pages = [];
+        // ── 第 1 頁：學生引導單
+        pages.push(`<div class="sheet">
+          <div class="ws-head"><div class="ws-title">「${escapeHtml(topic)}」作文學習引導單</div></div>
+          <div class="ws-meta"><span>${escapeHtml(genre)}</span><span>班級：＿＿＿</span><span>座號：＿＿＿</span><span>姓名：＿＿＿＿＿＿</span></div>
+          <div class="ws-section">一、想一想（審題小偵探）</div>
+          ${(data.questions || []).map((q, i) => `<div class="ws-q">${i + 1}. ${escapeHtml(q)}</div><div class="ws-lines"></div>`).join('')}
+          ${$('gdMindmap').checked && data.mindmap ? `<div class="ws-section">二、取材心智圖（也可以自己加分支！）</div>
+            <div style="text-align:center;border:1.5px solid #ccc;border-radius:10px;padding:6px">${buildMindmapSvg(String(data.mindmap).replace(/\\n/g, '\n'))}</div>` : ''}
+          <div class="ws-section">三、好詞佳句加油站</div>
+          <div style="font-size:14px"><b>形容詞：</b>${chips(data.words?.adjectives)}</div>
+          <div style="font-size:14px"><b>動　詞：</b>${chips(data.words?.verbs)}</div>
+          <div style="font-size:14px"><b>成　語：</b>${chips(data.words?.idioms)}</div>
+          <div style="font-size:14px;margin-top:6px"><b>名言佳句（挑一句放進作文裡）：</b>
+            <ul style="margin-left:2em">${(data.quotes || []).map(q => `<li style="margin:3px 0">${escapeHtml(q.text)}${q.author ? `——${escapeHtml(q.author)}` : ''}</li>`).join('')}</ul></div>
+        </div>`);
+        // ── 第 2 頁：段落鷹架＋感官
+        pages.push(`<div class="sheet ws-answerpage">
+          <div class="ws-head"><div class="ws-title">「${escapeHtml(topic)}」段落設計圖</div></div>
+          <div class="ws-section">四、一段一段蓋房子（段落鷹架）</div>
+          <table style="width:100%;border-collapse:collapse;font-size:14px">
+            <tr><th style="border:1.5px solid #666;padding:6px;background:#f3f3f3;width:110px">段落</th><th style="border:1.5px solid #666;padding:6px;background:#f3f3f3">這段要寫什麼</th><th style="border:1.5px solid #666;padding:6px;background:#f3f3f3">可以這樣開頭</th></tr>
+            ${(data.paragraphs || []).map(p => `<tr>
+              <td style="border:1.5px solid #666;padding:6px;font-weight:700">${escapeHtml(p.name)}</td>
+              <td style="border:1.5px solid #666;padding:6px">${escapeHtml(p.hint)}</td>
+              <td style="border:1.5px solid #666;padding:6px;color:#1d6e3f">${escapeHtml(p.starter)}</td></tr>
+              <tr><td colspan="3" style="border:1.5px solid #666;height:64px;padding:6px;color:#bbb;font-size:12px">我想寫的重點……</td></tr>`).join('')}
+          </table>
+          <div class="ws-section">五、五感放大鏡（讓文章活起來）</div>
+          <ul style="margin-left:2em;font-size:14.5px">${(data.sensory || []).map(s => `<li style="margin:4px 0">${escapeHtml(s)}</li>`).join('')}</ul>
+        </div>`);
+        // ── 第 3 頁：四格情境漫畫
+        if ($('gdComic').checked && (data.comic || []).length) {
+          pages.push(`<div class="sheet ws-answerpage">
+            <div class="ws-head"><div class="ws-title">「${escapeHtml(topic)}」四格情境漫畫</div></div>
+            <p style="font-size:14px;margin:6px 0">先把故事畫成四格漫畫，再把每一格變成一段文章，作文就完成一半了！</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+              ${data.comic.slice(0, 4).map((frame, i) => `<div>
+                <div style="border:2.5px dashed #888;border-radius:10px;height:250px;position:relative">
+                  <span style="position:absolute;top:6px;left:10px;font-weight:900;color:#888">第 ${i + 1} 格</span>
+                  <span style="position:absolute;bottom:6px;left:10px;right:10px;font-size:12px;color:#aaa">${escapeHtml(frame.scene)}</span>
+                </div>
+                <div style="font-size:13.5px;margin-top:4px">✏️ ${escapeHtml(frame.caption)}</div>
+              </div>`).join('')}
+            </div>
+          </div>`);
+        }
+        // ── 第 4 頁：教師教學參考
+        if ($('gdTeacher').checked) {
+          pages.push(`<div class="sheet ws-answerpage">
+            <div class="ws-head"><div class="ws-title">教師教學參考｜「${escapeHtml(topic)}」</div></div>
+            <div class="ws-section">建議教學流程</div>
+            <ol style="margin-left:2em;font-size:14.5px">${(data.teacherFlow || []).map(step => `<li style="margin:5px 0">${escapeHtml(step)}</li>`).join('')}</ol>
+            <div class="ws-section">提問話術（審題暖身）</div>
+            <ul style="margin-left:2em;font-size:14.5px">${(data.questions || []).map(q => `<li style="margin:4px 0">${escapeHtml(q)}</li>`).join('')}</ul>
+            <div class="ws-section">💡 教學小建議</div>
+            <ul style="margin-left:2em;font-size:14px;background:#fff7e6;border-radius:10px;padding:10px 10px 10px 2.4em">
+              <li style="margin:4px 0">先「說」再「寫」：口頭發表過的內容，落筆焦慮會少一半。</li>
+              <li style="margin:4px 0">心智圖全班共作一次，再讓學生補自己的分支——不是抄，是長出來。</li>
+              <li style="margin:4px 0">佳句用「仿寫」不用「背」：把名言改寫成自己的版本。</li>
+              <li style="margin:4px 0">低成就孩子先只完成四格漫畫＋每格一句話，就是一篇小作文。</li>
+              <li style="margin:4px 0">寫完用「兩顆星一個願望」互評：兩個優點＋一個建議，批改可搭配本站「✍️ 作文批改」。</li>
+            </ul>
+          </div>`);
+        }
+        $('gdPreview').innerHTML = pages.join('');
+        $('gdMeta').textContent = `共 ${pages.length} 頁；引導單發學生、參考頁老師留著。`;
+        showToast('🧭 引導單完成！');
+      } catch (e) { if (e.message !== 'no-key') { $('gdStatus').textContent = ''; showToast(e.message, true); } }
+      busy($('gdGoButton'), false);
+    });
+
+    // ============================================================
     // ✍️ 作文批改（拍照或貼文字 → 國小程度批改單）
     // ============================================================
-    async function filesToParts(input, max) {
-      const files = [...(input.files || [])].slice(0, max || 3);
+    async function filesToParts(files, max) {
+      const list = [...files].slice(0, max || 3);
       const parts = [];
-      for (const file of files) {
-        if (file.size > 8 * 1024 * 1024) throw new Error(`「${file.name}」超過 8MB，請縮小後再試。`);
+      for (const file of list) {
+        if (file.size > 15 * 1024 * 1024) throw new Error(`「${file.name}」超過 15MB，請縮小後再試。`);
         const b64 = await new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = () => resolve(String(reader.result).split(',')[1]);
-          reader.onerror = () => reject(new Error('圖片讀取失敗'));
+          reader.onerror = () => reject(new Error('檔案讀取失敗'));
           reader.readAsDataURL(file);
         });
         parts.push({ inline_data: { mime_type: file.type || 'image/jpeg', data: b64 } });
       }
       return parts;
     }
+    // Ctrl+V 貼圖（作文批改分頁）
+    const esPasted = [];
+    function renderEsPasteList() {
+      $('esPasteList').innerHTML = esPasted.map((file, i) =>
+        `<span class="mask-badge">📎 貼上的圖 ${i + 1} <button class="mini" type="button" data-es-paste-remove="${i}" style="padding:0 8px">✕</button></span>`).join('');
+    }
+    document.addEventListener('paste', e => {
+      if (!document.getElementById('page-essay').classList.contains('active')) return;
+      const images = [...(e.clipboardData?.files || [])].filter(f => f.type.startsWith('image/'));
+      if (!images.length) return;
+      images.forEach(f => { if (esPasted.length < 3) esPasted.push(f); });
+      renderEsPasteList();
+      showToast(`已貼上 ${images.length} 張圖片。`);
+    });
+    $('esPasteList').addEventListener('click', e => {
+      const btn = e.target.closest('[data-es-paste-remove]');
+      if (!btn) return;
+      esPasted.splice(Number(btn.dataset.esPasteRemove), 1);
+      renderEsPasteList();
+    });
     $('esGoButton').dataset.label = $('esGoButton').textContent;
     $('esGoButton').addEventListener('click', async () => {
       const text = $('esText').value.trim();
-      const hasImages = $('esImages').files.length > 0;
-      if (!text && !hasImages) return showToast('請拍作文照片或貼上文字。', true);
+      const esFiles = [...$('esImages').files, ...esPasted].slice(0, 3);
+      const hasImages = esFiles.length > 0;
+      if (!text && !hasImages) return showToast('請提供作文（拍照、PDF、貼圖或貼文字）。', true);
       const focus = [...document.querySelectorAll('.esFocus:checked')].map(c => c.value);
       const scoring = $('esScoring').value;
       const prompt = [
         `你是溫暖而專業的臺灣國小${$('esGrade').value}年級導師，正在批改學生作文${$('esTopic').value.trim() ? `「${$('esTopic').value.trim()}」` : ''}。`,
-        hasImages ? '附圖是學生手寫作文（可能多頁、字跡稚嫩），請先仔細辨識內容再批改；看不清楚的字用□標記，不要瞎猜。' : `作文內容：\n${text}`,
+        hasImages ? '附件是學生手寫作文（照片或 PDF，可能多頁、字跡稚嫩），請先仔細辨識內容再批改；看不清楚的字用□標記，不要瞎猜。' : `作文內容：\n${text}`,
         `批改重點：${focus.join('、') || '整體'}。用語適合國小${$('esGrade').value}年級，繁體中文、臺灣用語。`,
-        scoring === '不評分' ? '不打分數。' : scoring === '分數' ? '給 0-100 分數（grade 欄填數字）。' : '給等第：優／甲／乙／丙（grade 欄填等第）。',
+        scoring === '六級分'
+          ? ['採「國中教育會考寫作測驗評分規準」的六級分制與四向度，但期待值依國小年級調整（同年級中表現）：',
+             '四向度＝①立意取材（能否切題、選材是否凸顯主旨）②結構組織（段落完整、前後連貫）③遣詞造句（用詞準確、句型變化、文句流暢）④錯別字、格式與標點符號。',
+             '六級分意義：6=十分優秀、5=精采、4=符合基本要求、3=尚可但不太充分、2=不夠好、1=嚴重問題。',
+             'grade 欄填「N級分」，並回傳 "dimensions":[{"name":"立意取材","level":1到6,"note":"一句話評語"}×4個向度]。'].join('\n')
+          : scoring === '不評分' ? '不打分數。' : scoring === '分數' ? '給 0-100 分數（grade 欄填數字）。' : '給等第：優／甲／乙／丙（grade 欄填等第）。',
         '原則：先真心稱讚具體亮點（引用原句），修改建議挑最重要的 3-8 處就好（別把孩子淹沒），評語溫暖鼓勵、指出一個努力方向。',
         '只回傳 JSON：{"grade":"甲","wordCount":約字數,"strengths":["亮點1（引用原句）","亮點2"],"corrections":[{"original":"原句或原詞","suggestion":"建議改法","reason":"為什麼（一句話）"}],"structure":"結構與內容的一段建議（沒勾結構就給一句就好）","comment":"給學生的鼓勵評語約60字"}'
       ].filter(Boolean).join('\n');
       busy($('esGoButton'), true);
       try {
-        const imageParts = await filesToParts($('esImages'), 3);
+        const imageParts = await filesToParts(esFiles, 3);
         const key = geminiKey();
         if (!key) { showToast('尚未設定 Gemini 金鑰。', true); throw new Error('no-key'); }
         $('esStatus').textContent = '🤖 AI 批改中（手寫辨識較久，約 20–60 秒）…';
@@ -1121,11 +1286,21 @@
         const resultText = (((payload.candidates || [])[0] || {}).content?.parts || []).map(p => p.text || '').join('');
         const data = extractJson(resultText);
         $('esStatus').textContent = '';
-        const gradeBadge = data.grade ? `<div style="font-size:44px;font-weight:900;color:#a33;border:4px double #a33;border-radius:50%;width:110px;height:110px;display:flex;align-items:center;justify-content:center;position:absolute;top:46px;right:56px;transform:rotate(8deg)">${escapeHtml(String(data.grade))}</div>` : '';
+        const gradeText = String(data.grade || '');
+        const gradeBadge = gradeText ? `<div style="font-size:${gradeText.length > 2 ? 26 : 44}px;font-weight:900;color:#a33;border:4px double #a33;border-radius:50%;width:110px;height:110px;display:flex;align-items:center;justify-content:center;position:absolute;top:46px;right:56px;transform:rotate(8deg)">${escapeHtml(gradeText)}</div>` : '';
+        const dimensionRows = (data.dimensions || []).map(d => `<tr>
+          <td style="border:1px solid #999;padding:5px;font-weight:700">${escapeHtml(d.name || '')}</td>
+          <td style="border:1px solid #999;padding:5px;text-align:center;font-weight:900;color:#a33">${escapeHtml(String(d.level || ''))} 級</td>
+          <td style="border:1px solid #999;padding:5px">${escapeHtml(d.note || '')}</td></tr>`).join('');
+        const dimensionTable = dimensionRows ? `<div class="ws-section">📐 四向度評分（會考寫作規準・依年級調整）</div>
+          <table style="width:100%;border-collapse:collapse;font-size:14px">
+            <tr><th style="border:1px solid #999;padding:5px;background:#f3f3f3;width:120px">向度</th><th style="border:1px solid #999;padding:5px;background:#f3f3f3;width:70px">級分</th><th style="border:1px solid #999;padding:5px;background:#f3f3f3">說明</th></tr>
+            ${dimensionRows}</table>` : '';
         $('esPreview').innerHTML = `<div class="sheet" style="position:relative">
           ${gradeBadge}
           <div class="ws-head"><div class="ws-title">作文批改單</div></div>
           <div class="ws-meta"><span>題目：${escapeHtml($('esTopic').value.trim() || '＿＿＿＿＿')}</span><span>班級：＿＿＿</span><span>座號：＿＿＿</span><span>約 ${escapeHtml(String(data.wordCount || '—'))} 字</span></div>
+          ${dimensionTable}
           <div class="ws-section">🌟 寫得很棒的地方</div>
           <ul style="font-size:15px;margin-left:2em">${(data.strengths || []).map(s => `<li style="margin:4px 0">${escapeHtml(s)}</li>`).join('')}</ul>
           <div class="ws-section">✏️ 一起來修改（${(data.corrections || []).length} 處）</div>
