@@ -70,3 +70,10 @@ This project uses 12 images as decorative UI elements inside a larger work,
 which is within the permitted scope.
 
 - Terms: https://www.irasutoya.com/p/terms.html
+
+## pdf-lib
+
+`assets/vendor/pdf-lib.min.js` is [pdf-lib](https://github.com/Hopding/pdf-lib)
+v1.17.1, MIT License, vendored unmodified. It powers the local-only PDF tools
+(merge / extract / rotate / crop / images-to-PDF) in Studio.html; all processing
+happens in the user's browser and no file leaves the device.

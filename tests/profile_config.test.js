@@ -410,6 +410,15 @@ assert.match(aboutHtml, /提示 排隊/, "About 應示範大屏提示 LINE 遙�
 const introHtml = fs.readFileSync(path.join(projectRoot, "Intro.html"), "utf8");
 assert.match(introHtml, /教材小工場（第 2 版新登場）/, "Intro 應介紹教材小工場");
 assert.match(introHtml, /大屏提示/, "Intro 班級工具應含大屏提示");
+assert.match(introHtml, /教材小工場一站生成/, "Intro 轉貼文案應含第 2 版痛點");
+assert.match(installHtml, /copyLineBotButton/, "更新指南應提供一鍵複製最新程式碼（不依賴分享包）");
+
+// 📎 PDF 工具（pdf-lib 純本機）
+assert.match(studioHtml, /data-page="pdf"/, "教材小工場應有 PDF 工具分頁");
+assert.match(studioHtml, /assets\/vendor\/pdf-lib\.min\.js/, "PDF 工具應載入本站自帶的 pdf-lib");
+assert.ok(fs.existsSync(path.join(projectRoot, "assets", "vendor", "pdf-lib.min.js")), "pdf-lib 函式庫檔案應存在");
+assert.match(studioHtml, /setCropBox/, "PDF 工具應支援裁切");
+assert.match(noticesText, /pdf-lib/, "第三方聲明應記錄 pdf-lib");
 assert.match(morningHtml, /data-tool="tomato"/, "班級工具應含番茄鐘分頁");
 assert.match(morningHtml, /tomatoFullscreenButton/, "番茄鐘應支援全螢幕播放");
 

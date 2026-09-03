@@ -612,7 +612,11 @@
         <li><strong>更新 LINE 小幫手程式（有裝 B 部分的老師才要做）</strong>：
           <ol>
             <li>開你的「line小幫手」試算表 → 擴充功能 → Apps Script</li>
-            <li>全選刪掉舊程式，貼上新版 <code>LineBot.gs</code>（跟第 1 版取得方式相同：分享包裡的「02_LineBot程式碼」）→ 儲存 💾</li>
+            <li>按這顆按鈕取得最新程式碼：<br>
+              <button type="button" id="copyLineBotButton" style="font-size:16px;font-weight:900;padding:10px 22px;border-radius:10px;border:2px solid #1f514a;background:#1f514a;color:#fff;cursor:pointer;font-family:inherit;margin:6px 0">📋 一鍵複製最新 LineBot.gs 程式碼</button>
+              <span id="copyLineBotStatus" style="font-weight:700"></span><br>
+              <span class="lead">（按了就複製到剪貼簿；若失敗可<a href="LineBot.gs" target="_blank" rel="noopener">開啟原始碼</a>後 Ctrl+A 全選、Ctrl+C 複製）</span></li>
+            <li>回 Apps Script：<strong>Ctrl+A 全選刪掉舊程式 → Ctrl+V 貼上 → 儲存 💾</strong>（不應出現紅色錯誤）</li>
             <li><strong>部署 → 管理部署 → ✏️ 編輯 → 版本選「新版本」→ 部署</strong>（⚠️ 千萬不要按「新增部署」，網址會變）</li>
           </ol></li>
         <li><strong>重新授權一次（正常現象，不是壞掉）</strong>：第 2 版多了「建立表單、寄信、圖文選單」等能力，<strong>第一次使用這些新功能</strong>時 Google 會再跳一次授權視窗——跟第 1 版安裝時一樣按「進階 → 前往（不安全）→ 允許」即可，只會問這一次。</li>
@@ -668,6 +672,22 @@
         toast.classList.add('show');
         setTimeout(() => toast.classList.remove('show'), 1800);
       }));
+      // 第 2 版更新指南：一鍵複製最新 LineBot.gs（直接抓本站檔案，不需分享包）
+      const copyLineBot = document.getElementById('copyLineBotButton');
+      if (copyLineBot) copyLineBot.addEventListener('click', async () => {
+        const status = document.getElementById('copyLineBotStatus');
+        status.textContent = '⏳ 下載程式碼中…';
+        try {
+          const response = await fetch('LineBot.gs', { cache: 'no-store' });
+          if (!response.ok) throw new Error('HTTP ' + response.status);
+          const code = await response.text();
+          if (!code.includes('setupLineBot')) throw new Error('內容不完整');
+          await navigator.clipboard.writeText(code);
+          status.textContent = `✅ 已複製（共 ${code.split('\n').length} 行）——回 Apps Script 全選貼上吧！`;
+        } catch (error) {
+          status.textContent = '⚠️ 自動複製失敗，請按旁邊「開啟原始碼」手動全選複製。';
+        }
+      });
     })();
   </script>
 </body>
