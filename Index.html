@@ -3121,9 +3121,8 @@
         frameRequest: 0,
       },
     };
-    const deskpetAssetRoot = ['127.0.0.1', 'localhost', ''].includes(window.location.hostname)
-      ? 'assets/pet/'
-      : 'https://raw.githubusercontent.com/cona0815/teacher-dashboard/main/assets/pet/';
+    // 一律用本站相對路徑：Netlify 上就有 assets/pet/，外連 GitHub 會被 CSP img-src 'self' 擋下（GAS 託管時代的舊邏輯）
+    const deskpetAssetRoot = 'assets/pet/';
     const deskpetImages = {
       drag: `${deskpetAssetRoot}pet_drag.webp`,
       idle: `${deskpetAssetRoot}pet_idle.webp`,
