@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' https://generativelanguage.googleapis.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <title>教材小工場｜教師工作台</title>
+  <style>
+    :root { --bg:#f3f6f4; --surface:#fff; --ink:#1c302d; --muted:#657570; --line:#d5e1dc; --primary:#1f514a; --primary-strong:#173f3a; --soft:#e8f2ee; --gold:#b9852f; --gold-soft:#fff7e6; --danger:#a34339; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:"Microsoft JhengHei","Noto Sans TC",sans-serif; background:var(--bg); color:var(--ink); line-height:1.8; font-size:15px; }
+    header.app { background:var(--primary-strong); color:#fff; padding:16px 20px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+    header.app h1 { font-size:21px; }
+    header.app .key-status { font-size:12.5px; background:rgba(255,255,255,.14); border-radius:999px; padding:4px 14px; }
+    header.app a { color:#fff; }
+    .tabs { display:flex; gap:8px; padding:12px 18px 0; flex-wrap:wrap; background:var(--bg); }
+    .tab-button { border:2px solid var(--line); background:var(--surface); color:var(--primary-strong); border-radius:12px 12px 0 0; padding:10px 22px; font-size:16px; font-weight:900; cursor:pointer; font-family:inherit; }
+    .tab-button.active { background:var(--primary); border-color:var(--primary); color:#fff; }
+    main { padding:14px 18px 60px; }
+    .page { display:none; }
+    .page.active { display:block; }
+    .workbench { display:grid; grid-template-columns:340px minmax(0,1fr); gap:16px; align-items:start; }
+    @media (max-width: 980px) { .workbench { grid-template-columns:1fr; } }
+    .panel { background:var(--surface); border:2px solid var(--line); border-radius:14px; padding:16px; }
+    .field { margin-bottom:12px; }
+    .field label { display:block; font-size:13px; font-weight:900; color:var(--primary-strong); margin-bottom:4px; }
+    .input, .select, .textarea { width:100%; border:2px solid var(--line); border-radius:10px; padding:8px 10px; font-size:14px; font-family:inherit; background:var(--surface); color:var(--ink); }
+    .textarea { min-height:88px; resize:vertical; }
+    .check-row { display:flex; gap:12px; flex-wrap:wrap; font-size:13.5px; font-weight:700; }
+    .check-row label { display:inline-flex; gap:4px; align-items:center; cursor:pointer; }
+    .go-button { width:100%; border:0; background:var(--primary); color:#fff; border-radius:12px; padding:12px; font-size:17px; font-weight:900; cursor:pointer; font-family:inherit; margin-top:4px; }
+    .go-button:disabled { opacity:.5; }
+    .mini { border:1.5px solid var(--line); background:var(--surface); color:var(--primary-strong); border-radius:9px; padding:6px 14px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit; }
+    .hint { font-size:12px; color:var(--muted); line-height:1.7; margin-top:8px; }
+    .status { font-size:13px; color:var(--muted); margin-top:8px; min-height:20px; }
+    .preview-bar { display:flex; gap:8px; align-items:center; margin-bottom:10px; flex-wrap:wrap; }
+    .preview-host { background:#e2e8e5; border-radius:12px; padding:18px; overflow:auto; min-height:300px; }
+    /* A4 紙 */
+    .sheet { width:794px; min-height:1123px; margin:0 auto 18px; background:#fff; color:#111; box-shadow:0 3px 14px rgba(30,50,40,.18); padding:56px 60px; font-family:"Microsoft JhengHei","Noto Sans TC",serif; position:relative; }
+    .sheet * { line-height:1.9; }
+    .ws-head { text-align:center; border-bottom:2.5px solid #111; padding-bottom:8px; margin-bottom:6px; }
+    .ws-school { font-size:15px; letter-spacing:.3em; }
+    .ws-title { font-size:24px; font-weight:900; letter-spacing:.1em; margin-top:2px; }
+    .ws-meta { display:flex; justify-content:space-between; font-size:14px; margin:8px 0 14px; }
+    .ws-section { margin:14px 0 6px; font-size:16px; font-weight:900; }
+    .ws-q { font-size:15px; margin:7px 0; }
+    .ws-options { display:flex; gap:22px; flex-wrap:wrap; margin:2px 0 4px 26px; font-size:15px; }
+    .ws-lines { border-bottom:1.5px solid #999; height:34px; margin:6px 0 2px 26px; }
+    .ws-answerpage { page-break-before:always; }
+    .ws-answer-list { font-size:14px; }
+    .cut-line { border:none; border-top:2.5px dashed #555; margin:26px -20px 18px; position:relative; }
+    .cut-line::before { content:"✂ 請沿虛線剪下"; position:absolute; top:-13px; left:8px; background:#fff; font-size:12px; color:#555; padding:0 6px; }
+    .slip-title { text-align:center; font-size:18px; font-weight:900; margin-bottom:10px; }
+    .slip-fields { font-size:15px; margin-top:14px; }
+    .slip-fields span { display:inline-block; min-width:150px; margin-right:24px; }
+    .u { display:inline-block; border-bottom:1.5px solid #111; min-width:110px; }
+    /* 心智圖 */
+    .mm-split { display:grid; grid-template-columns:280px minmax(0,1fr); gap:12px; }
+    @media (max-width:980px){ .mm-split { grid-template-columns:1fr; } }
+    .mm-md { min-height:340px; font-family:Consolas,monospace; font-size:13px; }
+    .mm-svg-host { background:#fff; border-radius:10px; overflow:auto; border:1.5px solid var(--line); }
+    /* 評語 */
+    .cm-row { display:flex; gap:10px; align-items:flex-start; border:1.5px solid var(--line); border-radius:11px; background:#fffefb; padding:10px 12px; margin:8px 0; }
+    .cm-seat { flex:0 0 auto; font-weight:900; color:var(--gold); font-size:16px; min-width:44px; }
+    .cm-text { flex:1; font-size:14.5px; }
+    .warn { background:var(--gold-soft); border-left:4px solid var(--gold); border-radius:0 10px 10px 0; padding:8px 12px; font-size:12.5px; margin-top:10px; }
+    /* 海報 */
+    .po-sheet { display:flex; flex-direction:column; }
+    .po-title { font-size:52px; font-weight:900; text-align:center; letter-spacing:.08em; line-height:1.3; }
+    .po-sub { font-size:22px; text-align:center; margin:6px 0 22px; font-weight:700; }
+    .po-point { display:flex; gap:18px; align-items:flex-start; border-radius:18px; padding:16px 20px; margin:12px 0; }
+    .po-icon { font-size:44px; line-height:1.2; }
+    .po-heading { font-size:24px; font-weight:900; }
+    .po-text { font-size:18px; }
+    .po-footer { margin-top:auto; text-align:center; font-size:16px; font-weight:700; border-top:2.5px solid currentColor; padding-top:12px; }
+    /* 獎狀 */
+    .aw-sheet { display:flex; flex-direction:column; text-align:center; border:14px double #b9852f; padding:70px 64px !important; }
+    .aw-school { font-size:26px; letter-spacing:.35em; font-weight:700; }
+    .aw-big { font-size:88px; font-weight:900; letter-spacing:.8em; text-indent:.8em; margin:26px 0 30px; color:#8a5a12; }
+    .aw-body { font-size:26px; text-align:left; line-height:2.4; text-indent:2em; }
+    .aw-name { font-size:32px; font-weight:900; border-bottom:3px solid #8a5a12; padding:0 10px; }
+    .aw-sign { margin-top:auto; display:flex; justify-content:space-around; font-size:24px; font-weight:700; padding-top:40px; }
+    .aw-date { font-size:22px; margin-top:34px; }
+    /* 座位表 */
+    .st-stage { background:#3f5a52; color:#fff; text-align:center; border-radius:10px; padding:10px; font-size:20px; font-weight:900; letter-spacing:.4em; margin-bottom:18px; }
+    .st-grid { display:grid; gap:12px; }
+    .st-desk { border:2.5px solid #444; border-radius:12px; min-height:74px; display:flex; align-items:center; justify-content:center; font-size:30px; font-weight:900; cursor:pointer; background:#fbfaf5; }
+    .st-desk.empty { border-style:dashed; color:#bbb; background:none; cursor:default; }
+    .st-desk.picked { background:#ffe9a8; border-color:#b9852f; }
+    .st-pair { display:flex; gap:4px; }
+    .st-pair .st-desk { flex:1; }
+    .st-islands { display:flex; flex-wrap:wrap; gap:22px; justify-content:center; }
+    .st-island { border:2px dashed #8a9b93; border-radius:14px; padding:10px; }
+    .st-island-label { text-align:center; font-size:16px; font-weight:900; color:#3f5a52; margin-bottom:8px; }
+    .st-island .st-grid { gap:8px; }
+    .st-island .st-desk { min-width:96px; min-height:64px; font-size:24px; }
+    /* 遮蔽工具 */
+    .mask-canvas-wrap { position:relative; display:inline-block; max-width:100%; }
+    #maskCanvas { max-width:100%; height:auto; display:block; border-radius:8px; cursor:crosshair; touch-action:none; }
+    .mask-out { white-space:pre-wrap; background:#fffefb; border:1.5px solid var(--line); border-radius:10px; padding:12px; font-size:14px; min-height:80px; }
+    .mask-badge { display:inline-block; background:var(--soft); color:var(--primary-strong); border-radius:999px; padding:2px 12px; font-size:12px; font-weight:800; margin-left:6px; }
+    .toast { position:fixed; top:14px; left:50%; transform:translateX(-50%); background:var(--primary-strong); color:#fff; border-radius:12px; padding:10px 20px; font-size:15px; font-weight:800; z-index:50; opacity:0; pointer-events:none; transition:opacity .25s; }
+    .toast.show { opacity:1; }
+    .toast.error { background:var(--danger); }
+    @media print {
+      body { background:#fff; }
+      header.app, .tabs, .workbench > .panel:first-child, .preview-bar, .toast, .hint, .warn, .status { display:none !important; }
+      main { padding:0; }
+      .preview-host { background:none; padding:0; min-height:0; overflow:visible; }
+      .sheet { box-shadow:none; margin:0; width:auto; min-height:0; padding:10mm 12mm; }
+      .page { display:none !important; }
+      .page.active { display:block !important; }
+      .workbench { display:block; }
+    }
+  </style>
+</head>
+<body>
+  <header class="app">
+    <h1>🎨 教材小工場</h1>
+    <span class="key-status" id="keyStatus">檢查金鑰中…</span>
+    <span style="flex:1"></span>
+    <a href="Index.html">← 回工作台</a>
+    <a href="About.html" target="_blank" rel="noopener">📖 說明</a>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-button active" type="button" data-page="ws">📝 學習單</button>
+    <button class="tab-button" type="button" data-page="notice">📄 家長通知單</button>
+    <button class="tab-button" type="button" data-page="mm">🧠 心智圖</button>
+    <button class="tab-button" type="button" data-page="cm">💬 評語小幫手</button>
+    <button class="tab-button" type="button" data-page="poster">📢 行政海報</button>
+    <button class="tab-button" type="button" data-page="award">🏅 獎狀</button>
+    <button class="tab-button" type="button" data-page="seat">🪑 座位表</button>
+    <button class="tab-button" type="button" data-page="mask">🛡 敏感資料遮蔽</button>
+  </div>
+
+  <main>
+    <!-- 📝 學習單 -->
+    <section class="page active" id="page-ws">
+      <div class="workbench">
+        <div class="panel">
+          <div class="field"><label>科目</label>
+            <select class="select" id="wsSubject"><option>國語</option><option>數學</option><option>英語</option><option>自然</option><option>社會</option><option>生活</option><option>健康與體育</option><option>綜合活動</option></select></div>
+          <div class="field"><label>年級</label>
+            <select class="select" id="wsGrade"><option value="一">一年級</option><option value="二">二年級</option><option value="三">三年級</option><option value="四">四年級</option><option value="五" selected>五年級</option><option value="六">六年級</option></select></div>
+          <div class="field"><label>單元／主題（或貼上課文重點）</label>
+            <textarea class="textarea" id="wsTopic" placeholder="例：康軒五上 第三單元 台灣的地形&#10;重點：五大地形、山脈走向、平原分布…"></textarea></div>
+          <div class="field"><label>也可以拍課本頁面（選用，AI 會讀圖出題）</label>
+            <input class="input" type="file" id="wsImage" accept="image/*"></div>
+          <div class="field"><label>題型（可複選）</label>
+            <div class="check-row">
+              <label><input type="checkbox" class="wsType" value="選擇題" checked>選擇</label>
+              <label><input type="checkbox" class="wsType" value="是非題" checked>是非</label>
+              <label><input type="checkbox" class="wsType" value="填空題" checked>填空</label>
+              <label><input type="checkbox" class="wsType" value="簡答題">簡答</label>
+              <label><input type="checkbox" class="wsType" value="配合題">配合</label>
+            </div></div>
+          <div class="field"><label>總題數：<span id="wsCountLabel">10</span> 題</label>
+            <input type="range" id="wsCount" min="5" max="20" value="10" style="width:100%"></div>
+          <div class="field"><div class="check-row">
+            <label><input type="checkbox" id="wsDiff">🔀 差異化雙版本（基礎＋進階）</label>
+            <label><input type="checkbox" id="wsAnswer" checked>📎 附教師解答卷</label>
+          </div></div>
+          <button class="go-button" type="button" id="wsGoButton">✨ 生成學習單</button>
+          <div class="status" id="wsStatus"></div>
+          <div class="warn">AI 產出僅供草稿，<strong>請老師逐題審閱</strong>再發給學生；照片請勿含學生個資。</div>
+        </div>
+        <div class="panel">
+          <div class="preview-bar">
+            <button class="mini" type="button" onclick="window.print()">🖨 列印／存 PDF</button>
+            <span class="status" id="wsMeta">生成後這裡會出現 A4 預覽。</span>
+          </div>
+          <div class="preview-host" id="wsPreview"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 📄 家長通知單 -->
+    <section class="page" id="page-notice">
+      <div class="workbench">
+        <div class="panel">
+          <div class="field"><label>發文單位（校名／班級，會記住）</label>
+            <input class="input" id="ntSchool" placeholder="例：○○國民小學 六年一班"></div>
+          <div class="field"><label>主旨</label>
+            <input class="input" id="ntSubject" placeholder="例：校外教學活動通知"></div>
+          <div class="field"><label>內容要點（口語描述即可，AI 會寫成正式通知）</label>
+            <textarea class="textarea" id="ntBody" placeholder="例：下週三 9/10 校外教學去科工館，費用 250 元，早上 8 點校門口集合，下午 4 點回來，要穿運動服帶水壺，9/5 前交回條和費用"></textarea></div>
+          <div class="field"><label>或拍上級來文／公文（AI 讀圖轉寫成家長版）</label>
+            <input class="input" type="file" id="ntImage" accept="image/*"></div>
+          <div class="field"><div class="check-row">
+            <label><input type="checkbox" id="ntSlip" checked>✂ 附裁切回條（家長簽名）</label>
+          </div></div>
+          <button class="go-button" type="button" id="ntGoButton">✨ 生成通知單</button>
+          <div class="status" id="ntStatus"></div>
+          <div class="warn">寄出前請確認日期、金額等關鍵資訊正確；AI 可能改寫時失真。</div>
+        </div>
+        <div class="panel">
+          <div class="preview-bar">
+            <button class="mini" type="button" onclick="window.print()">🖨 列印／存 PDF</button>
+            <span class="status" id="ntMeta"></span>
+          </div>
+          <div class="preview-host" id="ntPreview"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 🧠 心智圖 -->
+    <section class="page" id="page-mm">
+      <div class="workbench">
+        <div class="panel">
+          <div class="field"><label>主題（或貼課文段落）</label>
+            <textarea class="textarea" id="mmTopic" placeholder="例：水的三態變化&#10;或直接貼一段課文，AI 會整理成心智圖"></textarea></div>
+          <div class="field"><label>也可以拍課本頁面（選用）</label>
+            <input class="input" type="file" id="mmImage" accept="image/*"></div>
+          <div class="field"><label>層數</label>
+            <select class="select" id="mmDepth"><option value="2">2 層（主幹＋分支）</option><option value="3" selected>3 層（含細節）</option></select></div>
+          <button class="go-button" type="button" id="mmGoButton">✨ 生成心智圖</button>
+          <div class="status" id="mmStatus"></div>
+          <div class="hint">生成後左邊會出現<strong>可編輯的大綱</strong>——改任何字，右邊的圖立刻重畫。</div>
+        </div>
+        <div class="panel">
+          <div class="preview-bar">
+            <button class="mini" type="button" onclick="window.print()">🖨 列印</button>
+            <button class="mini" type="button" id="mmDownloadButton">⬇ 下載 SVG</button>
+            <span class="status" id="mmMeta"></span>
+          </div>
+          <div class="mm-split">
+            <textarea class="textarea mm-md" id="mmMarkdown" placeholder="- 主題&#10;  - 分支一&#10;    - 細節"></textarea>
+            <div class="mm-svg-host page active" id="mmSvgHost"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 💬 評語小幫手 -->
+    <section class="page" id="page-cm">
+      <div class="workbench">
+        <div class="panel">
+          <div class="field"><label>學生清單（每行一位：座號＋幾個關鍵詞）</label>
+            <textarea class="textarea" id="cmList" style="min-height:160px" placeholder="1 熱心助人 愛打籃球 數學進步&#10;2 文靜 閱讀量大 上台會緊張&#10;3 活潑 常忘記帶作業 美勞很強"></textarea></div>
+          <div class="field"><label>語氣</label>
+            <select class="select" id="cmTone"><option value="溫暖鼓勵">溫暖鼓勵</option><option value="具體務實">具體務實（含成長建議）</option><option value="精簡扼要">精簡扼要</option></select></div>
+          <div class="field"><label>每則字數</label>
+            <select class="select" id="cmLength"><option value="30">約 30 字（聯絡簿）</option><option value="60" selected>約 60 字（成績單）</option><option value="100">約 100 字（期末詳評）</option></select></div>
+          <button class="go-button" type="button" id="cmGoButton">✨ 生成評語</button>
+          <div class="status" id="cmStatus"></div>
+          <div class="warn">評語會直接影響孩子與家長，<strong>請逐則潤飾</strong>後再使用；建議關鍵詞包含優點與一項可成長處。</div>
+        </div>
+        <div class="panel">
+          <div class="preview-bar">
+            <button class="mini" type="button" id="cmCopyAllButton">📋 全部複製</button>
+            <span class="status" id="cmMeta"></span>
+          </div>
+          <div id="cmResult"></div>
+        </div>
+      </div>
+    </section>
+    <!-- 📢 行政海報 -->
+    <section class="page" id="page-poster">
+      <div class="workbench">
+        <div class="panel">
+          <div class="field"><label>海報主題</label>
+            <input class="input" id="poTopic" placeholder="例：洗手五步驟／圖書館借書規則／運動會注意事項"></div>
+          <div class="field"><label>想放的內容（口語即可，AI 會整理成海報文案）</label>
+            <textarea class="textarea" id="poBody" placeholder="例：濕搓沖捧擦，吃飯前和上完廁所要洗，搓 20 秒"></textarea></div>
+          <div class="field"><label>配色</label>
+            <select class="select" id="poTheme">
+              <option value="sun">🌞 活力橘黃</option>
+              <option value="forest">🌿 沉穩綠</option>
+              <option value="ocean">🌊 清爽藍</option>
+              <option value="alert">🚨 警示紅</option>
+            </select></div>
+          <button class="go-button" type="button" id="poGoButton">✨ 生成海報</button>
+          <div class="status" id="poStatus"></div>
+          <div class="hint">A4 直式，貼教室或公布欄都清楚；文字都是真文字，列印不失真，也可以生成後手動改。</div>
+        </div>
+        <div class="panel">
+          <div class="preview-bar">
+            <button class="mini" type="button" onclick="window.print()">🖨 列印／存 PDF</button>
+            <span class="status" id="poMeta"></span>
+          </div>
+          <div class="preview-host" id="poPreview"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 🏅 獎狀 -->
+    <section class="page" id="page-award">
+      <div class="workbench">
+        <div class="panel">
+          <div class="field"><label>校名（沿用通知單設定）</label>
+            <input class="input" id="awSchool" placeholder="例：○○國民小學"></div>
+          <div class="field"><label>獎項名稱</label>
+            <input class="input" id="awName" placeholder="例：模範生獎／進步獎／閱讀小達人"></div>
+          <div class="field"><label>得獎名單（每行一位：班級 姓名）</label>
+            <textarea class="textarea" id="awList" placeholder="六年一班 王小明&#10;六年一班 李小華"></textarea></div>
+          <div class="field"><label>表彰事由（可自己寫，或按下面請 AI 撰寫）</label>
+            <textarea class="textarea" id="awReason" placeholder="例：品學兼優，熱心服務，足為同儕楷模，特頒此狀，以資鼓勵。"></textarea>
+            <div class="check-row" style="margin-top:6px"><button class="mini" type="button" id="awAiButton">🤖 請 AI 依獎項寫事由</button></div></div>
+          <div class="field"><label>落款職稱（右邊簽名處）</label>
+            <input class="input" id="awSigners" value="校長　＿＿＿＿＿＿、導師　＿＿＿＿＿＿"></div>
+          <button class="go-button" type="button" id="awGoButton">🏅 生成獎狀（每人一張）</button>
+          <div class="status" id="awStatus"></div>
+          <div class="warn">姓名只用於列印，<strong>不會儲存、不會上傳</strong>；按 AI 撰寫時也只送出獎項名稱，不送姓名。</div>
+        </div>
+        <div class="panel">
+          <div class="preview-bar">
+            <button class="mini" type="button" onclick="window.print()">🖨 列印／存 PDF</button>
+            <span class="status" id="awMeta"></span>
+          </div>
+          <div class="preview-host" id="awPreview"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 🪑 座位表 -->
+    <section class="page" id="page-seat">
+      <div class="workbench">
+        <div class="panel">
+          <div class="field"><label>班級人數（座號 1～N）</label>
+            <input class="input" id="stCount" type="number" min="2" max="50" value="28"></div>
+          <div class="field"><label>空號（用、分隔，可留白）</label>
+            <input class="input" id="stSkip" placeholder="例：7、13"></div>
+          <div class="field"><label>排法</label>
+            <select class="select" id="stLayout">
+              <option value="rows">傳統直排</option>
+              <option value="pairs">兩人一組（雙併桌）</option>
+              <option value="island4">小組島（每組 4 人）</option>
+              <option value="island6">小組島（每組 6 人）</option>
+            </select></div>
+          <div class="field" id="stColsField"><label>每排幾個座位（直行數）</label>
+            <input class="input" id="stCols" type="number" min="2" max="10" value="6"></div>
+          <div class="check-row" style="margin-bottom:12px">
+            <button class="mini" type="button" id="stOrderButton">🔢 依座號排</button>
+            <button class="mini" type="button" id="stShuffleButton">🎲 隨機重排</button>
+          </div>
+          <button class="go-button" type="button" id="stGoButton">🪑 產生座位表</button>
+          <div class="status" id="stStatus"></div>
+          <div class="hint"><strong>點兩個座位就互換</strong>；排好按列印貼在講桌上。純本機、完全不用 AI 也不上傳。</div>
+        </div>
+        <div class="panel">
+          <div class="preview-bar">
+            <button class="mini" type="button" onclick="window.print()">🖨 列印</button>
+            <span class="status" id="stMeta"></span>
+          </div>
+          <div class="preview-host" id="stPreview"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 🛡 敏感資料遮蔽 -->
+    <section class="page" id="page-mask">
+      <div class="workbench">
+        <div class="panel">
+          <div class="field"><label>🖼 圖片遮蔽<span class="mask-badge">100% 本機處理，不會上傳</span></label>
+            <input class="input" type="file" id="maskImageInput" accept="image/*"></div>
+          <div class="field"><label>遮蔽方式</label>
+            <div class="check-row">
+              <label><input type="radio" name="maskMode" value="mosaic" checked>▦ 馬賽克</label>
+              <label><input type="radio" name="maskMode" value="black">⬛ 黑條</label>
+            </div></div>
+          <div class="check-row" style="margin-bottom:12px">
+            <button class="mini" type="button" id="maskUndoButton">↩ 復原</button>
+            <button class="mini" type="button" id="maskDownloadButton">⬇ 下載遮蔽後圖片</button>
+          </div>
+          <div class="hint">在右邊的圖片上<strong>按住拖曳框選</strong>要遮的區域（姓名、電話、身分證…），放開就打上遮蔽。可框很多處，做完再下載。</div>
+          <hr style="border:none;border-top:1.5px solid var(--line);margin:16px 0">
+          <div class="field"><label>📃 文字自動遮蔽（貼上文字，常見個資自動打碼）</label>
+            <textarea class="textarea" id="maskTextInput" placeholder="貼上要分享的文字，身分證、手機、市話、Email、出生年月日會自動變成＊號"></textarea></div>
+          <button class="go-button" type="button" id="maskTextButton">🛡 一鍵遮蔽文字</button>
+          <div class="warn">姓名無法自動判斷，請自行檢查；遮蔽後仍建議<strong>逐字確認</strong>再分享。整個分頁不呼叫任何雲端服務。</div>
+        </div>
+        <div class="panel">
+          <div class="preview-bar"><span class="status" id="maskStatus">選擇圖片或貼上文字後開始。</span></div>
+          <div class="mask-canvas-wrap"><canvas id="maskCanvas" hidden></canvas></div>
+          <div class="mask-out" id="maskTextOut" hidden></div>
+          <div class="check-row" style="margin-top:8px"><button class="mini" type="button" id="maskCopyButton" hidden>📋 複製遮蔽後文字</button></div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    'use strict';
+    const $ = id => document.getElementById(id);
+    const escapeHtml = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    function showToast(message, isError) {
+      const toast = $('toast');
+      toast.textContent = message;
+      toast.classList.toggle('error', !!isError);
+      toast.classList.add('show');
+      clearTimeout(showToast.t);
+      showToast.t = setTimeout(() => toast.classList.remove('show'), 2800);
+    }
+
+    // ---------- 金鑰：沿用工作台已儲存的 Gemini 設定 ----------
+    function geminiKey() {
+      return localStorage.getItem('grade6AssistantApiKey') || sessionStorage.getItem('grade6AssistantApiKey') || '';
+    }
+    function geminiModel() {
+      try {
+        const s = JSON.parse(localStorage.getItem('grade6AssistantSettings') || 'null');
+        if (s && s.api && s.api.provider === 'gemini' && s.api.model) return s.api.model;
+      } catch (e) {}
+      return 'gemini-2.5-flash';
+    }
+    function refreshKeyStatus() {
+      $('keyStatus').innerHTML = geminiKey()
+        ? '🔑 已沿用工作台的 Gemini 金鑰'
+        : '⚠️ 未找到金鑰——請先到 <a href="Index.html">工作台</a>「⚙ 設定 → AI 設定」填入 Gemini 金鑰並勾選記住';
+    }
+    refreshKeyStatus();
+
+    async function fileToPart(input) {
+      const file = input && input.files && input.files[0];
+      if (!file) return null;
+      if (file.size > 8 * 1024 * 1024) throw new Error('圖片超過 8MB，請縮小後再試。');
+      const b64 = await new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => resolve(String(r.result).split(',')[1]);
+        r.onerror = () => reject(new Error('圖片讀取失敗'));
+        r.readAsDataURL(file);
+      });
+      return { inline_data: { mime_type: file.type || 'image/jpeg', data: b64 } };
+    }
+    async function callGemini(prompt, imagePart, statusEl) {
+      const key = geminiKey();
+      if (!key) { showToast('尚未設定 Gemini 金鑰，請先到工作台 AI 設定填入。', true); throw new Error('no-key'); }
+      statusEl.textContent = '🤖 AI 生成中（約 10–30 秒）…';
+      const parts = [{ text: prompt }];
+      if (imagePart) parts.push(imagePart);
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModel()}:generateContent?key=${encodeURIComponent(key)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts }], generationConfig: { temperature: 0.5 } })
+      });
+      if (!res.ok) {
+        const body = await res.text();
+        throw new Error(res.status === 400 && body.includes('API_KEY') ? '金鑰無效，請檢查工作台 AI 設定。' : `AI 回應錯誤（HTTP ${res.status}）`);
+      }
+      const data = await res.json();
+      const text = (((data.candidates || [])[0] || {}).content?.parts || []).map(p => p.text || '').join('');
+      if (!text) throw new Error('AI 沒有回覆內容，請再試一次。');
+      statusEl.textContent = '';
+      return text;
+    }
+    function extractJson(text) {
+      const m = text.match(/\{[\s\S]*\}/);
+      if (!m) throw new Error('AI 回覆格式不對，請再試一次。');
+      return JSON.parse(m[0]);
+    }
+    function busy(button, on) { button.disabled = on; button.textContent = on ? '⏳ 生成中…' : button.dataset.label; }
+    ['wsGoButton', 'ntGoButton', 'mmGoButton', 'cmGoButton', 'poGoButton'].forEach(id => { $(id).dataset.label = $(id).textContent; });
+
+    // ---------- 分頁切換 ----------
+    document.querySelectorAll('.tab-button').forEach(tab => tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab-button').forEach(i => i.classList.toggle('active', i === tab));
+      document.querySelectorAll('main > .page').forEach(p => p.classList.toggle('active', p.id === 'page-' + tab.dataset.page));
+    }));
+
+    // ============================================================
+    // 📝 學習單
+    // ============================================================
+    $('wsCount').addEventListener('input', () => { $('wsCountLabel').textContent = $('wsCount').value; });
+    $('wsGoButton').addEventListener('click', async () => {
+      const types = [...document.querySelectorAll('.wsType:checked')].map(c => c.value);
+      if (!types.length) return showToast('請至少勾一種題型。', true);
+      const topic = $('wsTopic').value.trim();
+      const hasImage = $('wsImage').files.length > 0;
+      if (!topic && !hasImage) return showToast('請輸入主題或上傳課本照片。', true);
+      const diff = $('wsDiff').checked;
+      const prompt = [
+        `你是臺灣國小${$('wsGrade').value}年級${$('wsSubject').value}老師，為單元「${topic || '（見附圖）'}」出一份學習單。`,
+        hasImage ? '附圖是課本或講義頁面，題目內容以圖中知識為準。' : '',
+        `題型限定：${types.join('、')}；總題數 ${$('wsCount').value} 題，依題型分節。`,
+        diff ? '請產出兩個版本：level="基礎"（直接提取、簡單應用）與 level="進階"（比較、推理、生活應用），題數相同、題目不同。' : '只產出一個版本 level="標準"。',
+        '用語符合該年級、繁體中文、臺灣用語。選擇題四個選項且只有一個正確。填空題以「____」標示空格。',
+        '只回傳 JSON，不要其他文字，格式：',
+        '{"title":"學習單標題","versions":[{"level":"基礎","sections":[{"type":"選擇題","questions":[{"q":"題目","options":["A內容","B內容","C內容","D內容"],"answer":"B"}]},{"type":"填空題","questions":[{"q":"題目含____","answer":"答案"}]},{"type":"是非題","questions":[{"q":"敘述","answer":"○"}]},{"type":"簡答題","questions":[{"q":"題目","answer":"參考答案","lines":2}]},{"type":"配合題","questions":[{"q":"左項","answer":"配對的右項"}]}]}]}'
+      ].filter(Boolean).join('\n');
+      busy($('wsGoButton'), true);
+      try {
+        const image = await fileToPart($('wsImage'));
+        const data = extractJson(await callGemini(prompt, image, $('wsStatus')));
+        renderWorksheet(data);
+        $('wsMeta').textContent = `已生成${data.versions.length > 1 ? '基礎＋進階雙版本' : ''}，可直接列印或存 PDF。`;
+        showToast('✨ 學習單完成！');
+      } catch (e) { if (e.message !== 'no-key') { $('wsStatus').textContent = ''; showToast(e.message, true); } }
+      busy($('wsGoButton'), false);
+    });
+    function circled(i) { return ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','⑪','⑫','⑬','⑭','⑮','⑯','⑰','⑱','⑲','⑳'][i] || (i + 1) + '.'; }
+    function renderWorksheet(data) {
+      const withAnswer = $('wsAnswer').checked;
+      const school = ($('ntSchool').value || '').trim();
+      const pages = [];
+      (data.versions || []).forEach(version => {
+        let qNo = 0;
+        const sections = (version.sections || []).map((section, si) => {
+          const head = `<div class="ws-section">${['一','二','三','四','五'][si] || si + 1}、${escapeHtml(section.type)}</div>`;
+          const qs = (section.questions || []).map(item => {
+            qNo += 1;
+            let body = `<div class="ws-q">${qNo}. ${section.type === '是非題' ? '（　）' : section.type === '選擇題' ? '（　）' : ''}${escapeHtml(item.q)}</div>`;
+            if (section.type === '選擇題' && item.options) {
+              body += `<div class="ws-options">${item.options.map((o, i) => `<span>(${'ABCD'[i]}) ${escapeHtml(o)}</span>`).join('')}</div>`;
+            }
+            if (section.type === '簡答題') {
+              body += Array.from({ length: item.lines || 2 }, () => '<div class="ws-lines"></div>').join('');
+            }
+            return body;
+          }).join('');
+          return head + qs;
+        }).join('');
+        pages.push(`<div class="sheet">
+          <div class="ws-head">${school ? `<div class="ws-school">${escapeHtml(school)}</div>` : ''}
+            <div class="ws-title">${escapeHtml(data.title || '學習單')}${version.level && version.level !== '標準' ? `（${escapeHtml(version.level)}版）` : ''}</div></div>
+          <div class="ws-meta"><span>班級：＿＿＿</span><span>座號：＿＿＿</span><span>姓名：＿＿＿＿＿＿</span><span>得分：＿＿＿</span></div>
+          ${sections}
+        </div>`);
+      });
+      if (withAnswer) {
+        const answers = (data.versions || []).map(version => {
+          let qNo = 0;
+          const list = (version.sections || []).map(section =>
+            (section.questions || []).map(item => { qNo += 1; return `<div>${qNo}. ${escapeHtml(item.answer == null ? '' : String(item.answer))}</div>`; }).join('')
+          ).join('');
+          return `<div class="ws-section">${escapeHtml(version.level || '標準')}版解答</div><div class="ws-answer-list">${list}</div>`;
+        }).join('');
+        pages.push(`<div class="sheet ws-answerpage"><div class="ws-head"><div class="ws-title">${escapeHtml(data.title || '學習單')}｜教師解答卷</div></div>${answers}</div>`);
+      }
+      $('wsPreview').innerHTML = pages.join('');
+    }
+
+    // ============================================================
+    // 📄 家長通知單
+    // ============================================================
+    $('ntSchool').value = localStorage.getItem('studioSchoolName') || '';
+    $('ntSchool').addEventListener('change', () => localStorage.setItem('studioSchoolName', $('ntSchool').value.trim()));
+    $('ntGoButton').addEventListener('click', async () => {
+      const body = $('ntBody').value.trim();
+      const hasImage = $('ntImage').files.length > 0;
+      if (!body && !hasImage) return showToast('請輸入內容要點或上傳公文照片。', true);
+      const prompt = [
+        '你是臺灣國小導師，把以下內容寫成一份正式但親切的「給家長通知單」。繁體中文、臺灣慣用格式。',
+        hasImage ? '附圖是上級來文或公文，請轉寫成家長看得懂的版本（去除公文用語）。' : '',
+        `主旨提示：${$('ntSubject').value.trim() || '（自行擬定）'}`,
+        body ? `內容要點：${body}` : '',
+        '重要日期、金額、地點務必完整保留並以清楚條列呈現。',
+        '只回傳 JSON：{"title":"通知單主旨","greeting":"親愛的家長您好：","paragraphs":["開場段落"],"items":["條列事項1","條列事項2"],"closing":"結尾段落（含感謝）","slipText":"回條上的聲明句（例：本人已詳閱○○通知，並同意讓子女參加。）"}'
+      ].filter(Boolean).join('\n');
+      busy($('ntGoButton'), true);
+      try {
+        const image = await fileToPart($('ntImage'));
+        const data = extractJson(await callGemini(prompt, image, $('ntStatus')));
+        renderNotice(data);
+        $('ntMeta').textContent = '請核對日期與金額後列印。';
+        showToast('✨ 通知單完成！');
+      } catch (e) { if (e.message !== 'no-key') { $('ntStatus').textContent = ''; showToast(e.message, true); } }
+      busy($('ntGoButton'), false);
+    });
+    function renderNotice(data) {
+      const school = ($('ntSchool').value || '○○國民小學').trim();
+      const today = new Date();
+      const dateText = `${today.getFullYear() - 1911} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日`;
+      const slip = $('ntSlip').checked ? `
+        <hr class="cut-line">
+        <div class="slip-title">📋 家長回條（請於簽名後交回）</div>
+        <div style="font-size:15px">${escapeHtml(data.slipText || '本人已詳閱本通知內容。')}</div>
+        <div class="slip-fields">
+          <span>班級：＿＿＿＿</span><span>座號：＿＿＿＿</span><span>學生姓名：<span class="u"></span></span><br><br>
+          <span>家長簽名：<span class="u"></span></span><span>日期：＿＿＿月＿＿＿日</span>
+        </div>` : '';
+      $('ntPreview').innerHTML = `<div class="sheet">
+        <div class="ws-head"><div class="ws-school">${escapeHtml(school)}</div>
+          <div class="ws-title">${escapeHtml(data.title || '家長通知單')}</div></div>
+        <p style="margin-top:14px">${escapeHtml(data.greeting || '親愛的家長您好：')}</p>
+        ${(data.paragraphs || []).map(p => `<p style="text-indent:2em;margin:8px 0">${escapeHtml(p)}</p>`).join('')}
+        ${(data.items || []).length ? `<ol style="margin:10px 0 10px 2em;font-size:15px">${data.items.map(i => `<li style="margin:5px 0">${escapeHtml(i)}</li>`).join('')}</ol>` : ''}
+        <p style="text-indent:2em;margin:8px 0">${escapeHtml(data.closing || '')}</p>
+        <p style="text-align:right;margin-top:18px">${escapeHtml(school)}　敬啟<br>中華民國 ${dateText}</p>
+        ${slip}
+      </div>`;
+    }
+
+    // ============================================================
+    // 🧠 心智圖（AI 出大綱 → 自繪 SVG，改字即重畫）
+    // ============================================================
+    $('mmGoButton').addEventListener('click', async () => {
+      const topic = $('mmTopic').value.trim();
+      const hasImage = $('mmImage').files.length > 0;
+      if (!topic && !hasImage) return showToast('請輸入主題或上傳照片。', true);
+      const depth = $('mmDepth').value;
+      const prompt = [
+        `你是臺灣國小老師，為「${topic || '（見附圖內容）'}」整理一張教學心智圖大綱。`,
+        hasImage ? '附圖是課本或講義頁面，以圖中知識為準。' : '',
+        `共 ${depth} 層：第 1 層是主題、第 2 層 3–6 個分支${depth === '3' ? '、第 3 層每分支 2–4 個關鍵詞' : ''}。每個節點不超過 12 個字，繁體中文。`,
+        '只回傳 Markdown 清單，不要其他文字，格式：',
+        '- 主題\n  - 分支\n    - 關鍵詞'
+      ].filter(Boolean).join('\n');
+      busy($('mmGoButton'), true);
+      try {
+        const image = await fileToPart($('mmImage'));
+        const text = await callGemini(prompt, image, $('mmStatus'));
+        const md = (text.match(/(^|\n)\s*-\s[\s\S]*/) || [text])[0].trim();
+        $('mmMarkdown').value = md;
+        renderMindmap();
+        showToast('✨ 心智圖完成！左邊大綱可直接編輯。');
+      } catch (e) { if (e.message !== 'no-key') { $('mmStatus').textContent = ''; showToast(e.message, true); } }
+      busy($('mmGoButton'), false);
+    });
+    $('mmMarkdown').addEventListener('input', renderMindmap);
+    function parseOutline(md) {
+      const root = { text: '主題', children: [] };
+      const stack = [{ node: root, indent: -1 }];
+      let first = true;
+      md.split('\n').forEach(line => {
+        const m = line.match(/^(\s*)-\s+(.+)$/);
+        if (!m) return;
+        const indent = m[1].replace(/\t/g, '  ').length;
+        const node = { text: m[2].trim(), children: [] };
+        if (first) { root.text = node.text; first = false; stack.length = 1; stack[0].indent = indent; return; }
+        while (stack.length > 1 && indent <= stack[stack.length - 1].indent) stack.pop();
+        stack[stack.length - 1].node.children.push(node);
+        stack.push({ node, indent });
+      });
+      return root;
+    }
+    const MM_COLORS = ['#e57368', '#f2b53c', '#79c281', '#5f9fe0', '#b784d9', '#e08b5c'];
+    function renderMindmap() {
+      const md = $('mmMarkdown').value;
+      if (!md.trim()) { $('mmSvgHost').innerHTML = ''; return; }
+      const root = parseOutline(md);
+      // 佈局：root 在左、往右展開的水平樹
+      const NODE_H = 34, GAP_Y = 10, LEVEL_W = [0, 200, 200, 180];
+      let leafY = 0;
+      const layout = (node, depth) => {
+        node.depth = depth;
+        if (!node.children.length) { node.y = leafY; leafY += NODE_H + GAP_Y; }
+        else {
+          node.children.forEach(c => layout(c, depth + 1));
+          node.y = (node.children[0].y + node.children[node.children.length - 1].y) / 2;
+        }
+        node.x = depth === 0 ? 10 : 10 + LEVEL_W.slice(1, depth + 1).reduce((a, b) => a + b, 0);
+        node.w = Math.min(230, 26 + node.text.length * (depth === 0 ? 19 : 15));
+      };
+      layout(root, 0);
+      const H = Math.max(leafY + 20, 120), W = 10 + LEVEL_W.slice(1, 4).reduce((a, b) => a + b, 0) + 240;
+      const shapes = [], links = [];
+      const draw = (node, color) => {
+        const fill = node.depth === 0 ? '#1f514a' : node.depth === 1 ? color : '#ffffff';
+        const stroke = node.depth >= 2 ? color : 'none';
+        const textFill = node.depth >= 2 ? '#333' : '#fff';
+        const fontSize = node.depth === 0 ? 17 : node.depth === 1 ? 15 : 13;
+        shapes.push(`<rect x="${node.x}" y="${node.y}" rx="16" width="${node.w}" height="${NODE_H}" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`
+          + `<text x="${node.x + node.w / 2}" y="${node.y + NODE_H / 2 + 5}" text-anchor="middle" font-size="${fontSize}" font-weight="700" fill="${textFill}">${escapeHtml(node.text)}</text>`);
+        node.children.forEach((child, i) => {
+          const branchColor = node.depth === 0 ? MM_COLORS[i % MM_COLORS.length] : color;
+          links.push(`<path d="M${node.x + node.w},${node.y + NODE_H / 2} C${node.x + node.w + 40},${node.y + NODE_H / 2} ${child.x - 40},${child.y + NODE_H / 2} ${child.x},${child.y + NODE_H / 2}" fill="none" stroke="${branchColor}" stroke-width="2.5"/>`);
+          draw(child, branchColor);
+        });
+      };
+      draw(root, MM_COLORS[0]);
+      $('mmSvgHost').innerHTML = `<svg id="mmSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family="Microsoft JhengHei, sans-serif" style="background:#fff">${links.join('')}${shapes.join('')}</svg>`;
+      $('mmMeta').textContent = '';
+    }
+    $('mmDownloadButton').addEventListener('click', () => {
+      const svg = document.getElementById('mmSvg');
+      if (!svg) return showToast('請先生成心智圖。', true);
+      const blob = new Blob([svg.outerHTML], { type: 'image/svg+xml' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = '心智圖.svg';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    // ============================================================
+    // 💬 評語小幫手
+    // ============================================================
+    let cmData = [];
+    $('cmGoButton').addEventListener('click', async () => {
+      const lines = $('cmList').value.split('\n').map(l => l.trim()).filter(Boolean);
+      if (!lines.length) return showToast('請輸入至少一位學生（座號＋關鍵詞）。', true);
+      if (lines.length > 35) return showToast('一次最多 35 位，請分批。', true);
+      const prompt = [
+        `你是臺灣國小導師，為以下學生各寫一則${$('cmLength').value === '30' ? '聯絡簿短評' : '成績單評語'}。`,
+        `語氣：${$('cmTone').value}。每則約 ${$('cmLength').value} 字，繁體中文。`,
+        '原則：先肯定具體優點，再自然帶到一個可成長方向（若關鍵詞有）；避免空泛套話與「該生」等疏離用語；不要出現學生姓名，用「孩子」或直接描述。',
+        '學生清單（座號 關鍵詞）：',
+        lines.join('\n'),
+        '只回傳 JSON：{"comments":[{"seat":"1","text":"評語內容"}]}'
+      ].join('\n');
+      busy($('cmGoButton'), true);
+      try {
+        const data = extractJson(await callGemini(prompt, null, $('cmStatus')));
+        cmData = data.comments || [];
+        $('cmResult').innerHTML = cmData.map(c => `
+          <div class="cm-row"><div class="cm-seat">${escapeHtml(c.seat)}號</div>
+            <div class="cm-text">${escapeHtml(c.text)}</div>
+            <button class="mini" type="button" data-copy-seat="${escapeHtml(c.seat)}">複製</button></div>`).join('');
+        $('cmMeta').textContent = `共 ${cmData.length} 則；點「複製」可逐則貼到成績系統。`;
+        showToast('✨ 評語完成，請逐則審閱！');
+      } catch (e) { if (e.message !== 'no-key') { $('cmStatus').textContent = ''; showToast(e.message, true); } }
+      busy($('cmGoButton'), false);
+    });
+    $('cmResult').addEventListener('click', async e => {
+      const btn = e.target.closest('[data-copy-seat]');
+      if (!btn) return;
+      const item = cmData.find(c => String(c.seat) === btn.dataset.copySeat);
+      if (item) { await navigator.clipboard.writeText(item.text).catch(() => {}); showToast(`已複製 ${item.seat} 號評語。`); }
+    });
+    $('cmCopyAllButton').addEventListener('click', async () => {
+      if (!cmData.length) return showToast('請先生成評語。', true);
+      await navigator.clipboard.writeText(cmData.map(c => `${c.seat}號：${c.text}`).join('\n')).catch(() => {});
+      showToast('已複製全部評語。');
+    });
+
+    // ============================================================
+    // 📢 行政海報
+    // ============================================================
+    const PO_THEMES = {
+      sun:    { bg: '#fff8ec', main: '#c2540a', card: '#ffe8c7', text: '#5b3a12' },
+      forest: { bg: '#f2f7f0', main: '#1f514a', card: '#dcebdd', text: '#243b2f' },
+      ocean:  { bg: '#eff6fb', main: '#155e9c', card: '#d8e9f7', text: '#1d3b52' },
+      alert:  { bg: '#fdf1ef', main: '#b3261e', card: '#fadcd7', text: '#57201b' }
+    };
+    $('poGoButton').addEventListener('click', async () => {
+      const topic = $('poTopic').value.trim();
+      if (!topic) return showToast('請輸入海報主題。', true);
+      const prompt = [
+        `你是臺灣國小的文宣高手，為「${topic}」設計一張教室海報的文案。`,
+        $('poBody').value.trim() ? `內容要點：${$('poBody').value.trim()}` : '',
+        '標題要響亮好記（可押韻）；3–5 個重點，每個重點配一個貼切的 emoji、一句短標題（8字內）與一句說明（20字內）。',
+        '繁體中文、給國小學生看得懂。只回傳 JSON：',
+        '{"title":"大標題","subtitle":"副標語","points":[{"icon":"🧼","heading":"短標題","text":"一句說明"}],"footer":"落款或提醒（例：○○國小 保健室 關心您）"}'
+      ].filter(Boolean).join('\n');
+      busy($('poGoButton'), true);
+      try {
+        const data = extractJson(await callGemini(prompt, null, $('poStatus')));
+        const theme = PO_THEMES[$('poTheme').value] || PO_THEMES.sun;
+        $('poPreview').innerHTML = `<div class="sheet po-sheet" style="background:${theme.bg};color:${theme.text}">
+          <div class="po-title" style="color:${theme.main}">${escapeHtml(data.title || topic)}</div>
+          <div class="po-sub">${escapeHtml(data.subtitle || '')}</div>
+          ${(data.points || []).map(p => `<div class="po-point" style="background:${theme.card}">
+            <div class="po-icon">${escapeHtml(p.icon || '⭐')}</div>
+            <div><div class="po-heading" style="color:${theme.main}">${escapeHtml(p.heading || '')}</div>
+            <div class="po-text">${escapeHtml(p.text || '')}</div></div></div>`).join('')}
+          <div class="po-footer" style="color:${theme.main}">${escapeHtml(data.footer || '')}</div>
+        </div>`;
+        $('poMeta').textContent = '可直接列印（彩色效果最好）。';
+        showToast('✨ 海報完成！');
+      } catch (e) { if (e.message !== 'no-key') { $('poStatus').textContent = ''; showToast(e.message, true); } }
+      busy($('poGoButton'), false);
+    });
+
+    // ============================================================
+    // 🏅 獎狀（姓名只在本機列印，不儲存不上傳）
+    // ============================================================
+    $('awSchool').value = localStorage.getItem('studioSchoolName') || '';
+    $('awSchool').addEventListener('change', () => localStorage.setItem('studioSchoolName', $('awSchool').value.trim()));
+    $('awAiButton').addEventListener('click', async () => {
+      const name = $('awName').value.trim();
+      if (!name) return showToast('請先填獎項名稱。', true);
+      try {
+        const text = await callGemini(
+          `為臺灣國小的「${name}」獎狀寫表彰事由，文言白話兼具、正式典雅，約 40 字，結尾用「特頒此狀，以資鼓勵。」。不要包含學生姓名。只回傳事由本文。`,
+          null, $('awStatus'));
+        $('awReason').value = text.trim().replace(/^["「]|["」]$/g, '');
+        showToast('✨ 事由完成，可再修改。');
+      } catch (e) { if (e.message !== 'no-key') { $('awStatus').textContent = ''; showToast(e.message, true); } }
+    });
+    $('awGoButton').addEventListener('click', () => {
+      const students = $('awList').value.split('\n').map(l => l.trim()).filter(Boolean);
+      if (!students.length) return showToast('請輸入得獎名單。', true);
+      const school = $('awSchool').value.trim() || '○○國民小學';
+      const award = $('awName').value.trim() || '獎';
+      const reason = $('awReason').value.trim() || '表現優異，特頒此狀，以資鼓勵。';
+      const today = new Date();
+      const dateText = `中華民國 ${today.getFullYear() - 1911} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日`;
+      $('awPreview').innerHTML = students.map(line => {
+        const parts = line.split(/\s+/);
+        const klass = parts.length > 1 ? parts[0] : '';
+        const student = parts.length > 1 ? parts.slice(1).join('') : parts[0];
+        return `<div class="sheet aw-sheet">
+          <div class="aw-school">${escapeHtml(school)}</div>
+          <div class="aw-big">獎狀</div>
+          <div class="aw-body">茲有 ${klass ? escapeHtml(klass) + '　' : ''}<span class="aw-name">${escapeHtml(student)}</span>　同學，榮獲<strong>「${escapeHtml(award)}」</strong>。${escapeHtml(reason)}</div>
+          <div class="aw-sign">${escapeHtml($('awSigners').value.trim() || '校長　＿＿＿＿＿＿').split('、').map(s => `<span>${escapeHtml(s)}</span>`).join('')}</div>
+          <div class="aw-date">${dateText}</div>
+        </div>`;
+      }).join('');
+      $('awMeta').textContent = `共 ${students.length} 張，每張一頁。`;
+      showToast(`🏅 已生成 ${students.length} 張獎狀！`);
+    });
+
+    // ============================================================
+    // 🪑 座位表（純本機）
+    // ============================================================
+    let stSeats = [];
+    let stPicked = -1;
+    function stPool() {
+      const count = Math.max(2, Math.min(50, parseInt($('stCount').value, 10) || 28));
+      const skip = new Set($('stSkip').value.split(/[、,\s]+/).map(v => parseInt(v, 10)).filter(Boolean));
+      return Array.from({ length: count }, (_, i) => i + 1).filter(n => !skip.has(n));
+    }
+    function stCols() { return Math.max(2, Math.min(10, parseInt($('stCols').value, 10) || 6)); }
+    function stGroupSize() { return $('stLayout').value === 'island6' ? 6 : 4; }
+    function stRender() {
+      const layout = $('stLayout').value;
+      const desk = i => {
+        const seat = stSeats[i];
+        return `<div class="st-desk${seat == null ? ' empty' : ''}${i === stPicked ? ' picked' : ''}" data-seat-index="${i}">${seat == null ? '' : seat + '號'}</div>`;
+      };
+      let body, title = '座位表';
+      if (layout === 'island4' || layout === 'island6') {
+        const size = stGroupSize();
+        const islands = [];
+        for (let i = 0; i < stSeats.length; i += size) {
+          const cells = stSeats.slice(i, i + size).map((_, k) => desk(i + k)).join('');
+          islands.push(`<div class="st-island"><div class="st-island-label">第 ${islands.length + 1} 組</div>
+            <div class="st-grid" style="grid-template-columns:repeat(${size === 4 ? 2 : 3},1fr)">${cells}</div></div>`);
+        }
+        body = `<div class="st-islands">${islands.join('')}</div>`;
+        title = `分組座位表（每組 ${size} 人・共 ${islands.length} 組）`;
+      } else if (layout === 'pairs') {
+        const pairs = [];
+        for (let i = 0; i < stSeats.length; i += 2) pairs.push(`<div class="st-pair">${desk(i)}${desk(i + 1)}</div>`);
+        const perRow = Math.max(1, Math.round(stCols() / 2));
+        body = `<div class="st-grid" style="grid-template-columns:repeat(${perRow},1fr);column-gap:26px">${pairs.join('')}</div>`;
+        title = '座位表（兩人雙併）';
+      } else {
+        body = `<div class="st-grid" style="grid-template-columns:repeat(${stCols()},1fr)">${stSeats.map((_, i) => desk(i)).join('')}</div>`;
+      }
+      $('stPreview').innerHTML = `<div class="sheet"><div class="ws-head"><div class="ws-title">${title}</div></div>
+        <div class="st-stage">講　台</div>
+        ${body}
+        <p style="margin-top:16px;font-size:13px;color:#666">製表日期：${new Date().toLocaleDateString('zh-TW')}</p></div>`;
+      $('stMeta').textContent = '點兩個座位互換；空位顯示為虛線框。';
+    }
+    function stBuild(shuffle) {
+      const pool = stPool();
+      if (shuffle) for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+      const layout = $('stLayout').value;
+      const unit = (layout === 'island4' || layout === 'island6') ? stGroupSize() : (layout === 'pairs' ? 2 : stCols());
+      const total = Math.ceil(pool.length / unit) * unit;
+      stSeats = Array.from({ length: total }, (_, i) => pool[i] == null ? null : pool[i]);
+      stPicked = -1;
+      stRender();
+    }
+    $('stLayout').addEventListener('change', () => {
+      $('stColsField').hidden = /island/.test($('stLayout').value);
+      if (stSeats.length) stBuild(false);
+    });
+    $('stGoButton').addEventListener('click', () => stBuild(true));
+    $('stShuffleButton').addEventListener('click', () => { if (!stSeats.length) return stBuild(true); stBuild(true); showToast('🎲 已隨機重排。'); });
+    $('stOrderButton').addEventListener('click', () => { stBuild(false); showToast('🔢 已依座號排列。'); });
+    $('stPreview').addEventListener('click', e => {
+      const desk = e.target.closest('[data-seat-index]');
+      if (!desk || desk.classList.contains('empty')) return;
+      const index = Number(desk.dataset.seatIndex);
+      if (stPicked < 0) { stPicked = index; }
+      else if (stPicked === index) { stPicked = -1; }
+      else { [stSeats[stPicked], stSeats[index]] = [stSeats[index], stSeats[stPicked]]; stPicked = -1; }
+      stRender();
+    });
+
+    // ============================================================
+    // 🛡 敏感資料遮蔽（100% 本機，不呼叫任何雲端）
+    // ============================================================
+    (() => {
+      const canvas = $('maskCanvas');
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      const history = [];
+      let dragStart = null, baseName = '圖片';
+      $('maskImageInput').addEventListener('change', () => {
+        const file = $('maskImageInput').files[0];
+        if (!file) return;
+        baseName = file.name.replace(/\.[^.]+$/, '');
+        const img = new Image();
+        img.onload = () => {
+          canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+          ctx.drawImage(img, 0, 0);
+          canvas.hidden = false; history.length = 0;
+          $('maskStatus').textContent = '在圖上按住拖曳框選要遮的地方（可框多處）。';
+          URL.revokeObjectURL(img.src);
+        };
+        img.src = URL.createObjectURL(file);
+      });
+      const canvasPoint = e => {
+        const rect = canvas.getBoundingClientRect();
+        return {
+          x: (e.clientX - rect.left) * (canvas.width / rect.width),
+          y: (e.clientY - rect.top) * (canvas.height / rect.height)
+        };
+      };
+      canvas.addEventListener('pointerdown', e => {
+        if (canvas.hidden) return;
+        canvas.setPointerCapture(e.pointerId);
+        dragStart = canvasPoint(e);
+        history.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+        if (history.length > 15) history.shift();
+      });
+      canvas.addEventListener('pointerup', e => {
+        if (!dragStart) return;
+        const end = canvasPoint(e);
+        const x = Math.min(dragStart.x, end.x), y = Math.min(dragStart.y, end.y);
+        const w = Math.abs(end.x - dragStart.x), h = Math.abs(end.y - dragStart.y);
+        dragStart = null;
+        if (w < 4 || h < 4) { history.pop(); return; }
+        const mode = document.querySelector('[name="maskMode"]:checked').value;
+        if (mode === 'black') { ctx.fillStyle = '#000'; ctx.fillRect(x, y, w, h); }
+        else {
+          // 馬賽克：把區域縮到極小再放大回去
+          const block = Math.max(8, Math.round(Math.max(w, h) / 12));
+          const tiny = document.createElement('canvas');
+          tiny.width = Math.max(1, Math.round(w / block));
+          tiny.height = Math.max(1, Math.round(h / block));
+          tiny.getContext('2d').drawImage(canvas, x, y, w, h, 0, 0, tiny.width, tiny.height);
+          ctx.imageSmoothingEnabled = false;
+          ctx.drawImage(tiny, 0, 0, tiny.width, tiny.height, x, y, w, h);
+          ctx.imageSmoothingEnabled = true;
+        }
+        $('maskStatus').textContent = '已遮蔽一處；可繼續框選或按「⬇ 下載」。';
+      });
+      $('maskUndoButton').addEventListener('click', () => {
+        if (!history.length) return showToast('沒有可復原的步驟。', true);
+        ctx.putImageData(history.pop(), 0, 0);
+        showToast('已復原一步。');
+      });
+      $('maskDownloadButton').addEventListener('click', () => {
+        if (canvas.hidden) return showToast('請先選擇圖片。', true);
+        const a = document.createElement('a');
+        a.href = canvas.toDataURL('image/png');
+        a.download = `${baseName}_已遮蔽.png`;
+        a.click();
+        showToast('已下載遮蔽後的圖片。');
+      });
+      // 文字自動遮蔽
+      const maskDigits = value => value.replace(/\d/g, '＊');
+      const TEXT_RULES = [
+        { name: '身分證', re: /[A-Z][12]\d{8}/g, sub: m => m[0] + m[1] + '＊'.repeat(8) },
+        { name: 'Email', re: /[\w.+-]+@[\w-]+(\.[\w-]+)+/g, sub: m => m[0] + '＊＊＊@' + m.split('@')[1] },
+        { name: '手機', re: /09\d{2}[- ]?\d{3}[- ]?\d{3}/g, sub: m => m.slice(0, 4) + '＊＊＊＊＊＊' },
+        { name: '市話', re: /\(?0\d{1,2}\)?[- ]?\d{3,4}[- ]?\d{4}/g, sub: m => maskDigits(m).replace(/^＊/, '0') },
+        { name: '出生年月日', re: /(民國)?\s?\d{2,3}\s?年\s?\d{1,2}\s?月\s?\d{1,2}\s?日/g, sub: () => '＊＊年＊＊月＊＊日' },
+        { name: '西元生日', re: /(19|20)\d{2}[\/\-.]\d{1,2}[\/\-.]\d{1,2}/g, sub: () => '＊＊＊＊/＊＊/＊＊' }
+      ];
+      $('maskTextButton').addEventListener('click', () => {
+        const raw = $('maskTextInput').value;
+        if (!raw.trim()) return showToast('請先貼上文字。', true);
+        let out = raw, hits = [];
+        TEXT_RULES.forEach(rule => {
+          let count = 0;
+          out = out.replace(rule.re, m => { count += 1; return rule.sub(m); });
+          if (count) hits.push(`${rule.name}×${count}`);
+        });
+        $('maskTextOut').textContent = out;
+        $('maskTextOut').hidden = false;
+        $('maskCopyButton').hidden = false;
+        $('maskStatus').textContent = hits.length ? `已遮蔽：${hits.join('、')}。姓名請自行檢查！` : '沒有找到可自動遮蔽的個資（姓名需手動處理）。';
+      });
+      $('maskCopyButton').addEventListener('click', async () => {
+        await navigator.clipboard.writeText($('maskTextOut').textContent).catch(() => {});
+        showToast('已複製遮蔽後文字。');
+      });
+    })();
+  </script>
+</body>
+</html>
