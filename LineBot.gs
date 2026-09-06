@@ -503,6 +503,11 @@ function handleLineSyncApi_(body) {
       return lineBotJson_(listContactBook_(body));
     }
     if (action === 'prompt_get') return lineBotJson_(getScreenPrompt_());
+    if (action === 'snapshot_get') {
+      // 桌面小綿助 v2.0 直連：讀回工作台最近一次上傳的快照（今日/逾期/今日課程）
+      if (!isTeacher) return lineBotJson_({ ok: false, error: '讀取快照需要老師金鑰' });
+      return lineBotJson_({ ok: true, snapshot: readWorkspaceSnapshot_() });
+    }
     if (action === 'prompt_set') {
       if (!isTeacher) return lineBotJson_({ ok: false, error: '設定大屏提示需要老師金鑰' });
       return lineBotJson_(setScreenPromptApi_(body));

@@ -14,6 +14,7 @@ import shutil
 import subprocess
 import sys
 import threading
+import time
 import uuid
 from datetime import date, datetime, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -25,6 +26,7 @@ from tkinter import filedialog, messagebox, ttk
 from PIL import Image, ImageGrab
 
 from desktop_pet_preview import ERROR_LOG, DesktopPetPreview
+from desktop_pet_cloud import CloudLink, DEFAULT_FOCUS_KEYWORDS, FocusTracker, ForegroundMonitor, cloud_url_allowed
 
 
 APP_NAME = "小綿助教師秘書"
@@ -213,7 +215,7 @@ textarea,input{font-family:inherit;font-size:14px;border:1.5px solid var(--line)
 details summary{cursor:pointer;font-weight:800;color:var(--strong)}
 .seat-ok{color:#1c6b45}.seat-bad{color:var(--danger);font-weight:800}
 </style></head><body>
-<header><h1>🐑 __PET_NAME__ 教師秘書</h1><div class="meta">本機頁面（127.0.0.1）｜<span id="stamp">載入中</span>｜每 15 秒自動更新</div></header>
+<header><h1>🐑 __PET_NAME__ 教師秘書</h1><div class="meta">本機頁面（127.0.0.1）｜v2.0｜<span id="stamp">載入中</span>｜每 15 秒自動更新</div></header>
 <main>
   <section class="card soft" style="grid-column:1/-1"><h2>☀ 今日簡報</h2><div id="brief" class="empty">載入中……</div></section>
 
@@ -245,6 +247,30 @@ details summary{cursor:pointer;font-weight:800;color:var(--strong)}
       <div class="note-meta">提醒的總開關與安靜時段，在教師工作台「設定 → 小綿助」。</div>
     </details>
   </section>
+
+  <section class="card soft" style="grid-column:1/-1"><h2>☁️ 雲端連線（v2.0：不開瀏覽器也能拿到資料）</h2>
+    <div id="cloudStatus" class="empty">載入中……</div>
+    <details id="cloudLinkSetup" style="margin-top:8px"><summary>⚙ 設定（貼一次就好）</summary>
+      <div class="row"><input id="clUrl" placeholder="🌐 機器人網址（https://script.google.com/macros/s/…/exec，與工作台同一個）"></div>
+      <div class="row"><input id="clToken" type="password" placeholder="🔑C 老師金鑰（與工作台「設定 → LINE 小幫手」同一把；已存過可留白）" style="flex:1">
+        每 <select id="clPoll"><option>1</option><option selected>2</option><option>5</option><option>10</option></select> 分鐘拉一次</div>
+      <div class="row"><button onclick="saveCloudLink(true)">儲存並啟用</button><button class="light" onclick="testCloudLink()">測試連線</button><button class="light" onclick="saveCloudLink(false)">停用</button>
+        <span class="note-meta">金鑰只存在這台電腦的小綿助資料檔；桌寵程式只允許連 script.google.com。</span></div>
+    </details></section>
+
+  <section class="card"><h2>📣 大屏提示遙控</h2>
+    <div class="row"><select id="promptSel" style="flex:1"></select></div>
+    <div class="row"><input id="promptCustom" placeholder="或自訂一句…" style="flex:1"><button onclick="sendPrompt()">送到大屏</button><button class="light" onclick="actx({action:'prompt_set',clear:true})">清除</button></div>
+    <div class="note-meta">教室大屏開著「📣 大屏提示」時，約 20 秒內切換（需雲端連線）。</div></section>
+
+  <section class="card"><h2>🍅 專注小綿助</h2>
+    <div>今日 <span class="num" id="focusMin">0</span> 分專注・<span class="num" id="driftMin" style="color:var(--danger)">0</span> 分分心　<span class="tag" id="focusStatus">—</span></div>
+    <div class="row"><button onclick="actx({action:'focus_session',minutes:25})">專注 25 分</button><button onclick="actx({action:'focus_session',minutes:50})">專注 50 分</button><button class="light" onclick="actx({action:'focus_session',minutes:0})">結束</button><span class="note-meta" id="sessionHint"></span></div>
+    <div class="row" id="recentDrift"></div>
+    <details style="margin-top:6px"><summary>⚙ 分心關鍵字（視窗標題含這些字＝分心；連續 3 分鐘才提醒）</summary>
+      <div class="row"><input id="focusKw" placeholder="以、分隔"><button onclick="saveFocusKw()">儲存</button></div>
+      <div class="row"><label><input type="checkbox" id="focusOn" onchange="actx({action:'set_focus',enabled:this.checked})"> 啟用分心提醒</label><span class="note-meta">只讀作用中視窗標題、不截圖、不上傳；大屏投影中自動安靜。</span></div>
+    </details></section>
 
   <section class="card"><h2>📮 待追蹤</h2><ul id="tracking"></ul></section>
 
@@ -288,6 +314,7 @@ async function load(){
     if(document.activeElement!==$('cfgMoveInterval'))$('cfgMoveInterval').value=String(d.health.moveInterval);
     const med=d.health.medicineTimes;
     $('medicine').innerHTML=med.length?med.map(t=>d.health.medicineDone.includes(t)?`<span class="tag">✅ ${t}</span>`:`<span class="tag">⏰ ${t}</span> <button class="light" style="padding:2px 10px" onclick="act('medicine_done','${t}')">已服用</button>`).join(' '):'未設定';
+    renderCloud(d.cloud||{});renderFocus(d.focus||{});
     $('medManage').innerHTML=med.length?med.map(t=>`<span class="tag">${t} <button class="light" style="padding:0 8px" title="移除" onclick="actx({action:'remove_medicine_time',time:'${t}'})">✖</button></span>`).join(' '):'<span class="note-meta">尚未設定服藥時間。</span>';
   }catch(e){$('brief').textContent='讀取失敗：'+e.message;}
 }
@@ -295,6 +322,35 @@ async function act(action,time){await fetch('/panel-action',{method:'POST',heade
 async function actx(payload){const r=await(await fetch('/panel-action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})).json().catch(()=>null);if(r&&r.ok===false)alert(r.error||'設定失敗');load();}
 async function addMed(){const t=$('cfgMedTime').value;if(!t)return alert('請先選擇時間');await actx({action:'add_medicine_time',time:t});$('cfgMedTime').value='';}
 async function addNote(){const t=$('noteInput').value.trim();if(!t)return;await fetch('/panel-action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'add_note',text:t})});$('noteInput').value='';load();}
+const PROMPTS=['上課囉！眼睛看老師|class_focus.png','坐姿端正，抬頭挺胸|class_focus.png','動作快，三秒內坐好|class_focus.png','發言請舉手，輪流說|raise_hand.png','安靜！音量零級|quiet_usagi.png','輕聲討論，別吵到隔壁組|quiet_cat.png','收作業囉，交給小組長|homework.png','訂正完拿給老師檢查|homework.png','寫完的同學自己再檢查一遍|homework.png','閱讀時間，安靜看書|reading.png','自習時間，完成自己的進度|reading.png','不會的先圈起來，等一下問|raise_hand.png','下課先喝水、上廁所|drink_water.png','吃飯不說話，細嚼慢嚥|quiet_cat.png','午休時間，趴下休息|nap.png','打掃時間，責任區掃乾淨|cleaning.png','整理書包，檢查抽屜|cleaning.png','排隊囉！快、靜、齊|line_up.png','到走廊排隊，不推不擠|line_up.png','上下樓梯靠右走、不奔跑|line_up.png','專科教室集合，帶課本鉛筆盒|line_up.png','準備放學：桌面清空、帶齊物品|cleaning.png'];
+$('promptSel').innerHTML=PROMPTS.map((p,i)=>`<option value="${i}">${p.split('|')[0]}</option>`).join('');
+async function sendPrompt(){const c=$('promptCustom').value.trim();const p=PROMPTS[Number($('promptSel').value)].split('|');await actx(c?{action:'prompt_set',text:c,img:'class_focus.png'}:{action:'prompt_set',text:p[0],img:p[1]});$('promptCustom').value='';}
+function renderCloud(c){
+  if(document.activeElement!==$('clUrl'))$('clUrl').value=c.url||'';
+  if(document.activeElement!==$('clPoll'))$('clPoll').value=String(c.pollMinutes||2);
+  const st=c.state||{};
+  if(!c.enabled){$('cloudStatus').textContent=c.url&&!c.hasToken?'已填網址，還缺 🔑C 老師金鑰。':'尚未啟用——點下方「⚙ 設定」貼上網址與 🔑C，小綿助就能自己去拿工作台快照、LINE 待整理與大屏提示。';$('cloudLinkSetup').open=!c.url;return;}
+  let html=`<div>✅ 已啟用，每 ${c.pollMinutes} 分鐘同步`+(st.fetchedAt?`｜最近 ${st.fetchedAt}`:'｜等待第一次同步')+`</div>`;
+  const snap=st.snapshot;
+  if(snap){html+=`<div>📋 工作台快照：今日 <b>${(snap.todayTasks||[]).length}</b> 件・逾期 <b>${snap.overdueCount||(snap.overdueTasks||[]).length}</b> 件`+(snap.updatedAt?`（${String(snap.updatedAt).slice(5,16).replace('T',' ')} 上傳）`:'')+`</div>`;}
+  if('lineCount' in st){html+=`<div>📱 LINE 待整理 <b>${st.lineCount}</b> 則`+((st.linePreview||[]).length?'：'+st.linePreview.map(esc).join('、'):'')+`</div>`;}
+  if(st.prompt&&st.prompt.text){html+=`<div>📣 大屏目前提示：${esc(st.prompt.text)}</div>`;}
+  if((st.errors||[]).length){html+=`<div class="note-meta">⚠ ${esc(st.errors.join('；'))}</div>`;}
+  if(c.lastError&&!(st.errors||[]).length){html+=`<div class="note-meta">⚠ ${esc(c.lastError)}</div>`;}
+  $('cloudStatus').innerHTML=html;
+}
+async function saveCloudLink(enabled){await actx({action:'set_cloud',url:$('clUrl').value.trim(),token:$('clToken').value.trim(),pollMinutes:$('clPoll').value,enabled});$('clToken').value='';}
+async function testCloudLink(){const r=await(await fetch('/panel-action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'cloud_test'})})).json().catch(()=>null);alert(r&&r.ok?'✅ '+(r.message||'連線成功'):'❌ '+(r&&r.error||'連線失敗'));setTimeout(load,2500);}
+function renderFocus(f){
+  $('focusMin').textContent=f.focusMinutes||0;$('driftMin').textContent=f.driftMinutes||0;
+  $('focusStatus').textContent=!f.enabled?'已關閉':f.status==='drift'?'😅 分心中':f.status==='pause'?'⏸ 投影／白名單':'😊 專注中';
+  const left=f.sessionUntil?Math.max(0,Math.round((f.sessionUntil*1000-Date.now())/60000)):0;
+  $('sessionHint').textContent=left?`🍅 專注時段剩 ${left} 分`:'';
+  if(document.activeElement!==$('focusKw'))$('focusKw').value=(f.keywords||[]).join('、');
+  $('focusOn').checked=!!f.enabled;
+  $('recentDrift').innerHTML=f.recentTitle?`<span class="note-meta">最近被判定分心的視窗：${esc(f.recentTitle)}</span> <button class="light" style="padding:2px 10px" onclick="actx({action:'focus_whitelist'})">這是備課用</button>`:'';
+}
+async function saveFocusKw(){await actx({action:'set_focus',keywords:$('focusKw').value.split(/[、,，\s]+/).filter(Boolean)});}
 function cloudCfg(){try{return JSON.parse(localStorage.getItem('petPanelCloud')||'null')||{}}catch(e){return{}}}
 function saveCloudCfg(){localStorage.setItem('petPanelCloud',JSON.stringify({url:$('cfgUrl').value.trim(),token:$('cfgToken').value.trim(),cls:$('cfgClass').value.trim()}));loadCloud();}
 async function loadCloud(){
@@ -362,6 +418,16 @@ def default_data() -> dict:
             "bridge_last_sync": "",
             "allowed_web_origin": "",
             "device_id": str(uuid.uuid4()),
+            # v2.0 方案 B：桌寵直連老師自己的 Apps Script（只允許 script.google.com）
+            "cloud_enabled": False,
+            "cloud_url": "",
+            "cloud_token": "",
+            "cloud_poll_minutes": 2,
+            # v2.0 專注小綿助：作用中視窗標題偵測（純本機、不截圖）
+            "focus_enabled": True,
+            "focus_keywords": list(DEFAULT_FOCUS_KEYWORDS),
+            "focus_threshold_minutes": 3,
+            "focus_cooldown_minutes": 10,
         },
         "health": {
             "date": date.today().isoformat(),
@@ -376,6 +442,10 @@ def default_data() -> dict:
             "medicine_done_times": [],
             "medicine_alerted_times": [],
             "medicine_done_date": "",
+            "focus_date": date.today().isoformat(),
+            "focus_seconds": 0,
+            "drift_seconds": 0,
+            "focus_whitelist": [],
         },
     }
 
@@ -448,6 +518,23 @@ class SecretaryPet(DesktopPetPreview):
             self.root.after(1200, self._opening_brief)
         self._schedule_cheer()
         self._start_local_bridge()
+        # ---- v2.0：雲端直連＋專注偵測＋新行為 ----
+        self.cloud = CloudLink()
+        self.cloud_state: dict = {}
+        self.cloud_last_line_count = -1
+        self.cloud_overdue_alerted_date = ""
+        self.focus_monitor = ForegroundMonitor()
+        self.focus_tracker = FocusTracker(settings.get("focus_threshold_minutes", 3), settings.get("focus_cooldown_minutes", 10))
+        self.focus_status = "focus"
+        self.focus_recent_title = ""
+        self.peek_until = 0
+        self.cuddle_target: int | None = None
+        self.mouse_last: tuple[int, int] = (-1, -1)
+        self.mouse_idle_since = time.time()
+        self._configure_cloud()
+        self.root.after(8000, self._cloud_tick)
+        self.root.after(2500, self._focus_tick)
+        self.root.after(1500, self._mouse_tick)
         if "--startup-launch" in sys.argv and settings.get("startup_delay_seconds", 0):
             self.root.withdraw()
             self.root.after(int(settings["startup_delay_seconds"]) * 1000, self.root.deiconify)
@@ -1003,6 +1090,174 @@ class SecretaryPet(DesktopPetPreview):
         webbrowser.open(f"http://{BRIDGE_HOST}:{BRIDGE_PORT}/panel")
         self.play("success", 2, "idle", "秘書頁開好了！")
 
+    # ------------------------------------------------------------------
+    # v2.0 雲端直連（方案 B）：每 N 分鐘在背景執行緒拉一次，只讀不寫
+    # ------------------------------------------------------------------
+    def _configure_cloud(self) -> None:
+        settings = self.data.get("settings", {})
+        self.cloud.configure(str(settings.get("cloud_url") or ""), str(settings.get("cloud_token") or ""))
+
+    def _cloud_enabled(self) -> bool:
+        settings = self.data.get("settings", {})
+        return bool(settings.get("cloud_enabled")) and self.cloud.ready
+
+    def _cloud_tick(self) -> None:
+        minutes = 2
+        try:
+            minutes = min(10, max(1, int(self.data.get("settings", {}).get("cloud_poll_minutes", 2))))
+        except (TypeError, ValueError):
+            pass
+        if self._cloud_enabled() and not self._in_quiet_hours():
+            threading.Thread(target=self._cloud_fetch_worker, name="xiaomianzhu-cloud", daemon=True).start()
+        try:
+            self.root.after(minutes * 60_000, self._cloud_tick)
+        except tk.TclError:
+            pass
+
+    def _cloud_fetch_worker(self) -> None:
+        try:
+            result = self.cloud.fetch_dashboard()
+        except Exception as error:  # noqa: BLE001 - 背景執行緒不能讓桌寵閃退
+            result = {"errors": [str(error)]}
+        try:
+            self.root.after(0, lambda: self._apply_cloud_result(result))
+        except tk.TclError:
+            pass
+
+    def _apply_cloud_result(self, result: dict) -> None:
+        self.cloud_state = result
+        line_count = int(result.get("lineCount") or 0)
+        if "lineCount" in result:
+            if self.cloud_last_line_count >= 0 and line_count > self.cloud_last_line_count:
+                self.play("success", 2, "idle")
+                self.show_bubble(f"📱 LINE 有 {line_count} 則待整理！", 4200)
+            self.cloud_last_line_count = line_count
+        snapshot = result.get("snapshot") or {}
+        overdue = int(snapshot.get("overdueCount") or len(snapshot.get("overdueTasks") or []))
+        today = date.today().isoformat()
+        if overdue and self.cloud_overdue_alerted_date != today and not self._in_quiet_hours():
+            self.cloud_overdue_alerted_date = today
+            self.show_bubble(f"☁️ 工作台有 {overdue} 件逾期任務，記得處理。", 4200)
+
+    def _cloud_prompt_set(self, text: str, img: str = "class_focus.png", clear: bool = False) -> dict:
+        if not self._cloud_enabled():
+            return {"ok": False, "error": "請先在「☁️ 雲端連線」填好網址與 🔑C 並啟用"}
+        try:
+            payload = {"clear": True} if clear else {"text": text[:60], "img": img}
+            self.cloud.call("prompt_set", payload)
+        except (RuntimeError, ValueError) as error:
+            return {"ok": False, "error": str(error)}
+        return {"ok": True}
+
+    # ------------------------------------------------------------------
+    # v2.0 專注小綿助：作用中視窗標題偵測（純本機、不截圖、不上傳）
+    # ------------------------------------------------------------------
+    def _focus_tick(self) -> None:
+        try:
+            settings = self.data.get("settings", {})
+            if settings.get("focus_enabled", True) and not self._in_quiet_hours():
+                title = self.focus_monitor.read_title()
+                keywords = [str(k) for k in (settings.get("focus_keywords") or [])]
+                whitelist = [str(k) for k in (self.data.get("health", {}).get("focus_whitelist") or [])]
+                status = self.focus_monitor.classify(title, keywords, whitelist)
+                self.focus_status = status
+                if status == "drift":
+                    self.focus_recent_title = title[:80]
+                with self.data_lock:
+                    should_scold = self.focus_tracker.observe(status, self.data.setdefault("health", {}), 2)
+                if should_scold:
+                    self._scold()
+                if int(time.time()) % 60 < 2:
+                    self._save_data()
+        except Exception:  # noqa: BLE001 - 偵測失敗不能影響桌寵
+            pass
+        try:
+            self.root.after(2000, self._focus_tick)
+        except tk.TclError:
+            pass
+
+    SCOLD_MESSAGES = [
+        "老師～作業還沒改完喔 🐑",
+        "咳咳，剛剛好像看到 Reels……",
+        "先把手邊的事做完，再滑一下下嘛！",
+        "我盯著你喔 👀 回來工作～",
+    ]
+
+    def _scold(self) -> None:
+        # 衝到螢幕中央附近盯著你
+        self.walking = False
+        target = max(0, min(self.screen_width - self.win_w, self.screen_width // 2 - self.win_w // 2))
+        self.cuddle_target = target
+        message = random.choice(self.SCOLD_MESSAGES)
+        if self.focus_tracker.in_session:
+            message = "專注時間！" + message
+        self.play("warning", 4, "idle", message)
+        self.show_bubble(message, 5200)
+
+    # ------------------------------------------------------------------
+    # v2.0 行為豐富化：探頭、蹭滑鼠
+    # ------------------------------------------------------------------
+    def start_walking(self) -> None:
+        if self.paused or self.drag_origin:
+            return
+        super().start_walking()
+        if random.random() < 0.3:
+            # 探頭：這趟走到螢幕邊緣停一下再回頭
+            self.walk_stop_at = int(self.root.tk.call("clock", "milliseconds")) + 60_000
+            self.peek_until = 0
+            self.show_bubble("我去門口看看～", 1600)
+
+    def _movement_tick(self) -> None:
+        now_ms = int(self.root.tk.call("clock", "milliseconds"))
+        if self.peek_until and now_ms < self.peek_until:
+            self.root.after(30, self._movement_tick)
+            return
+        if self.cuddle_target is not None and not self.drag_origin and not self.paused:
+            if abs(self.x - self.cuddle_target) <= 3:
+                self.cuddle_target = None
+                self.walking = False
+                if self.state.startswith("walk_"):
+                    self.play("success", 2, "idle", "蹭蹭～我在這裡陪你。")
+            else:
+                direction = 1 if self.cuddle_target > self.x else -1
+                if not self.walking or self.walk_direction != direction:
+                    self.walk_direction = direction
+                    self.walking = True
+                    self.play("walk_left" if direction < 0 else "walk_right")
+                self.x += direction * 2
+                self.root.geometry(f"+{self.x}+{self.y}")
+                self.root.after(30, self._movement_tick)
+                return
+        if not self.paused and self.walking and not self.drag_origin:
+            max_x = max(0, self.screen_width - self.win_w)
+            at_edge = (self.x <= 0 and self.walk_direction < 0) or (self.x >= max_x and self.walk_direction > 0)
+            if at_edge and self.walk_stop_at - now_ms > 20_000:
+                # 探頭：到了邊緣停兩秒張望，然後走回來
+                self.peek_until = now_ms + 2200
+                self.walk_stop_at = now_ms + random.randint(4000, 7000)
+                self.play("think", 2, "idle")
+                self.walking = True
+                self.walk_direction *= -1
+                self.root.after(2300, lambda: self.play("walk_left" if self.walk_direction < 0 else "walk_right"))
+                self.root.after(30, self._movement_tick)
+                return
+        super()._movement_tick()
+
+    def _mouse_tick(self) -> None:
+        try:
+            pointer = (self.root.winfo_pointerx(), self.root.winfo_pointery())
+            if pointer != self.mouse_last:
+                self.mouse_last = pointer
+                self.mouse_idle_since = time.time()
+            idle = time.time() - self.mouse_idle_since
+            near = abs(pointer[0] - (self.x + self.win_w // 2)) < 420 and abs(pointer[1] - self.y) < 320
+            if idle > 30 and near and self.cuddle_target is None and not self.walking and not self.drag_origin and not self.paused and random.random() < 0.15:
+                self.cuddle_target = max(0, min(self.screen_width - self.win_w, pointer[0] - self.win_w // 2))
+                self.mouse_idle_since = time.time()
+        except tk.TclError:
+            return
+        self.root.after(1500, self._mouse_tick)
+
     def _panel_payload(self) -> dict:
         today = date.today().isoformat()
         with self.data_lock:
@@ -1038,6 +1293,24 @@ class SecretaryPet(DesktopPetPreview):
                     "moveDone": health.get("move_done_date") == today,
                     "medicineTimes": list(health.get("medicine_times") or []),
                     "medicineDone": list(health.get("medicine_done_times") or []),
+                },
+                "cloud": {
+                    "enabled": bool(self.data.get("settings", {}).get("cloud_enabled")),
+                    "url": str(self.data.get("settings", {}).get("cloud_url") or ""),
+                    "hasToken": bool(self.data.get("settings", {}).get("cloud_token")),
+                    "pollMinutes": int(self.data.get("settings", {}).get("cloud_poll_minutes") or 2),
+                    "state": getattr(self, "cloud_state", {}) or {},
+                    "lastError": getattr(getattr(self, "cloud", None), "last_error", ""),
+                },
+                "focus": {
+                    "enabled": bool(self.data.get("settings", {}).get("focus_enabled", True)),
+                    "keywords": list(self.data.get("settings", {}).get("focus_keywords") or []),
+                    "status": getattr(self, "focus_status", "focus"),
+                    "focusMinutes": int(health.get("focus_seconds") or 0) // 60,
+                    "driftMinutes": int(health.get("drift_seconds") or 0) // 60,
+                    "recentTitle": getattr(self, "focus_recent_title", ""),
+                    "whitelist": list(health.get("focus_whitelist") or []),
+                    "sessionUntil": getattr(getattr(self, "focus_tracker", None), "session_until", 0) or 0,
                 },
             }
         return payload
@@ -1108,6 +1381,65 @@ class SecretaryPet(DesktopPetPreview):
                     "id": str(uuid.uuid4()), "text": text, "attachments": [], "created_at": now,
                 })
                 bubble = "記事保存好了。"
+            elif action == "set_cloud":
+                url = str(payload.get("url") or "").strip()
+                token = str(payload.get("token") or "").strip()
+                if url and not cloud_url_allowed(url):
+                    return {"ok": False, "error": "只能填 https://script.google.com/… 的 Apps Script 網址"}
+                settings = self.data.setdefault("settings", {})
+                settings["cloud_url"] = url
+                if token:
+                    settings["cloud_token"] = token
+                settings["cloud_enabled"] = bool(payload.get("enabled", True)) and bool(url) and bool(settings.get("cloud_token"))
+                try:
+                    settings["cloud_poll_minutes"] = min(10, max(1, int(payload.get("pollMinutes") or 2)))
+                except (TypeError, ValueError):
+                    settings["cloud_poll_minutes"] = 2
+                self._configure_cloud()
+                bubble = "雲端連線設定好了，我會自己去拿資料。" if settings["cloud_enabled"] else "雲端連線已關閉。"
+            elif action == "cloud_test":
+                self._save_data()
+                if not self._cloud_enabled():
+                    return {"ok": False, "error": "請先填好網址與 🔑C 並儲存"}
+                try:
+                    self.cloud.call("ping")
+                except (RuntimeError, ValueError) as error:
+                    return {"ok": False, "error": str(error)}
+                threading.Thread(target=self._cloud_fetch_worker, daemon=True).start()
+                return {"ok": True, "message": "連線成功，正在抓取資料"}
+            elif action == "prompt_set":
+                self._save_data()
+                result = self._cloud_prompt_set(str(payload.get("text") or ""), str(payload.get("img") or "class_focus.png"), bool(payload.get("clear")))
+                if not result.get("ok"):
+                    return result
+                bubble = "📣 大屏提示已送出！" if not payload.get("clear") else "大屏提示已清除。"
+            elif action == "set_focus":
+                settings = self.data.setdefault("settings", {})
+                if "enabled" in payload:
+                    settings["focus_enabled"] = bool(payload.get("enabled"))
+                if isinstance(payload.get("keywords"), list):
+                    settings["focus_keywords"] = [str(k).strip()[:30] for k in payload["keywords"] if str(k).strip()][:40]
+                bubble = "專注設定更新好了。"
+            elif action == "focus_session":
+                try:
+                    minutes = int(payload.get("minutes") or 0)
+                except (TypeError, ValueError):
+                    minutes = 0
+                if minutes > 0:
+                    self.focus_tracker.start_session(min(180, minutes))
+                    bubble = f"🍅 專注 {minutes} 分鐘開始，我會盯著你喔！"
+                else:
+                    self.focus_tracker.stop_session()
+                    bubble = "專注時段結束，辛苦了！"
+            elif action == "focus_whitelist":
+                title = str(payload.get("title") or getattr(self, "focus_recent_title", "") or "").strip()[:80]
+                if not title:
+                    return {"ok": False, "error": "沒有可加入白名單的視窗"}
+                whitelist = health.setdefault("focus_whitelist", [])
+                if title not in whitelist:
+                    whitelist.append(title)
+                    whitelist[:] = whitelist[-20:]
+                bubble = "好，這個視窗今天不再提醒。"
             elif action == "toggle_pause":
                 try:
                     self.root.after(0, self.toggle_pause)

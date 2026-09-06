@@ -140,3 +140,59 @@ class LocalBridgeTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CloudLinkTest(unittest.TestCase):
+    """v2.0 方案 B：桌寵只允許連老師自己的 Apps Script。"""
+
+    def test_host_whitelist(self):
+        from desktop_pet_cloud import cloud_url_allowed
+
+        self.assertTrue(cloud_url_allowed("https://script.google.com/macros/s/abc/exec"))
+        self.assertFalse(cloud_url_allowed("https://example.com/exec"))
+        self.assertFalse(cloud_url_allowed("http://script.google.com/macros/s/abc/exec"))
+        self.assertFalse(cloud_url_allowed(""))
+
+    def test_only_read_actions_and_prompt_set(self):
+        from desktop_pet_cloud import CloudLink
+
+        calls = []
+
+        def opener(url, body):
+            calls.append(json.loads(body.decode("utf-8")))
+            return {"ok": True, "items": [], "snapshot": None, "prompt": None}
+
+        link = CloudLink(opener=opener)
+        link.configure("https://script.google.com/macros/s/abc/exec", "token-c")
+        link.call("prompt_set", {"text": "排隊囉"})
+        with self.assertRaises(ValueError):
+            link.call("ack", {"ids": ["1"]})
+        with self.assertRaises(ValueError):
+            link.call("backup_save", {})
+        self.assertEqual(calls[0]["action"], "prompt_set")
+        self.assertEqual(calls[0]["token"], "token-c")
+
+    def test_focus_classifier_and_tracker(self):
+        from desktop_pet_cloud import FocusTracker, ForegroundMonitor
+
+        monitor = ForegroundMonitor(lambda: "")
+        self.assertEqual(monitor.classify("YouTube - Chrome", ["youtube"], []), "drift")
+        self.assertEqual(monitor.classify("晨間大屏｜點名", ["youtube"], []), "pause")
+        self.assertEqual(monitor.classify("YouTube 教學影片", ["youtube"], ["YouTube 教學影片"]), "pause")
+        self.assertEqual(monitor.classify("備課.docx - Word", ["youtube"], []), "focus")
+        tracker = FocusTracker(threshold_minutes=1, cooldown_minutes=10)
+        health = {}
+        alerted = [tracker.observe("drift", health, 2) for _ in range(31)]
+        self.assertEqual(alerted.count(True), 1)
+        self.assertGreaterEqual(health["drift_seconds"], 60)
+
+    def test_panel_set_cloud_rejects_other_hosts(self):
+        stub = PanelActionStub()
+        stub._configure_cloud = lambda: None
+        result = stub._panel_apply_action({"action": "set_cloud", "url": "https://evil.example/exec", "token": "x"})
+        self.assertFalse(result["ok"])
+        result = stub._panel_apply_action({"action": "set_cloud", "url": "https://script.google.com/macros/s/abc/exec", "token": "x"})
+        self.assertTrue(result["ok"])
+        self.assertTrue(stub.data["settings"]["cloud_enabled"])
+        self.assertIn("cloud", result)
+        self.assertIn("focus", result)

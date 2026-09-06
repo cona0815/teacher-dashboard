@@ -224,8 +224,19 @@ assert.match(desktopSecretary, /目前還沒有任務/, "桌面小綿助在空�
 assert.match(desktopSecretary, /box\.pack\(fill="x", expand=False\)/, "桌面清單不應在高 DPI 畫面撐成大片空白");
 assert.match(desktopSecretary, /bridge_origin_allowed/, "桌面小綿助應限制可存取的網頁來源");
 assert.match(desktopSecretary, /temporary\.replace\(DATA_FILE\)/, "桌面資料應以暫存檔原子替換保存");
-assert.doesNotMatch(desktopSecretary, /urllib\.request\.urlopen/, "桌面小綿助不應再依賴 GAS 網址同步");
-assert.doesNotMatch(desktopSecretary, /GAS \/exec|同步金鑰/, "桌面小綿助不應再顯示 GAS 同步欄位");
+// 2026-09-04 契約改版（使用者核定小綿助 v2.0「方案 B」）：桌寵可直連老師自己的
+// Apps Script，但只能透過 desktop_pet_cloud 模組、只允許 script.google.com 網域、只讀＋prompt_set。
+assert.doesNotMatch(desktopSecretary, /urllib\.request\.urlopen/, "桌寵主程式不得自行開網路連線，一律經 desktop_pet_cloud");
+assert.match(desktopSecretary, /from desktop_pet_cloud import CloudLink/, "桌寵應透過 CloudLink 模組連雲端");
+const desktopCloud = fs.readFileSync(path.join(projectRoot, "desktop_pet_cloud.py"), "utf8");
+assert.match(desktopCloud, /ALLOWED_HOSTS = \("script\.google\.com", "script\.googleusercontent\.com"\)/, "雲端模組只允許 Google Apps Script 網域");
+assert.match(desktopCloud, /READ_ACTIONS = \("ping", "snapshot_get", "pull", "prompt_get"\)/, "雲端模組的讀取動作應為固定白名單");
+assert.match(desktopCloud, /PROMPT_SET_ACTION = "prompt_set"/, "桌寵唯一的寫入動作是大屏提示遙控");
+assert.doesNotMatch(desktopCloud, /ImageGrab|screenshot|grab\(/i, "專注偵測不得截圖");
+for (const v2Feature of ["☁️ 雲端連線", "🍅 專注小綿助", "📣 大屏提示遙控", "這是備課用", "只讀作用中視窗標題、不截圖、不上傳"]) {
+  assert.match(desktopSecretary, new RegExp(v2Feature), `小綿助 v2.0 秘書頁缺少「${v2Feature}」`);
+}
+assert.match(fs.readFileSync(path.join(projectRoot, "LineBot.gs"), "utf8"), /action === 'snapshot_get'/, "GAS 應提供桌寵讀取工作台快照的動作");
 assert.match(indexHtml, /const PET_BRIDGE_URL = 'http:\/\/127\.0\.0\.1:8767'/, "網頁應自動連接本機小綿助");
 assert.match(indexHtml, /data-settings-panel="security"/, "網頁應提供資料與資安說明");
 assert.match(indexHtml, /Content-Security-Policy/, "網頁應宣告內容安全政策");
