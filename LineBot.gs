@@ -520,6 +520,22 @@ function handleLineSyncApi_(body) {
       if (!isTeacher) return lineBotJson_({ ok: false, error: '記事同步需要老師金鑰' });
       return lineBotJson_(syncNotesWithGoogleTasks_(body));
     }
+    if (action === 'calendar_event_create') {
+      if (!isTeacher) return lineBotJson_({ ok: false, error: '寫入日曆需要老師金鑰' });
+      return lineBotJson_(createCalendarEvent_(body));
+    }
+    if (action === 'calendar_sync_progress') {
+      if (!isTeacher) return lineBotJson_({ ok: false, error: '同步日曆需要老師金鑰' });
+      return lineBotJson_(syncProgressCalendar_(body));
+    }
+    if (action === 'drive_upload') {
+      if (!isTeacher) return lineBotJson_({ ok: false, error: '上傳檔案需要老師金鑰' });
+      return lineBotJson_(uploadWorkspaceFile_(body));
+    }
+    if (action === 'drive_list') {
+      if (!isTeacher) return lineBotJson_({ ok: false, error: '讀取檔案需要老師金鑰' });
+      return lineBotJson_(listWorkspaceFiles_());
+    }
     if (action === 'form_create') {
       if (!isTeacher) return lineBotJson_({ ok: false, error: '建立表單需要老師金鑰' });
       return lineBotJson_(createGoogleForm_(body));
@@ -657,6 +673,95 @@ function applyRichMenu_(body) {
   }
   props.setProperty('RICHMENU_LAST', richMenuId);
   return { ok: true, richMenuId: richMenuId };
+}
+
+// ---------------------------------------------------------------------------
+// 工作台雲端功能（取代 Netlify 版原本的「模擬成功」）：Google 日曆、Drive 檔案
+// ---------------------------------------------------------------------------
+function calendarDate_(text) {
+  var m = String(text || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) throw new Error('日期格式須為 YYYY-MM-DD');
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+}
+
+function createCalendarEvent_(body) {
+  var title = String(body.title || '').trim().slice(0, 120);
+  if (!title) return { ok: false, error: '缺少事件標題' };
+  var day = calendarDate_(body.dueDate);
+  var options = { description: String(body.description || '').slice(0, 1000) };
+  var calendar = CalendarApp.getDefaultCalendar();
+  var event;
+  var time = String(body.dueTime || '').match(/^(\d{2}):(\d{2})$/);
+  if (time) {
+    var start = new Date(day.getFullYear(), day.getMonth(), day.getDate(), Number(time[1]), Number(time[2]));
+    event = calendar.createEvent(title, start, new Date(start.getTime() + 60 * 60000), options);
+  } else {
+    event = calendar.createAllDayEvent(title, day, options);
+  }
+  return { ok: true, eventId: event.getId(), title: title, dueDate: body.dueDate, dueTime: body.dueTime || '' };
+}
+
+function syncProgressCalendar_(body) {
+  var subject = String(body.subject || '教學進度').slice(0, 40);
+  var rows = Array.isArray(body.rows) ? body.rows.slice(0, 200) : [];
+  var calendar = CalendarApp.getDefaultCalendar();
+  var events = [], failures = [], created = 0, updated = 0;
+  rows.forEach(function (row) {
+    try {
+      var title = '📚 ' + subject + (row.week ? '｜第 ' + row.week + ' 週' : '') + '：' + String(row.content || '').slice(0, 80);
+      var start = calendarDate_(row.startDate);
+      var end = calendarDate_(row.endDate || row.startDate);
+      end = new Date(end.getFullYear(), end.getMonth(), end.getDate() + 1);   // 全天事件結束日為隔天（不含）
+      var description = '教師工作台教學進度自動同步' + (row.periods ? '｜' + row.periods + ' 節' : '');
+      var event = null;
+      if (row.eventId) { try { event = calendar.getEventById(String(row.eventId)); } catch (error) { event = null; } }
+      if (event) {
+        event.setTitle(title);
+        event.setAllDayDates(start, end);
+        event.setDescription(description);
+        updated += 1;
+      } else {
+        event = calendar.createAllDayEvent(title, start, end, { description: description });
+        created += 1;
+      }
+      events.push({ rowKey: row.rowKey, clientKey: row.clientKey, eventId: event.getId() });
+    } catch (error) {
+      failures.push({ rowKey: row.rowKey, error: String(error && error.message ? error.message : error) });
+    }
+  });
+  return { ok: true, created: created, updated: updated, events: events, failures: failures };
+}
+
+function workspaceFileFolder_() {
+  var root = driveBackupFolder_();
+  var name = '工作台檔案';
+  var existing = root.getFoldersByName(name);
+  return existing.hasNext() ? existing.next() : root.createFolder(name);
+}
+
+function describeDriveFile_(file) {
+  return {
+    id: file.getId(), name: file.getName(), size: file.getSize(),
+    mimeType: file.getMimeType(), updatedAt: file.getLastUpdated().toISOString(), url: file.getUrl()
+  };
+}
+
+function uploadWorkspaceFile_(body) {
+  var name = String(body.name || '').trim().slice(0, 120) || ('檔案-' + Date.now());
+  var base64 = String(body.base64 || '');
+  if (!base64) return { ok: false, error: '沒有檔案內容' };
+  if (base64.length > 14 * 1024 * 1024) return { ok: false, error: '檔案超過 10MB，請壓縮後再上傳' };
+  var blob = Utilities.newBlob(Utilities.base64Decode(base64), String(body.mimeType || 'application/octet-stream'), name);
+  var file = workspaceFileFolder_().createFile(blob);
+  return { ok: true, file: describeDriveFile_(file) };
+}
+
+function listWorkspaceFiles_() {
+  var iterator = workspaceFileFolder_().getFiles();
+  var files = [];
+  while (iterator.hasNext() && files.length < 200) files.push(describeDriveFile_(iterator.next()));
+  files.sort(function (a, b) { return String(b.updatedAt).localeCompare(String(a.updatedAt)); });
+  return { ok: true, files: files.slice(0, 50) };
 }
 
 // ---------------------------------------------------------------------------

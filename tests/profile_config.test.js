@@ -460,3 +460,18 @@ for (const [name, html] of [["Index.html", indexHtml], ["Studio.html", studioHtm
 assert.match(studioHtml, /async function shrinkImageForAi/, "作文批改上傳前應自動縮圖");
 assert.match(desktopSecretary, /def _is_local_origin/, "桌寵面板端點應限制本機來源");
 assert.match(desktopSecretary, /換了網址就作廢舊金鑰/, "桌寵換雲端網址時應清空舊金鑰");
+
+// 2026-09-06 模擬資料清查：工作台建立 Google 表單必須走真的 GAS form_create
+assert.doesNotMatch(indexHtml, /serverCall\('createGoogleForm'/, "工作台不得再用 google.script.run 建立表單（Netlify 上不存在）");
+assert.match(indexHtml, /callLineBridge\('form_create'/, "工作台建立表單應透過 LINE 小幫手 GAS");
+assert.doesNotMatch(indexHtml, /模擬建立成功|模擬備份|模擬版會還原|模擬產生|模擬檔/, "工作台不得殘留『模擬』功能文案");
+
+// 2026-09-06 模擬資料清查（第二輪）：日曆、教學進度同步、Drive 檔案改走真 GAS
+for (const action of ["calendar_event_create", "calendar_sync_progress", "drive_upload", "drive_list"]) {
+  assert.match(fs.readFileSync(path.join(projectRoot, "LineBot.gs"), "utf8"), new RegExp(`action === '${action}'`), `GAS 應提供 ${action}`);
+  assert.match(indexHtml, new RegExp(`cloudCall\\('${action}'`), `工作台 ${action} 應經 LINE 小幫手 GAS`);
+}
+for (const fake of ["createGoogleCalendarEvent:", "syncTeachingProgressCalendar:", "createGoogleForm:", "uploadWorkspaceFile:", "listWorkspaceFiles:"]) {
+  assert.doesNotMatch(indexHtml, new RegExp(fake.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), `本機 shim 不得再提供假的 ${fake}`);
+}
+assert.doesNotMatch(indexHtml, /serverCall\('(createGoogleCalendarEvent|syncTeachingProgressCalendar|uploadWorkspaceFile|listWorkspaceFiles)'/, "雲端功能不得再走 google.script.run");

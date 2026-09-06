@@ -1169,14 +1169,6 @@
           catch (error) { previewTasks = snapshot; throw error; }
           return { ...previewResult(), archivedCount: archiveIds.size };
         },
-        createGoogleCalendarEvent: payload => ({ ok: true, eventId: `preview-${Date.now()}`, title: payload.title, dueDate: payload.dueDate, dueTime: payload.dueTime }),
-        syncTeachingProgressCalendar: payload => ({
-          ok: true,
-          created: payload.rows.filter(row => !row.eventId).length,
-          updated: payload.rows.filter(row => row.eventId).length,
-          events: payload.rows.map((row, index) => ({ rowKey: row.rowKey, clientKey: row.clientKey, eventId: row.eventId || `preview-progress-${Date.now()}-${index}` }))
-        }),
-        createGoogleForm: payload => ({ ok: true, formId: `preview-${Date.now()}`, title: payload.title, editUrl: '' }),
         backupDashboardToDrive: payload => {
           const item = { id: `preview-backup-${Date.now()}`, name: `dashboard-backup-${new Date().toISOString().slice(0, 10)}.json`, createdAt: new Date().toISOString(), size: JSON.stringify(payload.backup).length, text: JSON.stringify(payload.backup) };
           const next = [item, ...previewCloudBackups].slice(0, LOCAL_PREVIEW_BACKUP_LIMIT);
@@ -1190,14 +1182,7 @@
           if (!item) throw new Error('找不到這份雲端備份。');
           return { ok: true, name: item.name, text: item.text };
         },
-        uploadWorkspaceFile: payload => {
-          const item = { id: `preview-file-${Date.now()}`, name: payload.name, mimeType: payload.mimeType, size: Math.ceil((payload.base64 || '').length * .75), updatedAt: new Date().toISOString(), url: '' };
-          const next = [item, ...previewDriveFiles].slice(0, LOCAL_PREVIEW_FILE_LIMIT);
-          writeLocalPreviewJson(LOCAL_PREVIEW_STORAGE_KEYS.driveFiles, next);
-          previewDriveFiles = next;
-          return { ok: true, file: item };
-        },
-        listWorkspaceFiles: () => ({ ok: true, files: previewDriveFiles })
+        // 日曆／表單／Drive 已改走 LINE 小幫手 GAS（cloudCall），本機 shim 不再提供假成功
       };
       let successHandler = () => {};
       let failureHandler = () => {};
@@ -2022,7 +2007,7 @@
         <article class="backup-card local-storage-card" data-local-preview-only hidden>
           <h3>本機離線資料</h3>
           <p id="localStorageUsage">正在估算本機儲存量……</p>
-          <p class="cloud-row-meta">離線任務、模擬備份與檔案索引會留在這個瀏覽器；原始附件不會直接塞進 localStorage。請定期下載 JSON 備份。</p>
+          <p class="cloud-row-meta">任務、記事與檔案索引保存在這個瀏覽器；原始附件不會塞進 localStorage。請定期下載 JSON 備份或使用雲端備份。</p>
           <button class="button button-light" type="button" id="clearLocalPreviewDataButton">清理離線任務資料</button>
         </article>
         <div class="backup-grid">
@@ -2033,7 +2018,7 @@
           </article>
           <article class="backup-card">
             <h3>從備份還原</h3>
-            <p>選擇本系統產生的 JSON；模擬版會還原至目前畫面。</p>
+            <p>選擇本系統產生的 JSON 備份檔，還原後畫面會立即更新。</p>
             <button class="button button-light" type="button" id="importBackupButton">選擇備份檔</button>
             <input id="backupFileInput" type="file" accept="application/json,.json" hidden>
           </article>
@@ -3046,7 +3031,7 @@
       button.disabled = true;
       setLoading(true, '正在同步教學進度到 Google 日曆……');
       try {
-        const result = await serverCall('syncTeachingProgressCalendar', {
+        const result = await cloudCall('calendar_sync_progress', {
           subject,
           rows: eligibleRows.map(row => ({
             rowKey: row.id,
@@ -3058,9 +3043,8 @@
             startDate: row.startDate,
             endDate: row.endDate,
             type: row.type || 'teaching'
-          })),
-          csrfToken: state.csrfToken
-        });
+          }))
+        }, '同步教學進度到 Google 日曆');
         const eventMap = new Map((result.events || []).map(item => [item.rowKey, item]));
         roleWorkspaceState.progressRows.forEach(row => {
           const synced = eventMap.get(row.id);
@@ -3491,7 +3475,7 @@
       $('deskpetDuplicateWarning').hidden = !duplicate;
       $('deskpetDuplicateWarning').textContent = duplicate ? `可能重複：「${duplicate.name}」。請確認後再建立。` : '';
       $('deskpetDraftAttachmentSummary').hidden = attachmentNames.length === 0;
-      $('deskpetDraftAttachmentSummary').textContent = attachmentNames.length ? `已參考 ${attachmentNames.length} 個附件：${attachmentNames.join('、')}。目前模擬版建立任務時會保留檔名，原始附件只留在本次工作階段。` : '';
+      $('deskpetDraftAttachmentSummary').textContent = attachmentNames.length ? `已參考 ${attachmentNames.length} 個附件：${attachmentNames.join('、')}。建立任務時會保留檔名，原始附件只留在本次工作階段。` : '';
       $('deskpetDraft').hidden = false;
       setDeskpetStep('confirm');
       setDeskpetAnimation('idle');
@@ -3543,11 +3527,10 @@
       try {
         let result;
         if (draft.destination === 'calendar') {
-          result = await serverCall('createGoogleCalendarEvent', {
+          result = await cloudCall('calendar_event_create', {
             title: draft.title, dueDate: draft.dueDate, dueTime: draft.dueTime,
-            description: `由政好夥伴小綿助整理：${draft.safeText}`,
-            csrfToken: state.csrfToken,
-          });
+            description: `由小綿助整理：${draft.safeText}`,
+          }, '寫入 Google 日曆');
           appendDeskpetDiary({ type: 'calendar-created', title: draft.title, eventId: result.eventId || '', time: new Date().toISOString() });
         } else {
           const categories = state.options['類型'] || [];
@@ -4021,6 +4004,14 @@
         const lineButton = document.querySelector('[data-toolbox-target="lineInboxSection"]');
         if (lineButton?.classList.contains('active')) setTeacherToolbox('');
       }
+    }
+
+    // 工作台雲端功能一律經 LINE 小幫手 GAS；未設定時明確告知，不再回傳假成功
+    async function cloudCall(action, extra = {}, featureName = '這個雲端功能') {
+      if (!lineBridgeReady()) {
+        throw new Error(`${featureName}需要 LINE 小幫手：請到「⚙ 設定 → LINE 小幫手」填好 GAS 網址與 🔑C 並啟用。`);
+      }
+      return callLineBridge(action, extra);
     }
 
     async function callLineBridge(action, extra = {}) {
@@ -5658,7 +5649,7 @@
       document.querySelectorAll('[data-example-step]').forEach(step => step.classList.toggle('active', step.dataset.exampleStep === mode));
       $('aiInputLabel').textContent = aiModes[mode].label;
       $('aiInput').placeholder = aiModes[mode].placeholder;
-      $('aiOutput').textContent = '輸入內容後按「模擬產生」，結果會顯示在這裡。';
+      $('aiOutput').textContent = '輸入內容後按「分析並給建議」，結果會顯示在這裡。';
       $('aiOutput').classList.add('is-empty');
       $('aiCreateTaskButton').hidden = true;
       $('aiNextStepButton').hidden = true;
@@ -6882,13 +6873,22 @@
       const draft = collectFormDraft();
       if (!draft.title) return showToast('請先填寫表單名稱。', true);
       if (!draft.questions.length) return showToast('表單至少需要一個題目。', true);
-      if (!window.confirm(`確定要建立 Google 表單「${draft.title}」嗎？建立後可再到 Google 表單調整。`)) return;
+      if (!lineBridgeReady()) {
+        $('aiFormStatus').textContent = '建立 Google 表單需要 LINE 小幫手：請到「⚙ 設定 → LINE 小幫手」填好 GAS 網址與 🔑C（或改用「🎨 教材小工場 → 📋 Google 表單」）。';
+        return showToast('請先設定 LINE 小幫手（GAS）才能真的建立表單。', true);
+      }
+      if (!window.confirm(`確定要在你的 Google 帳號建立表單「${draft.title}」嗎？建立後可再到 Google 表單調整。`)) return;
       setLoading(true, '正在建立 Google 表單……');
       try {
-        const result = await serverCall('createGoogleForm', { ...draft, csrfToken: state.csrfToken });
-        $('aiFormStatus').innerHTML = result.editUrl
-          ? `✓ 已建立：<a href="${escapeHtml(result.editUrl)}" target="_blank" rel="noopener">開啟 Google 表單編輯頁</a>`
-          : '✓ 模擬建立成功；正式部署後會回傳 Google 表單編輯連結。';
+        // 題型對應 GAS form_create：checkboxes→checkbox、date→text（題目加註日期）、其餘同名
+        const questions = draft.questions.map(question => ({
+          type: question.type === 'checkboxes' ? 'checkbox' : question.type === 'date' ? 'text' : question.type,
+          title: question.type === 'date' ? `${question.title}（請填日期）` : question.title,
+          options: question.options,
+          required: question.required
+        }));
+        const result = await callLineBridge('form_create', { title: draft.title, description: draft.description, questions, sendCopy: false });
+        $('aiFormStatus').innerHTML = `✓ 已在你的 Google 帳號建立：<a href="${escapeHtml(result.editUrl)}" target="_blank" rel="noopener">編輯表單</a>｜<a href="${escapeHtml(result.formUrl)}" target="_blank" rel="noopener">給家長填的連結</a>`;
         $('aiCreateGoogleFormButton').disabled = true;
         showToast('Google 表單已建立。');
       } catch (error) {
@@ -7832,8 +7832,12 @@
     const CLOUD_BACKUP_AUTO_KEY = 'grade6CloudBackupAuto';
     const CLOUD_BACKUP_LAST_KEY = 'grade6CloudBackupLastDate';
 
-    function cloudBackupReady() {
+    // LINE 小幫手（GAS）是否已設定：雲端備份、日曆、Drive、表單等雲端功能共用
+    function lineBridgeReady() {
       return lineBridgeState.settings.enabled && !!lineBridgeState.settings.gasUrl && !!lineSyncToken();
+    }
+    function cloudBackupReady() {
+      return lineBridgeReady();
     }
 
     function formatBackupSize(chars) {
@@ -7935,10 +7939,10 @@
 
     async function uploadDriveFiles(files) {
       for (const file of [...files]) {
-        if (file.size > 35 * 1024 * 1024) { showToast(`${file.name} 超過單檔 35 MB 上限，已略過。`, true); continue; }
+        if (file.size > 10 * 1024 * 1024) { showToast(`${file.name} 超過單檔 10 MB 上限，已略過。`, true); continue; }
         try {
-          await serverCall('uploadWorkspaceFile', { name: file.name, mimeType: file.type || 'application/octet-stream', base64: await fileToBase64(file), csrfToken: state.csrfToken });
-          showToast(`${file.name} 已上傳到 Drive。`);
+          await cloudCall('drive_upload', { name: file.name, mimeType: file.type || 'application/octet-stream', base64: await fileToBase64(file) }, '上傳到 Drive');
+          showToast(`${file.name} 已上傳到你的 Google 雲端硬碟（LINE小幫手備份／工作台檔案）。`);
         } catch (error) { showToast(`${file.name}：${error.message || '上傳失敗'}`, true); }
       }
       $('driveUploadInput').value = '';
@@ -7953,14 +7957,18 @@
         const row = document.createElement('div');
         row.className = 'cloud-row';
         const size = file.size ? `${Math.ceil(file.size / 1024)} KB` : '';
-        row.innerHTML = `<div class="cloud-row-main"><div class="cloud-row-name">${escapeHtml(file.name)}</div><div class="cloud-row-meta">${escapeHtml([size, formatCloudDate(file.updatedAt)].filter(Boolean).join('｜'))}</div></div>${file.url ? `<a class="mini-button" href="${escapeHtml(file.url)}" target="_blank" rel="noopener noreferrer">開啟</a>` : '<span class="cloud-row-meta">模擬檔</span>'}`;
+        row.innerHTML = `<div class="cloud-row-main"><div class="cloud-row-name">${escapeHtml(file.name)}</div><div class="cloud-row-meta">${escapeHtml([size, formatCloudDate(file.updatedAt)].filter(Boolean).join('｜'))}</div></div>${file.url ? `<a class="mini-button" href="${escapeHtml(file.url)}" target="_blank" rel="noopener noreferrer">開啟</a>` : '<span class="cloud-row-meta">無連結</span>'}`;
         host.appendChild(row);
       });
     }
 
     async function refreshDriveFiles() {
+      if (!lineBridgeReady()) {
+        $('driveFileList').innerHTML = '<div class="cloud-row-meta">Drive 資料庫需要 LINE 小幫手：到「⚙ 設定 → LINE 小幫手」填好 GAS 網址與 🔑C 後，檔案會存進你自己的雲端硬碟。</div>';
+        return;
+      }
       $('driveFileList').innerHTML = '<div class="cloud-row-meta">正在讀取 Drive 資料……</div>';
-      try { const result = await serverCall('listWorkspaceFiles'); renderDriveFiles(result.files || []); }
+      try { const result = await cloudCall('drive_list', {}, 'Drive 資料庫'); renderDriveFiles(result.files || []); }
       catch (error) { $('driveFileList').innerHTML = `<div class="cloud-row-meta">${escapeHtml(error.message || '讀取失敗')}</div>`; }
     }
 
