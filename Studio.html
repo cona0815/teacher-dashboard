@@ -422,7 +422,7 @@
             <select class="select" id="esGrade"><option value="一">一年級</option><option value="二">二年級</option><option value="三">三年級</option><option value="四">四年級</option><option value="五" selected>五年級</option><option value="六">六年級</option></select></div>
           <div class="field"><label>作文題目</label>
             <input class="input" id="esTopic" placeholder="例：我的家人／難忘的校外教學"></div>
-          <div class="field"><label>作文檔案（圖片或 PDF，最多 3 個；也可以直接在這頁 Ctrl+V 貼上截圖）</label>
+          <div class="field"><label>作文檔案（圖片或 PDF，<strong>不限張數</strong>，跨頁全部丟進來；也可以直接在這頁 Ctrl+V 貼上截圖）</label>
             <input class="input" type="file" id="esImages" accept="image/*,.pdf,application/pdf" multiple>
             <div id="esPasteList" class="check-row" style="margin-top:6px"></div></div>
           <div class="field"><label>或直接貼上作文文字</label>
@@ -1253,8 +1253,60 @@
     // ============================================================
     // ✍️ 作文批改（拍照或貼文字 → 國小程度批改單）
     // ============================================================
+    // 作文批改：分類色標、逐段標記、詳細修改表
+    const ES_CATEGORY_COLORS = { '錯字': '#d32f2f', '標點': '#ef6c00', '用字': '#7b1fa2', '語詞': '#1565c0', '語句': '#2e7d32' };
+    function essayMarkupHtml(data) {
+      const corrections = (data.corrections || []).map((c, i) => ({
+        idx: i + 1,
+        paragraph: Math.max(1, parseInt(c.paragraph, 10) || 1),
+        category: ES_CATEGORY_COLORS[c.category] ? c.category : '語句',
+        original: String(c.original || '').trim(),
+        corrected: String(c.corrected || c.suggestion || '').trim(),
+        reason: String(c.reason || '').trim()
+      })).sort((a, b) => a.paragraph - b.paragraph || a.idx - b.idx);
+      const legend = Object.entries(ES_CATEGORY_COLORS).map(([name, color]) =>
+        `<span style="display:inline-block;margin:0 8px 4px 0;font-size:12.5px"><span style="display:inline-block;width:14px;height:14px;background:${color};border-radius:3px;vertical-align:-2px;margin-right:4px"></span>${name}</span>`).join('');
+      const paragraphs = Array.isArray(data.paragraphs) ? data.paragraphs.map(String) : [];
+      const marked = paragraphs.map((text, index) => {
+        let html = escapeHtml(text);
+        corrections.filter(c => c.paragraph === index + 1 && c.original).forEach(c => {
+          const needle = escapeHtml(c.original);
+          const at = html.indexOf(needle);
+          if (at < 0) return;
+          const color = ES_CATEGORY_COLORS[c.category];
+          const wrapped = `<mark style="background:${color}22;color:${color};text-decoration:line-through;text-decoration-thickness:2px;font-weight:700;padding:0 2px;border-radius:3px">${needle}</mark><span style="color:${color};font-weight:900;background:${color}18;padding:0 4px;border-radius:3px;margin-left:2px">→${escapeHtml(c.corrected)}<sup style="font-size:10px">${c.idx}</sup></span>`;
+          html = html.slice(0, at) + wrapped + html.slice(at + needle.length);
+        });
+        return `<p style="font-size:14.5px;line-height:2;margin:6px 0;text-indent:2em"><span style="display:inline-block;background:#333;color:#fff;font-size:11px;border-radius:999px;padding:0 8px;margin-right:6px;text-indent:0">第 ${index + 1} 段</span>${html}</p>`;
+      }).join('');
+      const rows = corrections.map(c => {
+        const color = ES_CATEGORY_COLORS[c.category];
+        return `<tr>
+          <td style="border:1px solid #999;padding:5px;text-align:center;font-weight:700">${c.idx}</td>
+          <td style="border:1px solid #999;padding:5px;text-align:center">第 ${c.paragraph} 段</td>
+          <td style="border:1px solid #999;padding:5px;text-align:center"><span style="background:${color};color:#fff;border-radius:6px;padding:1px 8px;font-weight:800">${escapeHtml(c.category)}</span></td>
+          <td style="border:1px solid #999;padding:5px;color:${color};text-decoration:line-through">${escapeHtml(c.original)}</td>
+          <td style="border:1px solid #999;padding:5px;color:${color};font-weight:900;font-size:15px">${escapeHtml(c.corrected)}</td>
+          <td style="border:1px solid #999;padding:5px">${escapeHtml(c.reason)}</td></tr>`;
+      }).join('');
+      const summary = Object.keys(ES_CATEGORY_COLORS).map(name => {
+        const count = corrections.filter(c => c.category === name).length;
+        return count ? `<span style="color:${ES_CATEGORY_COLORS[name]};font-weight:800;margin-right:10px">${name} ${count}</span>` : '';
+      }).join('');
+      return `
+          ${paragraphs.length ? `<div class="ws-section">📖 原文逐段批改（劃線＝要改，→ 後面是正確寫法）</div>
+          <div style="margin:2px 0 6px">${legend}</div>
+          <div style="border:1.5px solid #ccc;border-radius:10px;padding:8px 12px;background:#fffefb">${marked}</div>` : ''}
+          <div class="ws-section">✏️ 修改清單（共 ${corrections.length} 處：${summary || '無'}）</div>
+          <table style="width:100%;border-collapse:collapse;font-size:13.5px">
+            <tr><th style="border:1px solid #999;padding:5px;background:#f3f3f3;width:34px">#</th><th style="border:1px solid #999;padding:5px;background:#f3f3f3;width:64px">段落</th><th style="border:1px solid #999;padding:5px;background:#f3f3f3;width:66px">類別</th><th style="border:1px solid #999;padding:5px;background:#f3f3f3">原文</th><th style="border:1px solid #999;padding:5px;background:#f3f3f3">正確答案</th><th style="border:1px solid #999;padding:5px;background:#f3f3f3">說明</th></tr>
+            ${rows || '<tr><td colspan="6" style="border:1px solid #999;padding:8px;text-align:center;color:#666">沒有需要修改的地方 🎉</td></tr>'}
+          </table>`;
+    }
     async function filesToParts(files, max) {
-      const list = [...files].slice(0, max || 3);
+      const list = max ? [...files].slice(0, max) : [...files];
+      const total = list.reduce((sum, file) => sum + file.size, 0);
+      if (total > 20 * 1024 * 1024) throw new Error(`檔案合計 ${Math.round(total / 1048576)}MB，超過 20MB 上限；請把照片縮小或分兩批批改。`);
       const parts = [];
       for (const file of list) {
         if (file.size > 15 * 1024 * 1024) throw new Error(`「${file.name}」超過 15MB，請縮小後再試。`);
@@ -1278,7 +1330,7 @@
       if (!document.getElementById('page-essay').classList.contains('active')) return;
       const images = [...(e.clipboardData?.files || [])].filter(f => f.type.startsWith('image/'));
       if (!images.length) return;
-      images.forEach(f => { if (esPasted.length < 3) esPasted.push(f); });
+      images.forEach(f => { if (esPasted.length < 40) esPasted.push(f); });
       renderEsPasteList();
       showToast(`已貼上 ${images.length} 張圖片。`);
     });
@@ -1291,7 +1343,7 @@
     $('esGoButton').dataset.label = $('esGoButton').textContent;
     $('esGoButton').addEventListener('click', async () => {
       const text = $('esText').value.trim();
-      const esFiles = [...$('esImages').files, ...esPasted].slice(0, 3);
+      const esFiles = [...$('esImages').files, ...esPasted];
       const hasImages = esFiles.length > 0;
       if (!text && !hasImages) return showToast('請提供作文（拍照、PDF、貼圖或貼文字）。', true);
       const focus = [...document.querySelectorAll('.esFocus:checked')].map(c => c.value);
@@ -1306,12 +1358,17 @@
              '六級分意義：6=十分優秀、5=精采、4=符合基本要求、3=尚可但不太充分、2=不夠好、1=嚴重問題。',
              'grade 欄填「N級分」，並回傳 "dimensions":[{"name":"立意取材","level":1到6,"note":"一句話評語"}×4個向度]。'].join('\n')
           : scoring === '不評分' ? '不打分數。' : scoring === '分數' ? '給 0-100 分數（grade 欄填數字）。' : '給等第：優／甲／乙／丙（grade 欄填等第）。',
-        '原則：先真心稱讚具體亮點（引用原句），修改建議挑最重要的 3-8 處就好（別把孩子淹沒），評語溫暖鼓勵、指出一個努力方向。',
-        '只回傳 JSON：{"grade":"甲","wordCount":約字數,"strengths":["亮點1（引用原句）","亮點2"],"corrections":[{"original":"原句或原詞","suggestion":"建議改法","reason":"為什麼（一句話）"}],"structure":"結構與內容的一段建議（沒勾結構就給一句就好）","comment":"給學生的鼓勵評語約60字"}'
+        '批改方式（詳細版）：',
+        '1. 先把整篇作文照原樣逐段抄錄到 paragraphs（每段一個字串、依原文分段、保留原本的錯誤與標點；看不清楚的字用□）。',
+        '2. 逐段、逐句找出「所有」需要修改的地方，不要省略：category 只能是 錯字／標點／用字／語詞／語句 五種之一。',
+        '   ・錯字＝寫錯的字（含注音代替）；標點＝標點缺漏或用錯；用字＝字沒錯但這裡用得不恰當；語詞＝詞彙搭配不當或可更精準；語句＝句子不通順、重複、缺主詞或太長。',
+        '3. 每一處都要給 paragraph（第幾段，從 1 起算）、original（原文片段，抄原樣、最多 25 字）、corrected（正確或更好的寫法）、reason（一句話說明為什麼）。',
+        '4. 先真心稱讚具體亮點（引用原句）；評語溫暖鼓勵、指出一個努力方向。',
+        '只回傳 JSON：{"grade":"甲","wordCount":約字數,"paragraphs":["第1段原文","第2段原文"],"strengths":["亮點1（引用原句）","亮點2"],"corrections":[{"paragraph":1,"category":"錯字","original":"原文片段","corrected":"正確寫法","reason":"一句話"}],"structure":"結構與內容的一段建議（沒勾結構就給一句就好）","comment":"給學生的鼓勵評語約60字"}'
       ].filter(Boolean).join('\n');
       busy($('esGoButton'), true);
       try {
-        const imageParts = await filesToParts(esFiles, 3);
+        const imageParts = await filesToParts(esFiles, 0);
         const key = geminiKey();
         if (!key) { showToast('尚未設定 Gemini 金鑰。', true); throw new Error('no-key'); }
         $('esStatus').textContent = '🤖 AI 批改中（手寫辨識較久，約 20–60 秒）…';
@@ -1342,14 +1399,7 @@
           ${dimensionTable}
           <div class="ws-section">🌟 寫得很棒的地方</div>
           <ul style="font-size:15px;margin-left:2em">${(data.strengths || []).map(s => `<li style="margin:4px 0">${escapeHtml(s)}</li>`).join('')}</ul>
-          <div class="ws-section">✏️ 一起來修改（${(data.corrections || []).length} 處）</div>
-          <table style="width:100%;border-collapse:collapse;font-size:14px">
-            <tr><th style="border:1px solid #999;padding:5px;background:#f3f3f3">原文</th><th style="border:1px solid #999;padding:5px;background:#f3f3f3">建議</th><th style="border:1px solid #999;padding:5px;background:#f3f3f3">原因</th></tr>
-            ${(data.corrections || []).map(c => `<tr>
-              <td style="border:1px solid #999;padding:5px">${escapeHtml(c.original || '')}</td>
-              <td style="border:1px solid #999;padding:5px;color:#1d6e3f;font-weight:700">${escapeHtml(c.suggestion || '')}</td>
-              <td style="border:1px solid #999;padding:5px">${escapeHtml(c.reason || '')}</td></tr>`).join('')}
-          </table>
+          ${essayMarkupHtml(data)}
           <div class="ws-section">🏗 結構與內容</div>
           <p style="font-size:15px">${escapeHtml(data.structure || '')}</p>
           <div class="ws-section">💬 老師的話</div>
