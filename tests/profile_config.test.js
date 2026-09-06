@@ -475,3 +475,16 @@ for (const fake of ["createGoogleCalendarEvent:", "syncTeachingProgressCalendar:
   assert.doesNotMatch(indexHtml, new RegExp(fake.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), `本機 shim 不得再提供假的 ${fake}`);
 }
 assert.doesNotMatch(indexHtml, /serverCall\('(createGoogleCalendarEvent|syncTeachingProgressCalendar|uploadWorkspaceFile|listWorkspaceFiles)'/, "雲端功能不得再走 google.script.run");
+
+// 2026-09-06 文件同步契約：小綿助 v2.0、雲端功能改真、PDF 工具、作文批改不限張數、允許名單新行為
+assert.match(installHtml, /小綿助 v2\.0/, "安裝更新指南應介紹小綿助 v2.0 與升級步驟");
+assert.match(installHtml, /寫入 Google 日曆、存檔到雲端硬碟/, "更新指南授權說明應含日曆與雲端硬碟");
+assert.match(installHtml, /以前只是模擬/, "更新指南應說明雲端功能已改為真實寫入");
+assert.match(installHtml, /📎 PDF 工具/, "更新指南應列出 PDF 工具");
+assert.match(installHtml, /不會執行任何指令/, "安裝教學應說明允許名單未填時的新行為");
+assert.match(aboutHtml, /不限張數/, "About 作文批改應更新為不限張數");
+assert.match(aboutHtml, /桌面小綿助會看我的螢幕嗎/, "About 應回答桌寵螢幕隱私問題");
+assert.match(aboutHtml, /桌面小綿助 v2\.0 陪你專注/, "About 應有桌寵 v2.0 情境");
+assert.match(aboutHtml, /XiaoMianZhuSecretary/, "About 資料存放表應含桌寵資料位置");
+assert.match(introHtml, /專注小綿助/, "Intro 應有小綿助 v2.0 功能卡");
+assert.match(introHtml, /PDF 工具/, "Intro 教材小工場卡應含 PDF 工具");
