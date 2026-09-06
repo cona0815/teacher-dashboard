@@ -196,3 +196,45 @@ class CloudLinkTest(unittest.TestCase):
         self.assertTrue(stub.data["settings"]["cloud_enabled"])
         self.assertIn("cloud", result)
         self.assertIn("focus", result)
+
+
+class PanelLocalOnlyTest(unittest.TestCase):
+    """資安修正：面板端點只接受本機來源；網站來源即使在橋接白名單也不得存取。"""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.server = LocalBridgeServer(("127.0.0.1", 0), make_bridge_handler(DummySecretary()))
+        cls.port = cls.server.server_address[1]
+        cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
+        cls.thread.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.server.shutdown()
+        cls.server.server_close()
+
+    def _status(self, path, origin, payload=None):
+        data = None if payload is None else json.dumps(payload).encode("utf-8")
+        request = Request(f"http://127.0.0.1:{self.port}{path}", data=data, headers={"Origin": origin, "Content-Type": "application/json"})
+        try:
+            with urlopen(request, timeout=3) as response:
+                return response.status
+        except HTTPError as error:
+            return error.code
+
+    def test_web_origin_cannot_touch_panel(self):
+        web = "https://teacher-dashboard.netlify.app"
+        self.assertEqual(self._status("/panel-data", web), 403)
+        self.assertEqual(self._status("/panel-action", web, {"action": "set_cloud", "url": "https://script.google.com/macros/s/x/exec"}), 403)
+        # 同一來源仍可用 /sync（既有功能不受影響）
+        self.assertEqual(self._status("/sync", web, {"tasks": []}), 200)
+
+    def test_set_cloud_url_change_clears_token(self):
+        stub = PanelActionStub()
+        stub._configure_cloud = lambda: None
+        stub._panel_apply_action({"action": "set_cloud", "url": "https://script.google.com/macros/s/AAA/exec", "token": "secret-c"})
+        self.assertEqual(stub.data["settings"]["cloud_token"], "secret-c")
+        result = stub._panel_apply_action({"action": "set_cloud", "url": "https://script.google.com/macros/s/BBB/exec", "token": ""})
+        self.assertEqual(stub.data["settings"]["cloud_token"], "")
+        self.assertFalse(stub.data["settings"]["cloud_enabled"])
+        self.assertTrue(result["ok"])

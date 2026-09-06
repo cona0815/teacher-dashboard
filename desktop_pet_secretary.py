@@ -72,6 +72,17 @@ def make_bridge_handler(secretary: "SecretaryPet") -> type[BaseHTTPRequestHandle
         def _origin(self) -> str:
             return str(self.headers.get("Origin") or "")
 
+        def _is_local_origin(self) -> bool:
+            """秘書頁自己（127.0.0.1:8767）或無 Origin 的同源請求；網站來源一律不得碰面板端點。"""
+            origin = self._origin()
+            if not origin or origin == "null":
+                return True
+            try:
+                host = (urlparse(origin).hostname or "").lower()
+            except ValueError:
+                return False
+            return host in {"127.0.0.1", "localhost"}
+
         def _headers(self, status: int = 200, content_type: str = "application/json; charset=utf-8") -> bool:
             origin = self._origin()
             if not bridge_origin_allowed(origin, secretary._bridge_allowed_origin()):
@@ -108,6 +119,9 @@ def make_bridge_handler(secretary: "SecretaryPet") -> type[BaseHTTPRequestHandle
                     self.wfile.write(secretary._panel_html().encode("utf-8"))
                 return
             if self.path == "/panel-data":
+                if not self._is_local_origin():
+                    self._write_json({"ok": False, "error": "panel endpoints are local-only"}, 403)
+                    return
                 self._write_json(secretary._panel_payload())
                 return
             self._write_json({"ok": False, "error": "not found"}, 404)
@@ -124,6 +138,9 @@ def make_bridge_handler(secretary: "SecretaryPet") -> type[BaseHTTPRequestHandle
                 if not isinstance(payload, dict):
                     raise ValueError("資料格式不正確")
                 if self.path == "/panel-action":
+                    if not self._is_local_origin():
+                        self._write_json({"ok": False, "error": "panel endpoints are local-only"}, 403)
+                        return
                     self._write_json(secretary._panel_apply_action(payload))
                     return
                 result = secretary._bridge_sync(payload)
@@ -1238,7 +1255,7 @@ class SecretaryPet(DesktopPetPreview):
                 self.play("think", 2, "idle")
                 self.walking = True
                 self.walk_direction *= -1
-                self.root.after(2300, lambda: self.play("walk_left" if self.walk_direction < 0 else "walk_right"))
+                self.root.after(2300, lambda: (not self.paused and not self.drag_origin) and self.play("walk_left" if self.walk_direction < 0 else "walk_right"))
                 self.root.after(30, self._movement_tick)
                 return
         super()._movement_tick()
@@ -1387,6 +1404,9 @@ class SecretaryPet(DesktopPetPreview):
                 if url and not cloud_url_allowed(url):
                     return {"ok": False, "error": "只能填 https://script.google.com/… 的 Apps Script 網址"}
                 settings = self.data.setdefault("settings", {})
+                if url != str(settings.get("cloud_url") or ""):
+                    # 資安：換了網址就作廢舊金鑰，避免舊 🔑C 被送到新網址
+                    settings["cloud_token"] = ""
                 settings["cloud_url"] = url
                 if token:
                     settings["cloud_token"] = token

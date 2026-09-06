@@ -3157,7 +3157,7 @@
           promptRemoteStamp = prompt.updatedAt;
           $('promptCustomText').value = '';
           $('promptMessage').textContent = prompt.text;
-          $('promptImg').src = 'assets/irasutoya/' + (prompt.img || 'class_focus.png');
+          $('promptImg').src = 'assets/irasutoya/' + (/^[a-z_]+\.png$/.test(String(prompt.img || '')) ? prompt.img : 'class_focus.png');
         }
       } catch (e) {}
     }

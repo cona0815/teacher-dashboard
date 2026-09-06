@@ -446,3 +446,17 @@ assert.match(source, /assertSpreadsheetUiContext_\(\)/, "安裝端點必須限�
 assert.match(source, /LockService/, "共享寫入必須保留鎖");
 
 console.log("profile_config.test.js: all checks passed");
+
+// 2026-09-06 資安審查修正契約
+assert.match(lineBotSource, /還沒設定「允許的使用者」/, "LINE 允許名單為空時應拒絕指令並引導填 userId");
+assert.doesNotMatch(lineBotSource, /allowedUsers\.length && allowedUsers\.indexOf/, "不得再有『名單為空即放行』的邏輯");
+assert.match(lineBotSource, /function lineBotFormCopySweep/, "表單副本應改為單一時間觸發器掃描");
+assert.doesNotMatch(lineBotSource, /forForm\(form\)\.onFormSubmit\(\)\.create\(\)/, "不得再為每張表單各建一個觸發器（20 個上限）");
+assert.match(lineBotSource, /safeImg = \/\^\[a-z_\]\+\\\.png\$\//, "大屏提示圖片名稱應白名單驗證");
+for (const [name, html] of [["Index.html", indexHtml], ["Studio.html", studioHtml]]) {
+  assert.doesNotMatch(html, /generateContent\?key=/, `${name} 不得把 Gemini 金鑰放在網址`);
+  assert.match(html, /'x-goog-api-key'/, `${name} 應以標頭傳送 Gemini 金鑰`);
+}
+assert.match(studioHtml, /async function shrinkImageForAi/, "作文批改上傳前應自動縮圖");
+assert.match(desktopSecretary, /def _is_local_origin/, "桌寵面板端點應限制本機來源");
+assert.match(desktopSecretary, /換了網址就作廢舊金鑰/, "桌寵換雲端網址時應清空舊金鑰");

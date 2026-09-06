@@ -563,8 +563,9 @@ var SCREEN_PROMPTS = [
 ];
 
 function saveScreenPrompt_(text, img) {
+  var safeImg = /^[a-z_]+\.png$/.test(String(img || '')) ? String(img) : 'class_focus.png';
   PropertiesService.getScriptProperties().setProperty('SCREEN_PROMPT', JSON.stringify({
-    text: String(text).slice(0, 60), img: String(img || 'class_focus.png'), updatedAt: new Date().toISOString()
+    text: String(text).slice(0, 60), img: safeImg, updatedAt: new Date().toISOString()
   }));
 }
 
@@ -756,10 +757,80 @@ function createGoogleForm_(body) {
     if (question.required === true && item.setRequired) item.setRequired(true);
   });
   if (sendCopy) {
-    PropertiesService.getScriptProperties().setProperty('FORM_COPY_' + form.getId(), title);
-    ScriptApp.newTrigger('lineBotFormSubmitCopy').forForm(form).onFormSubmit().create();
+    // 每張表單一個觸發器會撞 Apps Script「每支腳本 20 個觸發器」上限；
+    // 改為登記表單清單＋單一時間觸發器（每 5 分鐘）掃描新回應寄副本。
+    registerFormCopy_(form.getId(), title);
+    ensureFormCopyTrigger_();
   }
   return { ok: true, formUrl: form.getPublishedUrl(), editUrl: form.getEditUrl(), formId: form.getId(), sendCopy: sendCopy };
+}
+
+var FORM_COPY_REGISTRY_KEY = 'FORM_COPY_FORMS';
+var FORM_COPY_MAX_FORMS = 60;
+var FORM_COPY_MAX_MAILS_PER_RUN = 30;
+
+function readFormCopyRegistry_() {
+  try {
+    var parsed = JSON.parse(PropertiesService.getScriptProperties().getProperty(FORM_COPY_REGISTRY_KEY) || '{}');
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch (error) { return {}; }
+}
+
+function writeFormCopyRegistry_(registry) {
+  PropertiesService.getScriptProperties().setProperty(FORM_COPY_REGISTRY_KEY, JSON.stringify(registry));
+}
+
+function registerFormCopy_(formId, title) {
+  var registry = readFormCopyRegistry_();
+  registry[formId] = { title: String(title || '').slice(0, 100), since: new Date().toISOString(), sent: 0 };
+  // 超過上限時淘汰最舊的登記（表單本身不受影響，只是不再寄副本）
+  var ids = Object.keys(registry).sort(function (a, b) { return String(registry[a].since).localeCompare(String(registry[b].since)); });
+  while (ids.length > FORM_COPY_MAX_FORMS) delete registry[ids.shift()];
+  writeFormCopyRegistry_(registry);
+}
+
+function ensureFormCopyTrigger_() {
+  var exists = ScriptApp.getProjectTriggers().some(function (trigger) { return trigger.getHandlerFunction() === 'lineBotFormCopySweep'; });
+  if (!exists) ScriptApp.newTrigger('lineBotFormCopySweep').timeBased().everyMinutes(5).create();
+}
+
+// 時間觸發器：掃描已登記表單的新回應，寄副本給填表者（單一觸發器服務所有表單）
+function lineBotFormCopySweep() {
+  var registry = readFormCopyRegistry_();
+  var ids = Object.keys(registry);
+  if (!ids.length) return;
+  var mailsLeft = FORM_COPY_MAX_MAILS_PER_RUN;
+  var changed = false;
+  ids.forEach(function (formId) {
+    if (mailsLeft <= 0) return;
+    var entry = registry[formId] || {};
+    var form;
+    try { form = FormApp.openById(formId); } catch (error) { delete registry[formId]; changed = true; return; }
+    var responses = form.getResponses();
+    var sent = Math.min(Number(entry.sent) || 0, responses.length);
+    for (var index = sent; index < responses.length && mailsLeft > 0; index += 1) {
+      try { sendFormCopyMail_(form, responses[index]); } catch (error) {}
+      mailsLeft -= 1;
+      sent = index + 1;
+    }
+    if (sent !== entry.sent) { entry.sent = sent; registry[formId] = entry; changed = true; }
+  });
+  if (changed) writeFormCopyRegistry_(registry);
+}
+
+function sendFormCopyMail_(form, response) {
+  var email = response.getRespondentEmail();
+  if (!email) return;
+  var lines = ['您好，這是您填寫「' + form.getTitle() + '」的回覆副本：', ''];
+  response.getItemResponses().forEach(function (itemResponse) {
+    var answer = itemResponse.getResponse();
+    if (Array.isArray(answer)) answer = answer.join('、');
+    lines.push('■ ' + itemResponse.getItem().getTitle());
+    lines.push('　' + String(answer == null ? '' : answer));
+    lines.push('');
+  });
+  lines.push('（此信由老師的表單系統自動寄出，直接回覆即可聯繫老師。）');
+  MailApp.sendEmail(email, '【回覆副本】' + form.getTitle(), lines.join('\n'));
 }
 
 // 表單提交觸發器：寄一份回覆副本給填表者（需表單有收集 Email）
@@ -770,18 +841,7 @@ function lineBotFormSubmitCopy(e) {
     if (!response || !form) return;
     var flag = PropertiesService.getScriptProperties().getProperty('FORM_COPY_' + form.getId());
     if (!flag) return;
-    var email = response.getRespondentEmail();
-    if (!email) return;
-    var lines = ['您好，這是您填寫「' + form.getTitle() + '」的回覆副本：', ''];
-    response.getItemResponses().forEach(function (itemResponse) {
-      var answer = itemResponse.getResponse();
-      if (Array.isArray(answer)) answer = answer.join('、');
-      lines.push('■ ' + itemResponse.getItem().getTitle());
-      lines.push('　' + String(answer == null ? '' : answer));
-      lines.push('');
-    });
-    lines.push('（此信由老師的表單系統自動寄出，直接回覆即可聯繫老師。）');
-    MailApp.sendEmail(email, '【回覆副本】' + form.getTitle(), lines.join('\n'));
+    sendFormCopyMail_(form, response);
   } catch (error) {
     // 寄信失敗不影響表單本身
   }
@@ -1187,7 +1247,16 @@ function handleLineWebhook_(e, body) {
 function handleLineEvent_(event, allowedUsers) {
   if (!event || event.type !== 'message' || !event.message) return;
   var userId = String((event.source && event.source.userId) || '');
-  if (allowedUsers.length && allowedUsers.indexOf(userId) === -1) return;
+  if (!allowedUsers.length) {
+    // 資安：名單未設定時一律不執行指令，改回覆對方的 userId 引導老師完成安裝第③步。
+    if (event.replyToken) {
+      replyLineMessage_(event.replyToken,
+        '🔒 這個小幫手還沒設定「允許的使用者」，暫時不接受任何指令。\n\n' +
+        '若你是老師本人，請把下面這串複製到試算表選單「🤖 LINE 小幫手 → ③ 填入 userId」：\n' + userId);
+    }
+    return;
+  }
+  if (allowedUsers.indexOf(userId) === -1) return;
   if (event.message.type !== 'text') {
     handleLineMediaMessage_(event, userId);
     return;

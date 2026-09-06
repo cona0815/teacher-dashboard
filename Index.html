@@ -7046,9 +7046,9 @@
       let response;
       if (cfg.kind === 'gemini') {
         const parts = [{ text: instruction }, ...await buildGeminiAttachmentParts()];
-        response = await fetch(`${cfg.endpoint}/${cfg.model}:generateContent?key=${encodeURIComponent(cfg.key)}`, {
+        response = await fetch(`${cfg.endpoint}/${cfg.model}:generateContent`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': cfg.key },
           body: JSON.stringify({
             contents: [{ role: 'user', parts }],
             generationConfig: { temperature: 0.4, maxOutputTokens: 2048, responseMimeType: 'application/json' }
@@ -7660,9 +7660,9 @@
       try {
         let response;
         if (preset.kind === 'gemini') {
-          response = await fetch(`${endpoint}/${model}:generateContent?key=${encodeURIComponent(key)}`, {
+          response = await fetch(`${endpoint}/${model}:generateContent`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
             body: JSON.stringify({ contents: [{ parts: [{ text: '請回覆 OK' }] }], generationConfig: { maxOutputTokens: 20 } })
           });
         } else {
