@@ -433,6 +433,26 @@
     .ai-advice-actions { margin-left: auto; display: inline-flex; gap: 4px; flex: 0 0 auto; }
     .ai-advice-actions .mini-button { padding: 2px 8px; font-size: 10px; }
     .ai-drop-target { outline: 2px dashed var(--primary); outline-offset: 5px; border-radius: 12px; }
+    .ai-draft-unnest { border: 2px dashed #b9c9c2; border-radius: 10px; padding: 5px 10px; margin: 6px 0 8px; font-size: 11px; color: #657570; text-align: center; }
+    .ai-draft-unnest.is-drop-target { border-color: var(--primary); background: #e8f2ee; color: var(--primary-strong); }
+    .ai-draft-board { display: grid; gap: 6px; }
+    .ai-draft-card { display: flex; align-items: flex-start; gap: 7px; padding: 7px 9px; border: 1.5px solid #d3ddd6; border-radius: 10px; background: white; font-size: 11.5px; line-height: 1.45; cursor: grab; }
+    .ai-draft-card.is-child { margin-left: 26px; border-left: 4px solid #8eb09b; background: #f7fbf8; }
+    .ai-draft-card.is-parent { border-color: #8eb09b; box-shadow: 0 0 0 2px #e8f2ee inset; }
+    .ai-draft-card.is-off { opacity: .5; }
+    .ai-draft-card.is-dragging { opacity: .4; }
+    .ai-draft-card.is-drop-target { border-color: #b9852f; background: #fff7e6; }
+    .ai-draft-card.is-created { border-style: dashed; opacity: .6; cursor: default; }
+    .ai-draft-card > input[type="checkbox"] { width: 16px; height: 16px; margin-top: 2px; flex: 0 0 auto; accent-color: var(--primary); }
+    .ai-draft-grip { color: #9aa8a2; font-size: 14px; line-height: 1; margin-top: 2px; flex: 0 0 auto; }
+    .ai-draft-body { flex: 1; min-width: 0; }
+    .ai-draft-name { font-weight: 800; outline: none; padding: 1px 4px; border-radius: 6px; }
+    .ai-draft-name:focus { background: #fffbe8; box-shadow: 0 0 0 1.5px #e3c988; }
+    .ai-draft-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 4px; color: var(--muted); font-size: 10.5px; }
+    .ai-draft-meta input, .ai-draft-meta select { border: 1px solid #d3ddd6; border-radius: 6px; padding: 1px 5px; font-size: 10.5px; background: white; color: var(--ink); }
+    .ai-draft-tag { display: inline-block; border-radius: 999px; padding: 0 7px; font-weight: 800; background: #e8f2ee; color: #1f514a; }
+    .ai-draft-card.is-child .ai-draft-tag { background: #fff7e6; color: #b9852f; }
+    .ai-draft-remove { border: 0; background: transparent; color: #9aa8a2; cursor: pointer; font-size: 13px; padding: 0 3px; }
     .calendar-note-chip { display: block; width: 100%; text-align: left; border: 1px solid #e3c988; background: #fff8e6; color: #7a5b16; border-radius: 8px; padding: 2px 6px; margin-top: 3px; font-size: 10px; font-weight: 800; cursor: grab; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
     .calendar-note-chip.dragging { opacity: .45; }
     .calendar-note-popover { position: fixed; z-index: 260; width: min(360px, calc(100vw - 24px)); background: var(--surface, #fff); border: 1.5px solid #e3c988; border-radius: 14px; box-shadow: 0 12px 32px rgba(60, 50, 20, .18); padding: 12px 14px; }
@@ -1359,7 +1379,7 @@
           <img src="assets/ipas/robot-ai.webp" alt="AI 行政助理">
           <div>
             <h2 id="aiAssistantTitle">AI 行政助理</h2>
-            <p>描述情境，AI 會先分析與建議；跟你有關的事會分成「任務」與「記事」並帶入時間；任務一律先建成獨立任務，主／子關係由你在任務清單拖曳決定。</p>
+            <p>描述情境，AI 會先分析與建議；跟你有關的事會分成「任務」與「記事」並帶入時間；任務先拆成一個個單一任務放在草稿板，你用拖曳決定主／子，確認後一次寫入任務清單。</p>
           </div>
         </div>
         <span class="privacy-badge">不處理個人資料</span>
@@ -1449,17 +1469,23 @@
               <h4>建議確認清單</h4>
               <span class="ai-hint" id="aiAdviceProgress">已確認 0／0</span>
             </div>
-            <p class="ai-hint" style="margin:2px 0 8px">怎麼用：AI 已把「跟我有關的事」分成<strong>任務</strong>（要動手做、有期限）與<strong>記事</strong>（只要記得），並抓出原文裡的日期時間。逐項按「➕任務」或「📌記事」，或直接按下方「⚡ 依建議一鍵建立」；勾選框是給你確認用的。建立的任務都是<strong>獨立任務</strong>，需要分主／子時到任務清單<strong>用拖曳</strong>（拖到另一個任務底下＝子任務，拖出來＝解除）。</p>
+            <p class="ai-hint" style="margin:2px 0 8px">怎麼用：AI 已把「跟我有關的事」分成<strong>任務</strong>（要動手做、有期限）與<strong>記事</strong>（只要記得），並抓出原文裡的日期時間。逐項按「➕任務」或「📌記事」，或直接按下方「⚡ 依建議一鍵建立」；勾選框是給你確認用的。任務會先放到下方<strong>任務草稿板</strong>，在那裡<strong>拖曳</strong>排好主／子（拖到另一個任務上＝子任務，拖到虛線區＝解除）再按「確認並建立」，一次寫進任務清單。</p>
             <div class="ai-advice-items" id="aiAdviceItems"></div>
             <div class="ai-actions"><button class="button button-light" type="button" id="aiAdviceApplyAll" hidden>⚡ 依建議一鍵建立全部（任務＋記事）</button></div>
           </div>
           <div class="ai-task-suggestion" id="aiTaskSuggestion" hidden>
-            <h4>任務建立建議</h4>
+            <div class="ai-section-head">
+              <h4>任務草稿板</h4>
+              <span class="ai-hint" id="aiDraftBoardCount"></span>
+            </div>
             <div class="ai-task-main" id="aiMainTaskTitle"></div>
-            <div class="ai-subtask-note" id="aiSubtaskRecommendation"></div>
-            <div class="ai-subtask-list" id="aiSubtaskSuggestionList"></div>
+            <div class="ai-subtask-note" id="aiSubtaskRecommendation">AI 先拆成一個個<strong>單一任務</strong>；把任務<strong>拖到另一個任務上</strong>就變成它的子任務（只有一層），拖到下方虛線區就解除。名稱、日期、時間都可直接改，取消勾選＝不建立。排好後按「確認並建立」，會一次寫進任務清單。</div>
+            <div class="ai-draft-unnest" id="aiDraftUnnestZone">⤴ 拖到這裡＝解除子任務、變回獨立任務</div>
+            <div class="ai-draft-board" id="aiDraftBoard"></div>
             <div class="ai-actions">
               <button class="button button-dark" type="button" id="aiCreateTaskButton">確認並建立任務</button>
+              <button class="mini-button" type="button" id="aiDraftAddButton">＋ 加一個空白任務</button>
+              <button class="mini-button" type="button" id="aiDraftFlattenButton">全部變回獨立</button>
             </div>
           </div>
           <div class="ai-teacher-message" id="aiTeacherMessage" hidden>
@@ -6317,6 +6343,9 @@
       $('activePromptLabel').textContent = 'AI 自動辨識';
       $('aiCreateTaskButton').disabled = false;
       $('aiCreateTaskButton').textContent = '確認並建立任務';
+      aiAssistantState.draftBoard = [];
+      $('aiDraftBoard').innerHTML = '';
+      $('aiDraftBoardCount').textContent = '';
     }
 
     function offsetDate(dateText, days) {
@@ -6659,13 +6688,14 @@
       if (!meta.length) return showToast('這次沒有可依建議建立的項目。', true);
       let tasks = 0, notes = 0;
       for (let index = 0; index < meta.length; index += 1) {
-        if (meta[index].kind === 'task') { await adviceItemToTask(index, true); tasks += 1; }
+        if (meta[index].kind === 'task') { adviceItemToTask(index, true); tasks += 1; }
         else { adviceItemToNote(index, true); notes += 1; }
         const box = document.querySelector(`[data-ai-advice-index="${index}"]`);
         if (box) box.checked = true;
       }
       updateAdviceProgress();
-      showToast(`⚡ 已依建議建立 ${tasks} 個任務、${notes} 則記事（時間都已帶入）。`);
+      showToast(`⚡ 已建立 ${notes} 則記事；${tasks} 個任務已放到草稿板，排好主／子後按「確認並建立」。`);
+      $('aiTaskSuggestion').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     function adviceItemText(index) {
@@ -6685,22 +6715,13 @@
       saveSecretaryNotes(quiet ? '' : `📌 已存到「小綿助記事」${meta.dueDate ? `，提醒日 ${meta.dueDate.replace(/-/g, '/')}` : ''}。`);
     }
 
-    async function adviceItemToTask(index, quiet) {
+    function adviceItemToTask(index, quiet) {
       const analysis = aiAssistantState.analysis;
       const text = adviceItemText(index);
       if (!analysis || !text) return;
       const meta = (analysis.aiChecklistMeta || [])[index] || {};
-      const clean = text.replace(/[。；]$/, '').slice(0, 90);
-      if (state.tasks.some(task => task.name.trim() === clean)) { if (!quiet) showToast('這一項已在任務清單裡。'); return; }
-      const draft = makeGenericTaskDraft(clean, analysis.classification.category, '中', meta.dueDate || safeIsoDate(analysis.dueDate) || '', clean);
-      draft.dueTime = meta.dueTime || '';
-      setLoading(true, '正在建立任務……');
-      try {
-        const result = await serverCall('saveTask', { ...draft, taskId: '', parentTaskId: '', projectId: '', taskType: '一般任務', csrfToken: state.csrfToken });
-        applyTaskResult(result);
-        if (!quiet) showToast(`➕ 已建立獨立任務「${clean}」${draft.dueDate ? `（${draft.dueDate.replace(/-/g, '/')}${draft.dueTime ? ' ' + draft.dueTime : ''}）` : ''}；需要分主子時到任務清單拖曳即可。`);
-      } catch (error) { showToast(error.message || '建立任務失敗。', true); }
-      finally { setLoading(false); }
+      const draft = addDraftTask({ name: text, dueDate: meta.dueDate || analysis.dueDate || '', dueTime: meta.dueTime || '', category: analysis.classification?.category }, quiet);
+      if (draft && !quiet) showToast('➕ 已放到下方「任務草稿板」；拖好主／子關係後按「確認並建立」。');
     }
 
     function applyTaskResult(result) {
@@ -6884,23 +6905,95 @@
 
     function renderTaskSuggestion(analysis) {
       $('aiTaskSuggestion').hidden = false;
+      aiAssistantState.draftBoard = [];
       if (!analysis.isTask) {
         $('aiMainTaskTitle').textContent = '目前不建議建立任務';
-        $('aiSubtaskRecommendation').textContent = '這次內容屬於文字草稿或單次溝通，暫時不需要加入工作清單；若老師補充後續追蹤日期、會談或回覆期限，系統會再產生任務建議。';
-        $('aiSubtaskSuggestionList').innerHTML = '';
+        $('aiSubtaskRecommendation').innerHTML = '這次內容屬於文字草稿或單次溝通；若仍要追蹤，可從上方清單按「➕任務」或「＋ 加一個空白任務」放到草稿板。';
+        renderDraftBoard();
+        return;
+      }
+      const category = analysis.classification?.category || '行政交辦';
+      const seen = new Set();
+      const push = (name, dueDate, dueTime, priority, nextAction) => {
+        const clean = String(name || '').replace(/[。；]$/, '').trim().slice(0, 90);
+        if (!clean || seen.has(clean)) return;
+        seen.add(clean);
+        aiAssistantState.draftBoard.push({ id: `d${aiAssistantState.draftBoard.length + 1}-${Date.now().toString(36)}`, name: clean, dueDate: safeIsoDate(dueDate), dueTime: safeTimeString(dueTime), priority: ['高', '中', '低'].includes(priority) ? priority : '中', nextAction: String(nextAction || clean).slice(0, 120), category, parentId: '', include: true, created: false });
+      };
+      push(analysis.mainTask.name, analysis.mainTask.dueDate, analysis.mainTask.dueTime, analysis.mainTask.priority, analysis.mainTask.nextAction);
+      (analysis.children || []).forEach(child => push(child.name, child.dueDate, '', '中', child.name));
+      (analysis.aiChecklistMeta || []).filter(item => item.kind === 'task').forEach(item => push(item.text, item.dueDate, item.dueTime, '中', item.text));
+      $('aiMainTaskTitle').textContent = `AI 拆出 ${aiAssistantState.draftBoard.length} 個單一任務（全部獨立）`;
+      renderDraftBoard();
+    }
+
+    function draftBoardOrdered() {
+      const board = aiAssistantState.draftBoard || [];
+      const roots = board.filter(item => !item.parentId || !board.some(other => other.id === item.parentId));
+      return roots.flatMap(root => [root, ...board.filter(item => item.parentId === root.id && item.id !== root.id)]);
+    }
+
+    function renderDraftBoard() {
+      const board = aiAssistantState.draftBoard || [];
+      const host = $('aiDraftBoard');
+      if (!board.length) {
+        host.innerHTML = '<div class="ai-hint">草稿板是空的。</div>';
+        $('aiDraftBoardCount').textContent = '';
         $('aiCreateTaskButton').hidden = true;
         return;
       }
+      const parentIds = new Set(board.filter(item => item.parentId).map(item => item.parentId));
+      host.innerHTML = draftBoardOrdered().map(item => {
+        const isChild = Boolean(item.parentId) && board.some(other => other.id === item.parentId);
+        const isParent = parentIds.has(item.id);
+        const parentName = isChild ? board.find(other => other.id === item.parentId).name : '';
+        return `<div class="ai-draft-card${isChild ? ' is-child' : ''}${isParent ? ' is-parent' : ''}${item.include ? '' : ' is-off'}${item.created ? ' is-created' : ''}" draggable="${item.created ? 'false' : 'true'}" data-draft-id="${item.id}">
+          <input type="checkbox" data-draft-include="${item.id}" ${item.include ? 'checked' : ''} ${item.created ? 'disabled' : ''} title="勾選＝要建立">
+          <span class="ai-draft-grip" title="拖曳">⠿</span>
+          <div class="ai-draft-body">
+            <div class="ai-draft-name" contenteditable="${item.created ? 'false' : 'true'}" spellcheck="false" data-draft-name="${item.id}">${escapeHtml(item.name)}</div>
+            <div class="ai-draft-meta">
+              <span class="ai-draft-tag">${item.created ? '✅ 已建立' : isChild ? `子任務 ← ${escapeHtml(parentName.slice(0, 14))}` : isParent ? '主任務' : '獨立任務'}</span>
+              📅 <input type="date" data-draft-date="${item.id}" value="${item.dueDate}" ${item.created ? 'disabled' : ''}>
+              <input type="time" data-draft-time="${item.id}" value="${item.dueTime}" ${item.created ? 'disabled' : ''}>
+              <select data-draft-priority="${item.id}" ${item.created ? 'disabled' : ''}>${['高', '中', '低'].map(level => `<option${level === item.priority ? ' selected' : ''}>${level}</option>`).join('')}</select>
+            </div>
+          </div>
+          ${item.created ? '' : `<button type="button" class="ai-draft-remove" data-draft-remove="${item.id}" title="從草稿板移除">✕</button>`}
+        </div>`;
+      }).join('');
+      const pending = board.filter(item => item.include && !item.created);
+      const parents = pending.filter(item => board.some(other => other.parentId === item.id && other.include && !other.created)).length;
+      const children = pending.filter(item => item.parentId && board.some(other => other.id === item.parentId)).length;
+      $('aiDraftBoardCount').textContent = `${pending.length} 個待建立（${parents} 主、${children} 子、${pending.length - parents - children} 獨立）`;
       $('aiCreateTaskButton').hidden = false;
-      $('aiMainTaskTitle').textContent = `任務：${analysis.mainTask.name}${analysis.mainTask.dueDate ? `｜期限 ${analysis.mainTask.dueDate}${analysis.mainTask.dueTime ? ' ' + analysis.mainTask.dueTime : ''}` : '｜期限待教師確認'}`;
-      $('aiSubtaskRecommendation').textContent = analysis.children.length
-        ? `另建議 ${analysis.children.length} 個相關任務，全部以「獨立任務」建立、不自動分主／子；老師可取消不需要的，之後到任務清單用拖曳決定誰是誰的子任務。`
-        : '這個情境較單純，建議建立一個任務；之後需要拆解時，在任務清單拖曳即可。';
-      $('aiSubtaskSuggestionList').innerHTML = analysis.children.map((child, index) => `
-        <label class="ai-subtask-option">
-          <input type="checkbox" data-ai-subtask-index="${index}" checked>
-          <span>${escapeHtml(child.name)}<br><small>${escapeHtml(child.suggestedTiming)}</small></span>
-        </label>`).join('');
+      $('aiCreateTaskButton').disabled = !pending.length;
+      $('aiCreateTaskButton').textContent = pending.length ? `✅ 確認並建立 ${pending.length} 個任務` : '草稿板的任務都已建立';
+    }
+
+    function addDraftTask(fields, quiet) {
+      if (!aiAssistantState.draftBoard) aiAssistantState.draftBoard = [];
+      const clean = String(fields.name || '').replace(/[。；]$/, '').trim().slice(0, 90);
+      if (clean && aiAssistantState.draftBoard.some(item => item.name === clean)) { if (!quiet) showToast('草稿板已有這一項。'); return null; }
+      const draft = { id: `d${aiAssistantState.draftBoard.length + 1}-${Date.now().toString(36)}`, name: clean, dueDate: safeIsoDate(fields.dueDate), dueTime: safeTimeString(fields.dueTime), priority: fields.priority || '中', nextAction: String(fields.nextAction || clean).slice(0, 120), category: fields.category || aiAssistantState.analysis?.classification?.category || '行政交辦', parentId: '', include: true, created: false };
+      aiAssistantState.draftBoard.push(draft);
+      $('aiTaskSuggestion').hidden = false;
+      if ($('aiMainTaskTitle').textContent === '目前不建議建立任務' || !$('aiMainTaskTitle').textContent) $('aiMainTaskTitle').textContent = '老師自行加入的任務';
+      renderDraftBoard();
+      return draft;
+    }
+
+    function nestDraft(childId, parentId) {
+      const board = aiAssistantState.draftBoard || [];
+      const child = board.find(item => item.id === childId);
+      if (!child || child.created) return;
+      let parent = parentId ? board.find(item => item.id === parentId) : null;
+      if (parent && parent.parentId && board.some(item => item.id === parent.parentId)) parent = board.find(item => item.id === parent.parentId);   // 只有一層
+      if (parent && (parent.id === child.id || parent.created)) return;
+      board.forEach(item => { if (item.parentId === child.id) item.parentId = ''; });   // 自己的子任務先升回獨立
+      child.parentId = parent ? parent.id : '';
+      renderDraftBoard();
+      showToast(parent ? `「${child.name.slice(0, 16)}」已成為「${parent.name.slice(0, 16)}」的子任務。` : `「${child.name.slice(0, 16)}」已變回獨立任務。`);
     }
 
     function formQuestionRow(question = {}, index = 0) {
@@ -7227,8 +7320,6 @@
           }));
         aiAssistantState.taskDraft = analysis.mainTask;
         aiAssistantState.taskDrafts = analysis.children;
-        $('aiCreateTaskButton').disabled = false;
-        $('aiCreateTaskButton').textContent = `建立 ${1 + analysis.children.length} 個任務`;
       }
       renderTaskSuggestion(analysis);
       if (!analysis.formDraft && !analysis.groupBuyRows) renderTeacherLineMessage(redactionText, analysis);
@@ -7351,8 +7442,6 @@
       renderTaskSuggestion(analysis);
       renderFormDraft(analysis.formDraft);
       renderGroupBuyDraft(analysis.groupBuyRows);
-      $('aiCreateTaskButton').disabled = false;
-      $('aiCreateTaskButton').textContent = `建立 ${1 + analysis.children.length} 個任務`;
       if (geminiConfigReady()) {
         const providerLabel = providerConfig().label;
         showToast(redaction.count
@@ -7369,30 +7458,40 @@
     }
 
     async function createAiSuggestedTasks() {
-      const analysis = aiAssistantState.analysis;
-      if (!analysis?.isTask || !analysis.mainTask) return showToast('目前沒有可建立的任務建議。', true);
-      const selected = [...document.querySelectorAll('[data-ai-subtask-index]:checked')]
-        .map(input => analysis.children[Number(input.dataset.aiSubtaskIndex)])
-        .filter(Boolean);
-      const drafts = [
-        { ...analysis.mainTask },
-        ...selected.map(child => makeGenericTaskDraft(child.name, analysis.classification.category, '中', child.dueDate, child.name))
-      ];
+      const board = aiAssistantState.draftBoard || [];
+      const pending = board.filter(item => item.include && !item.created && item.name.trim());
+      if (!pending.length) return showToast('草稿板沒有勾選、待建立的任務。', true);
+      const roots = pending.filter(item => !item.parentId || !pending.some(other => other.id === item.parentId));
       const existingNames = new Set(state.tasks.map(task => task.name.trim()));
-      setLoading(true, '正在建立任務……');
-      let created = 0, skipped = 0, result = null;
+      setLoading(true, '正在把草稿板寫入任務清單……');
+      let result = null, created = 0, skipped = 0, parents = 0, children = 0;
+      const toPayload = item => {
+        const draft = makeGenericTaskDraft(item.name.trim().slice(0, 90), item.category || '行政交辦', item.priority, item.dueDate, item.nextAction || item.name);
+        draft.dueTime = item.dueTime || '';
+        return draft;
+      };
       try {
-        for (const draft of drafts) {
-          if (existingNames.has(String(draft.name).trim())) { skipped += 1; continue; }
-          // 使用者指示：一律建立成獨立任務，不自動分主／子；關係由老師在任務清單拖曳決定
-          result = await serverCall('saveTask', { ...draft, taskId: '', parentTaskId: '', projectId: '', taskType: '一般任務', csrfToken: state.csrfToken });
-          existingNames.add(String(draft.name).trim());
-          created += 1;
+        for (const root of roots) {
+          const kids = pending.filter(item => item.parentId === root.id && item.id !== root.id);
+          if (existingNames.has(root.name.trim()) && !kids.length) { skipped += 1; root.created = true; continue; }
+          result = await serverCall('saveTask', { ...toPayload(root), taskId: '', parentTaskId: '', projectId: '', taskType: kids.length ? '主任務' : '一般任務', csrfToken: state.csrfToken });
+          created += 1; root.created = true;
+          const parentTaskId = result?.task?.taskId || '';
+          if (kids.length) {
+            parents += 1;
+            if (parentTaskId && result.task.projectId !== parentTaskId) {
+              result = await serverCall('saveTask', { ...result.task, projectId: parentTaskId, taskType: '主任務', csrfToken: state.csrfToken });
+            }
+            for (const kid of kids) {
+              result = await serverCall('saveTask', { ...toPayload(kid), taskId: '', parentTaskId, projectId: parentTaskId, taskType: parentTaskId ? '子任務' : '一般任務', csrfToken: state.csrfToken });
+              created += 1; children += 1; kid.created = true;
+            }
+          }
         }
         if (result) applyTaskResult(result);
-        $('aiCreateTaskButton').disabled = true;
-        $('aiCreateTaskButton').textContent = `已建立 ${created} 個任務`;
-        showToast(`已建立 ${created} 個獨立任務${skipped ? `（${skipped} 個同名已存在，略過）` : ''}；到任務清單可用拖曳把相關任務歸到同一個主任務底下。`);
+        renderDraftBoard();
+        showToast(`✅ 已寫入任務清單：${created} 個任務（${parents} 個主任務、${children} 個子任務）${skipped ? `，${skipped} 個同名已存在略過` : ''}。`);
+        $('taskTableWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (error) { showToast(error.message || '建立任務失敗。', true); }
       finally { setLoading(false); }
     }
@@ -8257,17 +8356,84 @@
       const row = event.target.closest('[data-ai-advice-drag]');
       if (row) event.dataTransfer.setData('text/advice-index', row.dataset.aiAdviceDrag);
     });
-    $('aiTaskSuggestion').addEventListener('dragover', event => {
-      if ([...event.dataTransfer.types].includes('text/advice-index')) {
-        event.preventDefault();
-        $('aiTaskSuggestion').classList.add('ai-drop-target');
-      }
+    let draftDragId = '';
+    $('aiDraftBoard').addEventListener('dragstart', event => {
+      const card = event.target.closest('[data-draft-id]');
+      if (!card || card.getAttribute('draggable') !== 'true') return;
+      draftDragId = card.dataset.draftId;
+      event.dataTransfer.effectAllowed = 'move';
+      try { event.dataTransfer.setData('text/draft-id', draftDragId); } catch (error) {}
+      card.classList.add('is-dragging');
     });
-    $('aiTaskSuggestion').addEventListener('dragleave', () => $('aiTaskSuggestion').classList.remove('ai-drop-target'));
+    $('aiDraftBoard').addEventListener('dragend', () => {
+      draftDragId = '';
+      document.querySelectorAll('#aiTaskSuggestion .is-dragging, #aiTaskSuggestion .is-drop-target').forEach(el => el.classList.remove('is-dragging', 'is-drop-target'));
+    });
+    // 名稱／日期欄位操作時暫停拖曳，避免選字時被拖走
+    $('aiDraftBoard').addEventListener('mousedown', event => {
+      const field = event.target.closest('[contenteditable="true"], input, select');
+      const card = event.target.closest('[data-draft-id]');
+      if (field && card) { card.setAttribute('draggable', 'false'); const restore = () => { if (!card.classList.contains('is-created')) card.setAttribute('draggable', 'true'); document.removeEventListener('mouseup', restore); }; document.addEventListener('mouseup', restore); }
+    });
+    $('aiTaskSuggestion').addEventListener('dragover', event => {
+      const types = [...event.dataTransfer.types];
+      const fromAdvice = types.includes('text/advice-index');
+      if (!draftDragId && !fromAdvice) return;
+      event.preventDefault();
+      document.querySelectorAll('#aiTaskSuggestion .is-drop-target').forEach(el => el.classList.remove('is-drop-target'));
+      if (fromAdvice) { $('aiTaskSuggestion').classList.add('ai-drop-target'); return; }
+      const target = event.target.closest('[data-draft-id], #aiDraftUnnestZone');
+      if (target && target.dataset.draftId !== draftDragId) target.classList.add('is-drop-target');
+    });
+    $('aiTaskSuggestion').addEventListener('dragleave', event => {
+      if (!$('aiTaskSuggestion').contains(event.relatedTarget)) $('aiTaskSuggestion').classList.remove('ai-drop-target');
+    });
     $('aiTaskSuggestion').addEventListener('drop', event => {
       $('aiTaskSuggestion').classList.remove('ai-drop-target');
-      const index = event.dataTransfer.getData('text/advice-index');
-      if (index !== '') { event.preventDefault(); adviceItemToTask(Number(index)); }
+      const adviceIndex = event.dataTransfer.getData('text/advice-index');
+      if (adviceIndex !== '') { event.preventDefault(); adviceItemToTask(Number(adviceIndex)); return; }
+      if (!draftDragId) return;
+      event.preventDefault();
+      const childId = draftDragId;
+      draftDragId = '';
+      const target = event.target.closest('[data-draft-id], #aiDraftUnnestZone');
+      if (!target) return;
+      if (target.id === 'aiDraftUnnestZone') nestDraft(childId, '');
+      else if (target.dataset.draftId !== childId) nestDraft(childId, target.dataset.draftId);
+    });
+    $('aiDraftBoard').addEventListener('change', event => {
+      const board = aiAssistantState.draftBoard || [];
+      const pick = attr => { const el = event.target.closest(`[${attr}]`); return el ? [el, board.find(item => item.id === el.getAttribute(attr))] : [null, null]; };
+      let [el, item] = pick('data-draft-include'); if (item) { item.include = el.checked; renderDraftBoard(); return; }
+      [el, item] = pick('data-draft-date'); if (item) { item.dueDate = safeIsoDate(el.value); return; }
+      [el, item] = pick('data-draft-time'); if (item) { item.dueTime = safeTimeString(el.value); return; }
+      [el, item] = pick('data-draft-priority'); if (item) item.priority = el.value;
+    });
+    $('aiDraftBoard').addEventListener('focusout', event => {
+      const el = event.target.closest('[data-draft-name]');
+      if (!el) return;
+      const item = (aiAssistantState.draftBoard || []).find(entry => entry.id === el.dataset.draftName);
+      if (item) { item.name = el.textContent.trim().slice(0, 90); item.nextAction = item.name; }
+    });
+    $('aiDraftBoard').addEventListener('keydown', event => {
+      if (event.key === 'Enter' && event.target.closest('[data-draft-name]')) { event.preventDefault(); event.target.blur(); }
+    });
+    $('aiDraftBoard').addEventListener('click', event => {
+      const remove = event.target.closest('[data-draft-remove]');
+      if (!remove) return;
+      const board = aiAssistantState.draftBoard || [];
+      board.forEach(item => { if (item.parentId === remove.dataset.draftRemove) item.parentId = ''; });
+      aiAssistantState.draftBoard = board.filter(item => item.id !== remove.dataset.draftRemove);
+      renderDraftBoard();
+    });
+    $('aiDraftAddButton').addEventListener('click', () => {
+      const draft = addDraftTask({ name: `新任務 ${(aiAssistantState.draftBoard || []).length + 1}` });
+      const el = draft && document.querySelector(`[data-draft-name="${draft.id}"]`);
+      if (el) { el.focus(); document.getSelection()?.selectAllChildren(el); }
+    });
+    $('aiDraftFlattenButton').addEventListener('click', () => {
+      (aiAssistantState.draftBoard || []).forEach(item => { if (!item.created) item.parentId = ''; });
+      renderDraftBoard();
     });
     $('aiAudience').addEventListener('change', () => {
       if (!aiAssistantState.analysis) return;

@@ -560,7 +560,10 @@ assert.match(indexHtml, /function safeTimeString/, "應能擷取原文時間到�
 assert.match(indexHtml, /draggable="true" data-task-row=/, "任務列應可拖曳");
 assert.match(indexHtml, /async function nestTask/, "應能拖曳設定／解除主子任務");
 assert.match(indexHtml, /id="taskUnnestZone"/, "應有解除子任務的拖放區");
-assert.match(indexHtml, /taskType: '一般任務', csrfToken: state\.csrfToken \}\);\s*existingNames\.add/, "AI 任務建議應建立獨立任務且經 saveTask 持久化");
+assert.match(indexHtml, /id="aiDraftBoard"/, "AI 行政助理應有任務草稿板");
+assert.match(indexHtml, /function nestDraft/, "草稿板應可拖曳設定／解除主子");
+assert.match(indexHtml, /taskType: kids\.length \? '主任務' : '一般任務'/, "確認建立時依草稿板關係寫入主／子任務並經 saveTask 持久化");
+assert.match(indexHtml, /parentTaskId, projectId: parentTaskId, taskType: parentTaskId \? '子任務'/, "子任務應掛在剛建立的主任務底下");
 assert.doesNotMatch(indexHtml, /建立主任務與 \$\{analysis\.children\.length\} 個子任務/, "不得再自動建立主／子任務");
 assert.match(indexHtml, /id="messageHubSection"/, "應有訊息整合站版面");
 assert.match(indexHtml, /data-toolbox-target="messageHubSection"/, "教師工具箱應有訊息整合站入口");
