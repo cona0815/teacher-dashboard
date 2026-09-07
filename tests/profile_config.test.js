@@ -529,3 +529,10 @@ assert.match(studioHtml, /🔥 暖身/, "學習單應有暖身區");
 assert.match(studioHtml, /🌟 挑戰題/, "學習單應有挑戰題");
 assert.match(studioHtml, /我的自我評量/, "學習單應有自我評量");
 assert.match(studioHtml, /例：中秋節/, "作文引導示範主題應為中秋節");
+
+// 段考複習講義／閱讀分級改寫
+assert.match(studioHtml, /data-page="review"/, "教材小工場應有段考複習講義分頁");
+assert.match(studioHtml, /data-page="reading"/, "教材小工場應有閱讀分級改寫分頁");
+assert.match(studioHtml, /易錯/, "複習講義應含易錯提醒");
+assert.match(studioHtml, /🟢 基礎/, "閱讀分級應有三級版本選項");
+assert.ok(studioHtml.includes("attachZone('rvImages'") && studioHtml.includes("attachZone('rdImages'"), "兩個新工具的檔案輸入應掛上拍照／貼上");

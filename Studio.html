@@ -179,6 +179,17 @@
     .ws2-footer { display:grid; grid-template-columns:1.3fr 1fr; gap:12px; margin-top:12px; }
     .ws2-self, .ws2-teacher { border:2.5px solid #111; border-radius:14px; padding:8px 12px; }
     .ws2-self-title { font-weight:900; font-size:15px; margin-bottom:4px; }
+    /* 複習講義／閱讀分級 */
+    .rv-stars { color:#b9852f; letter-spacing:.05em; font-size:15px; margin-left:6px; }
+    .rv-terms { margin:6px 0 2px; font-size:14px; }
+    .rv-pitfall { background:#f6f6f6; border-left:4px solid #111; padding:4px 10px; margin-top:6px; font-size:13.5px; }
+    .rv-steps { margin:6px 0 6px 2.2em; font-size:14.5px; }
+    .rv-steps li { margin:3px 0; }
+    .rv-answer { font-weight:900; margin-top:4px; }
+    .rd-text { font-size:16px; line-height:2.1; letter-spacing:.03em; margin:12px 4px; }
+    .rd-text p { text-indent:2em; margin:6px 0; }
+    .rd-vocab { columns:2; font-size:14px; }
+    .rd-vocab div { break-inside:avoid; margin:3px 0; }
     /* 遮蔽工具 */
     .mask-canvas-wrap { position:relative; display:inline-block; max-width:100%; }
     #maskCanvas { max-width:100%; height:auto; display:block; border-radius:8px; cursor:crosshair; touch-action:none; }
@@ -214,6 +225,8 @@
     <button class="tab-button" type="button" data-page="guide">🧭 作文引導單</button>
     <button class="tab-button" type="button" data-page="essay">✍️ 作文批改</button>
     <button class="tab-button" type="button" data-page="mm">🧠 心智圖</button>
+    <button class="tab-button" type="button" data-page="review">📖 段考複習講義</button>
+    <button class="tab-button" type="button" data-page="reading">📚 閱讀分級改寫</button>
     <span class="tab-group">📣 親師溝通</span>
     <button class="tab-button" type="button" data-page="notice">📄 家長通知單</button>
     <button class="tab-button" type="button" data-page="poster">📢 海報宣傳單</button>
@@ -344,6 +357,80 @@
             <textarea class="textarea mm-md" id="mmMarkdown" placeholder="- 主題&#10;  - 分支一&#10;    - 細節"></textarea>
             <div class="mm-svg-host page active" id="mmSvgHost"></div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 📖 段考複習講義 -->
+    <section class="page" id="page-review">
+      <div class="workbench">
+        <div class="panel">
+          <div class="field"><label>科目</label>
+            <select class="select" id="rvSubject"><option>國語</option><option>數學</option><option>英語</option><option>自然</option><option>社會</option><option>生活</option><option>健康與體育</option></select></div>
+          <div class="field"><label>年級</label>
+            <select class="select" id="rvGrade"><option value="一">一年級</option><option value="二">二年級</option><option value="三">三年級</option><option value="四">四年級</option><option value="五" selected>五年級</option><option value="六">六年級</option></select></div>
+          <div class="field"><label>單元範圍（或貼上課本重點）</label>
+            <textarea class="textarea" id="rvScope" placeholder="例：康軒五上數學 第 3～4 單元：因數與倍數、分數的加減"></textarea></div>
+          <div class="field"><label>拍課本／習作頁面（可多頁，AI 以圖中內容為準）</label>
+            <input class="input" type="file" id="rvImages" accept="image/*,.pdf,application/pdf" multiple></div>
+          <div class="field"><label>要包含的部分</label>
+            <div class="check-row">
+              <label><input type="checkbox" id="rvMindmap" checked>單元心智圖</label>
+              <label><input type="checkbox" id="rvStars" checked>段考星等標示</label>
+              <label><input type="checkbox" id="rvExamples" checked>例題逐步解</label>
+              <label><input type="checkbox" id="rvAnswer" checked>解答卷</label>
+            </div></div>
+          <div class="field"><label>練習題數：<span id="rvCountLabel">10</span> 題</label>
+            <input type="range" id="rvCount" min="5" max="20" value="10" style="width:100%"></div>
+          <button class="go-button" type="button" id="rvGoButton">📖 生成複習講義</button>
+          <div class="status" id="rvStatus"></div>
+          <div class="hint">產出：①單元總覽（學習目標＋心智圖）②觀念整理（重點、關鍵字、易錯提醒、星等）③例題逐步解 ④練習題（星等難度）⑤解答卷。黑白影印友善。</div>
+        </div>
+        <div class="panel">
+          <div class="preview-bar">
+            <button class="mini" type="button" onclick="window.print()">🖨 列印／存 PDF</button>
+            <button class="mini" type="button" onclick="downloadPreview('rvPreview','複習講義','doc')">⬇ Word</button>
+            <button class="mini" type="button" onclick="downloadPdfFromHost('rvPreview','複習講義',false)">⬇ PDF</button>
+            <span class="status" id="rvMeta"></span>
+          </div>
+          <div class="preview-host" id="rvPreview"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 📚 閱讀文本分級改寫 -->
+    <section class="page" id="page-reading">
+      <div class="workbench">
+        <div class="panel">
+          <div class="field"><label>班級年級</label>
+            <select class="select" id="rdGrade"><option value="一">一年級</option><option value="二">二年級</option><option value="三">三年級</option><option value="四">四年級</option><option value="五" selected>五年級</option><option value="六">六年級</option></select></div>
+          <div class="field"><label>貼上原文（課文、新聞、故事…）</label>
+            <textarea class="textarea" id="rdText" style="min-height:140px" placeholder="貼上要改寫的文章；也可以拍照。"></textarea></div>
+          <div class="field"><label>或拍照上傳原文</label>
+            <input class="input" type="file" id="rdImages" accept="image/*,.pdf,application/pdf" multiple></div>
+          <div class="field"><label>要產出的版本</label>
+            <div class="check-row">
+              <label><input type="checkbox" class="rdLevel" value="基礎" checked>🟢 基礎（低年級可讀）</label>
+              <label><input type="checkbox" class="rdLevel" value="標準" checked>🟡 標準（同年級）</label>
+              <label><input type="checkbox" class="rdLevel" value="進階" checked>🔴 進階（延伸挑戰）</label>
+            </div></div>
+          <div class="field"><div class="check-row">
+            <label><input type="checkbox" id="rdVocab" checked>📒 附詞彙表</label>
+            <label><input type="checkbox" id="rdQuiz" checked>❓ 附理解題（每版 3 題）</label>
+            <label><input type="checkbox" id="rdAnswer" checked>📎 教師解答頁</label>
+          </div></div>
+          <button class="go-button" type="button" id="rdGoButton">📚 生成分級文本</button>
+          <div class="status" id="rdStatus"></div>
+          <div class="hint">同一篇文章改寫成不同閱讀程度（事實與結論不變，只調整句長、詞彙與背景說明），每版各一頁，方便同班差異化。</div>
+        </div>
+        <div class="panel">
+          <div class="preview-bar">
+            <button class="mini" type="button" onclick="window.print()">🖨 列印／存 PDF</button>
+            <button class="mini" type="button" onclick="downloadPreview('rdPreview','分級文本','doc')">⬇ Word</button>
+            <button class="mini" type="button" onclick="downloadPdfFromHost('rdPreview','分級文本',false)">⬇ PDF</button>
+            <span class="status" id="rdMeta"></span>
+          </div>
+          <div class="preview-host" id="rdPreview"></div>
         </div>
       </div>
     </section>
@@ -900,6 +987,8 @@
     ['wsGoButton', 'ntGoButton', 'mmGoButton', 'cmGoButton', 'poGoButton'].forEach(id => { $(id).dataset.label = $(id).textContent; });
     ['wsImage', 'ntImage', 'mmImage'].forEach(id => attachZone(id));
     attachZone('esImages', { multiple: true });
+    attachZone('rvImages', { multiple: true });
+    attachZone('rdImages', { multiple: true });
     attachZone('pdfFiles', { multiple: true });
 
     // ---------- 分頁切換 ----------
@@ -1123,6 +1212,133 @@
         ${slip}
       </div>`;
     }
+
+    // ============================================================
+    // 📖 段考複習講義（拍課本→總覽／觀念／例題／練習／解答）
+    // ============================================================
+    $('rvCount').addEventListener('input', () => { $('rvCountLabel').textContent = $('rvCount').value; });
+    $('rvGoButton').dataset.label = $('rvGoButton').textContent;
+    $('rvGoButton').addEventListener('click', async () => {
+      const scope = $('rvScope').value.trim();
+      const files = zoneFiles('rvImages');
+      if (!scope && !files.length) return showToast('請輸入單元範圍或拍課本頁面。', true);
+      const subject = $('rvSubject').value, grade = $('rvGrade').value, count = Number($('rvCount').value);
+      const prompt = [
+        `你是資深臺灣國小${grade}年級${subject}老師，要為段考範圍「${scope || '（見附圖）'}」做一份複習講義。`,
+        files.length ? '附件是課本或習作頁面（可能多頁），觀念與題目請以圖中內容為準，不要加入範圍外的東西。' : '',
+        '內容：goals（學習目標 3–5 句）；mindmap（Markdown 三層大綱：- 單元 / - 概念 / - 關鍵詞，節點 12 字內）；',
+        'concepts（4–6 個概念，每個：name、points 2–4 句白話重點、keyTerms 2–4 個關鍵字、pitfalls 1–2 句易錯提醒、stars 段考重要度 1–3）；',
+        'examples（3–4 題例題：q、steps 逐步解 2–5 步、answer）；',
+        `exercises（${count} 題練習：q、options 若為選擇題給四選項否則省略、answer、stars 難度 1–3；題型混合）。`,
+        '用語符合年級、繁體中文、臺灣用語。只回傳 JSON：',
+        '{"title":"單元名稱 複習講義","goals":[""],"mindmap":"- 單元\\n  - 概念\\n    - 關鍵詞","concepts":[{"name":"","points":[""],"keyTerms":[""],"pitfalls":[""],"stars":3}],"examples":[{"q":"","steps":[""],"answer":""}],"exercises":[{"q":"","options":["","","",""],"answer":"","stars":2}]}'
+      ].filter(Boolean).join('\n');
+      busy($('rvGoButton'), true);
+      try {
+        const parts = await filesToParts(files, 0);
+        const key = geminiKey();
+        if (!key) { showToast('尚未設定 Gemini 金鑰。', true); throw new Error('no-key'); }
+        $('rvStatus').textContent = '🤖 AI 整理講義中（多頁課本約 30–60 秒）…';
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModel()}:generateContent`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }, ...parts] }], generationConfig: { temperature: 0.4 } })
+        });
+        if (!response.ok) throw new Error(`AI 回應錯誤（HTTP ${response.status}）`);
+        const payload = await response.json();
+        const data = extractJson((((payload.candidates || [])[0] || {}).content?.parts || []).map(p => p.text || '').join(''));
+        $('rvStatus').textContent = '';
+        const stars = n => $('rvStars').checked ? `<span class="rv-stars">${'★'.repeat(Math.max(1, Math.min(3, Number(n) || 1)))}${'☆'.repeat(3 - Math.max(1, Math.min(3, Number(n) || 1)))}</span>` : '';
+        const head = (sub) => `<div class="ws2-head"><div><div class="ws2-chips"><span class="ws2-chip">${escapeHtml(subject)}</span><span class="ws2-chip">${escapeHtml(grade)}年級</span><span class="ws2-chip ws2-chip-dark">${sub}</span></div><div class="sw-title" style="text-align:left">${escapeHtml(data.title || '複習講義')}</div></div></div>`;
+        const pages = [];
+        pages.push(`<div class="sheet sw-sheet">${head('單元總覽')}
+          <div class="sw-section"><div class="sw-section-head"><span class="sw-pill">🎯 學習目標</span></div><div class="ws2-box">${(data.goals || []).map(g => `<div class="sw-q"><span class="sw-box"></span>${escapeHtml(g)}</div>`).join('')}</div></div>
+          ${$('rvMindmap').checked && data.mindmap ? `<div class="sw-section"><div class="sw-section-head"><span class="sw-pill">🧠 單元心智圖</span></div><div class="ws2-box" style="text-align:center">${buildMindmapSvg(String(data.mindmap).replace(/\\n/g, '\n'))}</div></div>` : ''}
+          <div class="sw-section"><div class="sw-section-head"><span class="sw-pill">📌 概念一覽</span><span class="sw-lead">星等＝段考重要度</span></div><div class="ws2-box">${(data.concepts || []).map((c, i) => `<div class="sw-q"><span class="ws2-no">${i + 1}</span><span><b>${escapeHtml(c.name)}</b> ${stars(c.stars)}</span></div>`).join('')}</div></div>
+        </div>`);
+        pages.push(`<div class="sheet sw-sheet ws-answerpage">${head('觀念整理')}
+          ${(data.concepts || []).slice(0, 6).map((c, i) => `<div class="sw-section"><div class="sw-section-head"><span class="sw-pill">${i + 1}. ${escapeHtml(c.name)}</span>${stars(c.stars)}</div>
+            <div class="ws2-box">
+              ${(c.points || []).map(pt => `<div class="sw-q">▸ ${escapeHtml(pt)}</div>`).join('')}
+              ${(c.keyTerms || []).length ? `<div class="rv-terms">🔑 關鍵字：${c.keyTerms.map(t => `<span class="ws2-opt">${escapeHtml(t)}</span>`).join(' ')}</div>` : ''}
+              ${(c.pitfalls || []).length ? `<div class="rv-pitfall">⚠️ 易錯：${c.pitfalls.map(escapeHtml).join('；')}</div>` : ''}
+            </div></div>`).join('')}
+        </div>`);
+        if ($('rvExamples').checked && (data.examples || []).length) {
+          pages.push(`<div class="sheet sw-sheet ws-answerpage">${head('例題逐步解')}
+            ${data.examples.slice(0, 4).map((ex, i) => `<div class="sw-section"><div class="sw-section-head"><span class="sw-pill">例 ${i + 1}</span></div>
+              <div class="ws2-box"><div class="ws2-q"><span>${escapeHtml(ex.q)}</span></div>
+              <ol class="rv-steps">${(ex.steps || []).map(st => `<li>${escapeHtml(st)}</li>`).join('')}</ol>
+              <div class="rv-answer">✅ 答：${escapeHtml(String(ex.answer == null ? '' : ex.answer))}</div></div></div>`).join('')}
+          </div>`);
+        }
+        const exercises = (data.exercises || []).slice(0, count);
+        pages.push(`<div class="sheet sw-sheet ws-answerpage">${head('練習題')}
+          <div class="ws2-name"><span>班級 <i></i></span><span>座號 <i></i></span><span>姓名 <i style="min-width:110px"></i></span><span class="ws2-score">得分 ☆☆☆☆☆</span></div>
+          <div class="ws2-box" style="margin-top:10px">${exercises.map((ex, i) => `<div class="ws2-q"><span class="ws2-no">${i + 1}</span>${ex.options ? '<span class="ws2-ans">（　）</span>' : ''}<span>${escapeHtml(ex.q)} ${stars(ex.stars)}</span></div>${ex.options ? `<div class="ws2-options">${ex.options.map((o, k) => `<span class="ws2-opt">(${'ABCD'[k]}) ${escapeHtml(o)}</span>`).join('')}</div>` : '<div class="ws-lines"></div>'}`).join('')}</div>
+        </div>`);
+        if ($('rvAnswer').checked) {
+          pages.push(`<div class="sheet ws-answerpage"><div class="ws-head"><div class="ws-title">${escapeHtml(data.title || '複習講義')}｜練習題解答</div></div><div class="ws-answer-list">${exercises.map((ex, i) => `<div>${i + 1}. ${escapeHtml(String(ex.answer == null ? '' : ex.answer))}</div>`).join('')}</div></div>`);
+        }
+        $('rvPreview').innerHTML = pages.join('');
+        $('rvMeta').textContent = `共 ${pages.length} 頁；解答卷在最後一頁。`;
+        showToast('📖 複習講義完成！');
+      } catch (e) { if (e.message !== 'no-key') { $('rvStatus').textContent = ''; showToast(e.message, true); } }
+      busy($('rvGoButton'), false);
+    });
+
+    // ============================================================
+    // 📚 閱讀文本分級改寫（Diffit 式差異化）
+    // ============================================================
+    $('rdGoButton').dataset.label = $('rdGoButton').textContent;
+    $('rdGoButton').addEventListener('click', async () => {
+      const text = $('rdText').value.trim();
+      const files = zoneFiles('rdImages');
+      if (!text && !files.length) return showToast('請貼上原文或拍照。', true);
+      const levels = [...document.querySelectorAll('.rdLevel:checked')].map(c => c.value);
+      if (!levels.length) return showToast('請至少勾一個版本。', true);
+      const grade = $('rdGrade').value;
+      const prompt = [
+        `你是臺灣國小閱讀教學專家。班級為${grade}年級。請把下面的文章改寫成 ${levels.join('、')} 版本，做差異化閱讀。`,
+        files.length ? '附件是原文的照片，請先辨識全文。' : `原文：\n${text}`,
+        '規則：事實、人物、結論完全不變；「基礎」＝比班級低 2 個年級可讀（短句、常用詞、必要時加一句背景說明，長度約原文 60–70%）；「標準」＝同年級（潤飾通順、長度相近）；「進階」＝高 1–2 個年級（保留原文深度並加 1–2 段延伸資訊或觀點，長度約 120%）。',
+        $('rdVocab').checked ? '每版附 vocab：4–6 個該版本讀者可能不熟的詞（word、meaning 白話解釋）。' : '',
+        $('rdQuiz').checked ? '每版附 questions：3 題理解題（1 題找資訊、1 題推論、1 題自己的想法；q、options 四選項或省略、answer）。' : '',
+        '繁體中文、臺灣用語。只回傳 JSON：',
+        '{"title":"文章標題","levels":[{"level":"基礎","readingAge":"約三年級","text":"改寫全文（段落用\\n分隔）","vocab":[{"word":"","meaning":""}],"questions":[{"q":"","options":["","","",""],"answer":""}]}]}'
+      ].filter(Boolean).join('\n');
+      busy($('rdGoButton'), true);
+      try {
+        const parts = await filesToParts(files, 0);
+        const key = geminiKey();
+        if (!key) { showToast('尚未設定 Gemini 金鑰。', true); throw new Error('no-key'); }
+        $('rdStatus').textContent = '🤖 AI 改寫中（約 20–40 秒）…';
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModel()}:generateContent`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }, ...parts] }], generationConfig: { temperature: 0.4 } })
+        });
+        if (!response.ok) throw new Error(`AI 回應錯誤（HTTP ${response.status}）`);
+        const payload = await response.json();
+        const data = extractJson((((payload.candidates || [])[0] || {}).content?.parts || []).map(p => p.text || '').join(''));
+        $('rdStatus').textContent = '';
+        const LEVEL_ICON = { '基礎': '🟢', '標準': '🟡', '進階': '🔴' };
+        const versions = (data.levels || []).filter(v => levels.includes(v.level));
+        const pages = versions.map((v, i) => `<div class="sheet sw-sheet${i ? ' ws-answerpage' : ''}">
+          <div class="ws2-head"><div><div class="ws2-chips"><span class="ws2-chip ws2-chip-dark">${LEVEL_ICON[v.level] || ''} ${escapeHtml(v.level)}版</span><span class="ws2-chip">${escapeHtml(v.readingAge || '')}</span><span class="ws2-chip">${escapeHtml(grade)}年級班</span></div>
+            <div class="sw-title" style="text-align:left">${escapeHtml(data.title || '閱讀文本')}</div>
+            <div class="ws2-name"><span>座號 <i></i></span><span>姓名 <i style="min-width:110px"></i></span></div></div></div>
+          <div class="rd-text">${String(v.text || '').split(/\n+/).map(par => `<p>${escapeHtml(par)}</p>`).join('')}</div>
+          ${$('rdVocab').checked && (v.vocab || []).length ? `<div class="sw-section"><div class="sw-section-head"><span class="sw-pill">📒 詞彙小幫手</span></div><div class="ws2-box rd-vocab">${v.vocab.map(w => `<div><b>${escapeHtml(w.word)}</b>：${escapeHtml(w.meaning)}</div>`).join('')}</div></div>` : ''}
+          ${$('rdQuiz').checked && (v.questions || []).length ? `<div class="sw-section"><div class="sw-section-head"><span class="sw-pill">❓ 讀懂了嗎</span></div><div class="ws2-box">${v.questions.map((q, k) => `<div class="ws2-q"><span class="ws2-no">${k + 1}</span>${q.options ? '<span class="ws2-ans">（　）</span>' : ''}<span>${escapeHtml(q.q)}</span></div>${q.options ? `<div class="ws2-options">${q.options.map((o, j) => `<span class="ws2-opt">(${'ABCD'[j]}) ${escapeHtml(o)}</span>`).join('')}</div>` : '<div class="ws-lines"></div><div class="ws-lines"></div>'}`).join('')}</div></div>` : ''}
+        </div>`);
+        if ($('rdAnswer').checked && $('rdQuiz').checked) {
+          pages.push(`<div class="sheet ws-answerpage"><div class="ws-head"><div class="ws-title">${escapeHtml(data.title || '閱讀文本')}｜教師解答</div></div>${versions.map(v => `<div class="ws-section">${escapeHtml(v.level)}版</div><div class="ws-answer-list">${(v.questions || []).map((q, k) => `<div>${k + 1}. ${escapeHtml(String(q.answer == null ? '' : q.answer))}</div>`).join('')}</div>`).join('')}</div>`);
+        }
+        $('rdPreview').innerHTML = pages.join('');
+        $('rdMeta').textContent = `共 ${versions.length} 個版本、${pages.length} 頁；同一篇文章、三種難度。`;
+        showToast('📚 分級文本完成！');
+      } catch (e) { if (e.message !== 'no-key') { $('rdStatus').textContent = ''; showToast(e.message, true); } }
+      busy($('rdGoButton'), false);
+    });
 
     // ============================================================
     // 🧠 心智圖（AI 出大綱 → 自繪 SVG，改字即重畫）
