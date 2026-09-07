@@ -522,3 +522,10 @@ assert.match(studioHtml, /id="rmPngButton"/, "圖文選單應可下載 PNG");
 assert.match(studioHtml, /id="gdFormat"/, "作文引導單應可選版型");
 assert.match(studioHtml, /async function runSenseWorksheet/, "應有感官觀察四頁組產生流程");
 assert.match(studioHtml, /我可以先這樣說/, "感官學習單應含句型起手式區");
+
+// 學習單生動版式：暖身／挑戰／自評／線稿插圖
+assert.match(studioHtml, /id="wsArt"/, "學習單應可附 AI 線稿插圖");
+assert.match(studioHtml, /🔥 暖身/, "學習單應有暖身區");
+assert.match(studioHtml, /🌟 挑戰題/, "學習單應有挑戰題");
+assert.match(studioHtml, /我的自我評量/, "學習單應有自我評量");
+assert.match(studioHtml, /例：中秋節/, "作文引導示範主題應為中秋節");

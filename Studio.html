@@ -16,6 +16,8 @@
     .tabs { display:flex; gap:8px; padding:12px 18px 0; flex-wrap:wrap; background:var(--bg); }
     .tab-button { border:2px solid var(--line); background:var(--surface); color:var(--primary-strong); border-radius:12px 12px 0 0; padding:10px 22px; font-size:16px; font-weight:900; cursor:pointer; font-family:inherit; }
     .tab-button.active { background:var(--primary); border-color:var(--primary); color:#fff; }
+    .tab-group { align-self:flex-end; font-size:12px; font-weight:900; color:var(--muted); padding:0 4px 12px 10px; border-left:3px solid var(--line); margin-left:6px; white-space:nowrap; }
+    .tab-group:first-child { border-left:0; margin-left:0; padding-left:0; }
     main { padding:14px 18px 60px; }
     .page { display:none; }
     .page.active { display:block; }
@@ -149,6 +151,34 @@
     .sw-starters-title { position:absolute; top:-15px; left:50%; transform:translateX(-50%); background:#111; color:#fff; border-radius:10px; padding:2px 16px; font-weight:900; font-size:15px; }
     .sw-starter { font-size:15px; margin:6px 0; letter-spacing:.04em; }
     .sw-motto { border:2.5px solid #111; border-radius:16px; padding:8px 14px; margin-top:10px; text-align:center; font-weight:900; font-size:16px; }
+    /* 學習單生動版式（沿用 sw- 黑白影印風） */
+    .ws2-head { display:grid; grid-template-columns:1fr; gap:12px; border:2.5px solid #111; border-radius:18px; padding:12px 16px; margin-bottom:12px; }
+    .ws2-head.has-art { grid-template-columns:1fr 150px; }
+    .ws2-art img { width:150px; height:150px; object-fit:contain; }
+    .ws2-chips { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:4px; }
+    .ws2-chip { border:1.5px solid #111; border-radius:999px; padding:0 10px; font-size:12px; font-weight:800; }
+    .ws2-chip-dark { background:#111; color:#fff; }
+    .ws2-goal { font-size:14px; margin-top:2px; }
+    .ws2-name { display:flex; gap:14px; flex-wrap:wrap; font-size:14px; margin-top:6px; }
+    .ws2-name i { display:inline-block; min-width:60px; border-bottom:1.5px solid #111; height:16px; vertical-align:bottom; }
+    .ws2-score { margin-left:auto; font-weight:900; letter-spacing:.1em; }
+    .ws2-box { border:2.5px solid #111; border-radius:14px; padding:8px 14px; }
+    .ws2-warm { background:#f6f6f6; }
+    .ws2-q { display:flex; gap:8px; align-items:baseline; font-size:15px; margin:6px 0 2px; }
+    .ws2-no { flex:0 0 auto; width:22px; height:22px; border:2px solid #111; border-radius:50%; font-size:12px; font-weight:900; display:inline-flex; align-items:center; justify-content:center; transform:translateY(2px); }
+    .ws2-ox { flex:0 0 auto; border:1.5px solid #111; border-radius:8px; padding:0 8px; font-weight:900; letter-spacing:.2em; }
+    .ws2-ans { flex:0 0 auto; }
+    .ws2-blank { display:inline-block; min-width:70px; border-bottom:1.5px solid #111; height:16px; margin:0 3px; vertical-align:bottom; }
+    .ws2-options { display:flex; flex-wrap:wrap; gap:6px 14px; margin:2px 0 6px 30px; }
+    .ws2-opt { border:1.5px solid #111; border-radius:8px; padding:1px 10px; font-size:14px; }
+    .ws2-match { width:100%; border-collapse:collapse; font-size:14.5px; }
+    .ws2-match th { font-size:12px; text-align:left; padding:2px 6px; }
+    .ws2-match td { padding:6px; }
+    .ws2-dots { width:90px; border-bottom:2px dotted #111; }
+    .ws2-hint { font-size:13px; margin:4px 0 4px 30px; }
+    .ws2-footer { display:grid; grid-template-columns:1.3fr 1fr; gap:12px; margin-top:12px; }
+    .ws2-self, .ws2-teacher { border:2.5px solid #111; border-radius:14px; padding:8px 12px; }
+    .ws2-self-title { font-weight:900; font-size:15px; margin-bottom:4px; }
     /* 遮蔽工具 */
     .mask-canvas-wrap { position:relative; display:inline-block; max-width:100%; }
     #maskCanvas { max-width:100%; height:auto; display:block; border-radius:8px; cursor:crosshair; touch-action:none; }
@@ -179,19 +209,21 @@
   </header>
 
   <div class="tabs">
+    <span class="tab-group">📚 備課</span>
     <button class="tab-button active" type="button" data-page="ws">📝 學習單</button>
-    <button class="tab-button" type="button" data-page="notice">📄 家長通知單</button>
-    <button class="tab-button" type="button" data-page="mm">🧠 心智圖</button>
-    <!-- 評語小幫手暫時收起（使用者指示「先不用」；要恢復移除 hidden 即可）；獎狀已依指示移除 -->
-    <button class="tab-button" type="button" data-page="cm" hidden>💬 評語小幫手</button>
-    <button class="tab-button" type="button" data-page="poster">📢 海報宣傳單</button>
-    <button class="tab-button" type="button" data-page="seat">🪑 座位表</button>
     <button class="tab-button" type="button" data-page="guide">🧭 作文引導單</button>
     <button class="tab-button" type="button" data-page="essay">✍️ 作文批改</button>
+    <button class="tab-button" type="button" data-page="mm">🧠 心智圖</button>
+    <span class="tab-group">📣 親師溝通</span>
+    <button class="tab-button" type="button" data-page="notice">📄 家長通知單</button>
+    <button class="tab-button" type="button" data-page="poster">📢 海報宣傳單</button>
     <button class="tab-button" type="button" data-page="gform">📋 Google 表單</button>
     <button class="tab-button" type="button" data-page="richmenu">📱 LINE 圖文選單</button>
+    <span class="tab-group">🧰 班務工具</span>
+    <button class="tab-button" type="button" data-page="seat">🪑 座位表</button>
     <button class="tab-button" type="button" data-page="mask">🛡 敏感資料遮蔽</button>
     <button class="tab-button" type="button" data-page="pdf">📎 PDF 工具</button>
+    <button class="tab-button" type="button" data-page="cm" hidden>💬 評語小幫手</button>
   </div>
 
   <main>
@@ -220,6 +252,8 @@
           <div class="field"><div class="check-row">
             <label><input type="checkbox" id="wsDiff">🔀 差異化雙版本（基礎＋進階）</label>
             <label><input type="checkbox" id="wsAnswer" checked>📎 附教師解答卷</label>
+            <label><input type="checkbox" id="wsArt" checked>🖼 附 AI 線稿插圖（約多 15 秒）</label>
+            <label><input type="checkbox" id="wsExtras" checked>🎯 暖身＋挑戰題＋自我評量</label>
           </div></div>
           <button class="go-button" type="button" id="wsGoButton">✨ 生成學習單</button>
           <div class="status" id="wsStatus"></div>
@@ -445,11 +479,11 @@
           <div class="field"><label>年級</label>
             <select class="select" id="gdGrade"><option value="一">一年級</option><option value="二">二年級</option><option value="三">三年級</option><option value="四">四年級</option><option value="五" selected>五年級</option><option value="六">六年級</option></select></div>
           <div class="field"><label>作文主題</label>
-            <input class="input" id="gdTopic" placeholder="例：難忘的運動會／我的家人／如果我有一雙翅膀"></div>
+            <input class="input" id="gdTopic" placeholder="例：中秋節／難忘的運動會／我的家人／如果我有一雙翅膀"></div>
           <div class="field"><label>版型</label>
             <select class="select" id="gdFormat">
               <option value="guide" selected>🧭 引導單（審題→心智圖→段落鷹架→佳句→四格漫畫）</option>
-              <option value="sense">🍊 感官觀察四頁組（看／摸／聞嚐／聽想／寫，附黑白線稿插圖）</option>
+              <option value="sense">🌕 感官觀察四頁組（看／摸／聞嚐／聽想／寫，附黑白線稿插圖；例：中秋節）</option>
             </select></div>
           <div class="field" id="gdSenseOpts" hidden><div class="check-row">
             <label><input type="checkbox" id="gdSenseArt" checked>🖼 每頁附 AI 線稿插圖（Gemini 生圖，約多 1 分鐘）</label>
@@ -891,46 +925,90 @@
         `題型限定：${types.join('、')}；總題數 ${$('wsCount').value} 題，依題型分節。`,
         diff ? '請產出兩個版本：level="基礎"（直接提取、簡單應用）與 level="進階"（比較、推理、生活應用），題數相同、題目不同。' : '只產出一個版本 level="標準"。',
         '用語符合該年級、繁體中文、臺灣用語。選擇題四個選項且只有一個正確。填空題以「____」標示空格。',
+        '另外再給：goal（本單元學習目標一句，20 字內）、warmup（暖身活動：title 例「連連看／圈圈看／找找看」，items 3 個孩子一眼能做的小任務）、challenge（一題生活應用挑戰題 q 與提示 hint）、selfCheck（3 句「我能…」自評句）、cheer（一句鼓勵語）、imagePrompt（英文，描述一張與單元相關的可愛線稿插圖主體，30–50 words，不要提到文字）。',
         '只回傳 JSON，不要其他文字，格式：',
-        '{"title":"學習單標題","versions":[{"level":"基礎","sections":[{"type":"選擇題","questions":[{"q":"題目","options":["A內容","B內容","C內容","D內容"],"answer":"B"}]},{"type":"填空題","questions":[{"q":"題目含____","answer":"答案"}]},{"type":"是非題","questions":[{"q":"敘述","answer":"○"}]},{"type":"簡答題","questions":[{"q":"題目","answer":"參考答案","lines":2}]},{"type":"配合題","questions":[{"q":"左項","answer":"配對的右項"}]}]}]}'
+        '{"title":"學習單標題","goal":"","warmup":{"title":"","items":["",""]},"challenge":{"q":"","hint":""},"selfCheck":["我能…"],"cheer":"","imagePrompt":"","versions":[{"level":"基礎","sections":[{"type":"選擇題","questions":[{"q":"題目","options":["A內容","B內容","C內容","D內容"],"answer":"B"}]},{"type":"填空題","questions":[{"q":"題目含____","answer":"答案"}]},{"type":"是非題","questions":[{"q":"敘述","answer":"○"}]},{"type":"簡答題","questions":[{"q":"題目","answer":"參考答案","lines":2}]},{"type":"配合題","questions":[{"q":"左項","answer":"配對的右項"}]}]}]}'
       ].filter(Boolean).join('\n');
       busy($('wsGoButton'), true);
       try {
         const image = await fileToPart(zoneFirst('wsImage'));
         const data = extractJson(await callGemini(prompt, image, $('wsStatus')));
-        renderWorksheet(data);
+        let art = '';
+        if ($('wsArt').checked) {
+          try {
+            art = await generateImage(`Clean black-and-white line art illustration for an elementary school worksheet, coloring-book style, thick smooth outlines, cute friendly characters or objects, white background. Subject: ${data.imagePrompt || topic}. ABSOLUTELY NO text, letters or numbers. Square composition.`, null, '1:1', $('wsStatus'));
+          } catch (e) { if (e.message === 'no-key') throw e; art = ''; }
+        }
+        renderWorksheet(data, art);
+        $('wsStatus').textContent = '';
         $('wsMeta').textContent = `已生成${data.versions.length > 1 ? '基礎＋進階雙版本' : ''}，可直接列印或存 PDF。`;
         showToast('✨ 學習單完成！');
       } catch (e) { if (e.message !== 'no-key') { $('wsStatus').textContent = ''; showToast(e.message, true); } }
       busy($('wsGoButton'), false);
     });
     function circled(i) { return ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','⑪','⑫','⑬','⑭','⑮','⑯','⑰','⑱','⑲','⑳'][i] || (i + 1) + '.'; }
-    function renderWorksheet(data) {
+    function renderWorksheet(data, art) {
       const withAnswer = $('wsAnswer').checked;
+      const extras = $('wsExtras').checked;
       const school = ($('ntSchool').value || '').trim();
+      const subject = $('wsSubject').value, grade = $('wsGrade').value;
+      const TYPE_ICON = { '選擇題': '🅰', '是非題': '⭕', '填空題': '✏️', '簡答題': '💬', '配合題': '🔗' };
+      const blank = text => escapeHtml(text).replace(/_{2,}|＿{2,}/g, '<span class="ws2-blank"></span>');
       const pages = [];
       (data.versions || []).forEach(version => {
         let qNo = 0;
         const sections = (version.sections || []).map((section, si) => {
-          const head = `<div class="ws-section">${['一','二','三','四','五'][si] || si + 1}、${escapeHtml(section.type)}</div>`;
-          const qs = (section.questions || []).map(item => {
-            qNo += 1;
-            let body = `<div class="ws-q">${qNo}. ${section.type === '是非題' ? '（　）' : section.type === '選擇題' ? '（　）' : ''}${escapeHtml(item.q)}</div>`;
-            if (section.type === '選擇題' && item.options) {
-              body += `<div class="ws-options">${item.options.map((o, i) => `<span>(${'ABCD'[i]}) ${escapeHtml(o)}</span>`).join('')}</div>`;
-            }
-            if (section.type === '簡答題') {
-              body += Array.from({ length: item.lines || 2 }, () => '<div class="ws-lines"></div>').join('');
-            }
-            return body;
-          }).join('');
-          return head + qs;
+          const questions = section.questions || [];
+          let body = '';
+          if (section.type === '配合題') {
+            body = `<table class="ws2-match"><tr><th>左邊</th><th></th><th>右邊（打亂）</th></tr>${questions.map((item, i) => {
+              qNo += 1;
+              const shuffled = questions.map(q => q.answer);
+              const right = shuffled[(i + 2) % shuffled.length];
+              return `<tr><td>${qNo}. ${escapeHtml(item.q)}　●</td><td class="ws2-dots"></td><td>●　${escapeHtml(String(right == null ? '' : right))}</td></tr>`;
+            }).join('')}</table>`;
+          } else {
+            body = questions.map(item => {
+              qNo += 1;
+              let q = `<div class="ws2-q"><span class="ws2-no">${qNo}</span>`;
+              if (section.type === '是非題') q += `<span class="ws2-ox">○ ✕</span>`;
+              if (section.type === '選擇題') q += `<span class="ws2-ans">（　）</span>`;
+              q += `<span>${blank(item.q)}</span></div>`;
+              if (section.type === '選擇題' && item.options) {
+                q += `<div class="ws2-options">${item.options.map((o, i) => `<span class="ws2-opt">(${'ABCD'[i]}) ${escapeHtml(o)}</span>`).join('')}</div>`;
+              }
+              if (section.type === '簡答題') q += Array.from({ length: item.lines || 2 }, () => '<div class="ws-lines"></div>').join('');
+              return q;
+            }).join('');
+          }
+          return `<div class="sw-section"><div class="sw-section-head"><span class="sw-pill">${['一','二','三','四','五','六'][si] || si + 1}、${escapeHtml(section.type)}</span><span class="sw-lead">${TYPE_ICON[section.type] || ''} 共 ${questions.length} 題</span></div><div class="ws2-box">${body}</div></div>`;
         }).join('');
-        pages.push(`<div class="sheet">
-          <div class="ws-head">${school ? `<div class="ws-school">${escapeHtml(school)}</div>` : ''}
-            <div class="ws-title">${escapeHtml(data.title || '學習單')}${version.level && version.level !== '標準' ? `（${escapeHtml(version.level)}版）` : ''}</div></div>
-          <div class="ws-meta"><span>班級：＿＿＿</span><span>座號：＿＿＿</span><span>姓名：＿＿＿＿＿＿</span><span>得分：＿＿＿</span></div>
+        const warm = extras && data.warmup && (data.warmup.items || []).length ? `
+          <div class="sw-section"><div class="sw-section-head"><span class="sw-pill">🔥 暖身</span><span class="sw-lead">${escapeHtml(data.warmup.title || '先動動腦')}</span></div>
+            <div class="ws2-box ws2-warm">${data.warmup.items.slice(0, 4).map(item => `<div class="sw-q"><span class="sw-box"></span>${escapeHtml(item)}</div>`).join('')}</div></div>` : '';
+        const challenge = extras && data.challenge && data.challenge.q ? `
+          <div class="sw-section"><div class="sw-section-head"><span class="sw-pill">🌟 挑戰題</span><span class="sw-lead">生活應用，寫出你的想法</span></div>
+            <div class="ws2-box"><div class="ws2-q"><span class="ws2-no">★</span><span>${blank(data.challenge.q)}</span></div>${data.challenge.hint ? `<div class="ws2-hint">💡 提示：${escapeHtml(data.challenge.hint)}</div>` : ''}<div class="ws-lines"></div><div class="ws-lines"></div></div></div>` : '';
+        const selfCheck = extras ? `
+          <div class="ws2-footer">
+            <div class="ws2-self"><div class="ws2-self-title">✅ 我的自我評量</div>${(data.selfCheck || ['我能專心完成這張學習單', '我會檢查答案', '我有不懂的會問老師']).slice(0, 3).map(item => `<div class="sw-q"><span class="sw-box"></span>${escapeHtml(item)}　☆☆☆</div>`).join('')}</div>
+            <div class="ws2-teacher"><div class="ws2-self-title">👩‍🏫 老師的話</div><div style="height:58px"></div></div>
+          </div>
+          <div class="sw-motto">💪 ${escapeHtml(data.cheer || '每寫一題，就離厲害更近一步！')}</div>` : '';
+        pages.push(`<div class="sheet sw-sheet ws2-sheet">
+          <div class="ws2-head${art ? ' has-art' : ''}">
+            <div>
+              <div class="ws2-chips"><span class="ws2-chip">${escapeHtml(subject)}</span><span class="ws2-chip">${escapeHtml(grade)}年級</span>${version.level && version.level !== '標準' ? `<span class="ws2-chip ws2-chip-dark">${escapeHtml(version.level)}版</span>` : ''}${school ? `<span class="ws2-chip">${escapeHtml(school)}</span>` : ''}</div>
+              <div class="sw-title" style="text-align:left">${escapeHtml(data.title || '學習單')}</div>
+              ${data.goal ? `<div class="ws2-goal">🎯 學習目標：${escapeHtml(data.goal)}</div>` : ''}
+              <div class="ws2-name"><span>班級 <i></i></span><span>座號 <i></i></span><span>姓名 <i style="min-width:110px"></i></span><span class="ws2-score">得分 ☆☆☆☆☆</span></div>
+            </div>
+            ${art ? `<div class="ws2-art"><img src="${art}" alt=""></div>` : ''}
+          </div>
+          ${warm}
           ${sections}
+          ${challenge}
+          ${selfCheck}
         </div>`);
       });
       if (withAnswer) {
@@ -941,7 +1019,7 @@
           ).join('');
           return `<div class="ws-section">${escapeHtml(version.level || '標準')}版解答</div><div class="ws-answer-list">${list}</div>`;
         }).join('');
-        pages.push(`<div class="sheet ws-answerpage"><div class="ws-head"><div class="ws-title">${escapeHtml(data.title || '學習單')}｜教師解答卷</div></div>${answers}</div>`);
+        pages.push(`<div class="sheet ws-answerpage"><div class="ws-head"><div class="ws-title">${escapeHtml(data.title || '學習單')}｜教師解答卷</div></div>${answers}${data.challenge && data.challenge.q ? `<div class="ws-section">挑戰題參考方向</div><div class="ws-answer-list">${escapeHtml(data.challenge.hint || '開放作答，鼓勵合理即可。')}</div>` : ''}</div>`);
       }
       $('wsPreview').innerHTML = pages.join('');
     }
@@ -1476,7 +1554,7 @@
     // ---- 🍊 感官觀察四頁組（看→摸→聞嚐→聽想→寫；仿「從吃柚子學寫作」版式）----
     async function runSenseWorksheet(topic, grade) {
       const prompt = [
-        `你是資深臺灣國小${grade}年級國語老師，要為主題「${topic}」設計一套四頁的「感官觀察作文學習單」，讓孩子先把眼前的東西看細、摸清楚，再慢慢寫出來。`,
+        `你是資深臺灣國小${grade}年級國語老師，要為主題「${topic}」設計一套四頁的「感官觀察作文學習單」，讓孩子先把眼前的人事物看細、摸清楚，再慢慢寫出來。主題可能是物品，也可能是節慶或活動（例：中秋節）；若是節慶活動，「看一看」寫場景與人、「摸一摸」可改為「做一做（動手體驗：剝柚子、烤肉、做月餅）」、「聞一聞／嚐一嚐」寫食物氣味與滋味、「聽一聽」寫聲音與對話。`,
         '格式固定四頁：第1頁「一、看一看」＋「二、摸一摸」；第2頁「三、聞一聞」＋「四、嚐一嚐」（若主題不能嚐，改成「四、聽一聽」）；第3頁「五、想一想（它讓我想到…）」＋「六、心情與感受」；第4頁「七、我可以這樣寫」（把前面觀察組成段落）。',
         '每一區塊（section）有 lead 一句引導語、3 個小格（blocks），每格有標題（4字內，例：先看整體／再看細節／看看周圍）與 3–4 個給孩子勾選作答的具體問題（問句結尾留空讓孩子填，用語符合年級，貼合這個主題）。',
         '每頁有 starters：4 句「我可以先這樣說」的句型起手式（用＿＿＿留空），以及 motto：一句給孩子的寫作金句。',
@@ -1518,7 +1596,7 @@
           ${sections}
           <div class="sw-starters"><div class="sw-starters-title">我可以先這樣說</div>
             ${(page.starters || []).slice(0, 4).map(line => `<div class="sw-starter">☆ ${escapeHtml(line)}</div>`).join('')}</div>
-          <div class="sw-motto">🍊 ${escapeHtml(page.motto || '作文不是把一句話拉長，而是先把眼前的東西看細、摸清楚。')} 🍊</div>
+          <div class="sw-motto">🌕 ${escapeHtml(page.motto || '作文不是把一句話拉長，而是先把眼前的人事物看細、摸清楚。')} 🌕</div>
         </div>`;
       }).join('');
       $('gdMeta').textContent = `共 ${total} 頁感官觀察學習單；黑白版式適合影印。`;
