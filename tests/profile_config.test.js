@@ -488,3 +488,21 @@ assert.match(aboutHtml, /桌面小綿助 v2\.0 陪你專注/, "About 應有桌�
 assert.match(aboutHtml, /XiaoMianZhuSecretary/, "About 資料存放表應含桌寵資料位置");
 assert.match(introHtml, /專注小綿助/, "Intro 應有小綿助 v2.0 功能卡");
 assert.match(introHtml, /PDF 工具/, "Intro 教材小工場卡應含 PDF 工具");
+
+// 2026-09-07 教材小工場 v3：拍照／貼上元件、真 PDF 下載、海報改 Gemini 生圖與風格庫
+assert.match(studioHtml, /function attachZone/, "每個檔案輸入都應有拍照／貼上元件");
+assert.match(studioHtml, /\['wsImage', 'ntImage', 'mmImage'\]\.forEach\(id => attachZone\(id\)\)/, "學習單／通知單／心智圖的檔案輸入應掛上拍照／貼上");
+for (const zoneId of ["esImages", "pdfFiles", "maskImageInput"]) {
+  assert.ok(studioHtml.includes(`attachZone('${zoneId}'`), `${zoneId} 應掛上拍照／貼上`);
+}
+assert.match(studioHtml, /assets\/vendor\/html2pdf\.bundle\.min\.js/, "應載入本站自帶的 html2pdf");
+assert.ok(fs.existsSync(path.join(projectRoot, "assets", "vendor", "html2pdf.bundle.min.js")), "html2pdf 函式庫應存在");
+assert.ok((studioHtml.match(/downloadPdfFromHost\('/g) || []).length >= 6, "各文件工具都應有 PDF 下載");
+assert.match(studioHtml, /responseModalities: \['IMAGE', 'TEXT'\]/, "海報應呼叫 Gemini 生圖模型");
+{
+  const stylesBlock = studioHtml.slice(studioHtml.indexOf("const PO_STYLES = ["), studioHtml.indexOf("];", studioHtml.indexOf("const PO_STYLES = [")));
+  assert.ok((stylesBlock.match(/^\s+\['[a-z]+', '/gm) || []).length >= 12, "海報風格庫至少 12 種");
+}
+assert.doesNotMatch(studioHtml, /PO_THEMES/, "海報不再使用配色版型");
+assert.match(studioHtml, /name="poTextMode"/, "海報應可選文字疊圖或 AI 畫進圖");
+assert.match(fs.readFileSync(path.join(projectRoot, "THIRD_PARTY_NOTICES.md"), "utf8"), /html2pdf/, "第三方聲明應記錄 html2pdf");

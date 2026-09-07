@@ -38,6 +38,7 @@
     /* A4 紙 */
     .sheet { width:794px; min-height:1123px; margin:0 auto 18px; background:#fff; color:#111; box-shadow:0 3px 14px rgba(30,50,40,.18); padding:56px 60px; font-family:"Microsoft JhengHei","Noto Sans TC",serif; position:relative; }
     .sheet * { line-height:1.9; }
+    .sheet.pdf-export { width:210mm; min-height:296mm; margin:0; box-shadow:none; padding:14mm 16mm; page-break-after:always; }
     .ws-head { text-align:center; border-bottom:2.5px solid #111; padding-bottom:8px; margin-bottom:6px; }
     .ws-school { font-size:15px; letter-spacing:.3em; }
     .ws-title { font-size:24px; font-weight:900; letter-spacing:.1em; margin-top:2px; }
@@ -108,6 +109,15 @@
     .st-island-label { text-align:center; font-size:16px; font-weight:900; color:#3f5a52; margin-bottom:8px; }
     .st-island .st-grid { gap:8px; }
     .st-island .st-desk { min-width:96px; min-height:64px; font-size:24px; }
+    /* 海報（生圖版）畫布與疊字 */
+    .po-canvas { position:relative; margin:0 auto; background-size:cover; background-position:center; box-shadow:0 3px 14px rgba(30,50,40,.18); overflow:hidden; font-family:"Microsoft JhengHei","Noto Sans TC",sans-serif; }
+    .po-ov-title { position:absolute; top:5%; left:6%; right:6%; text-align:center; font-size:60px; font-weight:900; line-height:1.25; color:#fff; text-shadow:0 3px 0 rgba(0,0,0,.35), 0 0 22px rgba(0,0,0,.55); letter-spacing:.05em; outline:none; }
+    .po-ov-sub { position:absolute; top:24%; left:8%; right:8%; text-align:center; font-size:26px; font-weight:800; color:#fff; text-shadow:0 2px 0 rgba(0,0,0,.35), 0 0 16px rgba(0,0,0,.6); outline:none; }
+    .po-ov-points { position:absolute; left:6%; right:6%; bottom:9%; display:flex; flex-wrap:wrap; justify-content:center; gap:10px; }
+    .po-ov-point { background:rgba(255,255,255,.88); color:#1c302d; border-radius:999px; padding:8px 20px; font-size:24px; font-weight:900; box-shadow:0 3px 10px rgba(0,0,0,.25); outline:none; }
+    .po-ov-footer { position:absolute; bottom:2.5%; left:0; right:0; text-align:center; font-size:16px; font-weight:800; color:#fff; text-shadow:0 1px 0 rgba(0,0,0,.4), 0 0 10px rgba(0,0,0,.6); outline:none; }
+    .zone-chip { display:inline-flex; align-items:center; gap:4px; background:var(--soft); color:var(--primary-strong); border-radius:999px; padding:2px 10px; font-size:12px; font-weight:800; margin:2px 4px 2px 0; }
+    @media print { .po-canvas { box-shadow:none; } }
     /* 遮蔽工具 */
     .mask-canvas-wrap { position:relative; display:inline-block; max-width:100%; }
     #maskCanvas { max-width:100%; height:auto; display:block; border-radius:8px; cursor:crosshair; touch-action:none; }
@@ -188,6 +198,7 @@
           <div class="preview-bar">
             <button class="mini" type="button" onclick="window.print()">🖨 列印／存 PDF</button>
             <button class="mini" type="button" onclick="downloadPreview('wsPreview','學習單','doc')">⬇ Word</button>
+            <button class="mini" type="button" onclick="downloadPdfFromHost('wsPreview','學習單',false)">⬇ PDF</button>
             <span class="status" id="wsMeta">生成後這裡會出現 A4 預覽。</span>
           </div>
           <div class="preview-host" id="wsPreview"></div>
@@ -218,6 +229,7 @@
           <div class="preview-bar">
             <button class="mini" type="button" onclick="window.print()">🖨 列印／存 PDF</button>
             <button class="mini" type="button" onclick="downloadPreview('ntPreview','家長通知單','doc')">⬇ Word</button>
+            <button class="mini" type="button" onclick="downloadPdfFromHost('ntPreview','家長通知單',false)">⬇ PDF</button>
             <span class="status" id="ntMeta"></span>
           </div>
           <div class="preview-host" id="ntPreview"></div>
@@ -242,7 +254,8 @@
         <div class="panel">
           <div class="preview-bar">
             <button class="mini" type="button" onclick="window.print()">🖨 列印</button>
-            <button class="mini" type="button" id="mmDownloadButton">⬇ 下載 SVG</button>
+            <button class="mini" type="button" id="mmDownloadButton">⬇ SVG</button>
+            <button class="mini" type="button" onclick="downloadPdfFromHost('mmSvgHost','心智圖',true)">⬇ PDF</button>
             <span class="status" id="mmMeta"></span>
           </div>
           <div class="mm-split">
@@ -281,57 +294,50 @@
       <div class="workbench">
         <div class="panel">
           <div class="field"><label>海報主題</label>
-            <input class="input" id="poTopic" placeholder="例：洗手五步驟／圖書館借書規則／運動會注意事項"></div>
-          <div class="field"><label>想放的內容（口語即可，AI 會整理成海報文案）</label>
-            <textarea class="textarea" id="poBody" placeholder="例：濕搓沖捧擦，吃飯前和上完廁所要洗，搓 20 秒"></textarea></div>
-          <div class="field"><label>配色</label>
-            <select class="select" id="poTheme">
-              <option value="sun">🌞 活力橘黃</option>
-              <option value="forest">🌿 沉穩綠</option>
-              <option value="ocean">🌊 清爽藍</option>
-              <option value="alert">🚨 警示紅</option>
-              <option value="berry">🍓 莓果粉</option>
-              <option value="grape">🍇 葡萄紫</option>
-              <option value="mint">🍃 薄荷青</option>
-              <option value="lemon">🍋 檸檬黃黑</option>
+            <input class="input" id="poTopic" placeholder="例：上廁所要沖水／圖書館借書規則／運動會加油"></div>
+          <div class="field"><label>想放的內容（口語即可，AI 會整理成標題與重點）</label>
+            <textarea class="textarea" id="poBody" placeholder="例：轉身按一下、回頭看一眼、體貼下一位"></textarea></div>
+          <div class="field"><label>給誰看</label>
+            <select class="select" id="poAudience">
+              <option>國小低年級學童</option><option selected>國小中高年級學童</option><option>幼兒園學前孩童</option>
+              <option>國中青少年學生</option><option>學生家長與社區人士</option><option>全體教職員工</option><option>全校親師生</option>
             </select></div>
-          <div class="field"><label>版型</label>
-            <select class="select" id="poLayout">
-              <option value="cards">🗂 卡片條列（重點一張張）</option>
-              <option value="center">🎯 置中大字（口號海報）</option>
-              <option value="steps">1️⃣ 步驟編號（流程教學）</option>
-              <option value="twocol">◫ 兩欄整齊（規則清單）</option>
+          <div class="field"><label>🎨 風格（AI 生圖）</label>
+            <select class="select" id="poStyle"></select></div>
+          <div class="field"><label>比例</label>
+            <select class="select" id="poRatio">
+              <option value="3:4" selected>▯ 3:4 直式（A4 海報）</option>
+              <option value="4:3">▭ 4:3 橫式（投影／橫幅）</option>
+              <option value="1:1">■ 1:1 方形（社群、圖卡）</option>
+              <option value="16:9">▭ 16:9 寬（大屏、簡報）</option>
+              <option value="9:16">▯ 9:16 直（手機、LINE）</option>
             </select></div>
-          <div class="field"><label>方向</label>
-            <select class="select" id="poOrient">
-              <option value="portrait">▯ 直式 A4</option>
-              <option value="landscape">▭ 橫式 A4（列印時記得選橫向）</option>
-            </select></div>
-          <div class="field"><label>🏫 學校人物（穿本校運動服的小朋友）</label>
+          <div class="field"><label>🏫 學校人物（穿本校運動服的小朋友當主角）</label>
             <select class="select" id="poChar">
-              <option value="">不放人物（用いらすとや插圖）</option>
-              <option value="boy">男孩</option>
-              <option value="girl">女孩</option>
+              <option value="">不指定（AI 自由發揮）</option>
+              <option value="boy">男孩（深藍運動服）</option>
+              <option value="girl">女孩（紅色運動服）</option>
             </select></div>
-          <div class="field" id="poPoseField" hidden><label>人物姿勢</label>
+          <div class="field" id="poPoseField" hidden><label>人物姿勢（有存參考圖時會照圖畫）</label>
             <select class="select" id="poPose">
-              <option value="1">🪑 坐好等待</option>
-              <option value="2">💻 認真操作</option>
-              <option value="3">🙋 舉手發問</option>
-              <option value="4">📖 讀書分享</option>
-              <option value="5">🤔 苦惱思考</option>
-              <option value="6">📂 拿著資料</option>
-              <option value="7">✅ 舉牌打勾</option>
-              <option value="8">🎉 開心歡呼</option>
+              <option value="1">🪑 坐好等待</option><option value="2">💻 認真操作</option><option value="3">🙋 舉手發問</option><option value="4">📖 讀書分享</option>
+              <option value="5">🤔 苦惱思考</option><option value="6">📂 拿著資料</option><option value="7" selected>✅ 舉牌打勾</option><option value="8">🎉 開心歡呼</option>
             </select></div>
-          <button class="go-button" type="button" id="poGoButton">✨ 生成海報</button>
+          <div class="field"><label>文字怎麼放</label>
+            <div class="check-row">
+              <label><input type="radio" name="poTextMode" value="overlay" checked>疊在圖上（中文保證正確、可再改字）</label>
+              <label><input type="radio" name="poTextMode" value="inpaint">讓 AI 畫進圖裡（更自然，偶爾錯字）</label>
+            </div></div>
+          <button class="go-button" type="button" id="poGoButton">🎨 AI 生成海報</button>
           <div class="status" id="poStatus"></div>
-          <div class="hint">AI 會自動挑一張生動可愛的插圖（いらすとや）放上海報；文字都是真文字，列印不失真。</div>
+          <div class="hint">用你的 Gemini 金鑰呼叫生圖模型（自動偵測可用的 image 模型），一張約 10–30 秒。不滿意按「🔁 再生一張」。</div>
         </div>
         <div class="panel">
           <div class="preview-bar">
-            <button class="mini" type="button" onclick="window.print()">🖨 列印／存 PDF</button>
-            <button class="mini" type="button" onclick="downloadPreview('poPreview','海報','doc')">⬇ Word</button>
+            <button class="mini" type="button" id="poAgainButton">🔁 再生一張</button>
+            <button class="mini" type="button" id="poPngButton">⬇ PNG</button>
+            <button class="mini" type="button" id="poPdfButton">⬇ PDF</button>
+            <button class="mini" type="button" onclick="window.print()">🖨 列印</button>
             <span class="status" id="poMeta"></span>
           </div>
           <div class="preview-host" id="poPreview"></div>
@@ -375,6 +381,7 @@
           <div class="preview-bar">
             <button class="mini" type="button" onclick="window.print()">🖨 列印／存 PDF</button>
             <button class="mini" type="button" onclick="downloadPreview('stPreview','座位表','doc')">⬇ Word</button>
+            <button class="mini" type="button" onclick="downloadPdfFromHost('stPreview','座位表',false)">⬇ PDF</button>
             <button class="mini" type="button" onclick="downloadPreview('stPreview','座位表','xls')">⬇ Excel</button>
             <span class="status" id="stMeta"></span>
           </div>
@@ -407,6 +414,7 @@
           <div class="preview-bar">
             <button class="mini" type="button" onclick="window.print()">🖨 列印／存 PDF</button>
             <button class="mini" type="button" onclick="downloadPreview('gdPreview','作文引導單','doc')">⬇ Word</button>
+            <button class="mini" type="button" onclick="downloadPdfFromHost('gdPreview','作文引導單',false)">⬇ PDF</button>
             <span class="status" id="gdMeta"></span>
           </div>
           <div class="preview-host" id="gdPreview"></div>
@@ -422,9 +430,9 @@
             <select class="select" id="esGrade"><option value="一">一年級</option><option value="二">二年級</option><option value="三">三年級</option><option value="四">四年級</option><option value="五" selected>五年級</option><option value="六">六年級</option></select></div>
           <div class="field"><label>作文題目</label>
             <input class="input" id="esTopic" placeholder="例：我的家人／難忘的校外教學"></div>
-          <div class="field"><label>作文檔案（圖片或 PDF，<strong>不限張數</strong>，跨頁全部丟進來；也可以直接在這頁 Ctrl+V 貼上截圖）</label>
+          <div class="field"><label>作文檔案（圖片或 PDF，<strong>不限張數</strong>，跨頁全部丟進來；也可以拍照或貼上截圖）</label>
             <input class="input" type="file" id="esImages" accept="image/*,.pdf,application/pdf" multiple>
-            <div id="esPasteList" class="check-row" style="margin-top:6px"></div></div>
+</div>
           <div class="field"><label>或直接貼上作文文字</label>
             <textarea class="textarea" id="esText" placeholder="拍照或貼文字擇一即可"></textarea></div>
           <div class="field"><label>批改重點（可複選）</label>
@@ -450,6 +458,7 @@
           <div class="preview-bar">
             <button class="mini" type="button" onclick="window.print()">🖨 列印批改單</button>
             <button class="mini" type="button" onclick="downloadPreview('esPreview','作文批改單','doc')">⬇ Word</button>
+            <button class="mini" type="button" onclick="downloadPdfFromHost('esPreview','作文批改單',false)">⬇ PDF</button>
             <span class="status" id="esMeta">批改後會產生一張可列印的批改單，可以夾回作文本。</span>
           </div>
           <div class="preview-host" id="esPreview"></div>
@@ -590,6 +599,7 @@
   </main>
   <div class="toast" id="toast"></div>
   <script src="assets/vendor/pdf-lib.min.js"></script>
+  <script src="assets/vendor/html2pdf.bundle.min.js"></script>
 
   <script>
     'use strict';
@@ -623,7 +633,7 @@
     refreshKeyStatus();
 
     async function fileToPart(input) {
-      const file = input && input.files && input.files[0];
+      const file = input instanceof File ? input : (input && input.files && input.files[0]);
       if (!file) return null;
       if (file.size > 8 * 1024 * 1024) throw new Error('圖片超過 8MB，請縮小後再試。');
       const b64 = await new Promise((resolve, reject) => {
@@ -661,6 +671,94 @@
       return JSON.parse(m[0]);
     }
     function busy(button, on) { button.disabled = on; button.textContent = on ? '⏳ 生成中…' : button.dataset.label; }
+    // 共用：每個「選擇檔案」旁都加「📷 拍照」「📋 貼上圖片」，並支援 Ctrl+V
+    const ATTACH_ZONES = {};
+    function attachZone(inputId, options = {}) {
+      const input = $(inputId);
+      if (!input) return;
+      const zone = { files: [], multiple: !!options.multiple, onFile: options.onFile || null, chips: null };
+      ATTACH_ZONES[inputId] = zone;
+      const wrap = document.createElement('div');
+      wrap.className = 'check-row';
+      wrap.style.marginTop = '6px';
+      wrap.innerHTML = `<button class="mini" type="button" data-zone-camera>📷 拍照</button><button class="mini" type="button" data-zone-paste>📋 貼上圖片</button><span class="hint" style="margin:0">或在這頁直接 Ctrl+V</span><span data-zone-chips></span>`;
+      input.insertAdjacentElement('afterend', wrap);
+      const camera = document.createElement('input');
+      camera.type = 'file'; camera.accept = 'image/*'; camera.setAttribute('capture', 'environment'); camera.hidden = true;
+      if (zone.multiple) camera.multiple = true;
+      wrap.appendChild(camera);
+      zone.chips = wrap.querySelector('[data-zone-chips]');
+      wrap.querySelector('[data-zone-camera]').addEventListener('click', () => camera.click());
+      camera.addEventListener('change', () => { addZoneFiles(inputId, [...camera.files]); camera.value = ''; });
+      wrap.querySelector('[data-zone-paste]').addEventListener('click', async () => {
+        try {
+          const items = await navigator.clipboard.read();
+          const files = [];
+          for (const item of items) {
+            const type = item.types.find(t => t.startsWith('image/'));
+            if (type) files.push(new File([await item.getType(type)], `貼上的圖-${Date.now()}.png`, { type }));
+          }
+          if (!files.length) return showToast('剪貼簿裡沒有圖片；截圖後再按一次，或直接 Ctrl+V。', true);
+          addZoneFiles(inputId, files);
+        } catch (e) { showToast('瀏覽器不允許讀剪貼簿，請直接在這頁按 Ctrl+V。', true); }
+      });
+      zone.chips.addEventListener('click', e => {
+        const btn = e.target.closest('[data-zone-remove]');
+        if (!btn) return;
+        zone.files.splice(Number(btn.dataset.zoneRemove), 1);
+        renderZoneChips(inputId);
+      });
+    }
+    function addZoneFiles(inputId, files) {
+      const zone = ATTACH_ZONES[inputId];
+      if (!zone || !files.length) return;
+      zone.files = zone.multiple ? [...zone.files, ...files].slice(0, 40) : files.slice(-1);
+      renderZoneChips(inputId);
+      showToast(`已加入 ${files.length} 張圖片。`);
+      if (zone.onFile) zone.onFile(zone.files[zone.files.length - 1]);
+    }
+    function renderZoneChips(inputId) {
+      const zone = ATTACH_ZONES[inputId];
+      zone.chips.innerHTML = zone.files.map((file, i) => `<span class="zone-chip">📎 ${escapeHtml(file.name.slice(0, 18))} <button class="mini" type="button" data-zone-remove="${i}" style="padding:0 6px">✕</button></span>`).join('');
+    }
+    function zoneFiles(inputId) {
+      const input = $(inputId);
+      const zone = ATTACH_ZONES[inputId];
+      return [...((input && input.files) || []), ...((zone && zone.files) || [])];
+    }
+    function zoneFirst(inputId) {
+      const files = zoneFiles(inputId);
+      const zone = ATTACH_ZONES[inputId];
+      return (zone && zone.files.length ? zone.files[zone.files.length - 1] : files[0]) || null;
+    }
+    document.addEventListener('paste', e => {
+      const active = document.querySelector('main > .page.active');
+      if (!active) return;
+      const target = Object.keys(ATTACH_ZONES).find(id => active.contains($(id)));
+      if (!target) return;
+      const images = [...(e.clipboardData?.files || [])].filter(f => f.type.startsWith('image/'));
+      if (images.length) addZoneFiles(target, images);
+    });
+
+    // 共用：把預覽輸出成真正的 PDF 檔（html2pdf.js：html2canvas + jsPDF，全程本機）
+    async function downloadPdfFromHost(hostId, filename, landscape) {
+      const host = $(hostId);
+      if (!host || !host.innerHTML.trim()) return showToast('請先生成內容再下載。', true);
+      if (typeof html2pdf === 'undefined') return showToast('PDF 引擎載入失敗，請重新整理。', true);
+      showToast('⏳ 正在製作 PDF…');
+      const sheets = host.querySelectorAll('.sheet');
+      sheets.forEach(sheet => sheet.classList.add('pdf-export'));
+      try {
+        await html2pdf().set({
+          margin: 0, filename: `${filename}.pdf`, image: { type: 'jpeg', quality: 0.95 },
+          html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: landscape ? 'landscape' : 'portrait' },
+          pagebreak: { mode: ['css', 'legacy'], before: '.ws-answerpage' }
+        }).from(host).save();
+        showToast('已下載 PDF。');
+      } catch (e) { showToast('PDF 製作失敗：' + (e.message || e), true); }
+      finally { sheets.forEach(sheet => sheet.classList.remove('pdf-export')); }
+    }
     // 共用：把預覽匯出成 Word（.doc）或 Excel（.xls）——用 HTML 包裝，Office 直接開啟可編輯
     function downloadPreview(hostId, filename, format) {
       const host = $(hostId);
@@ -695,6 +793,9 @@
       return payload;
     }
     ['wsGoButton', 'ntGoButton', 'mmGoButton', 'cmGoButton', 'poGoButton'].forEach(id => { $(id).dataset.label = $(id).textContent; });
+    ['wsImage', 'ntImage', 'mmImage'].forEach(id => attachZone(id));
+    attachZone('esImages', { multiple: true });
+    attachZone('pdfFiles', { multiple: true });
 
     // ---------- 分頁切換 ----------
     document.querySelectorAll('.tab-button').forEach(tab => tab.addEventListener('click', () => {
@@ -710,7 +811,7 @@
       const types = [...document.querySelectorAll('.wsType:checked')].map(c => c.value);
       if (!types.length) return showToast('請至少勾一種題型。', true);
       const topic = $('wsTopic').value.trim();
-      const hasImage = $('wsImage').files.length > 0;
+      const hasImage = zoneFiles('wsImage').length > 0;
       if (!topic && !hasImage) return showToast('請輸入主題或上傳課本照片。', true);
       const diff = $('wsDiff').checked;
       const prompt = [
@@ -724,7 +825,7 @@
       ].filter(Boolean).join('\n');
       busy($('wsGoButton'), true);
       try {
-        const image = await fileToPart($('wsImage'));
+        const image = await fileToPart(zoneFirst('wsImage'));
         const data = extractJson(await callGemini(prompt, image, $('wsStatus')));
         renderWorksheet(data);
         $('wsMeta').textContent = `已生成${data.versions.length > 1 ? '基礎＋進階雙版本' : ''}，可直接列印或存 PDF。`;
@@ -781,7 +882,7 @@
     $('ntSchool').addEventListener('change', () => localStorage.setItem('studioSchoolName', $('ntSchool').value.trim()));
     $('ntGoButton').addEventListener('click', async () => {
       const body = $('ntBody').value.trim();
-      const hasImage = $('ntImage').files.length > 0;
+      const hasImage = zoneFiles('ntImage').length > 0;
       if (!body && !hasImage) return showToast('請輸入內容要點或上傳公文照片。', true);
       const prompt = [
         '你是臺灣國小導師，把以下內容寫成一份正式但親切的「給家長通知單」。繁體中文、臺灣慣用格式。',
@@ -793,7 +894,7 @@
       ].filter(Boolean).join('\n');
       busy($('ntGoButton'), true);
       try {
-        const image = await fileToPart($('ntImage'));
+        const image = await fileToPart(zoneFirst('ntImage'));
         const data = extractJson(await callGemini(prompt, image, $('ntStatus')));
         renderNotice(data);
         $('ntMeta').textContent = '請核對日期與金額後列印。';
@@ -830,7 +931,7 @@
     // ============================================================
     $('mmGoButton').addEventListener('click', async () => {
       const topic = $('mmTopic').value.trim();
-      const hasImage = $('mmImage').files.length > 0;
+      const hasImage = zoneFiles('mmImage').length > 0;
       if (!topic && !hasImage) return showToast('請輸入主題或上傳照片。', true);
       const depth = $('mmDepth').value;
       const prompt = [
@@ -842,7 +943,7 @@
       ].filter(Boolean).join('\n');
       busy($('mmGoButton'), true);
       try {
-        const image = await fileToPart($('mmImage'));
+        const image = await fileToPart(zoneFirst('mmImage'));
         const text = await callGemini(prompt, image, $('mmStatus'));
         const md = (text.match(/(^|\n)\s*-\s[\s\S]*/) || [text])[0].trim();
         $('mmMarkdown').value = md;
@@ -962,86 +1063,180 @@
     });
 
     // ============================================================
-    // 📢 海報宣傳單（8 配色 × 4 版型 × 直橫 × いらすとや插圖）
+    // 📢 海報宣傳單（Gemini 生圖：風格庫 × 比例 × 學校人物 × 文字疊圖）
     // ============================================================
-    const PO_THEMES = {
-      sun:    { bg: '#fff8ec', main: '#c2540a', card: '#ffe8c7', text: '#5b3a12' },
-      forest: { bg: '#f2f7f0', main: '#1f514a', card: '#dcebdd', text: '#243b2f' },
-      ocean:  { bg: '#eff6fb', main: '#155e9c', card: '#d8e9f7', text: '#1d3b52' },
-      alert:  { bg: '#fdf1ef', main: '#b3261e', card: '#fadcd7', text: '#57201b' },
-      berry:  { bg: '#fdf0f4', main: '#c2185b', card: '#fbd8e4', text: '#5c1a33' },
-      grape:  { bg: '#f6f0fb', main: '#6a35a8', card: '#e8dcf5', text: '#3a2058' },
-      mint:   { bg: '#eefaf6', main: '#0d8a6a', card: '#d3f0e6', text: '#164e40' },
-      lemon:  { bg: '#fffbe6', main: '#1c1c1c', card: '#ffe94d', text: '#1c1c1c' }
-    };
-    const PO_IMAGES = {
-      class_focus: '上課、學習、專心聽講', raise_hand: '舉手、發言、發問',
-      quiet_usagi: '安靜的兔子', quiet_cat: '輕聲的貓咪', quiet_kuma: '提醒的熊',
-      homework: '寫作業、寫字', cleaning: '打掃、整潔', line_up: '排隊、集合、秩序',
-      reading: '閱讀、看書', drink_water: '喝水、運動、健康', nap: '睡覺、休息', too_noisy: '吵鬧、搗蛋'
-    };
+    const PO_STYLES = [
+      ['watercolor', '🎨 溫暖水彩手繪風', 'warm hand-painted watercolor illustration, soft washes, paper texture, gentle outlines'],
+      ['flat', '🟦 簡約扁平向量插畫風', 'clean flat vector illustration, bold simple shapes, limited harmonious palette, generous whitespace'],
+      ['anime', '🌸 日式動漫插畫風', 'Japanese anime style illustration, expressive characters, clean linework, vibrant cel shading'],
+      ['clay', '🧸 3D 黏土微縮模型風', '3D claymation miniature diorama, soft plasticine textures, cute rounded characters, studio lighting'],
+      ['chalk', '🖍 黑板粉筆手繪風', 'chalk drawing on a dark green classroom blackboard, hand-drawn chalk strokes, chalk dust, doodle icons'],
+      ['doodle', '✏️ 手繪塗鴉筆記風', 'playful hand-drawn doodle notebook style, marker sketches, arrows and stickers, notebook paper'],
+      ['papercut', '📄 立體剪紙層次風', 'layered paper-cut art, stacked colored paper with soft shadows, dimensional depth'],
+      ['pixel', '👾 像素復古遊戲風', '16-bit retro pixel art, chunky pixels, bright arcade palette, game HUD vibe'],
+      ['picturebook', '📚 童書繪本風', 'children\'s picture book illustration, cozy textured gouache, whimsical and friendly'],
+      ['thumbnail', '▶️ YouTube 縮圖風', 'high-impact YouTube thumbnail style, dramatic lighting, big expressive focal subject, high contrast'],
+      ['poster', '🖼 復古招貼海報風', 'vintage screen-printed propaganda-style poster, bold graphic shapes, halftone texture, two-tone ink'],
+      ['kawaii', '🐣 可愛貼紙風', 'kawaii sticker style, chubby characters with thick outlines, pastel colors, sparkle accents']
+    ];
+    $('poStyle').innerHTML = PO_STYLES.map(([key, label]) => `<option value="${key}">${label}</option>`).join('');
     $('poChar').addEventListener('change', () => { $('poPoseField').hidden = !$('poChar').value; });
-    $('poGoButton').addEventListener('click', async () => {
+    const PO_CHAR_DESC = {
+      boy: 'a cheerful Taiwanese elementary school boy with short black hair wearing a navy blue school sports uniform with yellow trim, navy shorts and blue sneakers',
+      girl: 'a cheerful Taiwanese elementary school girl with a ponytail wearing a red school sports uniform with navy trim, red shorts and red sneakers'
+    };
+    const PO_RATIO_SIZE = { '3:4': [794, 1059], '4:3': [1059, 794], '1:1': [900, 900], '16:9': [1120, 630], '9:16': [630, 1120] };
+    let poLast = null;   // { copy, imageDataUrl, mode, ratio }
+
+    // 生圖模型：用老師自己的金鑰自動偵測（快取），找不到就依序試常見名稱
+    async function pickImageModel(key) {
+      const cached = localStorage.getItem('studioImageModel');
+      if (cached) return cached;
+      const fallbacks = ['gemini-2.5-flash-image', 'gemini-2.5-flash-image-preview', 'gemini-3-flash-image', 'gemini-2.0-flash-preview-image-generation'];
+      try {
+        const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200', { headers: { 'x-goog-api-key': key } });
+        if (res.ok) {
+          const data = await res.json();
+          const names = (data.models || []).map(m => String(m.name || '').replace(/^models\//, ''))
+            .filter(n => /image/i.test(n) && !/imagen|embedding|veo/i.test(n));
+          const preferred = names.find(n => /flash-image$/.test(n)) || names.find(n => /flash-image/.test(n)) || names[0];
+          if (preferred) { localStorage.setItem('studioImageModel', preferred); return preferred; }
+        }
+      } catch (e) {}
+      return fallbacks[0];
+    }
+    async function generateImage(prompt, referenceFile, aspectRatio, statusEl) {
+      const key = geminiKey();
+      if (!key) { showToast('尚未設定 Gemini 金鑰。', true); throw new Error('no-key'); }
+      const parts = [{ text: prompt }];
+      if (referenceFile) parts.push(await fileToPart(referenceFile));
+      const candidates = [await pickImageModel(key), 'gemini-2.5-flash-image', 'gemini-2.5-flash-image-preview'];
+      let lastError = '';
+      for (const model of [...new Set(candidates)]) {
+        for (const withRatio of [true, false]) {
+          statusEl.textContent = `🎨 生圖中（${model}）… 約 10–30 秒`;
+          const generationConfig = withRatio
+            ? { responseModalities: ['IMAGE', 'TEXT'], imageConfig: { aspectRatio } }
+            : { responseModalities: ['IMAGE', 'TEXT'] };
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+            body: JSON.stringify({ contents: [{ parts }], generationConfig })
+          });
+          if (!res.ok) {
+            lastError = `HTTP ${res.status}`;
+            if (res.status === 404) break;          // 模型不存在 → 換下一個
+            if (res.status === 400 && withRatio) continue;  // 不支援 imageConfig → 不帶比例再試
+            const body = await res.text().catch(() => '');
+            lastError += ' ' + body.slice(0, 160);
+            break;
+          }
+          const data = await res.json();
+          const partsOut = (((data.candidates || [])[0] || {}).content || {}).parts || [];
+          const image = partsOut.find(p => p.inlineData || p.inline_data);
+          if (image) {
+            const blob = image.inlineData || image.inline_data;
+            localStorage.setItem('studioImageModel', model);
+            return `data:${blob.mimeType || blob.mime_type || 'image/png'};base64,${blob.data}`;
+          }
+          lastError = '模型沒有回傳圖片（可能被安全政策擋下），請換個說法或風格';
+          break;
+        }
+      }
+      localStorage.removeItem('studioImageModel');
+      throw new Error(`生圖失敗：${lastError || '找不到可用的生圖模型'}。請確認金鑰有開啟 Gemini 生圖（AI Studio 金鑰預設可用）。`);
+    }
+    async function loadCharacterReference(charKey, pose) {
+      if (!charKey) return null;
+      try {
+        const res = await fetch(`assets/characters/${charKey}_${pose}.png`, { cache: 'force-cache' });
+        if (!res.ok) return null;
+        const blob = await res.blob();
+        if (!blob.type.startsWith('image/')) return null;
+        return new File([blob], `${charKey}_${pose}.png`, { type: blob.type });
+      } catch (e) { return null; }
+    }
+    function renderPoster() {
+      if (!poLast) return;
+      const [w, hgt] = PO_RATIO_SIZE[poLast.ratio] || PO_RATIO_SIZE['3:4'];
+      const c = poLast.copy;
+      if (poLast.mode === 'inpaint') {
+        $('poPreview').innerHTML = `<div class="po-canvas" id="poCanvas" style="width:${w}px;height:${hgt}px"><img src="${poLast.imageDataUrl}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></div>`;
+      } else {
+        $('poPreview').innerHTML = `<div class="po-canvas" id="poCanvas" style="width:${w}px;height:${hgt}px;background-image:url('${poLast.imageDataUrl}')">
+          <div class="po-ov-title" contenteditable="true" spellcheck="false">${escapeHtml(c.title || '')}</div>
+          ${c.subtitle ? `<div class="po-ov-sub" contenteditable="true" spellcheck="false">${escapeHtml(c.subtitle)}</div>` : ''}
+          <div class="po-ov-points">${(c.points || []).slice(0, 5).map(p => `<div class="po-ov-point" contenteditable="true" spellcheck="false">${escapeHtml(p.icon || '⭐')} ${escapeHtml(p.heading || '')}</div>`).join('')}</div>
+          ${c.footer ? `<div class="po-ov-footer" contenteditable="true" spellcheck="false">${escapeHtml(c.footer)}</div>` : ''}
+        </div>`;
+      }
+      $('poMeta').textContent = poLast.mode === 'overlay' ? '文字可直接點著改；改完再下載 PNG／PDF。' : '不滿意按「🔁 再生一張」。';
+    }
+    async function runPoster(regenerateOnly) {
       const topic = $('poTopic').value.trim();
       if (!topic) return showToast('請輸入海報主題。', true);
-      const prompt = [
-        `你是臺灣國小的文宣高手，為「${topic}」設計一張海報宣傳單的文案。`,
-        $('poBody').value.trim() ? `內容要點：${$('poBody').value.trim()}` : '',
-        '標題要響亮好記（可押韻）；3–6 個重點，每個重點配一個貼切的 emoji、一句短標題（8字內）與一句說明（20字內）。',
-        `另外從這份插圖清單挑一張最符合主題的，把代號填進 hero 欄：${Object.entries(PO_IMAGES).map(([key, desc]) => `${key}（${desc}）`).join('、')}`,
-        '繁體中文、給國小學生看得懂。只回傳 JSON：',
-        '{"title":"大標題","subtitle":"副標語","hero":"插圖代號","points":[{"icon":"🧼","heading":"短標題","text":"一句說明"}],"footer":"落款或提醒（例：○○國小 保健室 關心您）"}'
-      ].filter(Boolean).join('\n');
+      const mode = document.querySelector('[name="poTextMode"]:checked').value;
+      const ratio = $('poRatio').value;
+      const style = PO_STYLES.find(s => s[0] === $('poStyle').value) || PO_STYLES[0];
+      const audience = $('poAudience').value;
       busy($('poGoButton'), true);
       try {
-        const data = extractJson(await callGemini(prompt, null, $('poStatus')));
-        const theme = PO_THEMES[$('poTheme').value] || PO_THEMES.sun;
-        const layout = $('poLayout').value;
-        const landscape = $('poOrient').value === 'landscape';
-        const hero = PO_IMAGES[data.hero] ? data.hero : 'class_focus';
-        const charSheet = $('poChar').value;
-        const pose = Number($('poPose').value) || 1;
-        const charDiv = charSheet
-          ? `<img class="po-char" src="assets/characters/${charSheet}_${pose}.png" alt="">`
-          : '';
-        const heroImg = charSheet
-          ? (layout === 'center' ? charDiv : '')
-          : `<img class="po-hero" src="assets/irasutoya/${hero}.png" alt="">`;
-        const points = data.points || [];
-        let body;
-        if (layout === 'center') {
-          body = `${heroImg}
-            <div class="po-center-lines">${points.map(p => `<div class="po-center-line"><span>${escapeHtml(p.icon || '⭐')}</span>${escapeHtml(p.heading || '')}</div>`).join('')}</div>`;
-        } else if (layout === 'steps') {
-          body = `<div class="po-hero-side">${heroImg}</div>
-            ${points.map((p, i) => `<div class="po-point" style="background:${theme.card}">
-              <div class="po-step-no" style="background:${theme.main}">${i + 1}</div>
-              <div><div class="po-heading" style="color:${theme.main}">${escapeHtml(p.icon || '')} ${escapeHtml(p.heading || '')}</div>
-              <div class="po-text">${escapeHtml(p.text || '')}</div></div></div>`).join('')}`;
-        } else if (layout === 'twocol') {
-          body = `<div class="po-hero-side">${heroImg}</div>
-            <div class="po-twocol">${points.map(p => `<div class="po-point" style="background:${theme.card};margin:0">
-              <div class="po-icon">${escapeHtml(p.icon || '⭐')}</div>
-              <div><div class="po-heading" style="color:${theme.main}">${escapeHtml(p.heading || '')}</div>
-              <div class="po-text">${escapeHtml(p.text || '')}</div></div></div>`).join('')}</div>`;
-        } else {
-          body = `<div class="po-hero-side">${heroImg}</div>
-            ${points.map(p => `<div class="po-point" style="background:${theme.card}">
-              <div class="po-icon">${escapeHtml(p.icon || '⭐')}</div>
-              <div><div class="po-heading" style="color:${theme.main}">${escapeHtml(p.heading || '')}</div>
-              <div class="po-text">${escapeHtml(p.text || '')}</div></div></div>`).join('')}`;
+        let copy = regenerateOnly && poLast ? poLast.copy : null;
+        if (!copy) {
+          copy = extractJson(await callGemini([
+            `你是臺灣國小的文宣高手，為「${topic}」設計海報文案，對象：${audience}。`,
+            $('poBody').value.trim() ? `內容要點：${$('poBody').value.trim()}` : '',
+            '標題響亮好記（12 字內、可押韻）、副標一句（16 字內）、3–5 個重點（每點一個 emoji＋8 字內短句）、落款一句。',
+            '另外用英文寫一段 imagePrompt：描述這張海報「插圖」的畫面主體、動作、場景與氛圍（40–70 words），不要提到文字、字體或版面。',
+            '只回傳 JSON：{"title":"","subtitle":"","points":[{"icon":"🧼","heading":""}],"footer":"","imagePrompt":""}'
+          ].filter(Boolean).join('\n'), null, $('poStatus')));
         }
-        $('poPreview').innerHTML = `<div class="sheet po-sheet${landscape ? ' po-land' : ''}${layout === 'center' ? ' po-centered' : ''}" style="background:${theme.bg};color:${theme.text}">
-          <div class="po-title" style="color:${theme.main}">${escapeHtml(data.title || topic)}</div>
-          <div class="po-sub">${escapeHtml(data.subtitle || '')}</div>
-          ${body}
-          ${charSheet && layout !== 'center' ? charDiv : ''}
-          <div class="po-footer" style="color:${theme.main}">${escapeHtml(data.footer || '')}</div>
-        </div>`;
-        $('poMeta').textContent = landscape ? '橫式版面：列印時請在列印視窗選「橫向」。' : '可直接列印（彩色效果最好）。';
-        showToast('✨ 海報完成！');
+        const charKey = $('poChar').value;
+        const pose = $('poPose').value;
+        const reference = await loadCharacterReference(charKey, pose);
+        const characterLine = charKey
+          ? (reference
+              ? `Main character: the child in the attached reference image — keep the same hairstyle, face and school sports uniform exactly.`
+              : `Main character: ${PO_CHAR_DESC[charKey]}.`)
+          : '';
+        const textLine = mode === 'overlay'
+          ? 'ABSOLUTELY NO text, letters, numbers, logos or signs anywhere in the image. Keep the top 25% and bottom 18% of the composition as calm, low-detail background so a title and captions can be placed there later.'
+          : `Render these Traditional Chinese texts clearly and correctly inside the design: title 「${copy.title}」 at the top, key points ${(copy.points || []).map(p => '「' + (p.heading || '') + '」').join(' ')} , footer 「${copy.footer || ''}」. Use large legible typography.`;
+        const imagePrompt = [
+          `A school campus poster illustration for Taiwanese elementary school, audience: ${audience}.`,
+          `Style: ${style[2]}.`,
+          `Scene: ${copy.imagePrompt || topic}.`,
+          characterLine,
+          textLine,
+          `Aspect ratio ${ratio}. High quality, print-ready, friendly and positive mood, no watermark.`
+        ].filter(Boolean).join(' ');
+        const imageDataUrl = await generateImage(imagePrompt, reference, ratio, $('poStatus'));
+        poLast = { copy, imageDataUrl, mode, ratio };
+        renderPoster();
+        $('poStatus').textContent = '';
+        showToast('🎨 海報完成！');
       } catch (e) { if (e.message !== 'no-key') { $('poStatus').textContent = ''; showToast(e.message, true); } }
       busy($('poGoButton'), false);
+    }
+    $('poGoButton').addEventListener('click', () => runPoster(false));
+    $('poAgainButton').addEventListener('click', () => { if (!poLast) return showToast('請先生成一張海報。', true); runPoster(true); });
+    async function posterCanvas() {
+      const el = document.getElementById('poCanvas');
+      if (!el) { showToast('請先生成海報。', true); return null; }
+      return html2pdf().set({ html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' } }).from(el).toCanvas().get('canvas');
+    }
+    $('poPngButton').addEventListener('click', async () => {
+      const canvas = await posterCanvas();
+      if (!canvas) return;
+      const a = document.createElement('a'); a.href = canvas.toDataURL('image/png'); a.download = `海報-${$('poTopic').value.trim() || 'poster'}.png`; a.click();
+      showToast('已下載 PNG。');
+    });
+    $('poPdfButton').addEventListener('click', async () => {
+      const el = document.getElementById('poCanvas');
+      if (!el) return showToast('請先生成海報。', true);
+      const [w, hgt] = PO_RATIO_SIZE[poLast.ratio] || PO_RATIO_SIZE['3:4'];
+      await html2pdf().set({ margin: 0, filename: `海報-${$('poTopic').value.trim() || 'poster'}.pdf`, image: { type: 'jpeg', quality: 0.95 },
+        html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'px', format: [w, hgt], orientation: w >= hgt ? 'landscape' : 'portrait', hotfixes: ['px_scaling'] } }).from(el).save();
+      showToast('已下載 PDF。');
     });
 
     // ============================================================
@@ -1338,30 +1533,10 @@
         return { mime_type: 'image/jpeg', data: dataUrl.split(',')[1] };
       } catch (e) { return null; }
     }
-    // Ctrl+V 貼圖（作文批改分頁）
-    const esPasted = [];
-    function renderEsPasteList() {
-      $('esPasteList').innerHTML = esPasted.map((file, i) =>
-        `<span class="mask-badge">📎 貼上的圖 ${i + 1} <button class="mini" type="button" data-es-paste-remove="${i}" style="padding:0 8px">✕</button></span>`).join('');
-    }
-    document.addEventListener('paste', e => {
-      if (!document.getElementById('page-essay').classList.contains('active')) return;
-      const images = [...(e.clipboardData?.files || [])].filter(f => f.type.startsWith('image/'));
-      if (!images.length) return;
-      images.forEach(f => { if (esPasted.length < 40) esPasted.push(f); });
-      renderEsPasteList();
-      showToast(`已貼上 ${images.length} 張圖片。`);
-    });
-    $('esPasteList').addEventListener('click', e => {
-      const btn = e.target.closest('[data-es-paste-remove]');
-      if (!btn) return;
-      esPasted.splice(Number(btn.dataset.esPasteRemove), 1);
-      renderEsPasteList();
-    });
     $('esGoButton').dataset.label = $('esGoButton').textContent;
     $('esGoButton').addEventListener('click', async () => {
       const text = $('esText').value.trim();
-      const esFiles = [...$('esImages').files, ...esPasted];
+      const esFiles = zoneFiles('esImages');
       const hasImages = esFiles.length > 0;
       if (!text && !hasImages) return showToast('請提供作文（拍照、PDF、貼圖或貼文字）。', true);
       const focus = [...document.querySelectorAll('.esFocus:checked')].map(c => c.value);
@@ -1655,7 +1830,7 @@
       $('pdfGoButton').dataset.label = $('pdfGoButton').textContent;
       $('pdfGoButton').addEventListener('click', async () => {
         if (typeof PDFLib === 'undefined') return showToast('PDF 引擎載入失敗，請重新整理頁面。', true);
-        const files = [...$('pdfFiles').files];
+        const files = zoneFiles('pdfFiles');
         if (!files.length) return showToast('請先選擇檔案。', true);
         const mode = $('pdfMode').value;
         busy($('pdfGoButton'), true);
@@ -1745,8 +1920,7 @@
       const ctx = canvas.getContext('2d', { willReadFrequently: true });
       const history = [];
       let dragStart = null, baseName = '圖片';
-      $('maskImageInput').addEventListener('change', () => {
-        const file = $('maskImageInput').files[0];
+      function loadMaskImage(file) {
         if (!file) return;
         baseName = file.name.replace(/\.[^.]+$/, '');
         const img = new Image();
@@ -1758,7 +1932,9 @@
           URL.revokeObjectURL(img.src);
         };
         img.src = URL.createObjectURL(file);
-      });
+      }
+      $('maskImageInput').addEventListener('change', () => loadMaskImage($('maskImageInput').files[0]));
+      attachZone('maskImageInput', { onFile: loadMaskImage });
       const canvasPoint = e => {
         const rect = canvas.getBoundingClientRect();
         return {

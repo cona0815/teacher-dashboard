@@ -77,3 +77,10 @@ which is within the permitted scope.
 v1.17.1, MIT License, vendored unmodified. It powers the local-only PDF tools
 (merge / extract / rotate / crop / images-to-PDF) in Studio.html; all processing
 happens in the user's browser and no file leaves the device.
+
+## html2pdf.js (bundles html2canvas and jsPDF)
+
+`assets/vendor/html2pdf.bundle.min.js` is [html2pdf.js](https://github.com/eKoopmans/html2pdf.js)
+v0.10.1 (MIT), which bundles [html2canvas](https://github.com/niklasvh/html2canvas) (MIT)
+and [jsPDF](https://github.com/parallax/jsPDF) (MIT). Used for client-side PDF/PNG export
+of generated worksheets and posters in Studio.html; nothing is uploaded.
