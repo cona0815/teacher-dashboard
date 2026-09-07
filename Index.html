@@ -142,6 +142,15 @@
     h1 { margin: 0; font-size: clamp(24px, 3vw, 38px); line-height: 1.1; }
     .user-line { margin-top: 8px; font-size: 13px; opacity: .82; }
     .top-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+    .ai-kind-badge { display:inline-block; margin-left:6px; font-size:11px; font-weight:800; border-radius:999px; padding:0 8px; background:#e8f2ee; color:#1f514a; vertical-align:1px; }
+    .ai-kind-badge.is-task { background:#fff7e6; color:#b9852f; }
+    .ai-kind-badge.is-time { background:#eef3fb; color:#1f3a5f; }
+    .mini-button.is-suggested { border-color:#b9852f; box-shadow:0 0 0 2px #fff3d6 inset; font-weight:900; }
+    .task-unnest-zone { border:2px dashed #b9c9c2; border-radius:10px; padding:6px 12px; font-size:12.5px; color:#657570; margin-bottom:8px; text-align:center; }
+    .task-unnest-zone.is-drop-target { border-color:#1f514a; background:#e8f2ee; color:#1f514a; }
+    tr.is-dragging { opacity:.45; }
+    tr.is-drop-target td { background:#fff7e6 !important; box-shadow:inset 0 -3px 0 #b9852f; }
+    [data-task-row] { cursor:grab; }
 
     .button {
       min-height: 42px; border: 2px solid transparent; border-radius: 14px; padding: 8px 15px;
@@ -1246,6 +1255,7 @@
         <div class="teacher-toolbox-actions" aria-label="教師工具">
           <button class="toolbox-button" type="button" data-toolbox-target="contactBookSection" data-line-only aria-expanded="false" hidden>聯絡本</button>
           <button class="toolbox-button" type="button" data-toolbox-target="lineInboxSection" data-line-only aria-expanded="false" hidden>LINE 收件匣<span class="toolbox-badge" id="lineInboxBadge" hidden>0</span></button>
+          <button class="toolbox-button" type="button" data-toolbox-target="messageHubSection" aria-expanded="false">📮 訊息整合站<span class="toolbox-badge" id="messageHubBadge" hidden>0</span></button>
           <button class="toolbox-button" type="button" data-toolbox-target="secretaryNotesSection" aria-expanded="false">小綿助記事</button>
           <button class="toolbox-button" type="button" data-toolbox-target="aiAssistantSection" data-ai-only aria-expanded="false" hidden>AI 行政助理</button>
           <button class="toolbox-button" type="button" data-toolbox-target="teachingProgressPanel" data-role-only="teacher" aria-expanded="false">教學進度</button>
@@ -1439,7 +1449,9 @@
               <h4>建議確認清單</h4>
               <span class="ai-hint" id="aiAdviceProgress">已確認 0／0</span>
             </div>
+            <p class="ai-hint" style="margin:2px 0 8px">怎麼用：AI 已把「跟我有關的事」分成<strong>任務</strong>（要動手做、有期限）與<strong>記事</strong>（只要記得），並抓出原文裡的日期時間。逐項按「➕任務」或「📌記事」，或直接按下方「⚡ 依建議一鍵建立」；勾選框是給你確認用的。建立的任務都是<strong>獨立任務</strong>，需要分主／子時到任務清單<strong>用拖曳</strong>（拖到另一個任務底下＝子任務，拖出來＝解除）。</p>
             <div class="ai-advice-items" id="aiAdviceItems"></div>
+            <div class="ai-actions"><button class="button button-light" type="button" id="aiAdviceApplyAll" hidden>⚡ 依建議一鍵建立全部（任務＋記事）</button></div>
           </div>
           <div class="ai-task-suggestion" id="aiTaskSuggestion" hidden>
             <h4>任務建立建議</h4>
@@ -1537,6 +1549,50 @@
         </div>
         <div class="secretary-note-meta" id="lineInboxStatus">尚未同步。</div>
         <div class="secretary-note-list" id="lineInboxList"></div>
+      </div>
+    </section>
+
+    <section class="secretary-notes message-hub" id="messageHubSection" aria-labelledby="messageHubTitle">
+      <div class="secretary-notes-head">
+        <div class="secretary-notes-title">
+          <img src="assets/ipas/mailbox-line.webp" alt="">
+          <div>
+            <h2 id="messageHubTitle">📮 訊息整合站 <span class="secretary-note-count" id="messageHubCount">0</span></h2>
+            <p>把 LINE 群組裡漂流的碎片（主任一則、處室一則、老師補一則、臨時又改一則）全貼進來，AI 幫你拆成一條一條、判斷要轉達給誰、抓出時間；勾選後<strong>整合成一則學生看得懂的訊息</strong>，只要傳一次。</p>
+          </div>
+        </div>
+      </div>
+      <div class="secretary-notes-body">
+        <div class="secretary-note-compose">
+          <textarea class="textarea" id="hubInput" rows="4" placeholder="直接把 LINE 群組的訊息整段複製貼上（可一次貼很多則、也可以分好幾次貼）……"></textarea>
+          <div class="secretary-note-compose-side">
+            <button class="button button-dark" type="button" id="hubAddButton">➕ 加入並拆解</button>
+            <span class="secretary-note-meta">AI 會去掉閒聊與抱怨、合併重複、抓日期時間；沒設定 AI 時會用換行分條。</span>
+          </div>
+        </div>
+        <div class="secretary-note-actions" style="align-items:center;gap:8px">
+          <label class="secretary-note-meta">整合對象
+            <select class="input" id="hubAudience" style="max-width:170px;padding:6px 8px">
+              <option value="學生">👧 學生版（學生看得懂）</option>
+              <option value="家長">👨‍👩‍👧 家長版</option>
+              <option value="科任">🧑‍🏫 科任／學年老師版</option>
+              <option value="自己">📝 自己的待辦清單</option>
+            </select></label>
+          <button class="button button-light" type="button" id="hubCompileButton">🧩 把勾選的整合成一則</button>
+          <button class="mini-button" type="button" id="hubSelectAllButton">全選</button>
+          <button class="mini-button" type="button" id="hubClearDoneButton">清除已勾選</button>
+          <button class="mini-button" type="button" id="hubTasksButton">自己待辦→建任務</button>
+        </div>
+        <div class="secretary-note-list" id="hubList"></div>
+        <div id="hubOutputWrap" hidden style="margin-top:10px">
+          <div class="secretary-note-meta">整合後的訊息（可直接修改）：</div>
+          <textarea class="textarea" id="hubOutput" rows="8"></textarea>
+          <div class="secretary-note-actions">
+            <button class="button button-dark" type="button" id="hubCopyButton">📋 複製訊息</button>
+            <button class="button button-light" type="button" id="hubNoteButton">📌 存為記事</button>
+            <span class="secretary-note-meta">貼到班級 LINE 群、聯絡簿或大屏黑板皆可。</span>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -4763,7 +4819,7 @@
           : rowClass === 'project-parent' ? '<span class="project-level-label">主任務</span>' : '';
 
         return `
-          <tr class="${rowClass}">
+          <tr class="${rowClass}" draggable="true" data-task-row="${escapeHtml(task.taskId)}" title="拖到另一個任務上＝變成它的子任務；拖到上方「解除區」＝變回獨立任務">
             <td><span class="badge ${priorityClass}">${escapeHtml(task.priority)}</span></td>
             <td>
               <div class="project-task-name">${isChild ? '<span class="project-connector">└</span>' : ''}<div>${levelLabel}<div class="${taskNameClass}">${escapeHtml(task.name)}</div>${progress}</div></div>
@@ -4787,6 +4843,7 @@
       }).join('');
 
       $('taskTableWrap').innerHTML = `
+        <div class="task-unnest-zone" id="taskUnnestZone">⤴ 把子任務拖到這裡＝解除、變回獨立任務　｜　把任務拖到另一個任務上＝變成它的子任務（拖錯再拖出來就好）</div>
         <table>
           <thead><tr><th>優先</th><th>任務</th><th>狀態</th><th>期限</th><th>下一步</th><th>主責教師</th><th>操作</th></tr></thead>
           <tbody>${rows}</tbody>
@@ -6576,17 +6633,39 @@
 
     function renderAdviceChecklist(analysis) {
       const items = buildAdviceItems(analysis);
+      const meta = analysis.aiChecklistMeta || [];
       $('aiAdviceChecklist').hidden = !items.length;
-      $('aiAdviceItems').innerHTML = items.map((item, index) => `
+      $('aiAdviceItems').innerHTML = items.map((item, index) => {
+        const m = meta[index] || {};
+        const when = m.dueDate ? `${m.dueDate.replace(/-/g, '/')}${m.dueTime ? ' ' + m.dueTime : ''}` : '';
+        const badge = m.kind === 'task' ? '<span class="ai-kind-badge is-task">建議：任務</span>' : m.kind === 'note' ? '<span class="ai-kind-badge">建議：記事</span>' : '';
+        return `
         <label class="ai-advice-option" draggable="true" data-ai-advice-drag="${index}" title="拖到下方「任務建立建議」可轉成任務">
           <input type="checkbox" data-ai-advice-index="${index}">
-          <span>${escapeHtml(item)}</span>
+          <span>${escapeHtml(item)}${badge}${when ? `<span class="ai-kind-badge is-time">⏰ ${escapeHtml(when)}</span>` : ''}</span>
           <span class="ai-advice-actions">
-            <button type="button" class="mini-button" data-advice-to-task="${index}" title="加入下方任務草稿">➕任務</button>
-            <button type="button" class="mini-button" data-advice-to-note="${index}" title="存到小綿助記事統一管理">📌記事</button>
+            <button type="button" class="mini-button${m.kind === 'task' ? ' is-suggested' : ''}" data-advice-to-task="${index}" title="直接建立成獨立任務（會帶入時間）">➕任務</button>
+            <button type="button" class="mini-button${m.kind === 'note' ? ' is-suggested' : ''}" data-advice-to-note="${index}" title="存到小綿助記事（會帶入提醒日）">📌記事</button>
           </span>
-        </label>`).join('');
+        </label>`;
+      }).join('');
+      $('aiAdviceApplyAll').hidden = !meta.length;
       updateAdviceProgress();
+    }
+
+    async function applyAllAdviceSuggestions() {
+      const analysis = aiAssistantState.analysis;
+      const meta = analysis?.aiChecklistMeta || [];
+      if (!meta.length) return showToast('這次沒有可依建議建立的項目。', true);
+      let tasks = 0, notes = 0;
+      for (let index = 0; index < meta.length; index += 1) {
+        if (meta[index].kind === 'task') { await adviceItemToTask(index, true); tasks += 1; }
+        else { adviceItemToNote(index, true); notes += 1; }
+        const box = document.querySelector(`[data-ai-advice-index="${index}"]`);
+        if (box) box.checked = true;
+      }
+      updateAdviceProgress();
+      showToast(`⚡ 已依建議建立 ${tasks} 個任務、${notes} 則記事（時間都已帶入）。`);
     }
 
     function adviceItemText(index) {
@@ -6595,36 +6674,41 @@
       return buildAdviceItems(analysis)[index] || '';
     }
 
-    function adviceItemToNote(index) {
+    function adviceItemToNote(index, quiet) {
       const text = adviceItemText(index);
       if (!text) return;
-      const note = normalizeSecretaryNote({ text: `【提醒】${text}`, createdAt: new Date().toISOString() }, 'web');
+      const meta = (aiAssistantState.analysis?.aiChecklistMeta || [])[index] || {};
+      if (secretaryNotesState.notes.some(note => note.text === `【提醒】${text}`)) { if (!quiet) showToast('這一則已在記事裡。'); return; }
+      const note = normalizeSecretaryNote({ text: `【提醒】${text}`, createdAt: new Date().toISOString(), remindDate: meta.dueDate || '' }, 'web');
       if (!note) return;
       secretaryNotesState.notes.unshift(note);
-      saveSecretaryNotes('📌 已存到「小綿助記事」；到該版面可勾完成、刪除或轉為任務。');
+      saveSecretaryNotes(quiet ? '' : `📌 已存到「小綿助記事」${meta.dueDate ? `，提醒日 ${meta.dueDate.replace(/-/g, '/')}` : ''}。`);
     }
 
-    function adviceItemToTask(index) {
+    async function adviceItemToTask(index, quiet) {
       const analysis = aiAssistantState.analysis;
       const text = adviceItemText(index);
       if (!analysis || !text) return;
+      const meta = (analysis.aiChecklistMeta || [])[index] || {};
       const clean = text.replace(/[。；]$/, '').slice(0, 90);
-      if (!analysis.isTask || !analysis.mainTask) {
-        analysis.isTask = true;
-        analysis.mainTask = makeGenericTaskDraft(clean, analysis.classification.category, '中', safeIsoDate(analysis.dueDate) || '', clean);
-        aiAssistantState.taskDraft = analysis.mainTask;
-        analysis.children = analysis.children || [];
-      } else if (analysis.mainTask.name === clean || analysis.children.some(child => child.name === clean)) {
-        return showToast('這一項已在任務草稿裡。');
-      } else {
-        analysis.children.push({ name: clean, dueDate: '', suggestedTiming: '期限請老師確認' });
-        aiAssistantState.taskDrafts = analysis.children;
-      }
-      renderTaskSuggestion(analysis);
-      $('aiCreateTaskButton').disabled = false;
-      $('aiCreateTaskButton').textContent = analysis.children.length ? `建立主任務與 ${analysis.children.length} 個子任務` : '建立主任務';
-      showToast('➕ 已加入任務草稿；請在「任務建立建議」確認後建立。');
-      $('aiTaskSuggestion').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      if (state.tasks.some(task => task.name.trim() === clean)) { if (!quiet) showToast('這一項已在任務清單裡。'); return; }
+      const draft = makeGenericTaskDraft(clean, analysis.classification.category, '中', meta.dueDate || safeIsoDate(analysis.dueDate) || '', clean);
+      draft.dueTime = meta.dueTime || '';
+      setLoading(true, '正在建立任務……');
+      try {
+        const result = await serverCall('saveTask', { ...draft, taskId: '', parentTaskId: '', projectId: '', taskType: '一般任務', csrfToken: state.csrfToken });
+        applyTaskResult(result);
+        if (!quiet) showToast(`➕ 已建立獨立任務「${clean}」${draft.dueDate ? `（${draft.dueDate.replace(/-/g, '/')}${draft.dueTime ? ' ' + draft.dueTime : ''}）` : ''}；需要分主子時到任務清單拖曳即可。`);
+      } catch (error) { showToast(error.message || '建立任務失敗。', true); }
+      finally { setLoading(false); }
+    }
+
+    function applyTaskResult(result) {
+      if (!result) return;
+      state.tasks = result.tasks || state.tasks;
+      state.filteredTasks = [...state.tasks];
+      renderSummary(result.summary || summarizeCurrentTasks());
+      applyFilters();
     }
 
     function updateAdviceProgress() {
@@ -6808,10 +6892,10 @@
         return;
       }
       $('aiCreateTaskButton').hidden = false;
-      $('aiMainTaskTitle').textContent = `主任務：${analysis.mainTask.name}${analysis.dueDate ? `｜期限 ${analysis.dueDate}` : '｜期限待教師確認'}`;
+      $('aiMainTaskTitle').textContent = `任務：${analysis.mainTask.name}${analysis.mainTask.dueDate ? `｜期限 ${analysis.mainTask.dueDate}${analysis.mainTask.dueTime ? ' ' + analysis.mainTask.dueTime : ''}` : '｜期限待教師確認'}`;
       $('aiSubtaskRecommendation').textContent = analysis.children.length
-        ? `建議建立 ${analysis.children.length} 個子任務。老師可取消不需要的項目，確認後才會寫入工作清單。`
-        : '這個情境較單純，建議只建立主任務；若後續工作變多，可在主任務編輯畫面自行新增子任務。';
+        ? `另建議 ${analysis.children.length} 個相關任務，全部以「獨立任務」建立、不自動分主／子；老師可取消不需要的，之後到任務清單用拖曳決定誰是誰的子任務。`
+        : '這個情境較單純，建議建立一個任務；之後需要拆解時，在任務清單拖曳即可。';
       $('aiSubtaskSuggestionList').innerHTML = analysis.children.map((child, index) => `
         <label class="ai-subtask-option">
           <input type="checkbox" data-ai-subtask-index="${index}" checked>
@@ -7000,8 +7084,8 @@
         ' "category": "情境分類，例如 行政交辦/親師溝通/活動籌備/教學/會議",',
         ' "isTask": true 或 false（是否需要建立待辦任務）,',
         ' "analysis": ["3 到 6 條重點分析與具體建議，每條一句話"],',
-        ' "checklist": ["3 到 6 條老師行動前應確認的事項"],',
-        ' "mainTask": {"name": "任務名稱，20 字內", "dueDate": "YYYY-MM-DD 或空字串", "priority": "高/中/低", "nextAction": "下一步行動一句話"} 或 null,',
+        ' "checklist": [{"text": "與這位老師有關、要確認或要做的事（一句話）", "kind": "task 或 note（要老師動手做、有交付物或期限的 → task；只需知道、留意、提醒自己的 → note）", "dueDate": "YYYY-MM-DD 或空字串（只能來自原文）", "dueTime": "HH:MM 或空字串（原文有寫時間才填）"}]（3 到 8 條）,',
+        ' "mainTask": {"name": "任務名稱，20 字內", "dueDate": "YYYY-MM-DD 或空字串", "dueTime": "HH:MM 或空字串", "priority": "高/中/低", "nextAction": "下一步行動一句話"} 或 null,',
         ' "subtasks": [{"name": "子任務名稱", "dueDate": "YYYY-MM-DD 或空字串"}]（只有多階段工作才拆，最多 6 項，否則空陣列）,',
         ' "parentMessage": "若適合發給家長，給一段禮貌委婉、不含個資的留言草稿；否則空字串",',
         ' "attachmentSummary": ["每個附件的重點摘要，一項一條"]（沒有附件就空陣列）',
@@ -7012,6 +7096,11 @@
         safeText
       ].join('\n');
       return instruction;
+    }
+
+    function safeTimeString(value) {
+      const text = String(value || '').trim();
+      return /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(text) ? text : '';
     }
 
     function parseAiJsonText(rawText) {
@@ -7112,7 +7201,12 @@
       $('aiResultType').textContent = `${analysis.isTask ? '任務型｜可建立工作' : '諮詢型｜先提供建議'}｜${cfg.label}`;
       $('aiResultType').hidden = false;
       if (Array.isArray(parsed.checklist) && parsed.checklist.length) {
-        analysis.aiChecklist = parsed.checklist.slice(0, 8).map(item => String(item).slice(0, 120));
+        const meta = parsed.checklist.slice(0, 8).map(item => typeof item === 'string'
+          ? { text: item.slice(0, 120), kind: 'note', dueDate: '', dueTime: '' }
+          : { text: String(item?.text || '').slice(0, 120), kind: item?.kind === 'task' ? 'task' : 'note', dueDate: safeIsoDate(item?.dueDate), dueTime: safeTimeString(item?.dueTime) })
+          .filter(item => item.text);
+        analysis.aiChecklist = meta.map(item => item.text);
+        analysis.aiChecklistMeta = meta;
       }
       renderAdviceChecklist(analysis);
       if (parsed.mainTask?.name) {
@@ -7123,6 +7217,7 @@
           safeIsoDate(parsed.mainTask.dueDate),
           String(parsed.mainTask.nextAction || parsed.mainTask.name).slice(0, 120)
         );
+        analysis.mainTask.dueTime = safeTimeString(parsed.mainTask.dueTime);
         analysis.children = (Array.isArray(parsed.subtasks) ? parsed.subtasks : []).slice(0, 6)
           .filter(item => item && item.name)
           .map(item => ({
@@ -7133,7 +7228,7 @@
         aiAssistantState.taskDraft = analysis.mainTask;
         aiAssistantState.taskDrafts = analysis.children;
         $('aiCreateTaskButton').disabled = false;
-        $('aiCreateTaskButton').textContent = analysis.children.length ? `建立主任務與 ${analysis.children.length} 個子任務` : '建立主任務';
+        $('aiCreateTaskButton').textContent = `建立 ${1 + analysis.children.length} 個任務`;
       }
       renderTaskSuggestion(analysis);
       if (!analysis.formDraft && !analysis.groupBuyRows) renderTeacherLineMessage(redactionText, analysis);
@@ -7257,7 +7352,7 @@
       renderFormDraft(analysis.formDraft);
       renderGroupBuyDraft(analysis.groupBuyRows);
       $('aiCreateTaskButton').disabled = false;
-      $('aiCreateTaskButton').textContent = analysis.children.length ? `建立主任務與 ${analysis.children.length} 個子任務` : '建立主任務';
+      $('aiCreateTaskButton').textContent = `建立 ${1 + analysis.children.length} 個任務`;
       if (geminiConfigReady()) {
         const providerLabel = providerConfig().label;
         showToast(redaction.count
@@ -7273,29 +7368,33 @@
         : analysis.parentMessage ? '親師留言草稿已產生，可直接修改或複製。' : '情境分析與任務建議已完成。');
     }
 
-    function createAiSuggestedTasks() {
+    async function createAiSuggestedTasks() {
       const analysis = aiAssistantState.analysis;
       if (!analysis?.isTask || !analysis.mainTask) return showToast('目前沒有可建立的任務建議。', true);
-      const existingNames = new Set(state.tasks.map(task => task.name.trim()));
-      if (existingNames.has(analysis.mainTask.name.trim())) return showToast('相同名稱的主任務已存在，請先確認工作清單。', true);
-      const stamp = Date.now();
-      const mainId = `AI-${stamp}`;
-      const mainTask = { ...analysis.mainTask, taskId: mainId, projectId: mainId, parentTaskId: '', taskType: '主任務' };
       const selected = [...document.querySelectorAll('[data-ai-subtask-index]:checked')]
         .map(input => analysis.children[Number(input.dataset.aiSubtaskIndex)])
         .filter(Boolean);
-      const childTasks = selected.map((child, index) => ({
-        ...makeGenericTaskDraft(child.name, analysis.classification.category, index === 0 ? '高' : '中', child.dueDate, child.name),
-        taskId: `${mainId}-${String(index + 1).padStart(2, '0')}`,
-        projectId: mainId, parentTaskId: mainId, taskType: '子任務', sortOrder: 91 + index
-      }));
-      state.tasks = [mainTask, ...childTasks, ...state.tasks];
-      state.filteredTasks = [...state.tasks];
-      renderSummary(summarizeCurrentTasks());
-      renderTasks();
-      $('aiCreateTaskButton').disabled = true;
-      $('aiCreateTaskButton').textContent = `已建立主任務與 ${childTasks.length} 個子任務`;
-      showToast(`已建立 1 個主任務${childTasks.length ? `與 ${childTasks.length} 個子任務` : ''}，並歸在同一專案下。`);
+      const drafts = [
+        { ...analysis.mainTask },
+        ...selected.map(child => makeGenericTaskDraft(child.name, analysis.classification.category, '中', child.dueDate, child.name))
+      ];
+      const existingNames = new Set(state.tasks.map(task => task.name.trim()));
+      setLoading(true, '正在建立任務……');
+      let created = 0, skipped = 0, result = null;
+      try {
+        for (const draft of drafts) {
+          if (existingNames.has(String(draft.name).trim())) { skipped += 1; continue; }
+          // 使用者指示：一律建立成獨立任務，不自動分主／子；關係由老師在任務清單拖曳決定
+          result = await serverCall('saveTask', { ...draft, taskId: '', parentTaskId: '', projectId: '', taskType: '一般任務', csrfToken: state.csrfToken });
+          existingNames.add(String(draft.name).trim());
+          created += 1;
+        }
+        if (result) applyTaskResult(result);
+        $('aiCreateTaskButton').disabled = true;
+        $('aiCreateTaskButton').textContent = `已建立 ${created} 個任務`;
+        showToast(`已建立 ${created} 個獨立任務${skipped ? `（${skipped} 個同名已存在，略過）` : ''}；到任務清單可用拖曳把相關任務歸到同一個主任務底下。`);
+      } catch (error) { showToast(error.message || '建立任務失敗。', true); }
+      finally { setLoading(false); }
     }
 
     function loadAssistantSettings() {
@@ -7479,7 +7578,7 @@
     function setTeacherToolbox(targetId) {
       const content = $('teacherToolboxContent');
       const buttons = [...document.querySelectorAll('[data-toolbox-target]')];
-      const panels = ['teachingProgressPanel', 'aiAssistantSection', 'secretaryNotesSection', 'lineInboxSection', 'contactBookSection'];
+      const panels = ['teachingProgressPanel', 'aiAssistantSection', 'secretaryNotesSection', 'lineInboxSection', 'contactBookSection', 'messageHubSection'];
       const current = buttons.find(button => button.classList.contains('active'))?.dataset.toolboxTarget || '';
       const shouldCollapse = !targetId || (current === targetId && !content.hidden);
 
@@ -8296,6 +8395,71 @@
     $('nextMonthButton').addEventListener('click', () => moveCalendarMonth(1));
     $('keywordFilter').addEventListener('input', () => window.setTimeout(applyFilters, 0));
 
+    // 任務關係用拖曳決定（使用者指示：AI 不自動分主／子）
+    let draggingTaskId = '';
+    $('taskTableWrap').addEventListener('dragstart', event => {
+      const row = event.target.closest('[data-task-row]');
+      if (!row) return;
+      draggingTaskId = row.dataset.taskRow;
+      event.dataTransfer.effectAllowed = 'move';
+      try { event.dataTransfer.setData('text/plain', draggingTaskId); } catch (error) {}
+      row.classList.add('is-dragging');
+    });
+    $('taskTableWrap').addEventListener('dragend', () => {
+      draggingTaskId = '';
+      document.querySelectorAll('.is-dragging, .is-drop-target').forEach(el => el.classList.remove('is-dragging', 'is-drop-target'));
+    });
+    $('taskTableWrap').addEventListener('dragover', event => {
+      if (!draggingTaskId) return;
+      const target = event.target.closest('[data-task-row], #taskUnnestZone');
+      if (!target) return;
+      if (target.dataset && target.dataset.taskRow === draggingTaskId) return;
+      event.preventDefault();
+      document.querySelectorAll('.is-drop-target').forEach(el => el.classList.remove('is-drop-target'));
+      target.classList.add('is-drop-target');
+    });
+    $('taskTableWrap').addEventListener('drop', event => {
+      if (!draggingTaskId) return;
+      const target = event.target.closest('[data-task-row], #taskUnnestZone');
+      if (!target) return;
+      event.preventDefault();
+      const childId = draggingTaskId;
+      draggingTaskId = '';
+      if (target.id === 'taskUnnestZone') nestTask(childId, '');
+      else if (target.dataset.taskRow !== childId) nestTask(childId, target.dataset.taskRow);
+    });
+
+    async function nestTask(childId, parentId) {
+      const child = state.tasks.find(task => task.taskId === childId);
+      if (!child) return;
+      let parent = parentId ? state.tasks.find(task => task.taskId === parentId) : null;
+      if (parent && parent.parentTaskId) parent = state.tasks.find(task => task.taskId === parent.parentTaskId) || parent;   // 只維持一層主／子
+      if (parent && parent.taskId === child.taskId) return;
+      if (parent && parent.parentTaskId === child.taskId) return showToast('不能把主任務拖進自己的子任務。', true);
+      if (!parent && !child.parentTaskId) return showToast('這已經是獨立任務了。');
+      setLoading(true, '正在調整任務關係……');
+      try {
+        let result = null;
+        if (parent) {
+          const projectId = parent.projectId || parent.taskId;
+          if (parent.taskType !== '主任務' || parent.projectId !== projectId) {
+            result = await serverCall('saveTask', { ...parent, projectId, taskType: '主任務', csrfToken: state.csrfToken });
+          }
+          for (const grand of state.tasks.filter(task => task.parentTaskId === child.taskId)) {
+            result = await serverCall('saveTask', { ...grand, parentTaskId: '', projectId: '', taskType: '一般任務', csrfToken: state.csrfToken });
+          }
+          result = await serverCall('saveTask', { ...child, parentTaskId: parent.taskId, projectId, taskType: '子任務', csrfToken: state.csrfToken });
+          applyTaskResult(result);
+          showToast(`已把「${child.name}」放到「${parent.name}」底下（拖回上方解除區可取消）。`);
+        } else {
+          result = await serverCall('saveTask', { ...child, parentTaskId: '', projectId: '', taskType: '一般任務', csrfToken: state.csrfToken });
+          applyTaskResult(result);
+          showToast(`「${child.name}」已變回獨立任務。`);
+        }
+      } catch (error) { showToast(error.message || '調整任務關係失敗。', true); }
+      finally { setLoading(false); }
+    }
+
     $('taskTableWrap').addEventListener('click', event => {
       const button = event.target.closest('[data-action]');
       if (!button) return;
@@ -8426,6 +8590,7 @@
     });
     $('addSecretaryNoteButton').addEventListener('click', addSecretaryNote);
     $('syncGoogleTasksButton').addEventListener('click', syncNotesWithGoogleTasksClient);
+    $('aiAdviceApplyAll').addEventListener('click', applyAllAdviceSuggestions);
 
     // 📣 大屏提示遙控（與 LineBot.gs 的 SCREEN_PROMPTS 同步）
     const SCREEN_PROMPT_GROUPS = [
@@ -8476,6 +8641,176 @@
         $('screenPromptCustom').value = '';
       } catch (error) { showToast(error.message || '送出失敗。', true); }
     });
+    // ---- 📮 訊息整合站：LINE 河道碎片 → 拆條 → 勾選 → 整合成一則 ----
+    const HUB_KEY = 'grade6MessageHubItems';
+    const HUB_CATEGORIES = ['轉達學生', '轉達家長', '轉達科任', '自己待辦', '略過'];
+    let hubItems = readLocalPreviewArray(HUB_KEY, []).filter(item => item && item.text);
+    async function callAssistantJson(prompt) {
+      const cfg = providerConfig();
+      if (!cfg.ready) throw new Error('AI 服務尚未設定');
+      let response;
+      if (cfg.kind === 'gemini') {
+        response = await fetch(`${cfg.endpoint}/${cfg.model}:generateContent`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': cfg.key },
+          body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { temperature: 0.3, maxOutputTokens: 4096, responseMimeType: 'application/json' } })
+        });
+      } else {
+        response = await fetch(`${cfg.endpoint}/chat/completions`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${cfg.key}` },
+          body: JSON.stringify({ model: cfg.model, messages: [{ role: 'user', content: prompt }], temperature: 0.3, response_format: { type: 'json_object' } })
+        });
+      }
+      if (!response.ok) throw new Error(`AI 回應錯誤（HTTP ${response.status}）`);
+      const data = await response.json();
+      const rawText = cfg.kind === 'gemini'
+        ? (data?.candidates?.[0]?.content?.parts || []).map(part => part.text || '').join('')
+        : String(data?.choices?.[0]?.message?.content || '');
+      return parseAiJsonText(rawText);
+    }
+    function saveHub() {
+      hubItems = hubItems.slice(0, 200);
+      writeLocalPreviewJson(HUB_KEY, hubItems);
+      renderHub();
+    }
+    function renderHub() {
+      const host = $('hubList');
+      if (!host) return;
+      const pending = hubItems.filter(item => !item.done).length;
+      $('messageHubCount').textContent = pending;
+      const badge = $('messageHubBadge');
+      if (badge) { badge.textContent = pending; badge.hidden = !pending; }
+      if (!hubItems.length) { host.innerHTML = '<div class="secretary-note-empty">還沒有訊息。把 LINE 群組的內容貼上來，按「加入並拆解」。</div>'; return; }
+      host.innerHTML = hubItems.map((item, index) => `<article class="secretary-note-item${item.done ? ' done' : ''}">
+        <div class="secretary-note-main">
+          <input type="checkbox" class="note-done-check" data-hub-check="${index}" ${item.checked ? 'checked' : ''} title="勾選＝要整合進訊息">
+          <div style="flex:1">
+            <div class="secretary-note-text" contenteditable="true" spellcheck="false" data-hub-text="${index}">${escapeHtml(item.text)}</div>
+            <div class="secretary-note-meta">
+              <select class="input" data-hub-cat="${index}" style="padding:2px 6px;width:auto;font-size:12px">${HUB_CATEGORIES.map(c => `<option${c === item.category ? ' selected' : ''}>${c}</option>`).join('')}</select>
+              　⏰ <input type="text" class="input" data-hub-when="${index}" value="${escapeHtml(item.when || '')}" placeholder="時間（例：9/15 9:30）" style="width:150px;padding:2px 6px;font-size:12px">
+              ${item.source ? `　來源：${escapeHtml(item.source)}` : ''}
+            </div>
+          </div>
+        </div>
+        <button class="mini-button" type="button" data-hub-remove="${index}">刪除</button>
+      </article>`).join('');
+    }
+    function hubFallbackSplit(raw) {
+      return raw.split(/\n{2,}|\n(?=\S{0,3}[：:•●■▶\-—]|\n)/).map(t => t.trim()).filter(t => t.length > 3)
+        .map(text => ({ text: text.slice(0, 300), category: '轉達學生', when: (text.match(/\d{1,2}\/\d{1,2}(?:\s*\(?[一二三四五六日]\)?)?(?:\s*\d{1,2}:\d{2})?/) || [''])[0], checked: true }));
+    }
+    $('hubAddButton').addEventListener('click', async () => {
+      const raw = $('hubInput').value.trim();
+      if (!raw) return showToast('請先貼上訊息。', true);
+      let items = [];
+      if (providerConfig().ready) {
+        setLoading(true, 'AI 正在拆解訊息……');
+        try {
+          const parsed = await callAssistantJson([
+            `今天是 ${localDateString(new Date())}。以下是一位臺灣國小導師從 LINE 群組複製的一段或多段訊息（可能混雜主任交辦、處室通知、老師補充、臨時修改、閒聊與抱怨）。`,
+            '請拆成一條一條「導師需要處理的事」：去掉閒聊、抱怨、貼圖式回覆；同一件事被修改多次時只保留最新版本並註明「（已更新）」；每條抓出 when（日期時間，原文有才寫，格式如 9/15(二) 9:30）；判斷 category：轉達學生（學生要知道或要做）、轉達家長、轉達科任（其他老師）、自己待辦（導師自己要做）、略過（無需處理）。',
+            '每條用一句話改寫成清楚版本（保留原意，去除公文腔），並加 source（原始發文者或處室，若能看出）。',
+            '只回傳 JSON：{"items":[{"text":"","category":"轉達學生","when":"","source":""}]}',
+            '訊息：',
+            raw
+          ].join('\n'));
+          items = (parsed.items || []).map(item => ({
+            text: String(item.text || '').slice(0, 300), category: HUB_CATEGORIES.includes(item.category) ? item.category : '轉達學生',
+            when: String(item.when || '').slice(0, 30), source: String(item.source || '').slice(0, 30), checked: item.category !== '略過'
+          })).filter(item => item.text);
+        } catch (error) { showToast(`AI 拆解失敗，改用換行分條：${error.message}`, true); items = hubFallbackSplit(raw); }
+        finally { setLoading(false); }
+      } else { items = hubFallbackSplit(raw); }
+      if (!items.length) return showToast('沒有拆出任何項目。', true);
+      hubItems = [...items.map(item => ({ ...item, createdAt: new Date().toISOString() })), ...hubItems];
+      $('hubInput').value = '';
+      saveHub();
+      showToast(`已拆成 ${items.length} 條；請確認分類與勾選後整合。`);
+    });
+    $('hubList').addEventListener('change', event => {
+      const check = event.target.closest('[data-hub-check]'), cat = event.target.closest('[data-hub-cat]'), when = event.target.closest('[data-hub-when]');
+      if (check) hubItems[Number(check.dataset.hubCheck)].checked = check.checked;
+      if (cat) hubItems[Number(cat.dataset.hubCat)].category = cat.value;
+      if (when) hubItems[Number(when.dataset.hubWhen)].when = when.value.trim().slice(0, 30);
+      writeLocalPreviewJson(HUB_KEY, hubItems);
+    });
+    $('hubList').addEventListener('focusout', event => {
+      const text = event.target.closest('[data-hub-text]');
+      if (!text) return;
+      hubItems[Number(text.dataset.hubText)].text = text.textContent.trim().slice(0, 300);
+      writeLocalPreviewJson(HUB_KEY, hubItems);
+    });
+    $('hubList').addEventListener('click', event => {
+      const remove = event.target.closest('[data-hub-remove]');
+      if (!remove) return;
+      hubItems.splice(Number(remove.dataset.hubRemove), 1);
+      saveHub();
+    });
+    $('hubSelectAllButton').addEventListener('click', () => { hubItems.forEach(item => { item.checked = item.category !== '略過'; }); saveHub(); });
+    $('hubClearDoneButton').addEventListener('click', () => { hubItems = hubItems.filter(item => !item.checked); saveHub(); showToast('已清除勾選的項目。'); });
+    $('hubCompileButton').addEventListener('click', async () => {
+      const audience = $('hubAudience').value;
+      const selected = hubItems.filter(item => item.checked && item.category !== '略過');
+      if (!selected.length) return showToast('請先勾選要整合的項目。', true);
+      let message = '';
+      if (providerConfig().ready) {
+        setLoading(true, 'AI 正在整合訊息……');
+        try {
+          const parsed = await callAssistantJson([
+            `你是臺灣國小導師。把下面幾條事項整合成「一則」要傳給${audience === '學生' ? '國小學生（用孩子看得懂的話，短句、有順序、標明時間與要帶的東西）' : audience === '家長' ? '家長（禮貌、清楚、條列）' : audience === '科任' ? '科任與學年老師（精簡、條列、標明時間與需配合事項）' : '自己（待辦清單，依時間排序）'}的訊息。`,
+            '規則：依時間先後排序；同類事項合併；每條開頭用 emoji 或編號；有時間的把時間放前面；不加任何原文沒有的資訊；不使用學生姓名；結尾一句溫暖提醒（自己版不用）。',
+            '只回傳 JSON：{"message":"整合後的完整訊息（含換行）"}',
+            '事項：',
+            selected.map((item, i) => `${i + 1}. [${item.category}${item.when ? '｜' + item.when : ''}] ${item.text}`).join('\n')
+          ].join('\n'));
+          message = String(parsed.message || '').trim();
+        } catch (error) { showToast(`AI 整合失敗，改用簡易合併：${error.message}`, true); }
+        finally { setLoading(false); }
+      }
+      if (!message) {
+        const header = audience === '學生' ? '各位同學好，今天要注意的事：' : audience === '家長' ? '各位家長好，以下事項請留意：' : audience === '科任' ? '各位老師好，請協助以下事項：' : '我的待辦：';
+        message = [header, ...selected.map((item, i) => `${i + 1}. ${item.when ? `【${item.when}】` : ''}${item.text}`), audience === '自己' ? '' : '謝謝大家！'].filter(Boolean).join('\n');
+      }
+      $('hubOutput').value = message;
+      $('hubOutputWrap').hidden = false;
+      $('hubOutput').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      showToast('🧩 已整合成一則，可直接修改後複製。');
+    });
+    $('hubCopyButton').addEventListener('click', async () => {
+      await navigator.clipboard.writeText($('hubOutput').value).catch(() => {});
+      showToast('已複製整合訊息。');
+    });
+    $('hubNoteButton').addEventListener('click', () => {
+      const note = normalizeSecretaryNote({ text: $('hubOutput').value.trim(), createdAt: new Date().toISOString() }, 'web');
+      if (!note) return showToast('沒有內容可存。', true);
+      secretaryNotesState.notes.unshift(note);
+      saveSecretaryNotes('📌 整合訊息已存為記事。');
+    });
+    $('hubTasksButton').addEventListener('click', async () => {
+      const mine = hubItems.filter(item => item.category === '自己待辦' && !item.done);
+      if (!mine.length) return showToast('沒有「自己待辦」的項目（可先把分類改成自己待辦）。', true);
+      setLoading(true, '正在建立任務……');
+      let result = null, created = 0;
+      try {
+        for (const item of mine) {
+          if (state.tasks.some(task => task.name.trim() === item.text.slice(0, 90).trim())) continue;
+          const dateMatch = String(item.when || '').match(/(\d{1,2})\/(\d{1,2})/);
+          const timeMatch = String(item.when || '').match(/(\d{1,2}):(\d{2})/);
+          const year = new Date().getFullYear();
+          const dueDate = dateMatch ? `${year}-${String(dateMatch[1]).padStart(2, '0')}-${String(dateMatch[2]).padStart(2, '0')}` : '';
+          const draft = makeGenericTaskDraft(item.text.slice(0, 90), '行政交辦', '中', dueDate, item.text.slice(0, 120));
+          draft.dueTime = timeMatch ? `${String(timeMatch[1]).padStart(2, '0')}:${timeMatch[2]}` : '';
+          result = await serverCall('saveTask', { ...draft, taskId: '', parentTaskId: '', projectId: '', taskType: '一般任務', csrfToken: state.csrfToken });
+          item.done = true; created += 1;
+        }
+        if (result) applyTaskResult(result);
+        saveHub();
+        showToast(`已建立 ${created} 個任務（時間已帶入）。`);
+      } catch (error) { showToast(error.message || '建立任務失敗。', true); }
+      finally { setLoading(false); }
+    });
+    renderHub();
+
     $('screenPromptClearButton').addEventListener('click', async () => {
       try {
         await callLineBridge('prompt_set', { clear: true });

@@ -552,3 +552,16 @@ for (const cmd of ["說明", "今日點名", "缺交統計", "推播設定", "�
 assert.match(studioHtml, /段落修改指引（這一段要怎麼修）/, "批改單應逐段指出要修改處");
 assert.match(studioHtml, /praise 兩條/, "評語應固定兩條正向");
 assert.match(studioHtml, /improve 一條/, "評語應固定一條待改進");
+
+// 2026-09-07 工作台：清單分任務／記事＋帶時間、任務拖曳分主子、訊息整合站
+assert.match(indexHtml, /"kind": "task 或 note/, "AI 清單應標示每項是任務或記事");
+assert.match(indexHtml, /id="aiAdviceApplyAll"/, "應有依建議一鍵建立全部");
+assert.match(indexHtml, /function safeTimeString/, "應能擷取原文時間到任務欄位");
+assert.match(indexHtml, /draggable="true" data-task-row=/, "任務列應可拖曳");
+assert.match(indexHtml, /async function nestTask/, "應能拖曳設定／解除主子任務");
+assert.match(indexHtml, /id="taskUnnestZone"/, "應有解除子任務的拖放區");
+assert.match(indexHtml, /taskType: '一般任務', csrfToken: state\.csrfToken \}\);\s*existingNames\.add/, "AI 任務建議應建立獨立任務且經 saveTask 持久化");
+assert.doesNotMatch(indexHtml, /建立主任務與 \$\{analysis\.children\.length\} 個子任務/, "不得再自動建立主／子任務");
+assert.match(indexHtml, /id="messageHubSection"/, "應有訊息整合站版面");
+assert.match(indexHtml, /data-toolbox-target="messageHubSection"/, "教師工具箱應有訊息整合站入口");
+assert.match(indexHtml, /轉達學生', '轉達家長', '轉達科任', '自己待辦', '略過'/, "訊息整合站應有五種分類");
