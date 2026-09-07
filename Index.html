@@ -4864,7 +4864,7 @@
           <tr class="${rowClass}" draggable="true" data-task-row="${escapeHtml(task.taskId)}" title="拖到另一個任務上＝變成它的子任務；拖到上方「解除區」＝變回獨立任務">
             <td><span class="badge ${priorityClass}">${escapeHtml(task.priority)}</span></td>
             <td>
-              <div class="project-task-name"><span class="project-connector">${isChild ? '└' : ''}</span><div>${levelLabel}<div class="${taskNameClass} task-name-link" data-task-detail="${escapeHtml(task.taskId)}" title="點一下看說明、連結與來源附件">${escapeHtml(task.name)}${task.detailUrl ? ' <span class="task-link-dot" title="有連結">🔗</span>' : ''}</div>${progress}</div></div>
+              <div class="project-task-name">${isChild ? '<span class="project-connector">└</span>' : ''}<div>${levelLabel}<div class="${taskNameClass} task-name-link" data-task-detail="${escapeHtml(task.taskId)}" title="點一下看說明、連結與來源附件">${escapeHtml(task.name)}${task.detailUrl ? ' <span class="task-link-dot" title="有連結">🔗</span>' : ''}</div>${progress}</div></div>
               <div style="margin-top:5px;color:#7a8793;font-size:12px">${escapeHtml([taskWorkAxis(task), task.category].filter(Boolean).join('・'))}｜${escapeHtml(task.taskId)}</div>
             </td>
             <td><span class="badge ${statusClass}">${escapeHtml(task.status)}</span></td>
