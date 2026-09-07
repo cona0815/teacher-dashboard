@@ -94,6 +94,7 @@ function onOpen() {
       .addSeparator()
       .addItem('📋 更新安裝總表（看進度與代號）', 'menuBuildSetupSheet')
       .addItem('🔑 顯示我的金鑰', 'menuShowKeys')
+      .addItem('ℹ️ 程式版本（看要不要更新）', 'menuShowVersion')
       .addItem('🧹 清理重複資料（修統計）', 'menuCleanupDuplicates')
       .addToUi();
   } catch (error) {}
@@ -173,6 +174,7 @@ function buildSetupSheet_() {
     ['🔑C', '工作台同步金鑰', String(props.getProperty('LINE_SYNC_TOKEN') || '【請先執行選單①】'), '選單① 自動產生', '教師工作台「⚙ 設定 → LINE 小幫手 → 🔑C」', props.getProperty('LINE_SYNC_TOKEN') ? '✅ 已產生' : '⬜'],
     ['🔑D', '教室大屏金鑰', String(props.getProperty('CLASSROOM_TOKEN') || '【請先執行選單①】'), '選單① 自動產生', '晨間大屏「⚙ 設定 → 🔑D」（教室電腦只放這把）', props.getProperty('CLASSROOM_TOKEN') ? '✅ 已產生' : '⬜'],
     ['👤', '我的 LINE userId', hasUser ? '（已設定，機器人只回應你）' : '【對機器人傳「我的ID」後用選單③填入】', 'LINE 傳「我的ID」', '本表選單「③ 填入我的 LINE userId」', mask(hasUser)],
+    ['ℹ️', '程式版本', BOT_VERSION, '網站 Install 第 2 版更新指南', '比網站上的版本舊就用「一鍵複製 LineBot.gs」更新', '✅'],
     ['🔑E', 'Gemini 金鑰（選填）', hasE ? '（已安全存入，不顯示）' : '【選填：用選單④填入】', 'aistudio.google.com/app/apikey', '本表選單「④ 填入 Gemini 金鑰」＋工作台 AI 設定', hasE ? '✅ 已填' : '⬜ 未填（可先跳過）']
   ];
   sheet.getRange(1, 1, rows.length, 6).setValues(rows);
@@ -200,6 +202,18 @@ function menuSetupLineBot() {
   var summary = setupLineBot();
   buildSetupSheet_();
   menuShowDialog_('✅ LINE 小幫手初始化完成', summary + '\n\n📋 已同時建立「安裝總表」分頁（試算表最前面）——之後照總表逐格補齊、用選單②③④直接填入即可。');
+}
+
+function menuShowVersion() {
+  menuShowDialog_('程式版本', [
+    '這份試算表裡的 LINE 小幫手程式版本：',
+    '  ' + BOT_VERSION,
+    '',
+    '到 https://t-borad2026.netlify.app/Install.html#partv2 看「網站上的最新版本」；',
+    '若網站的日期比這裡新，照該頁「一鍵複製 LineBot.gs」貼上、儲存，再「管理部署 → 編輯 → 新版本 → 部署」。',
+    '',
+    '在 LINE 對機器人傳「版本」也會回覆這個日期。'
+  ].join('\n'));
 }
 
 function menuShowKeys() {
@@ -461,6 +475,9 @@ function doGet() {
   return lineBotJson_({ ok: true, service: 'teacher-dashboard-line-bot', hint: '請以 POST 使用本服務。' });
 }
 
+// 程式版本（每次發布都要更新；試算表選單「ℹ️ 程式版本」、LINE 傳「版本」、工作台連線檢查都會顯示）
+var BOT_VERSION = '2026-09-07 22:30';
+
 function lineBotJson_(payload) {
   return ContentService.createTextOutput(JSON.stringify(payload)).setMimeType(ContentService.MimeType.JSON);
 }
@@ -483,7 +500,7 @@ function handleLineSyncApi_(body) {
   }
   try {
     if (action === 'ping') {
-      return lineBotJson_({ ok: true, service: 'teacher-dashboard-line-bot', version: 1, role: isTeacher ? 'teacher' : 'classroom', time: new Date().toISOString() });
+      return lineBotJson_({ ok: true, service: 'teacher-dashboard-line-bot', version: 2, botVersion: BOT_VERSION, role: isTeacher ? 'teacher' : 'classroom', time: new Date().toISOString() });
     }
     if (action === 'pull') return lineBotJson_(pullLineInbox_());
     if (action === 'ack') return lineBotJson_(ackLineInbox_(body));
@@ -1402,6 +1419,10 @@ function handleLineEvent_(event, allowedUsers) {
     replyLineMessage_(event.replyToken, buildPushSettingsReply_());
     return;
   }
+  if (/^(版本|程式版本)$/.test(text)) {
+    replyLineMessage_(event.replyToken, 'LINE 小幫手程式版本：' + BOT_VERSION + '\n到 t-borad2026.netlify.app/Install.html#partv2 比對網站版本，較舊就更新。');
+    return;
+  }
   var promptMatch = text.match(/^(提示|大屏提示|大屏)\s*(.*)$/);
   if (promptMatch) {
     replyLineMessage_(event.replyToken, handleScreenPromptCommand_(promptMatch[2]));
@@ -2053,6 +2074,7 @@ function lineBotHelpText_() {
     '・「推播設定」→ 查看本月用量與各項推播開關；「開啟 放學小結」「關閉 作業推播」可切換',
     '・「撤回」→ 作廢剛剛那一筆；「刪除 關鍵字」→ 作廢含關鍵字的最新一筆',
     '・「我的ID」→ 查詢自己的 LINE userId（安裝設定用）',
+    '・「版本」→ 看目前程式版本日期（跟網站比對要不要更新）',
     '訊息會先進工作台的 LINE 收件匣，由你確認後才正式建立。',
     '（以上你問我答的功能都不用 LINE 額度；只有主動推播才會計算。）'
   ].join('\n');

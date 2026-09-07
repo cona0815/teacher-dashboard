@@ -190,5 +190,6 @@
     async function loadBoard() { $('source').textContent = '資料來源：正在同步 Workspace 任務系統…'; try { render(await serverCall('getBoardData')); } catch (error) { $('source').textContent = `讀取失敗：${error.message}`; $('taskList').innerHTML = `<div class="empty">${escapeHtml(error.message)}<br>請稍後重新整理。</div>`; scheduleRefresh(3); } }
     $('refreshButton').addEventListener('click', loadBoard); updateClock(); window.setInterval(updateClock, 60 * 1000); loadBoard();
   </script>
+  <script src="assets/version.js"></script>
 </body>
 </html>

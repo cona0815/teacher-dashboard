@@ -587,3 +587,10 @@ assert.match(indexHtml, /rel="noopener" title="\$\{escapeHtml\(task\.detailUrl\)
 assert.match(indexHtml, /function openTaskDetail/, "應有任務說明彈窗");
 assert.match(indexHtml, /data-task-detail=/, "任務名稱與下一步應可點開說明");
 assert.match(indexHtml, /📎 來源附件：/, "AI 建立的任務應記錄來源附件");
+
+// 版本標記：LineBot.gs BOT_VERSION、各頁 assets/version.js（發布時要一起更新日期）
+assert.match(lineBotSource, /var BOT_VERSION = '\d{4}-\d{2}-\d{2} \d{2}:\d{2}'/, "LineBot.gs 應有 BOT_VERSION 日期時間");
+assert.match(lineBotSource, /botVersion: BOT_VERSION/, "ping 應回傳程式版本");
+assert.match(lineBotSource, /\(版本\|程式版本\)/, "LINE 應支援「版本」指令");
+assert.match(fs.readFileSync(path.join(__dirname, '..', 'assets', 'version.js'), 'utf8'), /TD_VERSION = '\d{4}-\d{2}-\d{2} \d{2}:\d{2}'/, "assets/version.js 應有網站版本");
+['Index.html', 'Studio.html', 'Morning.html', 'Install.html'].forEach(name => assert.match(fs.readFileSync(path.join(__dirname, '..', name), 'utf8'), /assets\/version\.js/, name + ' 應載入版本標記'));

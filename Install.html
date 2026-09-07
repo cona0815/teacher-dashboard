@@ -596,6 +596,7 @@
 
     <section id="partv2">
       <h2>🆕 第 2 版來了！已經在用第 1 版的老師看這裡</h2>
+      <p class="lead">怎麼知道自己的版本？網站每頁左下角有「版本 日期 時間」；LINE 小幫手在試算表選單「🤖 LINE 小幫手 → ℹ️ 程式版本」或對機器人傳「版本」。<strong>本頁下方會顯示網站上最新的 LineBot.gs 版本</strong>，比你的新就照下面步驟更新。</p>
       <p class="lead">2026 年 9 月起網站升級為<strong>第 2 版</strong>。如果你是全新安裝，照上面 A→B→C 做就是第 2 版，這段可以跳過；<strong>已經裝好第 1 版的老師</strong>，照下面做 5～10 分鐘就升級完成。</p>
 
       <h3>第 2 版多了什麼？</h3>
@@ -619,6 +620,7 @@
             <li>按這顆按鈕取得最新程式碼：<br>
               <button type="button" id="copyLineBotButton" style="font-size:16px;font-weight:900;padding:10px 22px;border-radius:10px;border:2px solid #1f514a;background:#1f514a;color:#fff;cursor:pointer;font-family:inherit;margin:6px 0">📋 一鍵複製最新 LineBot.gs 程式碼</button>
               <span id="copyLineBotStatus" style="font-weight:700"></span><br>
+              <span class="lead">網站上的最新 LineBot.gs 版本：<strong id="siteBotVersion">讀取中…</strong>（試算表選單「🤖 LINE 小幫手 → ℹ️ 程式版本」或對機器人傳「版本」，日期比這個舊就要更新；一樣就不用動）</span><br>
               <span class="lead">（按了就複製到剪貼簿；若失敗可<a href="LineBot.gs" target="_blank" rel="noopener">開啟原始碼</a>後 Ctrl+A 全選、Ctrl+C 複製）</span></li>
             <li>回 Apps Script：<strong>Ctrl+A 全選刪掉舊程式 → Ctrl+V 貼上 → 儲存 💾</strong>（不應出現紅色錯誤）</li>
             <li><strong>部署 → 管理部署 → ✏️ 編輯 → 版本選「新版本」→ 部署</strong>（⚠️ 千萬不要按「新增部署」，網址會變）</li>
@@ -684,6 +686,12 @@
         toast.classList.add('show');
         setTimeout(() => toast.classList.remove('show'), 1800);
       }));
+      // 顯示本站 LineBot.gs 的版本日期（從檔案裡的 BOT_VERSION 讀）
+      fetch('LineBot.gs', { cache: 'no-store' }).then(r => r.text()).then(code => {
+        const m = code.match(/BOT_VERSION = '([^']+)'/);
+        const el = document.getElementById('siteBotVersion');
+        if (el) el.textContent = m ? m[1] : '（讀不到）';
+      }).catch(() => { const el = document.getElementById('siteBotVersion'); if (el) el.textContent = '（讀不到）'; });
       // 第 2 版更新指南：一鍵複製最新 LineBot.gs（直接抓本站檔案，不需分享包）
       const copyLineBot = document.getElementById('copyLineBotButton');
       if (copyLineBot) copyLineBot.addEventListener('click', async () => {
@@ -702,5 +710,6 @@
       });
     })();
   </script>
+  <script src="assets/version.js"></script>
 </body>
 </html>
