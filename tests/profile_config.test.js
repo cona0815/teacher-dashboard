@@ -575,3 +575,15 @@ assert.match(studioHtml, /async function dkGenerateSlide/, "應有逐頁生圖�
 assert.match(studioHtml, /style-anchor\.png/, "後續頁應以樣張為風格參考");
 assert.match(studioHtml, /ABSOLUTELY NO text, letters, numbers, logos or signs anywhere\. Keep \$\{calm\}/, "疊字模式生圖不得含文字並預留文字區");
 assert.match(studioHtml, /pdf\.addPage\(\[1120, 630\], 'landscape'\)/, "PDF 應為 16:9 橫式、每頁一張逐頁加入");
+
+// 任務／清單／整合站附超連結（來自原文或附件，寫入 detailUrl）
+assert.match(indexHtml, /"link": "原文或附件中對應這件事的網址/, "AI 清單項目應抽出對應網址");
+assert.match(indexHtml, /function safeUrl/, "網址應經 http(s) 驗證");
+assert.match(indexHtml, /data-draft-link=/, "草稿板每項應可填連結");
+assert.match(indexHtml, /draft\.detailUrl = item\.link \|\| ''/, "建立任務時連結應寫入 detailUrl");
+assert.match(indexHtml, /rel="noopener" title="\$\{escapeHtml\(task\.detailUrl\)\}">🔗 連結<\/a>/, "任務清單應顯示連結按鈕");
+
+// 任務說明彈窗：點名稱看完整說明、連結、來源附件
+assert.match(indexHtml, /function openTaskDetail/, "應有任務說明彈窗");
+assert.match(indexHtml, /data-task-detail=/, "任務名稱與下一步應可點開說明");
+assert.match(indexHtml, /📎 來源附件：/, "AI 建立的任務應記錄來源附件");

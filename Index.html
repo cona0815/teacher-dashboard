@@ -145,6 +145,8 @@
     .ai-kind-badge { display:inline-block; margin-left:6px; font-size:11px; font-weight:800; border-radius:999px; padding:0 8px; background:#e8f2ee; color:#1f514a; vertical-align:1px; }
     .ai-kind-badge.is-task { background:#fff7e6; color:#b9852f; }
     .ai-kind-badge.is-time { background:#eef3fb; color:#1f3a5f; }
+    .ai-kind-badge.is-link { background:#e6f0ff; color:#1d4ed8; text-decoration:none; cursor:pointer; }
+    .ai-kind-badge.is-link:hover { background:#d5e4ff; }
     .mini-button.is-suggested { border-color:#b9852f; box-shadow:0 0 0 2px #fff3d6 inset; font-weight:900; }
     .task-unnest-zone { border:2px dashed #b9c9c2; border-radius:10px; padding:6px 12px; font-size:12.5px; color:#657570; margin-bottom:8px; text-align:center; }
     .task-unnest-zone.is-drop-target { border-color:#1f514a; background:#e8f2ee; color:#1f514a; }
@@ -752,7 +754,17 @@
       text-decoration-color: #5f9270;
       opacity: .76;
     }
-    .task-next { max-width: 360px; color: var(--muted); line-height: 1.45; }
+    .task-next { max-width: 360px; color: var(--muted); line-height: 1.45; cursor: pointer; }
+    .task-next:hover, .task-name-link:hover { text-decoration: underline dotted; }
+    .task-name-link { cursor: pointer; }
+    .task-next-more { display:inline-block; font-size:10.5px; font-weight:800; color:var(--primary); background:var(--primary-soft); border-radius:999px; padding:0 7px; }
+    .task-link-dot { font-size: 12px; }
+    .task-detail-popover { z-index: 300; }
+    .task-detail-badges { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:8px; }
+    .task-detail-desc { white-space: pre-wrap; font-size: 13px; line-height: 1.55; padding: 8px 10px; background: #f7f4ec; border-radius: 10px; margin: 6px 0; max-height: 260px; overflow: auto; word-break: break-all; }
+    .task-detail-desc a { color: #1d4ed8; }
+    .task-detail-actions { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+    .task-detail-actions .button { min-height: 34px; padding: 4px 12px; font-size: 12.5px; text-decoration: none; }
     .badge {
       display: inline-flex; align-items: center; min-height: 27px; padding: 3px 9px;
       border-radius: 999px; background: #e7eee9; font-size: 12px; font-weight: 850; white-space: nowrap;
@@ -4823,9 +4835,12 @@
         const priorityClass = task.priority === '高' ? 'badge-high' : '';
         const statusClass = statusBadgeClass(task);
         const nextAction = task.nextAction || task.progress || '尚未填寫下一步行動';
+        const nextLines = String(nextAction).split('\n').map(line => line.trim()).filter(Boolean);
+        const nextFirst = nextLines[0] || nextAction;
+        const nextMore = nextLines.length > 1;
         const quickStatus = task.status === '已完成' ? '進行中' : '已完成';
         const detailLink = task.detailUrl
-          ? `<a class="mini-button" href="${escapeHtml(task.detailUrl)}" target="_blank" rel="noopener">資料</a>`
+          ? `<a class="mini-button task-link-button" href="${escapeHtml(task.detailUrl)}" target="_blank" rel="noopener" title="${escapeHtml(task.detailUrl)}">🔗 連結</a>`
           : '';
         const gcalLink = task.dueDate
           ? `<button class="mini-button" type="button" data-action="gcal" data-id="${escapeHtml(task.taskId)}" title="在 Google 日曆開啟預填好的新增畫面">📅</button>`
@@ -4849,12 +4864,12 @@
           <tr class="${rowClass}" draggable="true" data-task-row="${escapeHtml(task.taskId)}" title="拖到另一個任務上＝變成它的子任務；拖到上方「解除區」＝變回獨立任務">
             <td><span class="badge ${priorityClass}">${escapeHtml(task.priority)}</span></td>
             <td>
-              <div class="project-task-name">${isChild ? '<span class="project-connector">└</span>' : ''}<div>${levelLabel}<div class="${taskNameClass}">${escapeHtml(task.name)}</div>${progress}</div></div>
+              <div class="project-task-name"><span class="project-connector">${isChild ? '└' : ''}</span><div>${levelLabel}<div class="${taskNameClass} task-name-link" data-task-detail="${escapeHtml(task.taskId)}" title="點一下看說明、連結與來源附件">${escapeHtml(task.name)}${task.detailUrl ? ' <span class="task-link-dot" title="有連結">🔗</span>' : ''}</div>${progress}</div></div>
               <div style="margin-top:5px;color:#7a8793;font-size:12px">${escapeHtml([taskWorkAxis(task), task.category].filter(Boolean).join('・'))}｜${escapeHtml(task.taskId)}</div>
             </td>
             <td><span class="badge ${statusClass}">${escapeHtml(task.status)}</span></td>
             <td><span class="badge ${dueClass}">${escapeHtml(formatDue(task))}</span></td>
-            <td><div class="task-next">${escapeHtml(nextAction)}</div></td>
+            <td><div class="task-next" data-task-detail="${escapeHtml(task.taskId)}" title="點一下看完整說明">${escapeHtml(nextFirst)}${nextMore ? ' <span class="task-next-more">＋說明</span>' : ''}</div></td>
             <td>${escapeHtml(task.owner || '—')}</td>
             <td>
               <div class="row-actions">
@@ -6668,7 +6683,8 @@
       $('aiAdviceItems').innerHTML = items.map((item, index) => {
         const m = meta[index] || {};
         const when = m.dueDate ? `${m.dueDate.replace(/-/g, '/')}${m.dueTime ? ' ' + m.dueTime : ''}` : '';
-        const badge = m.kind === 'task' ? '<span class="ai-kind-badge is-task">建議：任務</span>' : m.kind === 'note' ? '<span class="ai-kind-badge">建議：記事</span>' : '';
+        const badge = (m.kind === 'task' ? '<span class="ai-kind-badge is-task">建議：任務</span>' : m.kind === 'note' ? '<span class="ai-kind-badge">建議：記事</span>' : '')
+          + (m.link ? `<a class="ai-kind-badge is-link" href="${escapeHtml(m.link)}" target="_blank" rel="noopener" title="${escapeHtml(m.link)}">🔗 連結</a>` : '');
         return `
         <label class="ai-advice-option" draggable="true" data-ai-advice-drag="${index}" title="拖到下方「任務建立建議」可轉成任務">
           <input type="checkbox" data-ai-advice-index="${index}">
@@ -6710,7 +6726,7 @@
       if (!text) return;
       const meta = (aiAssistantState.analysis?.aiChecklistMeta || [])[index] || {};
       if (secretaryNotesState.notes.some(note => note.text === `【提醒】${text}`)) { if (!quiet) showToast('這一則已在記事裡。'); return; }
-      const note = normalizeSecretaryNote({ text: `【提醒】${text}`, createdAt: new Date().toISOString(), remindDate: meta.dueDate || '' }, 'web');
+      const note = normalizeSecretaryNote({ text: `【提醒】${text}${meta.link ? ` 🔗 ${meta.link}` : ''}`, createdAt: new Date().toISOString(), remindDate: meta.dueDate || '' }, 'web');
       if (!note) return;
       secretaryNotesState.notes.unshift(note);
       saveSecretaryNotes(quiet ? '' : `📌 已存到「小綿助記事」${meta.dueDate ? `，提醒日 ${meta.dueDate.replace(/-/g, '/')}` : ''}。`);
@@ -6721,7 +6737,7 @@
       const text = adviceItemText(index);
       if (!analysis || !text) return;
       const meta = (analysis.aiChecklistMeta || [])[index] || {};
-      const draft = addDraftTask({ name: text, dueDate: meta.dueDate || analysis.dueDate || '', dueTime: meta.dueTime || '', category: analysis.classification?.category }, quiet);
+      const draft = addDraftTask({ name: text, dueDate: meta.dueDate || analysis.dueDate || '', dueTime: meta.dueTime || '', link: meta.link || '', category: analysis.classification?.category }, quiet);
       if (draft && !quiet) showToast('➕ 已放到下方「任務草稿板」；拖好主／子關係後按「確認並建立」。');
     }
 
@@ -6915,15 +6931,15 @@
       }
       const category = analysis.classification?.category || '行政交辦';
       const seen = new Set();
-      const push = (name, dueDate, dueTime, priority, nextAction) => {
+      const push = (name, dueDate, dueTime, priority, nextAction, link) => {
         const clean = String(name || '').replace(/[。；]$/, '').trim().slice(0, 90);
         if (!clean || seen.has(clean)) return;
         seen.add(clean);
-        aiAssistantState.draftBoard.push({ id: `d${aiAssistantState.draftBoard.length + 1}-${Date.now().toString(36)}`, name: clean, dueDate: safeIsoDate(dueDate), dueTime: safeTimeString(dueTime), priority: ['高', '中', '低'].includes(priority) ? priority : '中', nextAction: String(nextAction || clean).slice(0, 120), category, parentId: '', include: true, created: false });
+        aiAssistantState.draftBoard.push({ id: `d${aiAssistantState.draftBoard.length + 1}-${Date.now().toString(36)}`, name: clean, dueDate: safeIsoDate(dueDate), dueTime: safeTimeString(dueTime), priority: ['高', '中', '低'].includes(priority) ? priority : '中', nextAction: String(nextAction || clean).slice(0, 120), link: safeUrl(link), category, parentId: '', include: true, created: false });
       };
-      push(analysis.mainTask.name, analysis.mainTask.dueDate, analysis.mainTask.dueTime, analysis.mainTask.priority, analysis.mainTask.nextAction);
-      (analysis.children || []).forEach(child => push(child.name, child.dueDate, '', '中', child.name));
-      (analysis.aiChecklistMeta || []).filter(item => item.kind === 'task').forEach(item => push(item.text, item.dueDate, item.dueTime, '中', item.text));
+      push(analysis.mainTask.name, analysis.mainTask.dueDate, analysis.mainTask.dueTime, analysis.mainTask.priority, analysis.mainTask.nextAction, analysis.mainTask.detailUrl);
+      (analysis.children || []).forEach(child => push(child.name, child.dueDate, '', '中', child.name, child.link));
+      (analysis.aiChecklistMeta || []).filter(item => item.kind === 'task').forEach(item => push(item.text, item.dueDate, item.dueTime, '中', item.text, item.link));
       $('aiMainTaskTitle').textContent = `AI 拆出 ${aiAssistantState.draftBoard.length} 個單一任務（全部獨立）`;
       renderDraftBoard();
     }
@@ -6958,6 +6974,7 @@
               📅 <input type="date" data-draft-date="${item.id}" value="${item.dueDate}" ${item.created ? 'disabled' : ''}>
               <input type="time" data-draft-time="${item.id}" value="${item.dueTime}" ${item.created ? 'disabled' : ''}>
               <select data-draft-priority="${item.id}" ${item.created ? 'disabled' : ''}>${['高', '中', '低'].map(level => `<option${level === item.priority ? ' selected' : ''}>${level}</option>`).join('')}</select>
+              🔗 <input type="url" data-draft-link="${item.id}" value="${escapeHtml(item.link || '')}" placeholder="連結（表單、報名網址…）" style="width:200px" ${item.created ? 'disabled' : ''}>${item.link ? `<a href="${escapeHtml(item.link)}" target="_blank" rel="noopener" class="ai-kind-badge is-link">開啟</a>` : ''}
             </div>
           </div>
           ${item.created ? '' : `<button type="button" class="ai-draft-remove" data-draft-remove="${item.id}" title="從草稿板移除">✕</button>`}
@@ -6976,7 +6993,7 @@
       if (!aiAssistantState.draftBoard) aiAssistantState.draftBoard = [];
       const clean = String(fields.name || '').replace(/[。；]$/, '').trim().slice(0, 90);
       if (clean && aiAssistantState.draftBoard.some(item => item.name === clean)) { if (!quiet) showToast('草稿板已有這一項。'); return null; }
-      const draft = { id: `d${aiAssistantState.draftBoard.length + 1}-${Date.now().toString(36)}`, name: clean, dueDate: safeIsoDate(fields.dueDate), dueTime: safeTimeString(fields.dueTime), priority: fields.priority || '中', nextAction: String(fields.nextAction || clean).slice(0, 120), category: fields.category || aiAssistantState.analysis?.classification?.category || '行政交辦', parentId: '', include: true, created: false };
+      const draft = { id: `d${aiAssistantState.draftBoard.length + 1}-${Date.now().toString(36)}`, name: clean, dueDate: safeIsoDate(fields.dueDate), dueTime: safeTimeString(fields.dueTime), priority: fields.priority || '中', nextAction: String(fields.nextAction || clean).slice(0, 120), link: safeUrl(fields.link), category: fields.category || aiAssistantState.analysis?.classification?.category || '行政交辦', parentId: '', include: true, created: false };
       aiAssistantState.draftBoard.push(draft);
       $('aiTaskSuggestion').hidden = false;
       if ($('aiMainTaskTitle').textContent === '目前不建議建立任務' || !$('aiMainTaskTitle').textContent) $('aiMainTaskTitle').textContent = '老師自行加入的任務';
@@ -7178,18 +7195,23 @@
         ' "category": "情境分類，例如 行政交辦/親師溝通/活動籌備/教學/會議",',
         ' "isTask": true 或 false（是否需要建立待辦任務）,',
         ' "analysis": ["3 到 6 條重點分析與具體建議，每條一句話"],',
-        ' "checklist": [{"text": "與這位老師有關、要確認或要做的事（一句話）", "kind": "task 或 note（要老師動手做、有交付物或期限的 → task；只需知道、留意、提醒自己的 → note）", "dueDate": "YYYY-MM-DD 或空字串（只能來自原文）", "dueTime": "HH:MM 或空字串（原文有寫時間才填）"}]（3 到 8 條）,',
-        ' "mainTask": {"name": "任務名稱，20 字內", "dueDate": "YYYY-MM-DD 或空字串", "dueTime": "HH:MM 或空字串", "priority": "高/中/低", "nextAction": "下一步行動一句話"} 或 null,',
-        ' "subtasks": [{"name": "子任務名稱", "dueDate": "YYYY-MM-DD 或空字串"}]（只有多階段工作才拆，最多 6 項，否則空陣列）,',
+        ' "checklist": [{"text": "與這位老師有關、要確認或要做的事（一句話）", "kind": "task 或 note（要老師動手做、有交付物或期限的 → task；只需知道、留意、提醒自己的 → note）", "dueDate": "YYYY-MM-DD 或空字串（只能來自原文）", "dueTime": "HH:MM 或空字串（原文有寫時間才填）", "link": "原文或附件中對應這件事的網址（https 開頭、一字不改）或空字串"}]（3 到 8 條）,',
+        ' "mainTask": {"name": "任務名稱，20 字內", "dueDate": "YYYY-MM-DD 或空字串", "dueTime": "HH:MM 或空字串", "priority": "高/中/低", "nextAction": "下一步行動一句話", "link": "對應網址或空字串"} 或 null,',
+        ' "subtasks": [{"name": "子任務名稱", "dueDate": "YYYY-MM-DD 或空字串", "link": "對應網址或空字串"}]（只有多階段工作才拆，最多 6 項，否則空陣列）,',
         ' "parentMessage": "若適合發給家長，給一段禮貌委婉、不含個資的留言草稿；否則空字串",',
         ' "attachmentSummary": ["每個附件的重點摘要，一項一條"]（沒有附件就空陣列）',
         '}',
-        '規則：日期只能來自原文或附件，不可虛構；諮詢型情境 mainTask 給 null；一律使用繁體中文。',
+        '規則：日期只能來自原文或附件，不可虛構；網址（表單、研習報名、雲端資料夾等）必須從原文或附件逐字抄出，附件裡的超連結文字也要抄，不可猜或編造；諮詢型情境 mainTask 給 null；一律使用繁體中文。',
         '',
         '老師的描述：',
         safeText
       ].join('\n');
       return instruction;
+    }
+
+    function safeUrl(value) {
+      const text = String(value || '').trim();
+      return /^https?:\/\/\S{4,}$/i.test(text) ? text.slice(0, 500) : '';
     }
 
     function safeTimeString(value) {
@@ -7280,6 +7302,7 @@
       analysis.isTask = parsed.mainTask?.name ? true : parsed.isTask === true;
       const analysisLines = (Array.isArray(parsed.analysis) ? parsed.analysis : [String(parsed.analysis || '')])
         .filter(Boolean).map(line => `• ${String(line).trim()}`);
+      aiAssistantState.lastAnalysisLines = analysisLines.map(line => line.replace(/^• /, ''));
       const attachmentLines = (Array.isArray(parsed.attachmentSummary) ? parsed.attachmentSummary : [])
         .filter(Boolean).map(line => `• ${String(line).trim()}`);
       const resultLines = [
@@ -7305,7 +7328,7 @@
       if (Array.isArray(parsed.checklist) && parsed.checklist.length) {
         const meta = parsed.checklist.slice(0, 8).map(item => typeof item === 'string'
           ? { text: item.slice(0, 120), kind: 'note', dueDate: '', dueTime: '' }
-          : { text: String(item?.text || '').slice(0, 120), kind: item?.kind === 'task' ? 'task' : 'note', dueDate: safeIsoDate(item?.dueDate), dueTime: safeTimeString(item?.dueTime) })
+          : { text: String(item?.text || '').slice(0, 120), kind: item?.kind === 'task' ? 'task' : 'note', dueDate: safeIsoDate(item?.dueDate), dueTime: safeTimeString(item?.dueTime), link: safeUrl(item?.link) })
           .filter(item => item.text);
         analysis.aiChecklist = meta.map(item => item.text);
         analysis.aiChecklistMeta = meta;
@@ -7320,11 +7343,13 @@
           String(parsed.mainTask.nextAction || parsed.mainTask.name).slice(0, 120)
         );
         analysis.mainTask.dueTime = safeTimeString(parsed.mainTask.dueTime);
+        analysis.mainTask.detailUrl = safeUrl(parsed.mainTask.link);
         analysis.children = (Array.isArray(parsed.subtasks) ? parsed.subtasks : []).slice(0, 6)
           .filter(item => item && item.name)
           .map(item => ({
             name: String(item.name).slice(0, 90),
             dueDate: safeIsoDate(item.dueDate),
+            link: safeUrl(item.link),
             suggestedTiming: safeIsoDate(item.dueDate) ? `建議 ${safeIsoDate(item.dueDate)} 前` : '期限請老師確認'
           }));
         aiAssistantState.taskDraft = analysis.mainTask;
@@ -7494,6 +7519,13 @@ ${cleanBase}`;
       const toPayload = item => {
         const draft = makeGenericTaskDraft(item.name.trim().slice(0, 90), item.category || '行政交辦', item.priority, item.dueDate, item.nextAction || item.name);
         draft.dueTime = item.dueTime || '';
+        draft.detailUrl = item.link || '';
+        const sources = (aiAssistantState.analysis?.attachments || []).map(a => a.name).filter(Boolean);
+        const lines = [item.nextAction || item.name];
+        if (sources.length) lines.push(`📎 來源附件：${sources.join('、')}`);
+        if (aiAssistantState.lastAnalysisLines?.length) lines.push(`📝 AI 分析：${aiAssistantState.lastAnalysisLines.slice(0, 2).join('；')}`);
+        lines.push(`🗂 出處：AI 行政助理 ${localDateString(new Date()).replace(/-/g, '/')}`);
+        draft.nextAction = lines.join('\n').slice(0, 1500);
         return draft;
       };
       try {
@@ -8433,7 +8465,8 @@ ${cleanBase}`;
       let [el, item] = pick('data-draft-include'); if (item) { item.include = el.checked; renderDraftBoard(); return; }
       [el, item] = pick('data-draft-date'); if (item) { item.dueDate = safeIsoDate(el.value); return; }
       [el, item] = pick('data-draft-time'); if (item) { item.dueTime = safeTimeString(el.value); return; }
-      [el, item] = pick('data-draft-priority'); if (item) item.priority = el.value;
+      [el, item] = pick('data-draft-priority'); if (item) { item.priority = el.value; return; }
+      [el, item] = pick('data-draft-link'); if (item) { item.link = safeUrl(el.value); if (item.link || !el.value.trim()) renderDraftBoard(); else showToast('連結要以 http(s):// 開頭。', true); }
     });
     $('aiDraftBoard').addEventListener('focusout', event => {
       const el = event.target.closest('[data-draft-name]');
@@ -8651,6 +8684,65 @@ ${cleanBase}`;
       } catch (error) { showToast(error.message || '調整任務關係失敗。', true); }
       finally { setLoading(false); }
     }
+
+    // 點任務名稱／下一步 → 說明彈窗（完整說明、連結、來源附件）
+    function linkifyText(text) {
+      return escapeHtml(text).replace(/(https?:\/\/[^\s<]+)/g, url => `<a href="${url}" target="_blank" rel="noopener">${url}</a>`);
+    }
+    function closeTaskDetail() { document.querySelector('.task-detail-popover')?.remove(); }
+    function openTaskDetail(task, anchor) {
+      closeTaskDetail();
+      const parent = task.parentTaskId ? state.tasks.find(t => t.taskId === task.parentTaskId) : null;
+      const children = state.tasks.filter(t => t.parentTaskId === task.taskId);
+      const description = task.nextAction || task.progress || '';
+      const pop = document.createElement('div');
+      pop.className = 'calendar-note-popover task-detail-popover';
+      pop.innerHTML = `
+        <div class="calendar-note-popover-head"><strong>${escapeHtml(task.name)}</strong><button class="mini-button" type="button" data-detail-close>✕</button></div>
+        <div class="task-detail-badges">
+          <span class="badge">${escapeHtml(task.taskType || '一般任務')}</span><span class="badge">${escapeHtml(task.status || '')}</span><span class="badge">優先 ${escapeHtml(task.priority || '中')}</span>
+          ${task.dueDate ? `<span class="badge">📅 ${escapeHtml(task.dueDate.replace(/-/g, '/'))}${task.dueTime ? ' ' + escapeHtml(task.dueTime) : ''}</span>` : ''}
+          <span class="badge">${escapeHtml([taskWorkAxis(task), task.category].filter(Boolean).join('・'))}</span>
+        </div>
+        ${parent ? `<div class="calendar-note-popover-row">⬆ 主任務：${escapeHtml(parent.name)}</div>` : ''}
+        ${children.length ? `<div class="calendar-note-popover-row">⬇ 子任務：${children.map(c => escapeHtml(c.name)).join('、')}</div>` : ''}
+        <div class="task-detail-desc">${description ? linkifyText(description) : '<span class="ai-hint">（尚未填寫說明；按「編輯」可補充）</span>'}</div>
+        ${task.waitingFor ? `<div class="calendar-note-popover-row">⏳ 等待：${escapeHtml(task.waitingFor)}</div>` : ''}
+        ${task.progress && task.nextAction ? `<div class="calendar-note-popover-row">📈 最近進度：${escapeHtml(task.progress)}</div>` : ''}
+        <div class="task-detail-actions">
+          ${task.detailUrl ? `<a class="button button-dark" href="${escapeHtml(task.detailUrl)}" target="_blank" rel="noopener">🔗 開啟連結</a>` : ''}
+          <button class="button button-light" type="button" data-detail-edit>✏️ 編輯</button>
+          <button class="button button-light" type="button" data-detail-status="${task.status === '已完成' ? '未開始' : '已完成'}">${task.status === '已完成' ? '重開' : '✅ 完成'}</button>
+        </div>`;
+      document.body.appendChild(pop);
+      const rect = anchor.getBoundingClientRect();
+      const width = Math.min(440, window.innerWidth - 24);
+      pop.style.width = `${width}px`;
+      pop.style.left = `${Math.max(12, Math.min(rect.left, window.innerWidth - width - 12))}px`;
+      const top = rect.bottom + 8;
+      pop.style.top = `${top + pop.offsetHeight > window.innerHeight - 12 ? Math.max(12, rect.top - pop.offsetHeight - 8) : top}px`;
+      pop.addEventListener('click', async event => {
+        if (event.target.closest('[data-detail-close]')) return closeTaskDetail();
+        if (event.target.closest('[data-detail-edit]')) { closeTaskDetail(); return openTaskModal(task); }
+        const statusButton = event.target.closest('[data-detail-status]');
+        if (statusButton) {
+          closeTaskDetail();
+          setLoading(true, '正在更新狀態……');
+          try { const result = await serverCall('updateTaskStatus', task.taskId, statusButton.dataset.detailStatus, state.csrfToken); applyTaskResult(result); showToast('狀態已更新。'); }
+          catch (error) { showToast(error.message || '更新失敗。', true); }
+          finally { setLoading(false); }
+        }
+      });
+    }
+    document.addEventListener('click', event => {
+      if (event.target.closest('.task-detail-popover')) return;
+      const trigger = event.target.closest('[data-task-detail]');
+      if (!trigger) return closeTaskDetail();
+      if (event.target.closest('a, button')) return;
+      const task = state.tasks.find(t => t.taskId === trigger.dataset.taskDetail);
+      if (task) openTaskDetail(task, trigger);
+    });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') closeTaskDetail(); });
 
     $('taskTableWrap').addEventListener('click', event => {
       const button = event.target.closest('[data-action]');
@@ -8882,6 +8974,7 @@ ${cleanBase}`;
               <select class="input" data-hub-cat="${index}" style="padding:2px 6px;width:auto;font-size:12px">${HUB_CATEGORIES.map(c => `<option${c === item.category ? ' selected' : ''}>${c}</option>`).join('')}</select>
               　⏰ <input type="text" class="input" data-hub-when="${index}" value="${escapeHtml(item.when || '')}" placeholder="時間（例：9/15 9:30）" style="width:150px;padding:2px 6px;font-size:12px">
               ${item.source ? `　來源：${escapeHtml(item.source)}` : ''}
+              ${item.link ? `　<a href="${escapeHtml(item.link)}" target="_blank" rel="noopener" class="ai-kind-badge is-link" title="${escapeHtml(item.link)}">🔗 連結</a>` : ''}
             </div>
           </div>
         </div>
@@ -8890,7 +8983,7 @@ ${cleanBase}`;
     }
     function hubFallbackSplit(raw) {
       return raw.split(/\n{2,}|\n(?=\S{0,3}[：:•●■▶\-—]|\n)/).map(t => t.trim()).filter(t => t.length > 3)
-        .map(text => ({ text: text.slice(0, 300), category: '轉達學生', when: (text.match(/\d{1,2}\/\d{1,2}(?:\s*\(?[一二三四五六日]\)?)?(?:\s*\d{1,2}:\d{2})?/) || [''])[0], checked: true }));
+        .map(text => ({ text: text.slice(0, 300), category: '轉達學生', link: safeUrl((text.match(/https?:\/\/\S+/) || [''])[0]), when: (text.match(/\d{1,2}\/\d{1,2}(?:\s*\(?[一二三四五六日]\)?)?(?:\s*\d{1,2}:\d{2})?/) || [''])[0], checked: true }));
     }
     $('hubAddButton').addEventListener('click', async () => {
       const raw = $('hubInput').value.trim();
@@ -8903,13 +8996,14 @@ ${cleanBase}`;
             `今天是 ${localDateString(new Date())}。以下是一位臺灣國小導師從 LINE 群組複製的一段或多段訊息（可能混雜主任交辦、處室通知、老師補充、臨時修改、閒聊與抱怨）。`,
             '請拆成一條一條「導師需要處理的事」：去掉閒聊、抱怨、貼圖式回覆；同一件事被修改多次時只保留最新版本並註明「（已更新）」；每條抓出 when（日期時間，原文有才寫，格式如 9/15(二) 9:30）；判斷 category：轉達學生（學生要知道或要做）、轉達家長、轉達科任（其他老師）、自己待辦（導師自己要做）、略過（無需處理）。',
             '每條用一句話改寫成清楚版本（保留原意，去除公文腔），並加 source（原始發文者或處室，若能看出）。',
-            '只回傳 JSON：{"items":[{"text":"","category":"轉達學生","when":"","source":""}]}',
+            '每條若原文有對應網址（表單、報名、雲端資料夾），link 逐字抄出，沒有就空字串，不可猜。',
+            '只回傳 JSON：{"items":[{"text":"","category":"轉達學生","when":"","source":"","link":""}]}',
             '訊息：',
             raw
           ].join('\n'));
           items = (parsed.items || []).map(item => ({
             text: String(item.text || '').slice(0, 300), category: HUB_CATEGORIES.includes(item.category) ? item.category : '轉達學生',
-            when: String(item.when || '').slice(0, 30), source: String(item.source || '').slice(0, 30), checked: item.category !== '略過'
+            when: String(item.when || '').slice(0, 30), source: String(item.source || '').slice(0, 30), link: safeUrl(item.link), checked: item.category !== '略過'
           })).filter(item => item.text);
         } catch (error) { showToast(`AI 拆解失敗，改用換行分條：${error.message}`, true); items = hubFallbackSplit(raw); }
         finally { setLoading(false); }
@@ -8951,10 +9045,10 @@ ${cleanBase}`;
         try {
           const parsed = await callAssistantJson([
             `你是臺灣國小導師。把下面幾條事項整合成「一則」要傳給${audience === '學生' ? '國小學生（用孩子看得懂的話，短句、有順序、標明時間與要帶的東西）' : audience === '家長' ? '家長（禮貌、清楚、條列）' : audience === '科任' ? '科任與學年老師（精簡、條列、標明時間與需配合事項）' : '自己（待辦清單，依時間排序）'}的訊息。`,
-            '規則：依時間先後排序；同類事項合併；每條開頭用 emoji 或編號；有時間的把時間放前面；不加任何原文沒有的資訊；不使用學生姓名；結尾一句溫暖提醒（自己版不用）。',
+            '規則：依時間先後排序；同類事項合併；每條開頭用 emoji 或編號；有時間的把時間放前面；有連結的把網址原樣放在該條最後（一字不改）；不加任何原文沒有的資訊；不使用學生姓名；結尾一句溫暖提醒（自己版不用）。',
             '只回傳 JSON：{"message":"整合後的完整訊息（含換行）"}',
             '事項：',
-            selected.map((item, i) => `${i + 1}. [${item.category}${item.when ? '｜' + item.when : ''}] ${item.text}`).join('\n')
+            selected.map((item, i) => `${i + 1}. [${item.category}${item.when ? '｜' + item.when : ''}] ${item.text}${item.link ? `（連結：${item.link}）` : ''}`).join('\n')
           ].join('\n'));
           message = String(parsed.message || '').trim();
         } catch (error) { showToast(`AI 整合失敗，改用簡易合併：${error.message}`, true); }
@@ -8962,7 +9056,7 @@ ${cleanBase}`;
       }
       if (!message) {
         const header = audience === '學生' ? '各位同學好，今天要注意的事：' : audience === '家長' ? '各位家長好，以下事項請留意：' : audience === '科任' ? '各位老師好，請協助以下事項：' : '我的待辦：';
-        message = [header, ...selected.map((item, i) => `${i + 1}. ${item.when ? `【${item.when}】` : ''}${item.text}`), audience === '自己' ? '' : '謝謝大家！'].filter(Boolean).join('\n');
+        message = [header, ...selected.map((item, i) => `${i + 1}. ${item.when ? `【${item.when}】` : ''}${item.text}${item.link ? ` ${item.link}` : ''}`), audience === '自己' ? '' : '謝謝大家！'].filter(Boolean).join('\n');
       }
       $('hubOutput').value = message;
       $('hubOutputWrap').hidden = false;
@@ -8993,6 +9087,7 @@ ${cleanBase}`;
           const dueDate = dateMatch ? `${year}-${String(dateMatch[1]).padStart(2, '0')}-${String(dateMatch[2]).padStart(2, '0')}` : '';
           const draft = makeGenericTaskDraft(item.text.slice(0, 90), '行政交辦', '中', dueDate, item.text.slice(0, 120));
           draft.dueTime = timeMatch ? `${String(timeMatch[1]).padStart(2, '0')}:${timeMatch[2]}` : '';
+          draft.detailUrl = item.link || '';
           result = await serverCall('saveTask', { ...draft, taskId: '', parentTaskId: '', projectId: '', taskType: '一般任務', csrfToken: state.csrfToken });
           item.done = true; created += 1;
         }
