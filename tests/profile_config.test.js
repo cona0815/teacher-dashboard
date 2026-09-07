@@ -536,3 +536,8 @@ assert.match(studioHtml, /data-page="reading"/, "教材小工場應有閱讀分�
 assert.match(studioHtml, /易錯/, "複習講義應含易錯提醒");
 assert.match(studioHtml, /🟢 基礎/, "閱讀分級應有三級版本選項");
 assert.ok(studioHtml.includes("attachZone('rvImages'") && studioHtml.includes("attachZone('rdImages'"), "兩個新工具的檔案輸入應掛上拍照／貼上");
+
+// 閱讀分級：即時國際時事（搜尋接地＋兒童安全過濾）
+assert.match(studioHtml, /google_search: \{\}/, "找時事應使用 Gemini Google 搜尋接地");
+assert.match(studioHtml, /const NEWS_BLOCKLIST = \/政治\|選舉/, "時事應有程式端兒童安全關鍵字過濾");
+assert.match(studioHtml, /絕對排除\*\*：政治、選舉/, "時事提示詞應明確排除政治、暴力、色情");

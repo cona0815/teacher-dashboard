@@ -404,8 +404,23 @@
         <div class="panel">
           <div class="field"><label>班級年級</label>
             <select class="select" id="rdGrade"><option value="一">一年級</option><option value="二">二年級</option><option value="三">三年級</option><option value="四">四年級</option><option value="五" selected>五年級</option><option value="六">六年級</option></select></div>
+          <div class="field"><label>📰 或找最新國際時事（兒童適讀：不含政治、暴力、色情）</label>
+            <div class="check-row">
+              <select class="select" id="rdNewsTopic" style="flex:1;min-width:150px">
+                <option value="科學新知與發明">🔬 科學新知</option>
+                <option value="環境生態與氣候">🌍 環境生態</option>
+                <option value="動物與自然">🐾 動物自然</option>
+                <option value="太空探索">🚀 太空探索</option>
+                <option value="運動賽事與運動員故事">⚽ 運動</option>
+                <option value="文化藝術與節慶">🎨 文化藝術</option>
+                <option value="科技與生活">💡 科技生活</option>
+                <option value="兒童與教育、感人正向故事">💛 溫暖故事</option>
+              </select>
+              <button class="mini" type="button" id="rdNewsButton">🔍 找 5 則最新</button>
+            </div>
+            <div id="rdNewsList" style="margin-top:6px"></div></div>
           <div class="field"><label>貼上原文（課文、新聞、故事…）</label>
-            <textarea class="textarea" id="rdText" style="min-height:140px" placeholder="貼上要改寫的文章；也可以拍照。"></textarea></div>
+            <textarea class="textarea" id="rdText" style="min-height:140px" placeholder="貼上要改寫的文章；也可以拍照，或用上面的「找最新時事」。"></textarea></div>
           <div class="field"><label>或拍照上傳原文</label>
             <input class="input" type="file" id="rdImages" accept="image/*,.pdf,application/pdf" multiple></div>
           <div class="field"><label>要產出的版本</label>
@@ -421,7 +436,7 @@
           </div></div>
           <button class="go-button" type="button" id="rdGoButton">📚 生成分級文本</button>
           <div class="status" id="rdStatus"></div>
-          <div class="hint">同一篇文章改寫成不同閱讀程度（事實與結論不變，只調整句長、詞彙與背景說明），每版各一頁，方便同班差異化。</div>
+          <div class="hint">同一篇文章改寫成不同閱讀程度（事實與結論不變，只調整句長、詞彙與背景說明），每版各一頁，方便同班差異化。時事由 Google 搜尋即時取得並經兒童安全過濾，仍請老師過目再發。</div>
         </div>
         <div class="panel">
           <div class="preview-bar">
@@ -1284,6 +1299,61 @@
         showToast('📖 複習講義完成！');
       } catch (e) { if (e.message !== 'no-key') { $('rvStatus').textContent = ''; showToast(e.message, true); } }
       busy($('rvGoButton'), false);
+    });
+
+    // ============================================================
+    // 📰 即時國際時事（Gemini Google 搜尋接地；兒童安全雙層過濾）
+    // ============================================================
+    const NEWS_BLOCKLIST = /政治|選舉|總統|政黨|國會|議員|戰爭|戰事|轟炸|軍事|飛彈|槍|殺|謀殺|屍|血|恐攻|暴動|性侵|性騷|色情|裸|毒品|自殺|綁架|虐待|強暴|屠殺|衝突升級|制裁/;
+    let rdNewsItems = [];
+    async function findKidSafeNews() {
+      const key = geminiKey();
+      if (!key) return showToast('尚未設定 Gemini 金鑰。', true);
+      const topic = $('rdNewsTopic').value;
+      const today = new Date().toISOString().slice(0, 10);
+      const prompt = [
+        `今天是 ${today}。請用搜尋工具找出「最近 14 天內」的國際新聞，主題：${topic}。`,
+        '對象是臺灣國小學生，因此**絕對排除**：政治、選舉、政府人事、戰爭與軍事、犯罪、暴力、意外死亡、災難傷亡描述、性與色情、毒品、恐怖攻擊、任何爭議與仇恨內容。只選正向、有知識性、適合 6–12 歲孩子的新聞。',
+        '找 5 則不同的新聞，每則：title（繁體中文標題，20 字內）、date（YYYY-MM-DD）、source（媒體名稱）、summary（用繁體中文、臺灣用語寫 250–350 字的兒童可讀摘要：發生了什麼、在哪裡、為什麼有趣或重要、和小朋友生活的連結；不要用成人新聞腔）、kidSafe（true/false，你再自我檢查一次是否完全符合排除規則）。',
+        '只回傳 JSON：{"items":[{"title":"","date":"","source":"","summary":"","kidSafe":true}]}'
+      ].join('\n');
+      $('rdNewsButton').disabled = true;
+      $('rdNewsList').innerHTML = '<div class="status">🔍 正在搜尋最新國際時事並做兒童安全過濾（約 15–30 秒）…</div>';
+      try {
+        let data = null;
+        for (const useTools of [true, false]) {
+          const body = { contents: [{ parts: [{ text: useTools ? prompt : prompt + '\n（無法使用搜尋工具時，請依你已知的近期國際新聞作答，並在 title 前加「（非即時）」）' }] }], generationConfig: { temperature: 0.3 } };
+          if (useTools) body.tools = [{ google_search: {} }];
+          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModel()}:generateContent`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key }, body: JSON.stringify(body)
+          });
+          if (!response.ok) { if (useTools && response.status === 400) continue; throw new Error(`AI 回應錯誤（HTTP ${response.status}）`); }
+          const payload = await response.json();
+          const text = (((payload.candidates || [])[0] || {}).content?.parts || []).map(p => p.text || '').join('');
+          try { data = extractJson(text); } catch (e) { if (useTools) continue; throw e; }
+          break;
+        }
+        const items = ((data && data.items) || []).filter(item => item && item.kidSafe !== false && item.summary && !NEWS_BLOCKLIST.test(item.title + item.summary)).slice(0, 5);
+        rdNewsItems = items;
+        if (!items.length) { $('rdNewsList').innerHTML = '<div class="status">這次沒有找到通過安全過濾的新聞，換個主題再找一次。</div>'; }
+        else {
+          $('rdNewsList').innerHTML = items.map((item, i) => `<div class="cm-row" style="flex-direction:column;align-items:stretch;gap:4px">
+            <div style="font-weight:900">${escapeHtml(item.title)} <span class="mask-badge">${escapeHtml(item.date || '')}${item.source ? '・' + escapeHtml(item.source) : ''}</span></div>
+            <div style="font-size:13px;color:var(--muted)">${escapeHtml(String(item.summary).slice(0, 80))}…</div>
+            <div class="check-row"><button class="mini" type="button" data-news-use="${i}">📚 用這則做分級文本</button><button class="mini" type="button" data-news-fill="${i}">貼到原文框</button></div>
+          </div>`).join('');
+        }
+      } catch (e) { $('rdNewsList').innerHTML = `<div class="status">找時事失敗：${escapeHtml(e.message)}</div>`; }
+      $('rdNewsButton').disabled = false;
+    }
+    $('rdNewsButton').addEventListener('click', findKidSafeNews);
+    $('rdNewsList').addEventListener('click', e => {
+      const use = e.target.closest('[data-news-use]'), fill = e.target.closest('[data-news-fill]');
+      const item = rdNewsItems[Number((use || fill || {}).dataset?.newsUse ?? (fill || {}).dataset?.newsFill)];
+      if (!item) return;
+      $('rdText').value = `${item.title}\n\n${item.summary}${item.source ? `\n\n（資料來源：${item.source}，${item.date || ''}）` : ''}`;
+      showToast('已放入原文框。');
+      if (use) $('rdGoButton').click();
     });
 
     // ============================================================
