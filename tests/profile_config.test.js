@@ -547,3 +547,8 @@ assert.match(studioHtml, /LINE 小幫手聽得懂的指令/, "圖文選單應附
 for (const cmd of ["說明", "今日點名", "缺交統計", "推播設定", "代課包", "提示 排隊", "撤回"]) {
   assert.ok(studioHtml.includes(`data-cmd="${cmd}"`), `指令表應含「${cmd}」`);
 }
+
+// 作文批改：段落修改指引＋評語 2 正向 1 待改進
+assert.match(studioHtml, /段落修改指引（這一段要怎麼修）/, "批改單應逐段指出要修改處");
+assert.match(studioHtml, /praise 兩條/, "評語應固定兩條正向");
+assert.match(studioHtml, /improve 一條/, "評語應固定一條待改進");

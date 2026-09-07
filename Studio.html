@@ -2115,8 +2115,9 @@
         '2. 逐段、逐句找出「所有」需要修改的地方，不要省略：category 只能是 錯字／標點／用字／語詞／語句 五種之一。',
         '   ・錯字＝寫錯的字（含注音代替）；標點＝標點缺漏或用錯；用字＝字沒錯但這裡用得不恰當；語詞＝詞彙搭配不當或可更精準；語句＝句子不通順、重複、缺主詞或太長。',
         '3. 每一處都要給 paragraph（第幾段，從 1 起算）、original（原文片段，抄原樣、最多 25 字）、corrected（正確或更好的寫法）、reason（一句話說明為什麼）。',
-        '4. 先真心稱讚具體亮點（引用原句）；評語溫暖鼓勵、指出一個努力方向。',
-        '只回傳 JSON：{"grade":"甲","wordCount":約字數,"paragraphs":["第1段原文","第2段原文"],"strengths":["亮點1（引用原句）","亮點2"],"corrections":[{"paragraph":1,"category":"錯字","original":"原文片段","corrected":"正確寫法","reason":"一句話"}],"structure":"結構與內容的一段建議（沒勾結構就給一句就好）","comment":"給學生的鼓勵評語約60字"}'
+        '4. 逐段給「段落修改指引」paragraphNotes：每一段一筆——issue（這段最需要改的地方，具體指出是哪一句、缺什麼，例：第 2 段只有一句話就跳到結尾，沒有寫出當時的心情）、howToFix（怎麼修，給孩子做得到的具體做法）、example（把該段最弱的一句示範改寫成更好的版本，保留孩子原意）。若某段寫得好也要說明為什麼好、可以怎麼再加分。',
+        '5. 評語 comment 固定三條、以正向為原則：praise 兩條（具體引用孩子寫得好的地方，不要空泛）、improve 一條（最值得下次努力的一個方向，語氣溫暖）。',
+        '只回傳 JSON：{"grade":"甲","wordCount":約字數,"paragraphs":["第1段原文","第2段原文"],"strengths":["亮點1（引用原句）","亮點2"],"corrections":[{"paragraph":1,"category":"錯字","original":"原文片段","corrected":"正確寫法","reason":"一句話"}],"paragraphNotes":[{"paragraph":1,"issue":"","howToFix":"","example":""}],"structure":"整篇結構與內容的一段建議","comment":{"praise":["",""],"improve":""}}'
       ].filter(Boolean).join('\n');
       busy($('esGoButton'), true);
       try {
@@ -2152,10 +2153,21 @@
           <div class="ws-section">🌟 寫得很棒的地方</div>
           <ul style="font-size:15px;margin-left:2em">${(data.strengths || []).map(s => `<li style="margin:4px 0">${escapeHtml(s)}</li>`).join('')}</ul>
           ${essayMarkupHtml(data)}
+          ${(data.paragraphNotes || []).length ? `<div class="ws-section">🧭 段落修改指引（這一段要怎麼修）</div>
+          <table style="width:100%;border-collapse:collapse;font-size:13.5px">
+            <tr><th style="border:1px solid #999;padding:5px;background:#f3f3f3;width:62px">段落</th><th style="border:1px solid #999;padding:5px;background:#f3f3f3">現在的問題</th><th style="border:1px solid #999;padding:5px;background:#f3f3f3">怎麼修</th><th style="border:1px solid #999;padding:5px;background:#f3f3f3">示範改寫</th></tr>
+            ${data.paragraphNotes.map(n => `<tr>
+              <td style="border:1px solid #999;padding:5px;text-align:center;font-weight:900">第 ${escapeHtml(String(n.paragraph || ''))} 段</td>
+              <td style="border:1px solid #999;padding:5px">${escapeHtml(n.issue || '')}</td>
+              <td style="border:1px solid #999;padding:5px">${escapeHtml(n.howToFix || '')}</td>
+              <td style="border:1px solid #999;padding:5px;color:#1d6e3f;font-weight:700">${escapeHtml(n.example || '')}</td></tr>`).join('')}
+          </table>` : ''}
           <div class="ws-section">🏗 結構與內容</div>
           <p style="font-size:15px">${escapeHtml(data.structure || '')}</p>
-          <div class="ws-section">💬 老師的話</div>
-          <p style="font-size:16px;background:#fff7e6;border-radius:10px;padding:10px 14px">${escapeHtml(data.comment || '')}</p>
+          <div class="ws-section">💬 老師的話（兩個做得好・一個再進步）</div>
+          <div style="font-size:15.5px;background:#fff7e6;border-radius:10px;padding:10px 14px">
+            ${(() => { const c = data.comment || {}; const praise = Array.isArray(c.praise) ? c.praise : (typeof c === 'string' ? [c] : []); const improve = c.improve || ''; return praise.slice(0, 2).map(t => `<div style="margin:3px 0">⭐ ${escapeHtml(t)}</div>`).join('') + (improve ? `<div style="margin:6px 0 0;color:#1f514a">🌱 ${escapeHtml(improve)}</div>` : ''); })()}
+          </div>
           <p style="text-align:right;font-size:14px;margin-top:14px">老師簽名：＿＿＿＿＿＿＿＿</p>
         </div>`;
         $('esMeta').textContent = '請老師確認內容後列印，可夾回學生作文本。';
