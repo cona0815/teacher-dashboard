@@ -125,6 +125,30 @@
     .nt-sheet [contenteditable]:hover { outline:1.5px dashed #b9852f; outline-offset:2px; border-radius:4px; }
     .nt-sheet [contenteditable]:focus { outline:2px solid #b9852f; background:#fffbea; }
     .nt-fun .ws-head { border-style:double; border-width:5px; }
+    /* 🍊 感官觀察學習單版式 */
+    .sw-sheet { padding:40px 44px; color:#111; position:relative; }
+    .sw-pageno { position:absolute; top:26px; right:40px; border:2.5px solid #111; border-radius:12px; padding:2px 12px; font-size:15px; font-weight:900; }
+    .sw-title { text-align:center; font-size:30px; font-weight:900; letter-spacing:.06em; }
+    .sw-subtitle { text-align:center; font-size:15px; margin:2px 0 12px; }
+    .sw-section { margin-bottom:12px; }
+    .sw-section-head { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+    .sw-pill { background:#111; color:#fff; font-weight:900; font-size:19px; border-radius:10px; padding:2px 16px; letter-spacing:.08em; }
+    .sw-lead { font-size:14px; }
+    .sw-grid { border:2.5px solid #111; border-radius:16px; padding:8px 12px; display:grid; grid-template-columns:1fr; gap:10px; }
+    .sw-grid.has-art { grid-template-columns:1.25fr 1fr; }
+    .sw-block { border-bottom:1.5px solid #111; padding:4px 0 8px; }
+    .sw-block:last-child { border-bottom:0; }
+    .sw-block-title { display:inline-block; border:2px dashed #111; border-radius:8px; padding:0 10px; font-weight:900; font-size:16px; margin-bottom:4px; }
+    .sw-block-title b { margin-right:6px; }
+    .sw-q { font-size:14px; display:flex; align-items:baseline; gap:6px; margin:3px 0; }
+    .sw-box { display:inline-block; width:14px; height:14px; border:1.8px solid #111; border-radius:3px; flex:0 0 auto; transform:translateY(2px); }
+    .sw-line { flex:1; border-bottom:1.5px solid #111; min-width:60px; height:16px; }
+    .sw-art { display:flex; align-items:center; justify-content:center; border-left:2.5px solid #111; }
+    .sw-art img { max-width:100%; max-height:340px; }
+    .sw-starters { border:2.5px solid #111; border-radius:16px; padding:22px 14px 12px; margin-top:10px; position:relative; }
+    .sw-starters-title { position:absolute; top:-15px; left:50%; transform:translateX(-50%); background:#111; color:#fff; border-radius:10px; padding:2px 16px; font-weight:900; font-size:15px; }
+    .sw-starter { font-size:15px; margin:6px 0; letter-spacing:.04em; }
+    .sw-motto { border:2.5px solid #111; border-radius:16px; padding:8px 14px; margin-top:10px; text-align:center; font-weight:900; font-size:16px; }
     /* 遮蔽工具 */
     .mask-canvas-wrap { position:relative; display:inline-block; max-width:100%; }
     #maskCanvas { max-width:100%; height:auto; display:block; border-radius:8px; cursor:crosshair; touch-action:none; }
@@ -422,6 +446,14 @@
             <select class="select" id="gdGrade"><option value="一">一年級</option><option value="二">二年級</option><option value="三">三年級</option><option value="四">四年級</option><option value="五" selected>五年級</option><option value="六">六年級</option></select></div>
           <div class="field"><label>作文主題</label>
             <input class="input" id="gdTopic" placeholder="例：難忘的運動會／我的家人／如果我有一雙翅膀"></div>
+          <div class="field"><label>版型</label>
+            <select class="select" id="gdFormat">
+              <option value="guide" selected>🧭 引導單（審題→心智圖→段落鷹架→佳句→四格漫畫）</option>
+              <option value="sense">🍊 感官觀察四頁組（看／摸／聞嚐／聽想／寫，附黑白線稿插圖）</option>
+            </select></div>
+          <div class="field" id="gdSenseOpts" hidden><div class="check-row">
+            <label><input type="checkbox" id="gdSenseArt" checked>🖼 每頁附 AI 線稿插圖（Gemini 生圖，約多 1 分鐘）</label>
+          </div></div>
           <div class="field"><label>文體</label>
             <select class="select" id="gdGenre"><option>記敘文</option><option>抒情文</option><option>說明文</option><option>應用文（書信/日記）</option><option>想像文</option></select></div>
           <div class="field"><label>要包含的內容（可複選）</label>
@@ -1440,10 +1472,68 @@
     // 🧭 作文引導單（審題六何→心智圖→段落鷹架→佳句→情境漫畫）
     // ============================================================
     $('gdGoButton').dataset.label = $('gdGoButton').textContent;
+    $('gdFormat').addEventListener('change', () => { $('gdSenseOpts').hidden = $('gdFormat').value !== 'sense'; });
+    // ---- 🍊 感官觀察四頁組（看→摸→聞嚐→聽想→寫；仿「從吃柚子學寫作」版式）----
+    async function runSenseWorksheet(topic, grade) {
+      const prompt = [
+        `你是資深臺灣國小${grade}年級國語老師，要為主題「${topic}」設計一套四頁的「感官觀察作文學習單」，讓孩子先把眼前的東西看細、摸清楚，再慢慢寫出來。`,
+        '格式固定四頁：第1頁「一、看一看」＋「二、摸一摸」；第2頁「三、聞一聞」＋「四、嚐一嚐」（若主題不能嚐，改成「四、聽一聽」）；第3頁「五、想一想（它讓我想到…）」＋「六、心情與感受」；第4頁「七、我可以這樣寫」（把前面觀察組成段落）。',
+        '每一區塊（section）有 lead 一句引導語、3 個小格（blocks），每格有標題（4字內，例：先看整體／再看細節／看看周圍）與 3–4 個給孩子勾選作答的具體問題（問句結尾留空讓孩子填，用語符合年級，貼合這個主題）。',
+        '每頁有 starters：4 句「我可以先這樣說」的句型起手式（用＿＿＿留空），以及 motto：一句給孩子的寫作金句。',
+        '每頁還要一段英文 imagePrompt：描述適合放在該頁的可愛線稿插圖主體（與主題和該頁感官相關，例如 a hand touching the fruit），30–50 words，不要提到文字。',
+        '第4頁的 blocks 改為段落框：標題如「開頭」「觀察」「感受」，questions 改為 2–3 句提示（例：先寫在哪裡看到它）。',
+        '只回傳 JSON：{"title":"從○○學寫作｜作文學習單","subtitle":"一句副標","pages":[{"sections":[{"name":"一、看一看","lead":"…","blocks":[{"title":"先看整體","questions":["…","…","…"]}]}],"starters":["我看到一個＿＿的○○。"],"motto":"…","imagePrompt":"…"}]}',
+        '繁體中文、臺灣用語。'
+      ].join('\n');
+      const data = extractJson(await callGemini(prompt, null, $('gdStatus')));
+      const pages = Array.isArray(data.pages) ? data.pages.slice(0, 4) : [];
+      if (!pages.length) throw new Error('AI 沒有回傳頁面內容，請再試一次。');
+      const arts = [];
+      if ($('gdSenseArt').checked) {
+        for (let i = 0; i < pages.length; i++) {
+          try {
+            $('gdStatus').textContent = `🖼 生成第 ${i + 1}/${pages.length} 頁線稿插圖…`;
+            arts[i] = await generateImage(`Clean black-and-white line art illustration for a children's worksheet, coloring-book style, thick smooth outlines, cute kawaii face on the main object, white background, no shading colors. Subject: ${pages[i].imagePrompt || topic}. ABSOLUTELY NO text, letters or numbers. Square composition.`, null, '1:1', $('gdStatus'));
+          } catch (e) { arts[i] = ''; if (e.message === 'no-key') throw e; }
+        }
+      }
+      const total = pages.length;
+      $('gdPreview').innerHTML = pages.map((page, index) => {
+        const sections = (page.sections || []).slice(0, 2).map((section, si) => `
+          <div class="sw-section">
+            <div class="sw-section-head"><span class="sw-pill">${escapeHtml(section.name || '')}</span><span class="sw-lead">${escapeHtml(section.lead || '')}</span></div>
+            <div class="sw-grid${si === 0 && arts[index] ? ' has-art' : ''}">
+              <div class="sw-blocks">${(section.blocks || []).slice(0, 3).map((block, bi) => `
+                <div class="sw-block">
+                  <div class="sw-block-title"><b>${bi + 1}</b> ${escapeHtml(block.title || '')}</div>
+                  ${(block.questions || []).slice(0, 4).map(q => `<div class="sw-q"><span class="sw-box"></span>${escapeHtml(q)}<span class="sw-line"></span></div>`).join('')}
+                </div>`).join('')}</div>
+              ${si === 0 && arts[index] ? `<div class="sw-art"><img src="${arts[index]}" alt=""></div>` : ''}
+            </div>
+          </div>`).join('');
+        return `<div class="sheet sw-sheet${index ? ' ws-answerpage' : ''}">
+          <div class="sw-pageno">${index + 1}/${total}</div>
+          <div class="sw-title">${escapeHtml(data.title || `從${topic}學寫作｜作文學習單`)} ${index + 1}</div>
+          <div class="sw-subtitle">${escapeHtml(data.subtitle || '先把小事看清楚，再慢慢寫出來')}</div>
+          ${sections}
+          <div class="sw-starters"><div class="sw-starters-title">我可以先這樣說</div>
+            ${(page.starters || []).slice(0, 4).map(line => `<div class="sw-starter">☆ ${escapeHtml(line)}</div>`).join('')}</div>
+          <div class="sw-motto">🍊 ${escapeHtml(page.motto || '作文不是把一句話拉長，而是先把眼前的東西看細、摸清楚。')} 🍊</div>
+        </div>`;
+      }).join('');
+      $('gdMeta').textContent = `共 ${total} 頁感官觀察學習單；黑白版式適合影印。`;
+    }
     $('gdGoButton').addEventListener('click', async () => {
       const topic = $('gdTopic').value.trim();
       if (!topic) return showToast('請輸入作文主題。', true);
       const grade = $('gdGrade').value, genre = $('gdGenre').value;
+      if ($('gdFormat').value === 'sense') {
+        busy($('gdGoButton'), true);
+        try { await runSenseWorksheet(topic, grade); $('gdStatus').textContent = ''; showToast('🍊 感官觀察學習單完成！'); }
+        catch (e) { if (e.message !== 'no-key') { $('gdStatus').textContent = ''; showToast(e.message, true); } }
+        busy($('gdGoButton'), false);
+        return;
+      }
       const prompt = [
         `你是資深臺灣國小${grade}年級國語老師，為${genre}「${topic}」設計一份作文教學引導材料，解決孩子「空白稿紙焦慮」。`,
         '設計原則：審題用六何法、取材用心智圖、每段給句型鷹架、好詞佳句要貼合主題與年級、感官摹寫提示具體。',

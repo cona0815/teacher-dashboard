@@ -517,3 +517,8 @@ assert.ok((studioHtml.match(/contenteditable="true" spellcheck="false"/g) || [])
 assert.match(studioHtml, /async function makeMenuBackground/, "圖文選單應能用 Gemini 產生背景圖");
 assert.match(studioHtml, /id="rmStyle"/, "圖文選單應可選插圖風格");
 assert.match(studioHtml, /id="rmPngButton"/, "圖文選單應可下載 PNG");
+
+// 作文引導單第二版型：感官觀察四頁組
+assert.match(studioHtml, /id="gdFormat"/, "作文引導單應可選版型");
+assert.match(studioHtml, /async function runSenseWorksheet/, "應有感官觀察四頁組產生流程");
+assert.match(studioHtml, /我可以先這樣說/, "感官學習單應含句型起手式區");
