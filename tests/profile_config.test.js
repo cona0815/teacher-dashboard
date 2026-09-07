@@ -594,3 +594,7 @@ assert.match(lineBotSource, /botVersion: BOT_VERSION/, "ping 應回傳程式版�
 assert.match(lineBotSource, /\(版本\|程式版本\)/, "LINE 應支援「版本」指令");
 assert.match(fs.readFileSync(path.join(__dirname, '..', 'assets', 'version.js'), 'utf8'), /TD_VERSION = '\d{4}-\d{2}-\d{2} \d{2}:\d{2}'/, "assets/version.js 應有網站版本");
 ['Index.html', 'Studio.html', 'Morning.html', 'Install.html'].forEach(name => assert.match(fs.readFileSync(path.join(__dirname, '..', name), 'utf8'), /assets\/version\.js/, name + ' 應載入版本標記'));
+
+// 使用說明選單：部署方法／系統使用方法／網頁介紹
+assert.match(indexHtml, /id="helpMenuButton"/, "工作台應有使用說明按鈕");
+['Install.html', 'About.html', 'Intro.html'].forEach(name => assert.match(indexHtml, new RegExp('class="help-card" href="' + name.replace('.', '\.') + '"'), '使用說明應連到 ' + name));

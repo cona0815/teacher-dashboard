@@ -142,6 +142,19 @@
     h1 { margin: 0; font-size: clamp(24px, 3vw, 38px); line-height: 1.1; }
     .user-line { margin-top: 8px; font-size: 13px; opacity: .82; }
     .top-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+    .help-overlay { position: fixed; inset: 0; z-index: 320; background: rgba(40, 50, 45, .45); display: flex; align-items: center; justify-content: center; padding: 16px; }
+    .help-overlay[hidden] { display: none; }
+    .help-panel { width: min(760px, 100%); max-height: 90vh; overflow: auto; background: var(--surface); border: 2px solid var(--line); border-radius: 22px; padding: 18px 20px; box-shadow: var(--shadow); }
+    .help-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+    .help-head h2 { margin: 0; font-size: 20px; }
+    .help-cards { display: grid; gap: 10px; }
+    .help-card { display: flex; gap: 14px; align-items: flex-start; padding: 14px 16px; border: 2px solid var(--line); border-radius: 16px; background: #fffdf8; color: var(--ink); text-decoration: none; transition: .12s ease; }
+    .help-card:hover { border-color: var(--primary); background: var(--primary-soft); transform: translateY(-1px); }
+    .help-card strong { font-size: 16px; color: var(--primary-strong); }
+    .help-card p { margin: 4px 0 0; font-size: 13px; color: var(--muted); line-height: 1.55; }
+    .help-emoji { font-size: 30px; line-height: 1; flex: 0 0 auto; }
+    .help-foot { margin-top: 12px; font-size: 11.5px; color: var(--muted); }
+    .help-foot a { color: var(--primary); }
     .ai-kind-badge { display:inline-block; margin-left:6px; font-size:11px; font-weight:800; border-radius:999px; padding:0 8px; background:#e8f2ee; color:#1f514a; vertical-align:1px; }
     .ai-kind-badge.is-task { background:#fff7e6; color:#b9852f; }
     .ai-kind-badge.is-time { background:#eef3fb; color:#1f3a5f; }
@@ -990,6 +1003,20 @@
   </style>
 </head>
 <body>
+  <div class="help-overlay" id="helpOverlay" hidden>
+    <div class="help-panel" role="dialog" aria-labelledby="helpTitle">
+      <div class="help-head"><h2 id="helpTitle">📖 使用說明</h2><button class="mini-button" type="button" id="helpCloseButton">✕ 關閉</button></div>
+      <div class="help-cards">
+        <a class="help-card" href="Install.html" target="_blank" rel="noopener">
+          <div class="help-emoji">🚀</div><div><strong>部署方法</strong><p>從零開始：工作台、晨間大屏、LINE 小幫手（Google 試算表＋Apps Script）、小綿助桌寵。已在用第 1 版的老師看「第 2 版更新指南」。</p></div></a>
+        <a class="help-card" href="About.html" target="_blank" rel="noopener">
+          <div class="help-emoji">🧭</div><div><strong>系統使用方法</strong><p>依情境的日常用法（早自習、備課夜、批改作文、LINE 河道整合……），以及你的資料存在哪裡、每個授權在做什麼。</p></div></a>
+        <a class="help-card" href="Intro.html" target="_blank" rel="noopener">
+          <div class="help-emoji">🌐</div><div><strong>網頁介紹</strong><p>一頁式圖文介紹：每個功能從哪個「很煩」開始、怎麼解決；可直接轉給同事或家長會。</p></div></a>
+      </div>
+      <div class="help-foot">網站版本 <span id="helpSiteVersion">—</span>｜LINE 小幫手版本：試算表選單「ℹ️ 程式版本」或對機器人傳「版本」｜<a href="https://github.com/cona0815/teacher-dashboard" target="_blank" rel="noopener">程式碼公開（GitHub）</a></div>
+    </div>
+  </div>
   <script>
     const WORK_CATEGORY_MAP = Object.freeze({
       '教學': Object.freeze([
@@ -1250,7 +1277,7 @@
         <div class="user-line" id="userLine">正在確認 Workspace 帳號</div>
       </div>
       <div class="top-actions">
-        <a class="button button-outline" href="About.html" target="_blank" rel="noopener" style="text-decoration:none">📖 使用說明</a>
+        <button class="button button-outline" type="button" id="helpMenuButton">📖 使用說明</button>
         <button class="button button-outline" type="button" id="settingsButton">⚙ 設定</button>
         <a class="button button-outline" id="boardLink" href="Board.html" target="_blank">電子紙看板</a>
         <button class="button button-primary" type="button" id="newTaskButton">＋ 新增任務</button>
@@ -8876,6 +8903,13 @@ ${cleanBase}`;
     $('syncGoogleTasksButton').addEventListener('click', syncNotesWithGoogleTasksClient);
     $('aiAdviceApplyAll').addEventListener('click', applyAllAdviceSuggestions);
     $('aiRetryButton').addEventListener('click', retryGeminiAnalysis);
+    $('helpMenuButton').addEventListener('click', () => {
+      $('helpSiteVersion').textContent = window.TD_VERSION || '—';
+      $('helpOverlay').hidden = false;
+    });
+    $('helpCloseButton').addEventListener('click', () => { $('helpOverlay').hidden = true; });
+    $('helpOverlay').addEventListener('click', event => { if (event.target === $('helpOverlay')) $('helpOverlay').hidden = true; });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') $('helpOverlay').hidden = true; });
 
     // 📣 大屏提示遙控（與 LineBot.gs 的 SCREEN_PROMPTS 同步）
     const SCREEN_PROMPT_GROUPS = [
