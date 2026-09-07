@@ -190,6 +190,9 @@
     .rd-text p { text-indent:2em; margin:6px 0; }
     .rd-vocab { columns:2; font-size:14px; }
     .rd-vocab div { break-inside:avoid; margin:3px 0; }
+    .rm-cmd-group { margin:4px 0; font-size:12.5px; }
+    .rm-cmd-group b { display:inline-block; min-width:64px; }
+    .rm-cmd-group .mini { padding:2px 9px; font-size:12px; margin:2px 3px 2px 0; }
     /* 遮蔽工具 */
     .mask-canvas-wrap { position:relative; display:inline-block; max-width:100%; }
     #maskCanvas { max-width:100%; height:auto; display:block; border-radius:8px; cursor:crosshair; touch-action:none; }
@@ -720,7 +723,20 @@
             <div id="rmCells"></div>
             <div class="check-row" style="margin-top:6px">
               <button class="mini" type="button" id="rmPresetButton">🔄 還原常用預設</button>
-            </div></div>
+            </div>
+            <details class="rm-cmds" open style="margin-top:8px">
+              <summary style="cursor:pointer;font-weight:900;color:var(--primary-strong)">📖 LINE 小幫手聽得懂的指令（點一下就填進上一個點過的按鈕）</summary>
+              <div class="hint" style="margin:4px 0 6px">圖文選單按鈕只能送「固定文字」，所以列出的都是不用再接字的指令；要接文字的（記：…、聯絡本：…）請老師直接用手打。</div>
+              <div class="rm-cmd-group"><b>📊 查詢</b>
+                <button class="mini" type="button" data-cmd="說明">說明</button><button class="mini" type="button" data-cmd="今日點名">今日點名</button><button class="mini" type="button" data-cmd="缺交統計">缺交統計</button><button class="mini" type="button" data-cmd="今天上到哪">今天上到哪（工作台快照）</button><button class="mini" type="button" data-cmd="推播設定">推播設定（用量與開關）</button><button class="mini" type="button" data-cmd="找檔案">找檔案（最近備份）</button><button class="mini" type="button" data-cmd="我的ID">我的ID</button></div>
+              <div class="rm-cmd-group"><b>🏫 班務</b>
+                <button class="mini" type="button" data-cmd="提示">提示（大屏提示指令清單）</button><button class="mini" type="button" data-cmd="提示 排隊">提示 排隊</button><button class="mini" type="button" data-cmd="提示 安靜">提示 安靜</button><button class="mini" type="button" data-cmd="提示 關">提示 關</button><button class="mini" type="button" data-cmd="代課包">代課包（請假交接）</button><button class="mini" type="button" data-cmd="照片轉聯絡本">照片轉聯絡本</button></div>
+              <div class="rm-cmd-group"><b>🔔 推播開關</b>
+                <button class="mini" type="button" data-cmd="開啟 晨間簡報">開啟 晨間簡報</button><button class="mini" type="button" data-cmd="關閉 晨間簡報">關閉 晨間簡報</button><button class="mini" type="button" data-cmd="開啟 放學小結">開啟 放學小結</button><button class="mini" type="button" data-cmd="關閉 放學小結">關閉 放學小結</button><button class="mini" type="button" data-cmd="開啟 作業推播">開啟 作業推播</button><button class="mini" type="button" data-cmd="關閉 作業推播">關閉 作業推播</button></div>
+              <div class="rm-cmd-group"><b>↩️ 修正</b>
+                <button class="mini" type="button" data-cmd="撤回">撤回（作廢上一筆）</button></div>
+              <div class="hint" style="margin-top:6px">需要接文字的指令（不適合做按鈕）：「記：…」存記事、「任務：…」建任務、「聯絡本：…」寫黑板、「聯絡簿：…」產生家長公告、「9號」查座號、「刪除 關鍵字」、「明天請假」。</div>
+            </details></div>
           <button class="go-button" type="button" id="rmArtButton">🎨 AI 產生背景圖</button>
           <button class="go-button" type="button" id="rmPreviewButton" style="margin-top:8px;background:var(--primary-strong)">👀 產生預覽圖（疊上按鈕）</button>
           <button class="go-button" type="button" id="rmApplyButton" style="margin-top:8px;background:var(--gold)">📱 套用到 LINE（需 GAS）</button>
@@ -2321,6 +2337,21 @@
       buildCells(true);
       $('rmLayout').addEventListener('change', () => buildCells(false));
       $('rmPresetButton').addEventListener('click', () => buildCells(true));
+      // 指令參考表：點指令 → 填進最近點過的「送出的指令」欄（沒點過就填第一個空的）
+      let rmLastMsgInput = null;
+      $('rmCells').addEventListener('focusin', e => { const el = e.target.closest('[data-rm-msg]'); if (el) rmLastMsgInput = el; });
+      document.querySelector('.rm-cmds').addEventListener('click', e => {
+        const btn = e.target.closest('[data-cmd]');
+        if (!btn) return;
+        const target = (rmLastMsgInput && document.contains(rmLastMsgInput)) ? rmLastMsgInput
+          : [...document.querySelectorAll('[data-rm-msg]')].find(el => !el.value.trim()) || document.querySelector('[data-rm-msg]');
+        if (!target) return;
+        target.value = btn.dataset.cmd;
+        const label = target.closest('[data-rm-cell]').querySelector('[data-rm-label]');
+        if (label && !label.value.trim()) label.value = btn.textContent.replace(/（.*）/, '').trim();
+        target.focus();
+        showToast(`已填入「${btn.dataset.cmd}」`);
+      });
       function renderMenuCanvas() {
         const layout = RM_LAYOUTS[$('rmLayout').value] || RM_LAYOUTS.six;
         const colors = RM_THEMES[$('rmTheme').value] || RM_THEMES.green;

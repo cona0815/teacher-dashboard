@@ -541,3 +541,9 @@ assert.ok(studioHtml.includes("attachZone('rvImages'") && studioHtml.includes("a
 assert.match(studioHtml, /google_search: \{\}/, "找時事應使用 Gemini Google 搜尋接地");
 assert.match(studioHtml, /const NEWS_BLOCKLIST = \/政治\|選舉/, "時事應有程式端兒童安全關鍵字過濾");
 assert.match(studioHtml, /絕對排除\*\*：政治、選舉/, "時事提示詞應明確排除政治、暴力、色情");
+
+// LINE 圖文選單：附小幫手可用指令參考表
+assert.match(studioHtml, /LINE 小幫手聽得懂的指令/, "圖文選單應附可用指令參考表");
+for (const cmd of ["說明", "今日點名", "缺交統計", "推播設定", "代課包", "提示 排隊", "撤回"]) {
+  assert.ok(studioHtml.includes(`data-cmd="${cmd}"`), `指令表應含「${cmd}」`);
+}
