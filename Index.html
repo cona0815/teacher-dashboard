@@ -7352,16 +7352,12 @@
         if (requestId === aiGeminiRequestSeq) {
           const message = String(error.message).slice(0, 160);
           showToast(`${label} 呼叫失敗：${message}。以下為本機規則分析。`, true);
-          const base = $('aiOutput').textContent.replace(/^⚠️[^
-]*
-（[^
-]*
-
-/, '');
+          const base = $('aiOutput').textContent.split('\n\n').slice(1).join('\n\n') || $('aiOutput').textContent;
+          const cleanBase = $('aiOutput').textContent.startsWith('⚠️') ? base : $('aiOutput').textContent;
           $('aiOutput').textContent = `⚠️ ${label} 呼叫失敗：${message}
 （下方是本機規則的粗略分析；請按「🔁 重試 AI」再試一次）
 
-${base}`;
+${cleanBase}`;
           $('aiRetryButton').hidden = false;
           aiAssistantState.lastRedactionText = redactionText;
         }
