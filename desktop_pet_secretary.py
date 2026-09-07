@@ -232,7 +232,7 @@ textarea,input{font-family:inherit;font-size:14px;border:1.5px solid var(--line)
 details summary{cursor:pointer;font-weight:800;color:var(--strong)}
 .seat-ok{color:#1c6b45}.seat-bad{color:var(--danger);font-weight:800}
 </style></head><body>
-<header><h1>🐑 __PET_NAME__ 教師秘書</h1><div class="meta">本機頁面（127.0.0.1）｜v2.0｜<span id="stamp">載入中</span>｜每 15 秒自動更新</div></header>
+<header><h1>🐑 __PET_NAME__ 教師秘書</h1><div class="meta">本機頁面（127.0.0.1）｜v2.0.1｜<span id="stamp">載入中</span>｜每 15 秒自動更新</div></header>
 <main>
   <section class="card soft" style="grid-column:1/-1"><h2>☀ 今日簡報</h2><div id="brief" class="empty">載入中……</div></section>
 
