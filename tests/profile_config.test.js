@@ -506,3 +506,14 @@ assert.match(studioHtml, /responseModalities: \['IMAGE', 'TEXT'\]/, "海報應�
 assert.doesNotMatch(studioHtml, /PO_THEMES/, "海報不再使用配色版型");
 assert.match(studioHtml, /name="poTextMode"/, "海報應可選文字疊圖或 AI 畫進圖");
 assert.match(fs.readFileSync(path.join(projectRoot, "THIRD_PARTY_NOTICES.md"), "utf8"), /html2pdf/, "第三方聲明應記錄 html2pdf");
+
+// 家長通知單升級：與宣傳單同套插圖介面，內容可微調
+assert.match(studioHtml, /id="ntStyle"/, "通知單應可選插圖風格");
+assert.match(studioHtml, /async function makeNoticeBanner/, "通知單應能產生 AI 插圖橫幅");
+assert.match(studioHtml, /id="ntPngButton"/, "通知單應可下載 PNG");
+assert.ok((studioHtml.match(/contenteditable="true" spellcheck="false"/g) || []).length >= 8, "通知單與海報文字應可直接點著修改");
+
+// LINE 圖文選單：Gemini 生背景＋疊按鈕
+assert.match(studioHtml, /async function makeMenuBackground/, "圖文選單應能用 Gemini 產生背景圖");
+assert.match(studioHtml, /id="rmStyle"/, "圖文選單應可選插圖風格");
+assert.match(studioHtml, /id="rmPngButton"/, "圖文選單應可下載 PNG");

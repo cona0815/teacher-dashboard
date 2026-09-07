@@ -118,6 +118,13 @@
     .po-ov-footer { position:absolute; bottom:2.5%; left:0; right:0; text-align:center; font-size:16px; font-weight:800; color:#fff; text-shadow:0 1px 0 rgba(0,0,0,.4), 0 0 10px rgba(0,0,0,.6); outline:none; }
     .zone-chip { display:inline-flex; align-items:center; gap:4px; background:var(--soft); color:var(--primary-strong); border-radius:999px; padding:2px 10px; font-size:12px; font-weight:800; margin:2px 4px 2px 0; }
     @media print { .po-canvas { box-shadow:none; } }
+    /* 家長通知單（插圖橫幅版） */
+    .nt-sheet { padding-top:40px; }
+    .nt-banner { margin:-40px -60px 14px; height:230px; overflow:hidden; }
+    .nt-banner img { width:100%; height:100%; object-fit:cover; display:block; }
+    .nt-sheet [contenteditable]:hover { outline:1.5px dashed #b9852f; outline-offset:2px; border-radius:4px; }
+    .nt-sheet [contenteditable]:focus { outline:2px solid #b9852f; background:#fffbea; }
+    .nt-fun .ws-head { border-style:double; border-width:5px; }
     /* 遮蔽工具 */
     .mask-canvas-wrap { position:relative; display:inline-block; max-width:100%; }
     #maskCanvas { max-width:100%; height:auto; display:block; border-radius:8px; cursor:crosshair; touch-action:none; }
@@ -220,16 +227,33 @@
             <input class="input" type="file" id="ntImage" accept="image/*"></div>
           <div class="field"><div class="check-row">
             <label><input type="checkbox" id="ntSlip" checked>✂ 附裁切回條（家長簽名）</label>
+            <label><input type="checkbox" id="ntArt" checked>🎨 附 AI 插圖橫幅</label>
           </div></div>
+          <div class="field"><label>🎨 插圖風格（與宣傳單相同的風格庫）</label>
+            <select class="select" id="ntStyle"></select></div>
+          <div class="field"><label>🏫 學校人物</label>
+            <select class="select" id="ntChar">
+              <option value="">不指定（AI 自由發揮）</option>
+              <option value="boy">男孩（深藍運動服）</option>
+              <option value="girl">女孩（紅色運動服）</option>
+            </select></div>
+          <div class="field"><label>版面氣氛</label>
+            <select class="select" id="ntTone">
+              <option value="warm" selected>🌼 溫馨親切（通知、活動）</option>
+              <option value="formal">📄 正式端莊（收費、重要事項）</option>
+              <option value="fun">🎉 活潑歡樂（園遊會、慶祝）</option>
+            </select></div>
           <button class="go-button" type="button" id="ntGoButton">✨ 生成通知單</button>
           <div class="status" id="ntStatus"></div>
-          <div class="warn">寄出前請確認日期、金額等關鍵資訊正確；AI 可能改寫時失真。</div>
+          <div class="warn">寄出前請確認日期、金額等關鍵資訊正確；AI 可能改寫時失真。<strong>通知內容可直接在右邊點著修改</strong>，改完再下載。</div>
         </div>
         <div class="panel">
           <div class="preview-bar">
             <button class="mini" type="button" onclick="window.print()">🖨 列印／存 PDF</button>
             <button class="mini" type="button" onclick="downloadPreview('ntPreview','家長通知單','doc')">⬇ Word</button>
             <button class="mini" type="button" onclick="downloadPdfFromHost('ntPreview','家長通知單',false)">⬇ PDF</button>
+            <button class="mini" type="button" id="ntPngButton">⬇ PNG</button>
+            <button class="mini" type="button" id="ntArtAgainButton">🔁 換一張插圖</button>
             <span class="status" id="ntMeta"></span>
           </div>
           <div class="preview-host" id="ntPreview"></div>
@@ -506,24 +530,39 @@
               <option value="four">4 格（2 排 × 2 格，大版）</option>
               <option value="three">3 格（1 排 × 3 格，小版）</option>
             </select></div>
-          <div class="field"><label>色系</label>
+          <div class="field"><label>🎨 背景插圖風格（Gemini 生圖）</label>
+            <select class="select" id="rmStyle"></select></div>
+          <div class="field"><label>背景想放什麼（口語即可）</label>
+            <input class="input" id="rmScene" placeholder="例：校園操場、書本與文具、溫馨教室角落"></div>
+          <div class="field"><label>🏫 學校人物</label>
+            <select class="select" id="rmChar">
+              <option value="">不指定（AI 自由發揮）</option>
+              <option value="boy">男孩（深藍運動服）</option>
+              <option value="girl">女孩（紅色運動服）</option>
+            </select></div>
+          <div class="field"><label>按鈕色系（疊在背景上的按鈕）</label>
             <select class="select" id="rmTheme">
               <option value="green" selected>🌿 森林綠</option>
               <option value="blue">🌊 海洋藍</option>
               <option value="warm">🌞 暖陽橘</option>
+              <option value="dark">⬛ 深色半透明</option>
+              <option value="light">⬜ 白色半透明</option>
             </select></div>
           <div class="field"><label>按鈕內容（顯示文字＋按下去送出的指令）</label>
             <div id="rmCells"></div>
             <div class="check-row" style="margin-top:6px">
               <button class="mini" type="button" id="rmPresetButton">🔄 還原常用預設</button>
             </div></div>
-          <button class="go-button" type="button" id="rmPreviewButton">👀 產生預覽圖</button>
+          <button class="go-button" type="button" id="rmArtButton">🎨 AI 產生背景圖</button>
+          <button class="go-button" type="button" id="rmPreviewButton" style="margin-top:8px;background:var(--primary-strong)">👀 產生預覽圖（疊上按鈕）</button>
           <button class="go-button" type="button" id="rmApplyButton" style="margin-top:8px;background:var(--gold)">📱 套用到 LINE（需 GAS）</button>
           <div class="status" id="rmStatus"></div>
-          <div class="warn">套用會蓋掉舊的圖文選單（自動刪除前一個）；需要已安裝 LINE 小幫手並填好 GAS 網址與 🔑C。指令文字要是機器人聽得懂的（預設都是）。</div>
+          <div class="warn">背景由 Gemini 生圖、按鈕文字由系統疊上去（中文保證正確）。套用會蓋掉舊的圖文選單（自動刪除前一個）；需要已安裝 LINE 小幫手並填好 GAS 網址與 🔑C。指令文字要是機器人聽得懂的（預設都是）。</div>
         </div>
         <div class="panel">
-          <div class="preview-bar"><span class="status" id="rmMeta">按「產生預覽圖」看看選單長相，再套用到 LINE。</span></div>
+          <div class="preview-bar">
+            <button class="mini" type="button" id="rmPngButton">⬇ PNG</button>
+            <span class="status" id="rmMeta">先「🎨 AI 產生背景圖」（可跳過），再「👀 產生預覽圖」看選單長相，最後套用到 LINE。</span></div>
           <div id="rmPreviewHost" style="border-radius:12px;overflow:hidden"></div>
         </div>
       </div>
@@ -890,20 +929,68 @@
         `主旨提示：${$('ntSubject').value.trim() || '（自行擬定）'}`,
         body ? `內容要點：${body}` : '',
         '重要日期、金額、地點務必完整保留並以清楚條列呈現。',
-        '只回傳 JSON：{"title":"通知單主旨","greeting":"親愛的家長您好：","paragraphs":["開場段落"],"items":["條列事項1","條列事項2"],"closing":"結尾段落（含感謝）","slipText":"回條上的聲明句（例：本人已詳閱○○通知，並同意讓子女參加。）"}'
+        '另外用英文寫一段 imagePrompt：描述適合放在這張通知單頂端的插圖畫面（主題相關的溫馨校園場景、動作與氛圍，30–60 words），不要提到文字、字體或版面。',
+        '只回傳 JSON：{"title":"通知單主旨","greeting":"親愛的家長您好：","paragraphs":["開場段落"],"items":["條列事項1","條列事項2"],"closing":"結尾段落（含感謝）","slipText":"回條上的聲明句（例：本人已詳閱○○通知，並同意讓子女參加。）","imagePrompt":""}'
       ].filter(Boolean).join('\n');
       busy($('ntGoButton'), true);
       try {
         const image = await fileToPart(zoneFirst('ntImage'));
         const data = extractJson(await callGemini(prompt, image, $('ntStatus')));
-        renderNotice(data);
-        $('ntMeta').textContent = '請核對日期與金額後列印。';
+        ntLast = { data, bannerUrl: '' };
+        renderNotice(data, '');
+        if ($('ntArt').checked) {
+          try { await makeNoticeBanner(); }
+          catch (e) { if (e.message !== 'no-key') showToast('插圖沒產出，先給你純文字版：' + e.message, true); }
+        }
+        $('ntStatus').textContent = '';
+        $('ntMeta').textContent = '請核對日期與金額；文字可直接點著修改，改完再列印或下載。';
         showToast('✨ 通知單完成！');
       } catch (e) { if (e.message !== 'no-key') { $('ntStatus').textContent = ''; showToast(e.message, true); } }
       busy($('ntGoButton'), false);
     });
-    function renderNotice(data) {
+    let ntLast = null;
+    async function makeNoticeBanner() {
+      if (!ntLast) return showToast('請先生成通知單。', true);
+      const style = PO_STYLES.find(item => item[0] === $('ntStyle').value) || PO_STYLES[0];
+      const charKey = $('ntChar').value;
+      const reference = await loadCharacterReference(charKey, '7');
+      const characterLine = charKey
+        ? (reference ? 'Main character: the child in the attached reference image — keep the same hairstyle, face and school sports uniform exactly.' : `Main character: ${PO_CHAR_DESC[charKey]}.`)
+        : '';
+      const tone = { warm: 'warm, welcoming, gentle', formal: 'calm, tidy, trustworthy, understated', fun: 'joyful, festive, energetic' }[$('ntTone').value] || 'warm';
+      const bannerPrompt = [
+        'A wide header banner illustration for a Taiwanese elementary school notice letter to parents.',
+        `Style: ${style[2]}. Mood: ${tone}.`,
+        `Scene: ${ntLast.data.imagePrompt || $('ntSubject').value || '校園生活'}.`,
+        characterLine,
+        'ABSOLUTELY NO text, letters, numbers, logos or signs in the image. Keep the composition simple with soft edges so printed text can sit below it. Aspect ratio 16:9, print-friendly, no watermark.'
+      ].filter(Boolean).join(' ');
+      ntLast.bannerUrl = await generateImage(bannerPrompt, reference, '16:9', $('ntStatus'));
+      renderNotice(ntLast.data, ntLast.bannerUrl);
+    }
+    $('ntArtAgainButton').addEventListener('click', async () => {
+      if (!ntLast) return showToast('請先生成通知單。', true);
+      busy($('ntGoButton'), true);
+      try { await makeNoticeBanner(); showToast('🎨 插圖換好了！'); }
+      catch (e) { if (e.message !== 'no-key') showToast(e.message, true); }
+      $('ntStatus').textContent = '';
+      busy($('ntGoButton'), false);
+    });
+    $('ntPngButton').addEventListener('click', async () => {
+      const sheet = document.querySelector('#ntPreview .sheet');
+      if (!sheet) return showToast('請先生成通知單。', true);
+      showToast('⏳ 正在製作 PNG…');
+      const canvas = await html2pdf().set({ html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' } }).from(sheet).toCanvas().get('canvas');
+      const a = document.createElement('a'); a.href = canvas.toDataURL('image/png'); a.download = `家長通知單-${$('ntSubject').value.trim() || 'notice'}.png`; a.click();
+      showToast('已下載 PNG。');
+    });
+    function renderNotice(data, bannerUrl) {
       const school = ($('ntSchool').value || '○○國民小學').trim();
+      const tone = $('ntTone').value;
+      const accent = tone === 'formal' ? '#1f3a5f' : tone === 'fun' ? '#c2540a' : '#1f514a';
+      const banner = bannerUrl
+        ? `<div class="nt-banner"><img src="${bannerUrl}" alt=""></div>`
+        : '';
       const today = new Date();
       const dateText = `${today.getFullYear() - 1911} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日`;
       const slip = $('ntSlip').checked ? `
@@ -914,14 +1001,15 @@
           <span>班級：＿＿＿＿</span><span>座號：＿＿＿＿</span><span>學生姓名：<span class="u"></span></span><br><br>
           <span>家長簽名：<span class="u"></span></span><span>日期：＿＿＿月＿＿＿日</span>
         </div>` : '';
-      $('ntPreview').innerHTML = `<div class="sheet">
-        <div class="ws-head"><div class="ws-school">${escapeHtml(school)}</div>
-          <div class="ws-title">${escapeHtml(data.title || '家長通知單')}</div></div>
-        <p style="margin-top:14px">${escapeHtml(data.greeting || '親愛的家長您好：')}</p>
-        ${(data.paragraphs || []).map(p => `<p style="text-indent:2em;margin:8px 0">${escapeHtml(p)}</p>`).join('')}
-        ${(data.items || []).length ? `<ol style="margin:10px 0 10px 2em;font-size:15px">${data.items.map(i => `<li style="margin:5px 0">${escapeHtml(i)}</li>`).join('')}</ol>` : ''}
-        <p style="text-indent:2em;margin:8px 0">${escapeHtml(data.closing || '')}</p>
-        <p style="text-align:right;margin-top:18px">${escapeHtml(school)}　敬啟<br>中華民國 ${dateText}</p>
+      $('ntPreview').innerHTML = `<div class="sheet nt-sheet nt-${tone}" style="--nt-accent:${accent}">
+        ${banner}
+        <div class="ws-head" style="border-color:${accent}"><div class="ws-school" contenteditable="true" spellcheck="false">${escapeHtml(school)}</div>
+          <div class="ws-title" contenteditable="true" spellcheck="false" style="color:${accent}">${escapeHtml(data.title || '家長通知單')}</div></div>
+        <p style="margin-top:14px" contenteditable="true" spellcheck="false">${escapeHtml(data.greeting || '親愛的家長您好：')}</p>
+        ${(data.paragraphs || []).map(p => `<p style="text-indent:2em;margin:8px 0" contenteditable="true" spellcheck="false">${escapeHtml(p)}</p>`).join('')}
+        ${(data.items || []).length ? `<ol style="margin:10px 0 10px 2em;font-size:15px" contenteditable="true" spellcheck="false">${data.items.map(i => `<li style="margin:5px 0">${escapeHtml(i)}</li>`).join('')}</ol>` : ''}
+        <p style="text-indent:2em;margin:8px 0" contenteditable="true" spellcheck="false">${escapeHtml(data.closing || '')}</p>
+        <p style="text-align:right;margin-top:18px" contenteditable="true" spellcheck="false">${escapeHtml(school)}　敬啟<br>中華民國 ${dateText}</p>
         ${slip}
       </div>`;
     }
@@ -1080,6 +1168,7 @@
       ['kawaii', '🐣 可愛貼紙風', 'kawaii sticker style, chubby characters with thick outlines, pastel colors, sparkle accents']
     ];
     $('poStyle').innerHTML = PO_STYLES.map(([key, label]) => `<option value="${key}">${label}</option>`).join('');
+    $('ntStyle').innerHTML = $('poStyle').innerHTML;
     $('poChar').addEventListener('change', () => { $('poPoseField').hidden = !$('poChar').value; });
     const PO_CHAR_DESC = {
       boy: 'a cheerful Taiwanese elementary school boy with short black hair wearing a navy blue school sports uniform with yellow trim, navy shorts and blue sneakers',
@@ -1702,8 +1791,54 @@
       const RM_THEMES = {
         green: ['#1f514a', '#2e6b5e', '#3d8577', '#579b8b', '#4a7d6f', '#356a5c'],
         blue: ['#155e9c', '#1f6fb0', '#2f80c4', '#4691d1', '#3a7bb8', '#2569a6'],
-        warm: ['#c2540a', '#d3671c', '#dd7a2e', '#c96114', '#b54d08', '#e08b40']
+        warm: ['#c2540a', '#d3671c', '#dd7a2e', '#c96114', '#b54d08', '#e08b40'],
+        dark: ['#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c'],
+        light: ['#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff']
       };
+      $('rmStyle').innerHTML = $('poStyle').innerHTML;
+      let rmBackground = null;   // HTMLImageElement（AI 背景）
+      function hexToRgba(hex, alpha) {
+        const n = parseInt(hex.slice(1), 16);
+        return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`;
+      }
+      async function makeMenuBackground() {
+        const layout = RM_LAYOUTS[$('rmLayout').value] || RM_LAYOUTS.six;
+        const style = PO_STYLES.find(item => item[0] === $('rmStyle').value) || PO_STYLES[0];
+        const charKey = $('rmChar').value;
+        const reference = await loadCharacterReference(charKey, '8');
+        const characterLine = charKey
+          ? (reference ? 'Feature the child in the attached reference image as the mascot (same hairstyle, face and school sports uniform), placed to one side.' : `Feature ${PO_CHAR_DESC[charKey]} as a mascot placed to one side.`)
+          : '';
+        const ratio = layout.height === 843 ? '16:9' : '3:2';
+        const prompt = [
+          'A decorative background artwork for a LINE chat rich menu used by a Taiwanese elementary school teacher.',
+          `Style: ${style[2]}.`,
+          `Scene: ${$('rmScene').value.trim() || 'a cheerful school campus with books, stationery and soft shapes'}.`,
+          characterLine,
+          'Keep the overall image soft, low-contrast and uncluttered so that translucent buttons with text will be placed on top later. ABSOLUTELY NO text, letters, numbers, logos or UI elements in the image.',
+          `Aspect ratio ${ratio}, no watermark.`
+        ].filter(Boolean).join(' ');
+        const dataUrl = await generateImage(prompt, reference, ratio, $('rmStatus'));
+        rmBackground = await new Promise((resolve, reject) => { const img = new Image(); img.onload = () => resolve(img); img.onerror = () => reject(new Error('背景圖載入失敗')); img.src = dataUrl; });
+      }
+      $('rmArtButton').dataset.label = $('rmArtButton').textContent;
+      $('rmArtButton').addEventListener('click', async () => {
+        busy($('rmArtButton'), true);
+        try {
+          await makeMenuBackground();
+          const { canvas } = renderMenuCanvas();
+          $('rmPreviewHost').innerHTML = `<img src="${canvas.toDataURL('image/png')}" style="width:100%;display:block" alt="圖文選單預覽">`;
+          $('rmStatus').textContent = '';
+          $('rmMeta').textContent = '🎨 背景完成，已疊上按鈕預覽；不滿意再按一次換一張。';
+          showToast('🎨 背景圖完成！');
+        } catch (e) { $('rmStatus').textContent = ''; if (e.message !== 'no-key') showToast(e.message, true); }
+        busy($('rmArtButton'), false);
+      });
+      $('rmPngButton').addEventListener('click', () => {
+        const { canvas } = renderMenuCanvas();
+        const a = document.createElement('a'); a.href = canvas.toDataURL('image/png'); a.download = 'LINE圖文選單.png'; a.click();
+        showToast('已下載 PNG（2500px 原尺寸）。');
+      });
       const RM_PRESETS = [
         { label: '📖 使用說明', msg: '說明' },
         { label: '🙋 今日點名', msg: '今日點名' },
@@ -1742,23 +1877,41 @@
         const canvas = document.createElement('canvas');
         canvas.width = 2500; canvas.height = layout.height;
         const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        if (rmBackground) {
+          // cover 裁切：把 AI 背景鋪滿整張選單
+          const scale = Math.max(canvas.width / rmBackground.width, canvas.height / rmBackground.height);
+          const w = rmBackground.width * scale, hgt = rmBackground.height * scale;
+          ctx.drawImage(rmBackground, (canvas.width - w) / 2, (canvas.height - hgt) / 2, w, hgt);
+        } else {
+          const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+          gradient.addColorStop(0, '#f3f6f4'); gradient.addColorStop(1, '#dcebdd');
+          ctx.fillStyle = gradient;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
         const cellW = canvas.width / layout.cols, cellH = canvas.height / layout.rows;
-        const margin = 22, radius = 46;
+        const margin = 34, radius = 54;
+        const themeKey = $('rmTheme').value;
         const areas = [];
         cells.forEach((cell, index) => {
           const col = index % layout.cols, row = Math.floor(index / layout.cols);
           const x = col * cellW, y = row * cellH;
-          ctx.fillStyle = colors[index % colors.length];
+          const color = colors[index % colors.length];
+          ctx.save();
+          ctx.shadowColor = 'rgba(0,0,0,.28)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 8;
+          ctx.fillStyle = hexToRgba(color, rmBackground ? 0.82 : 1);
           ctx.beginPath();
           ctx.roundRect(x + margin, y + margin, cellW - margin * 2, cellH - margin * 2, radius);
           ctx.fill();
-          ctx.fillStyle = '#ffffff';
+          ctx.restore();
+          ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = 6;
+          ctx.beginPath(); ctx.roundRect(x + margin, y + margin, cellW - margin * 2, cellH - margin * 2, radius); ctx.stroke();
+          const textColor = themeKey === 'light' ? '#1c302d' : '#ffffff';
+          ctx.fillStyle = textColor;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           const fontSize = Math.min(150, Math.floor((cellW - margin * 4) / Math.max(3, cell.label.length) * 1.6));
           ctx.font = `900 ${fontSize}px "Microsoft JhengHei", sans-serif`;
+          if (themeKey !== 'light') { ctx.lineWidth = Math.max(4, fontSize / 14); ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.strokeText(cell.label, x + cellW / 2, y + cellH / 2); }
           ctx.fillText(cell.label, x + cellW / 2, y + cellH / 2);
           areas.push({ x, y, w: cellW, h: cellH, text: cell.msg });
         });
