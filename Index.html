@@ -1456,6 +1456,7 @@
           </div>
           <div class="ai-actions">
             <button class="button button-dark" type="button" id="aiGenerateButton">分析並給建議</button>
+            <button class="button button-light" type="button" id="aiRetryButton" hidden>🔁 重試 AI</button>
             <button class="button button-light" type="button" id="redactButton">先檢查並去識別</button>
             <span class="ai-local-note">本機規則模擬｜尚未串接 API</span>
           </div>
@@ -7199,7 +7200,9 @@
     function parseAiJsonText(rawText) {
       const trimmed = String(rawText || '').trim();
       if (!trimmed) throw new Error('模型沒有回覆內容，可能觸發安全過濾');
-      const jsonText = trimmed.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```\s*$/, '');
+      let jsonText = trimmed.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```\s*$/, '');
+      const first = jsonText.indexOf('{'), last = jsonText.lastIndexOf('}');
+      if (first > 0 || (last >= 0 && last < jsonText.length - 1)) jsonText = jsonText.slice(Math.max(first, 0), last >= 0 ? last + 1 : undefined);
       try { return JSON.parse(jsonText); } catch (error) { throw new Error('模型回覆不是有效 JSON，請再試一次'); }
     }
 
@@ -7233,7 +7236,7 @@
           headers: { 'Content-Type': 'application/json', 'x-goog-api-key': cfg.key },
           body: JSON.stringify({
             contents: [{ role: 'user', parts }],
-            generationConfig: { temperature: 0.4, maxOutputTokens: 2048, responseMimeType: 'application/json' }
+            generationConfig: { temperature: 0.4, maxOutputTokens: 8192, responseMimeType: 'application/json' }
           })
         });
       } else {
@@ -7254,10 +7257,16 @@
         throw new Error(String(typeof message === 'object' ? JSON.stringify(message) : message).slice(0, 160));
       }
       const data = await response.json();
-      const rawText = cfg.kind === 'gemini'
-        ? (data?.candidates?.[0]?.content?.parts || []).map(part => part.text || '').join('')
-        : String(data?.choices?.[0]?.message?.content || '');
-      return parseAiJsonText(rawText);
+      if (cfg.kind === 'gemini') {
+        const block = data?.promptFeedback?.blockReason;
+        if (block) throw new Error(`內容被 Gemini 安全政策擋下（${block}），請換個說法或拿掉附件`);
+        const finish = data?.candidates?.[0]?.finishReason;
+        const rawText = (data?.candidates?.[0]?.content?.parts || []).filter(part => !part.thought).map(part => part.text || '').join('');
+        if (!rawText && finish && finish !== 'STOP') throw new Error(`Gemini 沒有回覆內容（${finish}）`);
+        try { return parseAiJsonText(rawText); }
+        catch (error) { throw new Error(finish === 'MAX_TOKENS' ? '回覆太長被截斷，請縮小附件或分次分析' : error.message); }
+      }
+      return parseAiJsonText(String(data?.choices?.[0]?.message?.content || ''));
     }
 
     function safeIsoDate(value) {
@@ -7327,6 +7336,7 @@
 
     async function runGeminiAnalysis(analysis, redactionText) {
       const requestId = ++aiGeminiRequestSeq;
+      $('aiRetryButton').hidden = true;
       const label = providerConfig().label || 'AI';
       const button = $('aiGenerateButton');
       button.disabled = true;
@@ -7335,15 +7345,35 @@
         const parsed = await callGeminiAnalysis(redactionText, analysis);
         if (requestId !== aiGeminiRequestSeq || aiAssistantState.analysis !== analysis) return;
         applyGeminiResult(analysis, parsed, redactionText);
+        $('aiRetryButton').hidden = true;
+        document.querySelectorAll('.ai-attachment-detail').forEach(el => { el.textContent = el.textContent.replace('等待分析', '已送 AI 分析'); });
         showToast(`✨ ${label} 分析完成；建議與任務草稿已更新。`);
       } catch (error) {
         if (requestId === aiGeminiRequestSeq) {
-          showToast(`${label} 呼叫失敗：${String(error.message).slice(0, 120)}。以下為本機規則分析。`, true);
+          const message = String(error.message).slice(0, 160);
+          showToast(`${label} 呼叫失敗：${message}。以下為本機規則分析。`, true);
+          const base = $('aiOutput').textContent.replace(/^⚠️[^
+]*
+（[^
+]*
+
+/, '');
+          $('aiOutput').textContent = `⚠️ ${label} 呼叫失敗：${message}
+（下方是本機規則的粗略分析；請按「🔁 重試 AI」再試一次）
+
+${base}`;
+          $('aiRetryButton').hidden = false;
+          aiAssistantState.lastRedactionText = redactionText;
         }
       } finally {
         button.disabled = false;
         button.textContent = '分析並給建議';
       }
+    }
+    function retryGeminiAnalysis() {
+      if (!aiAssistantState.analysis) return;
+      $('aiRetryButton').hidden = true;
+      runGeminiAnalysis(aiAssistantState.analysis, aiAssistantState.lastRedactionText || $('aiInput').value.trim());
     }
 
     let aiGeminiRequestSeq = 0;
@@ -8757,6 +8787,7 @@
     $('addSecretaryNoteButton').addEventListener('click', addSecretaryNote);
     $('syncGoogleTasksButton').addEventListener('click', syncNotesWithGoogleTasksClient);
     $('aiAdviceApplyAll').addEventListener('click', applyAllAdviceSuggestions);
+    $('aiRetryButton').addEventListener('click', retryGeminiAnalysis);
 
     // 📣 大屏提示遙控（與 LineBot.gs 的 SCREEN_PROMPTS 同步）
     const SCREEN_PROMPT_GROUPS = [
