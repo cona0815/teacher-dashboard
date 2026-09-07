@@ -120,6 +120,40 @@
     .po-ov-footer { position:absolute; bottom:2.5%; left:0; right:0; text-align:center; font-size:16px; font-weight:800; color:#fff; text-shadow:0 1px 0 rgba(0,0,0,.4), 0 0 10px rgba(0,0,0,.6); outline:none; }
     .zone-chip { display:inline-flex; align-items:center; gap:4px; background:var(--soft); color:var(--primary-strong); border-radius:999px; padding:2px 10px; font-size:12px; font-weight:800; margin:2px 4px 2px 0; }
     @media print { .po-canvas { box-shadow:none; } }
+    /* 🖼 圖像簡報 */
+    .dk-outline { display:grid; gap:8px; margin-bottom:12px; }
+    .dk-outline:empty { display:none; }
+    .dk-row { border:1.5px solid var(--line); border-radius:12px; background:#fff; padding:8px 10px; display:grid; grid-template-columns:44px 1fr; gap:8px; align-items:start; }
+    .dk-row .dk-no { font-weight:900; color:var(--primary-strong); font-size:18px; text-align:center; padding-top:4px; }
+    .dk-row .dk-role { display:block; font-size:11px; color:var(--muted); text-align:center; }
+    .dk-row input.input, .dk-row textarea.textarea, .dk-row select.select { padding:5px 8px; font-size:13px; margin-bottom:5px; }
+    .dk-row textarea.textarea { min-height:52px; }
+    .dk-row .dk-meta { display:flex; gap:6px; flex-wrap:wrap; align-items:center; font-size:12px; color:var(--muted); }
+    .dk-row .dk-meta select.select { width:auto; margin:0; }
+    .dk-grid { display:grid; gap:14px; }
+    .dk-slide-wrap { position:relative; }
+    .dk-slide-tools { display:flex; gap:6px; align-items:center; margin:0 0 6px; font-size:12px; color:var(--muted); }
+    .dk-canvas { position:relative; width:1120px; height:630px; margin:0 auto; background-size:cover; background-position:center; background-color:#eef2f0; box-shadow:0 3px 14px rgba(30,50,40,.18); overflow:hidden; font-family:"Microsoft JhengHei","Noto Sans TC",sans-serif; }
+    .dk-canvas .dk-t { position:absolute; font-weight:900; line-height:1.25; outline:none; letter-spacing:.03em; }
+    .dk-canvas .dk-b { position:absolute; outline:none; }
+    .dk-canvas .dk-b div { margin:0 0 10px; font-size:26px; font-weight:800; line-height:1.4; }
+    .dk-canvas .dk-b div::before { content:"●"; font-size:14px; margin-right:10px; vertical-align:middle; color:#b9852f; }
+    .dk-canvas .dk-box { background:rgba(255,255,255,.86); color:#1c302d; border-radius:18px; padding:22px 28px; box-shadow:0 4px 18px rgba(0,0,0,.18); backdrop-filter:blur(2px); }
+    .dk-canvas .dk-pn { position:absolute; right:26px; bottom:18px; font-size:16px; font-weight:800; color:#fff; text-shadow:0 1px 0 rgba(0,0,0,.4), 0 0 10px rgba(0,0,0,.6); }
+    .dk-canvas .dk-empty { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--muted); font-weight:800; }
+    /* 版面：title 封面／left 左字右圖／bottom 上圖下字／center 置中 */
+    .dk-canvas[data-layout="title"] .dk-t { left:8%; right:8%; top:30%; text-align:center; font-size:64px; color:#fff; text-shadow:0 3px 0 rgba(0,0,0,.35), 0 0 24px rgba(0,0,0,.6); }
+    .dk-canvas[data-layout="title"] .dk-b { left:15%; right:15%; top:58%; text-align:center; }
+    .dk-canvas[data-layout="title"] .dk-b div { font-size:28px; color:#fff; text-shadow:0 2px 0 rgba(0,0,0,.35), 0 0 16px rgba(0,0,0,.6); }
+    .dk-canvas[data-layout="title"] .dk-b div::before { content:""; margin:0; }
+    .dk-canvas[data-layout="left"] .dk-t { left:5%; top:6%; width:52%; font-size:44px; color:#fff; text-shadow:0 3px 0 rgba(0,0,0,.35), 0 0 20px rgba(0,0,0,.6); }
+    .dk-canvas[data-layout="left"] .dk-b { left:5%; top:26%; width:52%; }
+    .dk-canvas[data-layout="bottom"] .dk-t { left:5%; top:5%; right:5%; font-size:44px; color:#fff; text-shadow:0 3px 0 rgba(0,0,0,.35), 0 0 20px rgba(0,0,0,.6); }
+    .dk-canvas[data-layout="bottom"] .dk-b { left:5%; right:5%; bottom:9%; }
+    .dk-canvas[data-layout="bottom"] .dk-b div { display:inline-block; margin:0 18px 8px 0; }
+    .dk-canvas[data-layout="center"] .dk-t { left:10%; right:10%; top:18%; text-align:center; font-size:56px; color:#fff; text-shadow:0 3px 0 rgba(0,0,0,.35), 0 0 24px rgba(0,0,0,.6); }
+    .dk-canvas[data-layout="center"] .dk-b { left:18%; right:18%; top:48%; text-align:center; }
+    @media print { .dk-canvas { box-shadow:none; page-break-after:always; } .dk-outline, .dk-slide-tools { display:none !important; } }
     /* 家長通知單（插圖橫幅版） */
     .nt-sheet { padding-top:40px; }
     .nt-banner { margin:-40px -60px 14px; height:230px; overflow:hidden; }
@@ -230,6 +264,7 @@
     <button class="tab-button" type="button" data-page="mm">🧠 心智圖</button>
     <button class="tab-button" type="button" data-page="review">📖 段考複習講義</button>
     <button class="tab-button" type="button" data-page="reading">📚 閱讀分級改寫</button>
+    <button class="tab-button" type="button" data-page="deck">🖼 圖像簡報</button>
     <span class="tab-group">📣 親師溝通</span>
     <button class="tab-button" type="button" data-page="notice">📄 家長通知單</button>
     <button class="tab-button" type="button" data-page="poster">📢 海報宣傳單</button>
@@ -449,6 +484,59 @@
             <span class="status" id="rdMeta"></span>
           </div>
           <div class="preview-host" id="rdPreview"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 🖼 圖像簡報（每頁一張 AI 圖 → 單一 PDF） -->
+    <section class="page" id="page-deck">
+      <div class="workbench">
+        <div class="panel">
+          <div class="field"><label>簡報主題</label>
+            <input class="input" id="dkTopic" placeholder="例：認識台灣的四季／班親會班級經營說明／防災教育"></div>
+          <div class="field"><label>受眾與用途</label>
+            <div class="check-row">
+              <select class="select" id="dkAudience" style="flex:1;min-width:140px">
+                <option>國小低年級學生</option><option selected>國小中高年級學生</option><option>學生家長（班親會）</option><option>全校教職員（研習／報告）</option><option>國中學生</option>
+              </select>
+              <select class="select" id="dkPurpose" style="flex:1;min-width:120px">
+                <option selected>課堂教學</option><option>班親會</option><option>研習分享</option><option>成果報告</option><option>晨會宣導</option>
+              </select>
+            </div></div>
+          <div class="field"><label>內容來源（貼大綱、課文、講稿；留空則授權 AI 提架構）</label>
+            <textarea class="textarea" id="dkSource" style="min-height:110px" placeholder="可以貼課本段落、你的講稿、或條列想講的重點。也可以拍課本頁面。"></textarea>
+            <input type="file" id="dkImage" accept="image/*"></div>
+          <div class="field"><label>頁數（精確）與版面比例</label>
+            <div class="check-row">
+              <input class="input" type="number" id="dkCount" value="6" min="3" max="16" style="width:90px">頁
+              <span class="mask-badge">16:9（1920×1080）</span>
+            </div></div>
+          <div class="field"><label>🎨 視覺風格（整份鎖定同一風格）</label>
+            <select class="select" id="dkStyle"></select></div>
+          <div class="field"><label>🏫 學校人物</label>
+            <select class="select" id="dkChar">
+              <option value="">不指定</option><option value="boy">男孩（深藍運動服）</option><option value="girl">女孩（紅色運動服）</option>
+            </select></div>
+          <div class="field"><label>文字怎麼放</label>
+            <div class="check-row">
+              <label><input type="radio" name="dkTextMode" value="overlay" checked>疊在圖上（中文保證正確、可再改字）</label>
+              <label><input type="radio" name="dkTextMode" value="inpaint">讓 AI 畫進圖裡（偶爾錯字）</label>
+            </div></div>
+          <button class="go-button" type="button" id="dkOutlineButton">1️⃣ 產生逐頁大綱（先確認再生圖）</button>
+          <div class="status" id="dkStatus"></div>
+          <div class="hint">流程照「先確認、後生圖」：大綱可逐頁改 → 先生一張樣張看風格 → 再逐頁生成、不滿意單頁重生 → 下載單一 PDF。每頁一次生圖約 10–30 秒。</div>
+        </div>
+        <div class="panel">
+          <div class="preview-bar">
+            <button class="mini" type="button" id="dkSampleButton" disabled>2️⃣ 先生一張樣張</button>
+            <button class="mini" type="button" id="dkAllButton" disabled>3️⃣ 逐頁生成全部</button>
+            <button class="mini" type="button" id="dkStopButton" hidden>⏹ 停止</button>
+            <button class="mini" type="button" id="dkPdfButton" disabled>⬇ PDF</button>
+            <button class="mini" type="button" onclick="window.print()">🖨 列印</button>
+            <span class="status" id="dkMeta"></span>
+          </div>
+          <div id="dkOutline" class="dk-outline"></div>
+          <div class="preview-host" id="dkPreview" hidden></div>
         </div>
       </div>
     </section>
@@ -1738,6 +1826,221 @@
       await html2pdf().set({ margin: 0, filename: `海報-${$('poTopic').value.trim() || 'poster'}.pdf`, image: { type: 'jpeg', quality: 0.95 },
         html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'px', format: [w, hgt], orientation: w >= hgt ? 'landscape' : 'portrait', hotfixes: ['px_scaling'] } }).from(el).save();
       showToast('已下載 PDF。');
+    });
+
+    // ============================================================
+    // 🖼 圖像簡報：每頁一張 AI 圖（風格鎖定＋樣張核准＋單頁重生）→ 單一 PDF
+    //   參考 FW1201/visual-presentation-production 的關卡流程；改用 Gemini 生圖＋系統疊字避免中文錯字
+    // ============================================================
+    const DK_STYLES = [
+      ['editorial', '📰 Editorial 雜誌編輯風', 'editorial magazine layout illustration, warm off-white paper, ink linework, restrained accent colors, generous whitespace, refined and calm'],
+      ['eduwarm', '🍊 Edu Warm 溫暖教育風', 'warm educational illustration, ivory background, clay orange and teal accents, friendly rounded shapes, example-first storytelling'],
+      ['academic', '🎓 Academic Clean 學術簡潔風', 'clean academic presentation visual, graphite and calm blue palette, structured diagrams, figure callouts, minimal noise'],
+      ['handdrawn', '✏️ Hand-drawn Explainer 手繪解說風', 'hand-drawn explainer on paper background, clean ink sketches, one or two marker highlight colors, doodle arrows'],
+      ['neon', '💠 Neon Circuit 科技暗色風', 'dark navy tech background, cyan and violet glowing accents, restrained system diagrams, futuristic but readable'],
+      ...PO_STYLES
+    ];
+    $('dkStyle').innerHTML = DK_STYLES.map(([key, label]) => `<option value="${key}">${label}</option>`).join('');
+    attachZone('dkImage');
+    const DK_LAYOUT = { title: '封面：大標居中', left: '左字右圖', bottom: '上圖下字', center: '結語：置中' };
+    const DK_ROLE = { cover: '封面', context: '背景', evidence: '重點', process: '步驟', example: '例子', close: '結語' };
+    let dk = { outline: null, slides: [], mode: 'overlay', styleKey: '', sampleIndex: 1, stop: false };
+
+    function dkCollectOutline() {
+      if (!dk.outline) return null;
+      document.querySelectorAll('#dkOutline .dk-row').forEach(row => {
+        const i = Number(row.dataset.index);
+        const slide = dk.outline.slides[i];
+        if (!slide) return;
+        slide.title = row.querySelector('[data-dk="title"]').value.trim();
+        slide.bullets = row.querySelector('[data-dk="bullets"]').value.split('\n').map(t => t.trim()).filter(Boolean).slice(0, 5);
+        slide.layout = row.querySelector('[data-dk="layout"]').value;
+        slide.imagePrompt = row.querySelector('[data-dk="image"]').value.trim();
+      });
+      return dk.outline;
+    }
+    function renderDkOutline() {
+      const o = dk.outline;
+      $('dkOutline').innerHTML = o.slides.map((sl, i) => `<div class="dk-row" data-index="${i}">
+        <div><div class="dk-no">${i + 1}</div><span class="dk-role">${DK_ROLE[sl.role] || sl.role || ''}</span></div>
+        <div>
+          <input class="input" data-dk="title" value="${escapeHtml(sl.title || '')}" placeholder="這一頁的標題">
+          <textarea class="textarea" data-dk="bullets" placeholder="正文，一行一點（最多 5 點；封面可填副標）">${escapeHtml((sl.bullets || []).join('\n'))}</textarea>
+          <input class="input" data-dk="image" value="${escapeHtml(sl.imagePrompt || '')}" placeholder="畫面描述（英文，AI 會照這個畫）" title="畫面描述">
+          <div class="dk-meta">版面 <select class="select" data-dk="layout">${Object.entries(DK_LAYOUT).map(([k, v]) => `<option value="${k}"${k === sl.layout ? ' selected' : ''}>${v}</option>`).join('')}</select>
+            <span>｜樣張用第 <input type="radio" name="dkSample" value="${i}"${i === dk.sampleIndex ? ' checked' : ''}> 頁</span></div>
+        </div>
+      </div>`).join('');
+      $('dkMeta').textContent = `「${o.title || $('dkTopic').value}」共 ${o.slides.length} 頁。改好大綱後先生樣張。`;
+      $('dkSampleButton').disabled = false;
+      $('dkAllButton').disabled = false;
+      $('dkPdfButton').disabled = true;
+      $('dkPreview').hidden = true;
+      dk.slides = [];
+    }
+    $('dkOutline').addEventListener('change', e => { if (e.target.name === 'dkSample') dk.sampleIndex = Number(e.target.value); });
+
+    $('dkOutlineButton').addEventListener('click', async () => {
+      const topic = $('dkTopic').value.trim();
+      if (!topic) return showToast('請輸入簡報主題。', true);
+      const count = Math.min(16, Math.max(3, Number($('dkCount').value) || 6));
+      $('dkCount').value = count;
+      busy($('dkOutlineButton'), true);
+      try {
+        const source = $('dkSource').value.trim();
+        const imagePart = await fileToPart(zoneFirst('dkImage'));
+        const prompt = [
+          `你是臺灣國小的簡報設計師。為主題「${topic}」設計一份 16:9 圖像簡報，受眾：${$('dkAudience').value}，用途：${$('dkPurpose').value}。`,
+          source ? `內容來源（以此為準，不要編造來源沒有的數據）：\n${source}` : (imagePart ? '內容以附圖為準，不要編造附圖沒有的數據。' : '老師沒有提供內容，授權你提出架構；不要編造具體數據、案例或引用。'),
+          `恰好 ${count} 頁：第 1 頁封面（role=cover，layout=title，bullets 放一句副標），最後一頁結語或行動呼籲（role=close，layout=center），中間頁 role 從 context／evidence／process／example 挑，layout 從 left／bottom 挑並交替變化。`,
+          '每頁一個主張；title 14 字內；bullets 2–4 點、每點 16 字內、孩子看得懂的話（家長版／教職員版用正式一點）；imagePrompt 用英文 30–50 words 描述這頁「插圖畫面」的主體、動作、場景（不要提到文字、字體、版面）。',
+          '另給 styleNote：一句英文描述整份簡報統一的色調與氛圍（palette + mood）。',
+          `只回傳 JSON：{"title":"簡報總標題","styleNote":"","slides":[{"role":"cover","layout":"title","title":"","bullets":[""],"imagePrompt":""}]}（slides 恰好 ${count} 筆）`
+        ].join('\n');
+        const data = extractJson(await callGemini(prompt, imagePart, $('dkStatus')));
+        let slides = Array.isArray(data.slides) ? data.slides.slice(0, count) : [];
+        while (slides.length < count) slides.push({ role: 'evidence', layout: slides.length % 2 ? 'bottom' : 'left', title: `第 ${slides.length + 1} 頁`, bullets: [], imagePrompt: topic });
+        slides = slides.map((sl, i) => ({
+          role: i === 0 ? 'cover' : i === count - 1 ? 'close' : (DK_ROLE[sl.role] ? sl.role : 'evidence'),
+          layout: i === 0 ? 'title' : i === count - 1 ? 'center' : (DK_LAYOUT[sl.layout] && sl.layout !== 'title' ? sl.layout : (i % 2 ? 'bottom' : 'left')),
+          title: String(sl.title || '').slice(0, 30), bullets: (Array.isArray(sl.bullets) ? sl.bullets : []).map(String).filter(Boolean).slice(0, 5),
+          imagePrompt: String(sl.imagePrompt || topic).slice(0, 400)
+        }));
+        dk.outline = { title: String(data.title || topic), styleNote: String(data.styleNote || ''), slides };
+        dk.sampleIndex = Math.min(1, count - 1);
+        renderDkOutline();
+        showToast(`已產生 ${count} 頁大綱，請逐頁確認或修改。`);
+      } catch (e) { if (e.message !== 'no-key') { $('dkStatus').textContent = ''; showToast(e.message, true); } }
+      busy($('dkOutlineButton'), false);
+    });
+
+    function dkTextLine(slide, mode) {
+      if (mode === 'inpaint') {
+        return `Render these Traditional Chinese texts clearly and correctly, large and legible: title 「${slide.title}」${slide.bullets.length ? ', body points ' + slide.bullets.map(b => '「' + b + '」').join(' ') : ''}. Layout: ${slide.layout === 'title' ? 'title centered' : slide.layout === 'left' ? 'text on the left half, illustration on the right' : slide.layout === 'bottom' ? 'illustration on top, text band at the bottom' : 'text centered'}.`;
+      }
+      const calm = { title: 'the central horizontal band (30%–75% height)', left: 'the left 55% of the frame (put the main subject on the right side)', bottom: 'the bottom 40% of the frame (put the main subject in the upper part)', center: 'the middle 60% of the frame' }[slide.layout] || 'the left half';
+      return `ABSOLUTELY NO text, letters, numbers, logos or signs anywhere. Keep ${calm} as calm, low-detail, softly blurred background so text can be overlaid there later.`;
+    }
+    function dataUrlToFile(dataUrl, name) {
+      const [head, b64] = dataUrl.split(',');
+      const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
+      const bin = atob(b64); const arr = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+      return new File([arr], name, { type: mime });
+    }
+    async function dkGenerateSlide(index) {
+      const o = dkCollectOutline();
+      const slide = o.slides[index];
+      const style = DK_STYLES.find(x => x[0] === $('dkStyle').value) || DK_STYLES[0];
+      const mode = document.querySelector('[name="dkTextMode"]:checked').value;
+      const charKey = $('dkChar').value;
+      const charRef = await loadCharacterReference(charKey, 7);
+      // 風格鎖定：已有樣張時附上當參考，維持整份一致
+      const anchor = dk.slides.find((s, i) => s && s.imageDataUrl && i !== index);
+      const reference = anchor ? dataUrlToFile(anchor.imageDataUrl, 'style-anchor.png') : charRef;
+      const prompt = [
+        `One 16:9 presentation slide illustration (slide ${index + 1} of ${o.slides.length}) for a Taiwanese elementary school deck titled "${o.title}", audience: ${$('dkAudience').value}.`,
+        `Visual style (locked for the whole deck): ${style[2]}. Global palette and mood: ${o.styleNote || 'consistent, friendly, readable'}.`,
+        `Slide role: ${slide.role}. Scene: ${slide.imagePrompt || o.title}.`,
+        charKey ? (charRef && !anchor ? 'Main character: the child in the attached reference image — same hairstyle, face and school sports uniform.' : `Main character: ${PO_CHAR_DESC[charKey]}.`) : '',
+        anchor ? 'Match the visual style, palette, line quality and rendering technique of the attached reference image exactly, but draw a different scene for this slide.' : '',
+        dkTextLine(slide, mode),
+        'Aspect ratio 16:9, one single slide only (no contact sheet), no watermark, high quality.'
+      ].filter(Boolean).join(' ');
+      const imageDataUrl = await generateImage(prompt, reference, '16:9', $('dkStatus'));
+      dk.slides[index] = { imageDataUrl };
+      dk.mode = mode;
+      renderDkSlides();
+    }
+    function renderDkSlides() {
+      const o = dk.outline;
+      if (!o) return;
+      $('dkPreview').hidden = false;
+      const done = dk.slides.filter(Boolean).length;
+      $('dkPreview').innerHTML = `<div class="dk-grid" id="dkGrid">${o.slides.map((sl, i) => {
+        const img = dk.slides[i]?.imageDataUrl;
+        const overlay = dk.mode === 'overlay' && img;
+        return `<div class="dk-slide-wrap">
+          <div class="dk-slide-tools"><b>第 ${i + 1} 頁</b>・${escapeHtml(sl.title)}
+            <button class="mini" type="button" data-dk-regen="${i}">${img ? '🔁 重生這頁' : '🎨 生成這頁'}</button>
+            ${img ? `<button class="mini" type="button" data-dk-png="${i}">⬇ PNG</button>` : ''}</div>
+          <div class="dk-canvas" data-layout="${sl.layout}" data-index="${i}" style="${img ? `background-image:url('${img}')` : ''}">
+            ${img ? '' : '<div class="dk-empty">尚未生成</div>'}
+            ${overlay ? `<div class="dk-t${sl.layout === 'left' || sl.layout === 'bottom' ? '' : ''}" contenteditable="true" spellcheck="false">${escapeHtml(sl.title)}</div>
+            ${sl.bullets.length ? `<div class="dk-b${sl.layout === 'left' || sl.layout === 'bottom' ? ' dk-box' : ''}" contenteditable="true" spellcheck="false">${sl.bullets.map(b => `<div>${escapeHtml(b)}</div>`).join('')}</div>` : ''}` : ''}
+            ${img ? `<div class="dk-pn">${i + 1} / ${o.slides.length}</div>` : ''}
+          </div>
+        </div>`; }).join('')}</div>`;
+      $('dkPdfButton').disabled = done !== o.slides.length;
+      $('dkMeta').textContent = done === o.slides.length ? `${o.slides.length} 頁全部完成；文字可點著改，改完下載 PDF。` : `已生成 ${done}／${o.slides.length} 頁。`;
+    }
+    $('dkPreview').addEventListener('click', async e => {
+      const regen = e.target.closest('[data-dk-regen]'), png = e.target.closest('[data-dk-png]');
+      if (regen) {
+        regen.disabled = true;
+        try { await dkGenerateSlide(Number(regen.dataset.dkRegen)); $('dkStatus').textContent = ''; showToast('這一頁完成。'); }
+        catch (err) { if (err.message !== 'no-key') { $('dkStatus').textContent = ''; showToast(err.message, true); } regen.disabled = false; }
+      }
+      if (png) {
+        const el = document.querySelector(`.dk-canvas[data-index="${png.dataset.dkPng}"]`);
+        const canvas = await html2pdf().set({ html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' } }).from(el).toCanvas().get('canvas');
+        const a = document.createElement('a'); a.href = canvas.toDataURL('image/png'); a.download = `slide_${String(Number(png.dataset.dkPng) + 1).padStart(2, '0')}.png`; a.click();
+      }
+    });
+    $('dkSampleButton').addEventListener('click', async () => {
+      if (!dk.outline) return showToast('請先產生大綱。', true);
+      $('dkSampleButton').disabled = true;
+      try {
+        dk.slides = [];
+        await dkGenerateSlide(dk.sampleIndex);
+        $('dkStatus').textContent = '';
+        document.querySelector(`.dk-canvas[data-index="${dk.sampleIndex}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        showToast('樣張完成。滿意就按「逐頁生成全部」，其餘頁會沿用這張的風格；不滿意換風格或改畫面描述再生一次。');
+      } catch (e) { if (e.message !== 'no-key') { $('dkStatus').textContent = ''; showToast(e.message, true); } }
+      $('dkSampleButton').disabled = false;
+    });
+    $('dkAllButton').addEventListener('click', async () => {
+      if (!dk.outline) return showToast('請先產生大綱。', true);
+      dk.stop = false;
+      $('dkAllButton').disabled = true; $('dkSampleButton').disabled = true; $('dkStopButton').hidden = false;
+      const total = dk.outline.slides.length;
+      let failed = 0;
+      for (let i = 0; i < total; i++) {
+        if (dk.stop) break;
+        if (dk.slides[i]?.imageDataUrl) continue;
+        $('dkMeta').textContent = `生成第 ${i + 1}／${total} 頁…`;
+        try { await dkGenerateSlide(i); }
+        catch (e) { if (e.message === 'no-key') break; failed += 1; showToast(`第 ${i + 1} 頁失敗：${e.message}`, true); await new Promise(r => setTimeout(r, 1200)); }
+      }
+      $('dkStatus').textContent = '';
+      $('dkStopButton').hidden = true; $('dkAllButton').disabled = false; $('dkSampleButton').disabled = false;
+      renderDkSlides();
+      showToast(dk.stop ? '已停止，之後可按各頁「生成這頁」補齊。' : failed ? `完成，但 ${failed} 頁失敗，請按「重生這頁」。` : '🖼 整份簡報完成！');
+    });
+    $('dkStopButton').addEventListener('click', () => { dk.stop = true; $('dkStopButton').textContent = '⏹ 這頁生完就停'; });
+    $('dkPdfButton').addEventListener('click', async () => {
+      const grid = $('dkGrid');
+      if (!grid || dk.slides.filter(Boolean).length !== dk.outline.slides.length) return showToast('還有頁面尚未生成。', true);
+      $('dkPdfButton').disabled = true;
+      $('dkMeta').textContent = '正在合成 PDF…';
+      try {
+        // 每頁一張 16:9：逐張轉成圖片後用 jsPDF 逐頁加入（html2pdf 的自動分頁對固定尺寸頁不可靠）
+        const canvases = [...grid.querySelectorAll('.dk-canvas')];
+        const blank = document.createElement('div'); blank.style.cssText = 'width:10px;height:10px'; document.body.appendChild(blank);
+        const pdf = await html2pdf().set({ margin: 0, jsPDF: { unit: 'px', format: [1120, 630], orientation: 'landscape', hotfixes: ['px_scaling'] } }).from(blank).toPdf().get('pdf');
+        blank.remove();
+        const W = pdf.internal.pageSize.getWidth(), H = pdf.internal.pageSize.getHeight();
+        for (let i = 0; i < canvases.length; i++) {
+          $('dkMeta').textContent = `正在合成 PDF… ${i + 1}／${canvases.length}`;
+          const c = await html2pdf().set({ html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' } }).from(canvases[i]).toCanvas().get('canvas');
+          if (i) pdf.addPage([1120, 630], 'landscape');
+          pdf.addImage(c.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, W, H);
+        }
+        pdf.save(`簡報-${(dk.outline.title || $('dkTopic').value).slice(0, 30)}.pdf`);
+        showToast('已下載 PDF（每頁 16:9）。');
+      } catch (e) { showToast('PDF 匯出失敗：' + e.message, true); }
+      $('dkPdfButton').disabled = false;
+      $('dkMeta').textContent = `${dk.outline.slides.length} 頁全部完成。`;
     });
 
     // ============================================================

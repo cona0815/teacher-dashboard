@@ -568,3 +568,10 @@ assert.doesNotMatch(indexHtml, /建立主任務與 \$\{analysis\.children\.lengt
 assert.match(indexHtml, /id="messageHubSection"/, "應有訊息整合站版面");
 assert.match(indexHtml, /data-toolbox-target="messageHubSection"/, "教師工具箱應有訊息整合站入口");
 assert.match(indexHtml, /轉達學生', '轉達家長', '轉達科任', '自己待辦', '略過'/, "訊息整合站應有五種分類");
+
+// 🖼 圖像簡報：先確認大綱→樣張→逐頁生圖（風格錨定）→單一 PDF
+assert.match(studioHtml, /data-page="deck"/, "應有圖像簡報分頁");
+assert.match(studioHtml, /async function dkGenerateSlide/, "應有逐頁生圖流程");
+assert.match(studioHtml, /style-anchor\.png/, "後續頁應以樣張為風格參考");
+assert.match(studioHtml, /ABSOLUTELY NO text, letters, numbers, logos or signs anywhere\. Keep \$\{calm\}/, "疊字模式生圖不得含文字並預留文字區");
+assert.match(studioHtml, /pdf\.addPage\(\[1120, 630\], 'landscape'\)/, "PDF 應為 16:9 橫式、每頁一張逐頁加入");
