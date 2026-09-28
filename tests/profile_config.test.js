@@ -618,3 +618,12 @@ for (const menu of ["② 填入 LINE Token", "③ 填入我的 LINE userId", "�
 assert.match(installHtml, /🔑B（Webhook 驗證參數）先不用管/, "難度 1 應說明 🔑B 先不用");
 assert.match(lineBotSource, /【難度 1：雲端大腦】現在就要用這兩把/, "初始化彈窗應依難度分段");
 assert.match(lineBotSource, /BOT_VERSION = '\d{4}-\d{2}-\d{2} \d{2}:\d{2}'/, "GAS 版本日期");
+
+// 2026-09-28 小白視角第二輪：授權四畫面、大屏密碼、下載 .bat、SmartScreen、金鑰記錄表
+assert.ok((installHtml.match(/class="diagram steps"/g) || []).length >= 16, "每一關都應有 SVG 操作示意圖");
+assert.match(installHtml, /選取全部/, "授權步驟應提醒勾「選取全部」");
+assert.match(installHtml, /預設 <code>1234<\/code>/, "大屏設定應提醒設定頁密碼");
+assert.match(installHtml, /data-kiosk="edge"/, "應可直接下載開機啟動 .bat");
+assert.match(installHtml, /其他資訊<\/strong>」→「<strong>仍要執行/, "小綿助應說明 SmartScreen");
+assert.match(installHtml, /id="keyNotes"/, "應提供金鑰記錄表範本");
+assert.doesNotMatch(installHtml, /📤 送出/, "大屏按鈕是「💾 存到雲端」，不是「📤 送出」");
