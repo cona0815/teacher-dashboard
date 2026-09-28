@@ -27,6 +27,10 @@ from PIL import Image, ImageGrab
 
 from desktop_pet_preview import ERROR_LOG, DesktopPetPreview
 from desktop_pet_cloud import CloudLink, DEFAULT_FOCUS_KEYWORDS, FocusTracker, ForegroundMonitor, cloud_url_allowed
+from desktop_pet_voice import (
+    HOTKEY_CHOICES, POLISH_STYLES, VOCAB_PRESETS, HotkeyListener, Recorder, VoiceEngine, VoiceError,
+    classify_spoken_item, send_ctrl_v, strip_spoken_prefix,
+)
 
 
 APP_NAME = "小綿助教師秘書"
@@ -232,7 +236,7 @@ textarea,input{font-family:inherit;font-size:14px;border:1.5px solid var(--line)
 details summary{cursor:pointer;font-weight:800;color:var(--strong)}
 .seat-ok{color:#1c6b45}.seat-bad{color:var(--danger);font-weight:800}
 </style></head><body>
-<header><h1>🐑 __PET_NAME__ 教師秘書</h1><div class="meta">本機頁面（127.0.0.1）｜v2.0.1｜<span id="stamp">載入中</span>｜每 15 秒自動更新</div></header>
+<header><h1>🐑 __PET_NAME__ 教師秘書</h1><div class="meta">本機頁面（127.0.0.1）｜v2.1｜<span id="stamp">載入中</span>｜每 15 秒自動更新</div></header>
 <main>
   <section class="card soft" style="grid-column:1/-1"><h2>☀ 今日簡報</h2><div id="brief" class="empty">載入中……</div></section>
 
@@ -289,6 +293,23 @@ details summary{cursor:pointer;font-weight:800;color:var(--strong)}
       <div class="row"><label><input type="checkbox" id="focusOn" onchange="actx({action:'set_focus',enabled:this.checked})"> 啟用分心提醒</label><span class="note-meta">只讀作用中視窗標題、不截圖、不上傳；大屏投影中自動安靜。</span></div>
     </details></section>
 
+  <section class="card soft" style="grid-column:1/-1"><h2>🎙 語音輸入（v2.1：按住說話、放開出字）</h2>
+    <div id="voiceStatus" class="empty">載入中……</div>
+    <div class="row" style="margin-top:6px">
+      <button onclick="testVoice()">🎤 測試 3 秒錄音</button>
+      <span class="note-meta">先把游標放在任何要打字的地方，<b>按住</b><span id="voHotkeyName">右 Ctrl</span>說話、放開就貼上；<b>按住</b><span id="voPetHotkeyName">右 Alt</span>說話＝直接變成小綿助的記事或任務。</span>
+    </div>
+    <details id="voiceSetup" style="margin-top:8px"><summary>⚙ 設定（金鑰、快捷鍵、風格）</summary>
+      <div class="row"><input id="voGemini" type="password" placeholder="🔑E Gemini 金鑰（與工作台 AI 設定同一把；已存過可留白）" style="flex:1"><button class="light" onclick="clearKey('gemini')">清除</button></div>
+      <div class="row"><input id="voGroq" type="password" placeholder="（選填）Groq 金鑰 gsk_…：辨識更快（1–2 秒）" style="flex:1"><button class="light" onclick="clearKey('groq')">清除</button></div>
+      <div class="row">Gemini 模型 <input id="voModel" placeholder="gemini-2.5-flash" style="max-width:260px"><span class="note-meta">預設 2.5 Flash；可填較新的 Flash 系列試速度（Pro 系列較慢）。速度主要取決於 Flash／Pro 等級，不是版本號。</span></div>
+      <div class="row">辨識服務 <select id="voProvider"><option value="auto">自動（有 Groq 用 Groq，否則 Gemini）</option><option value="gemini">Gemini</option><option value="groq">Groq</option></select>
+        　打字快捷鍵 <select id="voHotkey"></select>　說給小綿助 <select id="voPetHotkey"></select></div>
+      <div class="row">潤飾風格 <select id="voStyle"></select>　詞庫 <select id="voVocab"></select>　<input id="voCustom" placeholder="自訂常用詞（頓號分隔）" style="flex:1"></div>
+      <div class="row"><label><input type="checkbox" id="voOn" checked> 啟用語音輸入</label><button onclick="saveVoice()">儲存</button>
+        <span class="note-meta">只在按住快捷鍵時錄音；音檔只送 Gemini 或 Groq 官方 API、不存檔；金鑰只存在這台電腦。</span></div>
+    </details></section>
+
   <section class="card"><h2>📮 待追蹤</h2><ul id="tracking"></ul></section>
 
   <section class="card"><h2>💬 快速記事</h2>
@@ -331,7 +352,7 @@ async function load(){
     if(document.activeElement!==$('cfgMoveInterval'))$('cfgMoveInterval').value=String(d.health.moveInterval);
     const med=d.health.medicineTimes;
     $('medicine').innerHTML=med.length?med.map(t=>d.health.medicineDone.includes(t)?`<span class="tag">✅ ${t}</span>`:`<span class="tag">⏰ ${t}</span> <button class="light" style="padding:2px 10px" onclick="act('medicine_done','${t}')">已服用</button>`).join(' '):'未設定';
-    renderCloud(d.cloud||{});renderFocus(d.focus||{});
+    renderCloud(d.cloud||{});renderFocus(d.focus||{});renderVoice(d.voice||{});
     $('medManage').innerHTML=med.length?med.map(t=>`<span class="tag">${t} <button class="light" style="padding:0 8px" title="移除" onclick="actx({action:'remove_medicine_time',time:'${t}'})">✖</button></span>`).join(' '):'<span class="note-meta">尚未設定服藥時間。</span>';
   }catch(e){$('brief').textContent='讀取失敗：'+e.message;}
 }
@@ -367,6 +388,28 @@ function renderFocus(f){
   $('focusOn').checked=!!f.enabled;
   $('recentDrift').innerHTML=f.recentTitle?`<span class="note-meta">最近被判定分心的視窗：${esc(f.recentTitle)}</span> <button class="light" style="padding:2px 10px" onclick="actx({action:'focus_whitelist'})">這是備課用</button>`:'';
 }
+function renderVoice(v){
+  const st=v.state||{};
+  const opts=(sel,items,cur)=>{const el=$(sel);if(document.activeElement===el)return;el.innerHTML=items.map(([k,l])=>`<option value="${k}"${k===cur?' selected':''}>${l}</option>`).join('');};
+  opts('voHotkey',Object.entries(v.hotkeyChoices||{}),v.hotkey||'');opts('voPetHotkey',Object.entries(v.hotkeyChoices||{}),v.petHotkey||'');
+  opts('voStyle',(v.styles||[]).map(x=>[x,x]),v.style);opts('voVocab',(v.vocabs||[]).map(x=>[x,x]),v.vocab);
+  if(document.activeElement!==$('voProvider'))$('voProvider').value=v.provider||'auto';
+  if(document.activeElement!==$('voCustom'))$('voCustom').value=v.customVocab||'';
+  if(document.activeElement!==$('voModel'))$('voModel').value=v.geminiModel||'';
+  $('voOn').checked=!!v.enabled;
+  $('voHotkeyName').textContent=(v.hotkeyChoices||{})[v.hotkey]||'（未設定）';$('voPetHotkeyName').textContent=(v.hotkeyChoices||{})[v.petHotkey]||'（未設定）';
+  let html='';
+  if(!v.hasGeminiKey&&!v.hasGroqKey){html='尚未設定——點下方「⚙ 設定」貼上 🔑E Gemini 金鑰（工作台 AI 設定那一把）就能用。';$('voiceSetup').open=true;}
+  else if(!v.enabled){html='已關閉。';}
+  else if(st.listener==='error'){html='⚠ 快捷鍵元件無法啟動：'+esc(st.lastError||'');}
+  else{html=`✅ 使用 <b>${v.resolved==='groq'?'Groq（快）':'Gemini'}</b>｜狀態：${st.status==='listening'?'🔴 聆聽中':st.status==='thinking'?'🔵 辨識中':'待命'}`+(st.lastAt?`｜最近 ${st.lastAt}`:'');}
+  if(st.lastText)html+=`<div class="note-meta">最近聽到：${esc(st.lastText)}</div>`;
+  if(st.lastError&&st.listener!=='error')html+=`<div class="note-meta">⚠ ${esc(st.lastError)}</div>`;
+  $('voiceStatus').innerHTML=html;
+}
+async function saveVoice(){await actx({action:'set_voice',enabled:$('voOn').checked,provider:$('voProvider').value,geminiKey:$('voGemini').value.trim(),groqKey:$('voGroq').value.trim(),hotkey:$('voHotkey').value,petHotkey:$('voPetHotkey').value,style:$('voStyle').value,vocab:$('voVocab').value,customVocab:$('voCustom').value.trim(),geminiModel:$('voModel').value.trim()});$('voGemini').value='';$('voGroq').value='';}
+async function clearKey(which){if(!confirm('確定清除這把金鑰？'))return;await actx(which==='gemini'?{action:'set_voice',clearGeminiKey:true}:{action:'set_voice',clearGroqKey:true});}
+async function testVoice(){const r=await(await fetch('/panel-action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'voice_test'})})).json().catch(()=>null);if(!r||!r.ok){alert('❌ '+(r&&r.error||'無法測試'));return;}$('voiceStatus').innerHTML='🔴 請說話（3 秒）……';setTimeout(load,4500);setTimeout(load,9000);}
 async function saveFocusKw(){await actx({action:'set_focus',keywords:$('focusKw').value.split(/[、,，\s]+/).filter(Boolean)});}
 function cloudCfg(){try{return JSON.parse(localStorage.getItem('petPanelCloud')||'null')||{}}catch(e){return{}}}
 function saveCloudCfg(){localStorage.setItem('petPanelCloud',JSON.stringify({url:$('cfgUrl').value.trim(),token:$('cfgToken').value.trim(),cls:$('cfgClass').value.trim()}));loadCloud();}
@@ -445,6 +488,18 @@ def default_data() -> dict:
             "focus_keywords": list(DEFAULT_FOCUS_KEYWORDS),
             "focus_threshold_minutes": 3,
             "focus_cooldown_minutes": 10,
+            # v2.1 會聽的小綿助：按住說話（右 Ctrl＝打字到游標處；右 Alt＝說給小綿助變記事／任務）
+            "voice_enabled": True,
+            "voice_provider": "auto",
+            "voice_gemini_key": "",
+            "voice_groq_key": "",
+            "voice_hotkey": "ctrl_r",
+            "voice_pet_hotkey": "alt_r",
+            "voice_gemini_model": "gemini-2.5-flash",
+            "voice_style": "自然口語",
+            "voice_vocab": "教學",
+            "voice_custom_vocab": "",
+            "voice_hold_seconds": 0.3,
         },
         "health": {
             "date": date.today().isoformat(),
@@ -552,6 +607,13 @@ class SecretaryPet(DesktopPetPreview):
         self.root.after(8000, self._cloud_tick)
         self.root.after(2500, self._focus_tick)
         self.root.after(1500, self._mouse_tick)
+        # ---- v2.1：會聽的小綿助 ----
+        self.voice = VoiceEngine()
+        self.recorder = Recorder()
+        self.hotkeys: HotkeyListener | None = None
+        self.voice_state: dict = {"status": "idle", "mode": "", "lastText": "", "lastError": "", "lastAt": "", "listener": ""}
+        self._configure_voice()
+        self.root.after(3000, self._voice_start)
         if "--startup-launch" in sys.argv and settings.get("startup_delay_seconds", 0):
             self.root.withdraw()
             self.root.after(int(settings["startup_delay_seconds"]) * 1000, self.root.deiconify)
@@ -1275,6 +1337,183 @@ class SecretaryPet(DesktopPetPreview):
             return
         self.root.after(1500, self._mouse_tick)
 
+    # ------------------------------------------------------------------ v2.1 語音
+    def _configure_voice(self) -> None:
+        self.voice.configure(self.data.get("settings", {}))
+
+    def _voice_start(self) -> None:
+        settings = self.data.get("settings", {})
+        if self.hotkeys:
+            self.hotkeys.stop()
+            self.hotkeys = None
+        if not settings.get("voice_enabled", True):
+            self.voice_state["listener"] = "off"
+            return
+        try:
+            self.hotkeys = HotkeyListener(
+                {"type": str(settings.get("voice_hotkey") or ""), "pet": str(settings.get("voice_pet_hotkey") or "")},
+                on_start=lambda mode: self._voice_from_thread(self._voice_begin, mode),
+                on_stop=lambda mode: self._voice_from_thread(self._voice_end, mode),
+                hold_seconds=float(settings.get("voice_hold_seconds") or 0.3),
+            )
+            self.hotkeys.start()
+            self.voice_state["listener"] = "on" if self.hotkeys.hotkeys else "off"
+            self.voice_state["lastError"] = ""
+        except VoiceError as error:
+            self.hotkeys = None
+            self.voice_state["listener"] = "error"
+            self.voice_state["lastError"] = str(error)
+
+    def _voice_from_thread(self, func, *args) -> None:
+        try:
+            self.root.after(0, lambda: func(*args))
+        except tk.TclError:
+            pass
+
+    def _voice_begin(self, mode: str) -> None:
+        if self.recorder.active:
+            return
+        if not self.voice.ready:
+            self.voice_state.update({"status": "idle", "lastError": "尚未填入 🔑E Gemini 金鑰：雙擊小綿助 → 🎙 語音輸入"})
+            self.play("warning", 2, "idle", "還沒有金鑰，先到秘書頁「🎙 語音輸入」貼 🔑E。")
+            return
+        try:
+            self.recorder.start()
+        except VoiceError as error:
+            self.voice_state.update({"status": "idle", "lastError": str(error)})
+            self.play("warning", 2, "idle", "麥克風打不開：" + str(error)[:40])
+            return
+        self.voice_state.update({"status": "listening", "mode": mode, "lastError": ""})
+        hint = {"type": "我在聽……放開就打字", "pet": "我在聽……放開就幫你記", "handoff": "我在聽……再按一次停止"}.get(mode, "我在聽……")
+        self.play("listen", None, "listen", hint)
+
+    def _voice_end(self, mode: str) -> None:
+        if not self.recorder.active:
+            return
+        audio = self.recorder.stop()
+        self.voice_state["status"] = "thinking"
+        self.play("think", None, "think", "整理中……")
+        threading.Thread(target=self._voice_worker, args=(mode, audio), name="xiaomianzhu-voice", daemon=True).start()
+
+    def _voice_worker(self, mode: str, audio) -> None:
+        text, error = "", ""
+        try:
+            text = self.voice.transcribe(audio)
+        except VoiceError as failure:
+            error = str(failure)
+        except Exception as failure:  # noqa: BLE001
+            error = f"語音處理失敗：{failure}"
+        self._voice_from_thread(self._voice_done, mode, text, error)
+
+    def _voice_done(self, mode: str, text: str, error: str) -> None:
+        self.voice_state.update({"status": "idle", "lastAt": datetime.now().strftime("%H:%M:%S")})
+        if error:
+            self.voice_state["lastError"] = error
+            self.play("warning", 2, "idle", error[:60])
+            return
+        if not text:
+            self.play("think", 1, "idle", "我聽不清楚，請再說一次。")
+            return
+        self.voice_state["lastText"] = text[:200]
+        if mode == "test":
+            self.play("success", 2, "idle", "聽到了：" + text[:40])
+            return
+        if mode == "type":
+            self._voice_type_text(text)
+            self.play("success", 1, "idle", f"已輸入 {len(text)} 字（{self.voice.last_provider}）")
+        elif mode == "handoff":
+            widget = self.panel_widgets.get("handoff") if self.panel_widgets else None
+            if widget is not None:
+                try:
+                    widget.insert("end", text)
+                    self.play("success", 1, "idle", "已放進交代欄，確認後按「整理」。")
+                    return
+                except tk.TclError:
+                    pass
+            self._voice_to_secretary(text)
+        else:
+            self._voice_to_secretary(text)
+
+    def _voice_type_text(self, text: str) -> None:
+        """複製到剪貼簿再送 Ctrl+V，貼到目前作用中視窗的游標處；0.8 秒後還原剪貼簿。"""
+        previous = None
+        try:
+            previous = self.root.clipboard_get()
+        except tk.TclError:
+            previous = None
+        try:
+            self.root.clipboard_clear()
+            self.root.clipboard_append(text)
+            self.root.update_idletasks()
+            send_ctrl_v()
+        except tk.TclError:
+            return
+        if previous is not None:
+            def restore() -> None:
+                try:
+                    self.root.clipboard_clear()
+                    self.root.clipboard_append(previous)
+                except tk.TclError:
+                    pass
+            self.root.after(800, restore)
+
+    def _voice_to_secretary(self, text: str) -> None:
+        """說給小綿助：有日期／期限／動作詞 → 任務，否則記事；工作台開啟時會經本機橋接帶入。"""
+        kind = classify_spoken_item(text)
+        body = strip_spoken_prefix(text)
+        with self.data_lock:
+            if kind == "task":
+                due_date = self._parse_date(body)
+                time_match = re.search(r"(?:上午|下午|晚上)?\s*(\d{1,2})[:：點](\d{2})", body)
+                title = re.sub(r"(今天|明天|後天|請|幫我|記得|提醒我|提醒|加入|新增|待辦)", " ", body)
+                title = re.sub(r"\s+", " ", title).strip(" ，。,.！!")[:80] or "語音任務"
+                self.data.setdefault("tasks", []).append({
+                    "id": str(uuid.uuid4()), "title": title, "kind": "任務", "due_date": due_date,
+                    "due_time": f"{int(time_match.group(1)):02d}:{time_match.group(2)}" if time_match else "",
+                    "priority": "高" if due_date <= (date.today() + timedelta(days=1)).isoformat() else "中",
+                    "status": "未開始", "waiting_for": "", "attachment_names": [], "attachment_paths": [],
+                    "attachment_statuses": [], "source": body, "medium": "voice", "created_at": now_iso(),
+                })
+                message = f"🎤 已建任務：{title[:24]}（{due_date[5:].replace('-', '/')}）"
+            else:
+                self.data.setdefault("notes", []).insert(0, {
+                    "id": str(uuid.uuid4()), "text": body, "attachments": [], "medium": "voice", "created_at": now_iso(),
+                })
+                message = f"🎤 已記下：{body[:26]}"
+        self._save_data()
+        try:
+            self._render_dashboard()
+        except (tk.TclError, AttributeError, KeyError):
+            pass
+        self.play("success", 2, "idle", message)
+
+    def _voice_payload(self) -> dict:
+        settings = self.data.get("settings", {})
+        return {
+            "enabled": bool(settings.get("voice_enabled", True)),
+            "provider": str(settings.get("voice_provider") or "auto"),
+            "resolved": self.voice.resolved_provider() if hasattr(self, "voice") else "",
+            "hasGeminiKey": bool(settings.get("voice_gemini_key")),
+            "hasGroqKey": bool(settings.get("voice_groq_key")),
+            "hotkey": str(settings.get("voice_hotkey") or ""),
+            "petHotkey": str(settings.get("voice_pet_hotkey") or ""),
+            "geminiModel": str(settings.get("voice_gemini_model") or "gemini-2.5-flash"),
+            "style": str(settings.get("voice_style") or "自然口語"),
+            "vocab": str(settings.get("voice_vocab") or "教學"),
+            "customVocab": str(settings.get("voice_custom_vocab") or ""),
+            "hotkeyChoices": HOTKEY_CHOICES, "styles": list(POLISH_STYLES), "vocabs": list(VOCAB_PRESETS),
+            "state": dict(getattr(self, "voice_state", {}) or {}),
+        }
+
+    def _voice_test_worker(self) -> None:
+        """面板「測試 3 秒錄音」：錄 3 秒 → 辨識 → 結果放進 voice_state.lastText。"""
+        try:
+            self._voice_from_thread(self._voice_begin, "test")
+            time.sleep(3.2)
+            self._voice_from_thread(self._voice_end, "test")
+        except Exception as error:  # noqa: BLE001
+            self.voice_state["lastError"] = str(error)
+
     def _panel_payload(self) -> dict:
         today = date.today().isoformat()
         with self.data_lock:
@@ -1319,6 +1558,7 @@ class SecretaryPet(DesktopPetPreview):
                     "state": getattr(self, "cloud_state", {}) or {},
                     "lastError": getattr(getattr(self, "cloud", None), "last_error", ""),
                 },
+                "voice": self._voice_payload() if hasattr(self, "_voice_payload") else {},
                 "focus": {
                     "enabled": bool(self.data.get("settings", {}).get("focus_enabled", True)),
                     "keywords": list(self.data.get("settings", {}).get("focus_keywords") or []),
@@ -1433,6 +1673,56 @@ class SecretaryPet(DesktopPetPreview):
                 if not result.get("ok"):
                     return result
                 bubble = "📣 大屏提示已送出！" if not payload.get("clear") else "大屏提示已清除。"
+            elif action == "set_voice":
+                settings = self.data.setdefault("settings", {})
+                settings["voice_enabled"] = bool(payload.get("enabled", True))
+                provider = str(payload.get("provider") or "auto")
+                settings["voice_provider"] = provider if provider in ("auto", "gemini", "groq") else "auto"
+                gemini_key = str(payload.get("geminiKey") or "").strip()
+                groq_key = str(payload.get("groqKey") or "").strip()
+                if gemini_key:
+                    if not gemini_key.startswith("AIza") or len(gemini_key) < 30:
+                        return {"ok": False, "error": "Gemini 金鑰格式不對（應為 AIza 開頭）"}
+                    settings["voice_gemini_key"] = gemini_key
+                if payload.get("clearGeminiKey"):
+                    settings["voice_gemini_key"] = ""
+                if groq_key:
+                    if not groq_key.startswith("gsk_"):
+                        return {"ok": False, "error": "Groq 金鑰格式不對（應為 gsk_ 開頭）"}
+                    settings["voice_groq_key"] = groq_key
+                if payload.get("clearGroqKey"):
+                    settings["voice_groq_key"] = ""
+                hotkey = str(payload.get("hotkey") if payload.get("hotkey") is not None else settings.get("voice_hotkey") or "")
+                pet_hotkey = str(payload.get("petHotkey") if payload.get("petHotkey") is not None else settings.get("voice_pet_hotkey") or "")
+                if hotkey not in HOTKEY_CHOICES or pet_hotkey not in HOTKEY_CHOICES:
+                    return {"ok": False, "error": "快捷鍵不在可選清單內"}
+                if hotkey and hotkey == pet_hotkey:
+                    return {"ok": False, "error": "兩個快捷鍵不能一樣"}
+                settings["voice_hotkey"] = hotkey
+                settings["voice_pet_hotkey"] = pet_hotkey
+                model = str(payload.get("geminiModel") if payload.get("geminiModel") is not None else settings.get("voice_gemini_model") or "").strip()
+                if model and not re.fullmatch(r"[a-z0-9.\-]{5,60}", model):
+                    return {"ok": False, "error": "Gemini 模型名稱只能是小寫英數、點與連字號（例：gemini-2.5-flash）"}
+                settings["voice_gemini_model"] = model or "gemini-2.5-flash"
+                style = str(payload.get("style") or settings.get("voice_style") or "自然口語")
+                settings["voice_style"] = style if style in POLISH_STYLES else "自然口語"
+                vocab = str(payload.get("vocab") or settings.get("voice_vocab") or "教學")
+                settings["voice_vocab"] = vocab if vocab in VOCAB_PRESETS else "教學"
+                settings["voice_custom_vocab"] = str(payload.get("customVocab") if payload.get("customVocab") is not None else settings.get("voice_custom_vocab") or "")[:500]
+                self._configure_voice()
+                try:
+                    self.root.after(0, self._voice_start)
+                except (tk.TclError, AttributeError):
+                    pass
+                bubble = "語音設定好了：按住快捷鍵說話、放開就出字。" if settings["voice_enabled"] else "語音輸入已關閉。"
+            elif action == "voice_test":
+                self._save_data()
+                if not getattr(self, "voice", None) or not self.voice.ready:
+                    return {"ok": False, "error": "請先貼上 🔑E Gemini 金鑰（或 Groq 金鑰）並儲存"}
+                if self.recorder.active:
+                    return {"ok": False, "error": "正在錄音中"}
+                threading.Thread(target=self._voice_test_worker, daemon=True).start()
+                return {"ok": True, "message": "請對麥克風說 3 秒話，結果會顯示在下方"}
             elif action == "set_focus":
                 settings = self.data.setdefault("settings", {})
                 if "enabled" in payload:
@@ -2111,19 +2401,10 @@ class SecretaryPet(DesktopPetPreview):
     def _voice_handoff(self) -> None:
         handoff: tk.Text = self.panel_widgets["handoff"]  # type: ignore[assignment]
         handoff.focus_set()
-        self.panel.update_idletasks()
-        if sys.platform == "win32":
-            try:
-                import ctypes
-                user32 = ctypes.windll.user32
-                keyup = 0x0002
-                user32.keybd_event(0x5B, 0, 0, 0)
-                user32.keybd_event(ord("H"), 0, 0, 0)
-                user32.keybd_event(ord("H"), 0, keyup, 0)
-                user32.keybd_event(0x5B, 0, keyup, 0)
-            except (AttributeError, OSError):
-                pass
-        self.show_bubble("已開啟 Windows 語音輸入；說完後再交給我整理。", 3000)
+        if self.recorder.active:
+            self._voice_end("handoff")
+        else:
+            self._voice_begin("handoff")
 
     def _analyze_handoff(self) -> None:
         handoff: tk.Text = self.panel_widgets["handoff"]  # type: ignore[assignment]

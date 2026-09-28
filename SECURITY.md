@@ -92,6 +92,13 @@ LINE 收件匣、檔案備份標題）若以 `=`、`+`、`-`、`@` 開頭，Goog
 例如被寫入 `=IMAGE("http://…")` 時，老師一開啟試算表就會對外連線。
 已加入 `sheetText_()`，寫入前補前導單引號強制為文字。
 
+## 小綿助 v2.1 語音輸入的邊界
+
+- 只有 `desktop_pet_voice.py` 會把音檔送出電腦，且 `default_opener` 只接受 `VOICE_ALLOWED_HOSTS`（`generativelanguage.googleapis.com`、`api.groq.com`）；桌寵主程式仍不直接呼叫 `urlopen`（測試契約看守）。
+- 錄音只在按住快捷鍵期間（`Recorder.start/stop`），上限 120 秒；音檔只存在記憶體，不寫檔、不備份、不經本機橋接送到網頁。
+- 🔑E／Groq 金鑰只存在小綿助本機資料檔（與 🔑C 同檔），面板端點僅限本機來源；面板回傳只有 `hasGeminiKey` 布林，不回傳金鑰本文。
+- 「打字模式」用剪貼簿＋Ctrl+V 貼上，0.8 秒後還原原本的剪貼簿內容；全域快捷鍵監聽（pynput）只比對設定的那一兩個鍵，不記錄其他按鍵。
+
 ## 已知限制
 
 - `localStorage` 不是加密保管庫。同一 Windows／瀏覽器帳號的使用者，以及網站本身執行的程式碼，都可能存取資料。

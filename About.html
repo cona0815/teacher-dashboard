@@ -119,6 +119,11 @@
         <p>主任一則、處室一則、科任補一則、臨時又改一則……導師像在 LINE 河道撿垃圾。把群組內容<strong>整段複製貼進來</strong> → AI 拆成一條一條、去掉閒聊、同一件事改多次只留最新版並註明「已更新」、抓日期時間、判斷要<strong>轉達學生／轉達家長／轉達科任／自己待辦／略過</strong>。勾選要傳的 → 選「學生版／家長版／科任版」→「整合成一則」→ 複製貼到班群或聯絡簿，<strong>只要傳一次</strong>。「自己待辦」可一鍵變任務（時間自動帶入）。項目存在你的瀏覽器，沒設 AI 時也能用換行分條。</p>
       </div>
 
+      <div class="scene"><h4>🎙 邊改作業邊碎念｜會聽的小綿助（v2.1）<span class="where">桌面小綿助 → 秘書頁「🎙 語音輸入」</span></h4>
+        <p>在秘書頁貼一次 🔑E Gemini 金鑰（工作台 AI 設定那一把）。之後在<strong>任何程式</strong>把游標放好，<strong>按住右 Ctrl 說話、放開</strong>，整理好的繁體中文就貼到游標處（去贅詞、修同音字、補標點，可選自然口語／正式書面／精簡重點／只修錯字）。<strong>按住右 Alt 說話</strong>＝直接說給小綿助：有日期或期限的變任務、其他變記事，工作台開著就自動帶入。有填 Groq 金鑰會自動改走 Groq，1–2 秒出字；只有 Gemini 約 3–6 秒。</p>
+        <div class="ex">只在按住快捷鍵時錄音；音檔只送 Gemini 或 Groq 官方 API、不存檔；金鑰只在這台電腦的小綿助資料檔。快捷鍵、風格、教學詞庫都在秘書頁可改。</div>
+      </div>
+
       <div class="scene"><h4>📋 要調查意願｜Google 表單一條龍<span class="where">🎨 教材小工場＋LINE</span></h4>
         <p>「📋 Google 表單」：描述需求 → AI 擬題 → 按「建立」直接在你的 Google 帳號生成表單，可勾「填完自動寄回覆副本給填表者」。拿到連結貼進 LINE 聯絡簿公告發給家長；回條改用「📱 LINE 圖文選單」把常用指令做成機器人下方的按鈕選單。</p>
       </div>
@@ -240,6 +245,7 @@
       <h2>🗝 金鑰權限邊界</h2>
       <table>
         <tr><th>金鑰</th><th>放在哪</th><th>權限範圍</th><th>外洩了怎麼辦</th></tr>
+        <tr><td>🔑E Gemini 金鑰（小綿助）</td><td>小綿助本機資料檔（與 🔑C 同檔，不經本機橋接送到網頁）</td><td>語音輸入：只把按住快捷鍵期間的音檔送到 generativelanguage.googleapis.com（或選填的 api.groq.com）</td><td>到 Google AI Studio 刪除舊金鑰重新申請，秘書頁「🎙 語音輸入 → 清除」</td></tr>
         <tr><td>🔑A LINE Token</td><td>指令碼屬性</td><td>用你的官方帳號收發訊息</td><td>LINE Developers 按 Reissue 換發即可，舊的立刻失效</td></tr>
         <tr><td>🔑B Webhook 參數</td><td>Webhook 網址內</td><td>驗證訊息確實來自 LINE 轉送</td><td>刪除指令碼屬性後重新執行初始化，換新網址參數</td></tr>
         <tr><td>🔑C 工作台同步金鑰</td><td>老師自己的電腦</td><td>讀寫收件匣、聯絡本、備份、<strong>歷史統計</strong></td><td>同上重生；<strong>絕不要存在教室電腦</strong></td></tr>

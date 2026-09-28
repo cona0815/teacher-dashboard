@@ -57,6 +57,17 @@ These files are distributed as part of this application, not as a standalone ill
 
 The original sheep character design, source frames and animation files under `assets/pet/` were created or generated specifically for this modified project and supplied by the project owner. They replace the former DeskPet white-cat artwork. No DeskPet white-cat artwork is included or loaded by the current interface, and the production fallback URL points only to this project's own `cona0815/teacher-dashboard` repository.
 
+## 小綿助 v2.1 voice input
+
+`desktop_pet_voice.py` is an original implementation written for this project (MIT). It reuses Traditional-Chinese polishing prompts, the teaching vocabulary list and the Whisper hallucination-marker list that the project owner authored in their own EZtype tool; no code from whisper-writer (GPL-3.0), of which EZtype is a fork, is included.
+
+Runtime dependencies bundled in the Windows portable build:
+
+- **pynput** — LGPL-3.0, https://github.com/moses-palmer/pynput (global hotkey listener).
+- **python-sounddevice** — MIT, https://github.com/spatialaudio/python-sounddevice, bundling **PortAudio** (MIT) for microphone capture.
+- **opencc-python-reimplemented** — Apache-2.0, https://github.com/yichen0831/opencc-python, with OpenCC conversion data (Apache-2.0) for Simplified→Traditional (Taiwan) conversion.
+- **NumPy** — BSD-3-Clause, https://numpy.org.
+
 ## Irasutoya illustrations
 
 The illustrations under `assets/irasutoya/` (12 files) were obtained from
