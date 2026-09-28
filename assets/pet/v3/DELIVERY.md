@@ -1,3 +1,99 @@
+# 交件說明：phase 2（2026-09-28）
+
+分支：`codex/pet-sprites-v3-phase2`。新增 10 組、78 格；第一批 11 組與 redo1 成果保持原樣。這次只交圖，不接桌寵程式。
+
+## 交件結果
+
+| 動作 | 格數 | 檢查結果 | 來源（自生／raw） | 備註 |
+|---|---:|---|---|---|
+| idle_blink | 6 | PASS | 自生 | 睜眼、閉眼彎線、小幅側頭、睜眼；葉片固定同側。 |
+| idle_grade | 8 | PASS | 自生（第三稿） | 坐姿改作業，同一側持紅筆；書頁只有粗勾。前兩稿換手已淘汰。 |
+| mail | 8 | PASS | 自生 | 抱實心淺綠空白泡泡、小跳與晃動；沒有 Logo 或內部圓點。 |
+| drink | 8 | PASS | 自生 | 雙前腳抬淡藍杯、閉眼喝水、放下。 |
+| stretch | 8 | PASS | 自生 | 前腳伸低、背拱起、站回與輕晃；頭保持圓形。 |
+| medicine | 8 | PASS | 自生 | 空白金色鬧鐘、白藥盒、短粗震動線；輕拍幅度較小。 |
+| focus | 8 | PASS | 自生 | 坐姿看空白書、逐格翻頁；番茄計時器沒有字或刻度。 |
+| watch | 8 | PASS | 自生 | 舉深綠望遠鏡、側頭看、放下與噘嘴，再回復表情。 |
+| note | 8 | PASS | 自生 | 逐步畫出兩條粗波浪線，將金色便利貼放到身旁。 |
+| sign | 8 | PASS | 自生（第二稿） | 雙前腳把空白白邊深綠板抬到頭頂；第一稿單手持牌已淘汰。 |
+
+正式驗收：**21 PASS、0 WARN、0 FAIL，退出碼 0**。新圖為一橫排；idle_blink 為 3072×512，其餘為 4096×512。RGBA 真透明、alpha 二值化；沒有補格、刪格或以複製格湊數。
+
+## 來源、提示詞與整理
+
+全部由內建 image_gen 生成，使用原有 `reference/sheep_ref.png` 與 `sheets/idle.png` 雙參考；沒有第三方素材、DeskCat、CLI 生圖或 API 金鑰。使用 imagegen／generate2dsprite 技能，依老師要求覆蓋技能的洋紅底預設，採透明底與指定單橫排。程式只做既有圖片清理、切格、整組等比例缩放、對齊，不繪製角色。
+
+提示詞集合以本次 `spec.json` 的 common_prompt 及十個 phase 2 action prompt 為基礎，每組填入實際格數。共同加強：固定小黑點眼睛、臉的位置與頭身比、葉根在畫面右側、道具小而實心並靠近身體、完整留在各自格內、無字／數字／Logo／洋紅。
+
+最終補充控制：idle_blink 指定六格睜閉順序與極小側頭；idle_grade 固定畫面左側持筆，右頁先有一個粗勾，筆只在左頁畫另一勾；mail 指定小幅起跳與落地；drink 指定抬杯—喝水—放下；stretch 指定伸低—拱背—站回—輕晃；medicine 指定空白鐘面、白盒及貼近鐘的粗短線；focus 指定書頁連著書脊翻動、番茄無刻度；watch 指定鏡片是道具而非放大的眼睛；note 只用兩條無圈的粗波浪線；sign 指定兩前腳分別抓看板左右下角、板貼近毛頂而不向遠處伸高。
+
+原圖原樣保存在 `raw/<動作>.png`。三張未採用稿件保存在 `raw/rejected/idle_grade-phase2-attempt1.png`、`idle_grade-phase2-attempt2.png`、`sign-phase2-attempt1.png`；沒有刪除原圖。
+
+先執行既有整理程式，**一定使用 --only，避免重新輸出第一批**：
+
+```sh
+python assets/pet/v3/normalize_raw.py --phase 2 --only idle_blink idle_grade mail drink stretch medicine focus watch note sign
+```
+
+再做兩組一致倍率的尺寸整理：sign 各格的非透明外框整組乘 **1.12**；stretch 各格整組乘 **382/419（約 0.91169451）**。每格裁切非透明外框後以同一倍率 Lanczos 縮放、alpha 以 128 二值化、清除透明 RGB、水平置中、底部對 y=488。未逐格變倍率、未拉伸長寬比。這是為了避免舉牌把羊身縮小，以及伸展站姿大於 idle。此步只處理這兩張 sheet，未修改 normalize_raw.py；日後從 raw 重建時須在 normalize 後重做此步，**不要在已調整的 sheet 上重複乘倍率**。
+
+## 目視檢查與限制
+
+已檢視 `_preview/overview.png`，並解碼十個 GIF 的全部 78 格、加上原 idle 比對，產生 `_preview/phase2-gif-review.png` 逐格目視檢查。這是 GIF 逐格檢視，並非在桌寵程式中實播驗收。預覽沿用既有 .gitignore，不納入 commit。
+
+- 十組均維持同一角色外觀，沒有可見文字、字母、數字或 Logo；書本／鐘面／板面留白，便利貼只保留指定波浪線，作業本只保留勾形。
+- 原 idle 奶油色外框高度約 382 px。新一般站姿／坐姿約 372～387 px；mail 蹲姿約 349 px。sign 第一格調整後約 382 px；stretch 站姿調整後約 382 px，伸展格依 free_scale 變低。這是排除綠葉與黑臉、以奶油色色域估算的外框，不是精確骨架量測；道具遮擋與抬手會影響外框。
+- idle_blink 奶油色外框寬 373～384 px、高 376～381 px；最大／最小寬差約 2.95%、高差約 1.33%。這只支持小幅輪廓變化，不等同逐像素輪廓距離小於 3%。
+- 正面眼睛與臉的位置目視接近 idle，仍有生成式圖像的小幅輪廓差異，不是逐像素複製。坐姿、持物與伸展不會有完全相同的身體外框。
+- 本批全部毫秒設定均可被 GIF 的 10 ms 單位表示，沒有本批播放時間捨入問題。未變更 spec 或桌寵播放設定。
+
+## 需要老師重生的圖（phase 2）
+
+目前沒有尚未處理的錯格、文字、換手持筆或單手持牌問題。以下美術限制如需更嚴格可再重生；沒有擅改規格或用程式重畫：
+
+- **精確色票／純扁平限制（十組）**：生成圖仍帶有參考圖的極淡奶油明暗，道具像素也含縮放／生成造成的近似色，不保證只含六個精確 RGB。若六色必須是逐像素白名單，本批仍需更嚴格重生或由老師另外授權道具限色處理。建議「exact solid palette fills, no shading, no texture, no intermediate colors」。
+- **medicine**：拍鐘的前腳位移很小，主要動感来自粗短震動線；若希望在小尺寸顯示時也清楚看出拍打，建議增大前腳抬起—落下幅度，保持鐘面空白、其他比例不變。
+- **idle_grade 的循環銜接**：最後已有兩個勾，回到第一格會重置為一個既有勾；這是本次繪畫循環的重置點，不是無縫連續書寫。若需要無縫循環，建議重生加入翻到新空白頁的回復段，但仍維持 8 格，不自行改 spec。
+
+## check_sprites.py 完整輸出（phase 2）
+
+命令：`python assets/pet/v3/check_sprites.py --phase 2 --preview`。Pillow DeprecationWarning 是既有 getdata API 的未來淘汰提示，不是 sprite WARN；依要求未修改驗收程式。
+
+```text
+C:\Users\cona0\Desktop\teacher-dashboard-repo\assets\pet\v3\check_sprites.py:80: DeprecationWarning: Image.Image.getdata is deprecated and will be removed in Pillow 14 (2027-10-15). Use get_flattened_data instead.
+  magenta = sum(1 for r, g, b, a in fr.getdata() if a >= 32 and is_magenta(r, g, b))
+[PASS] idle（6 格）
+[PASS] walk_right（8 格）
+[PASS] drag（6 格）
+[PASS] sleep（6 格）
+[PASS] listen（6 格）
+[PASS] think（8 格）
+[PASS] success（8 格）
+[PASS] warning（8 格）
+[PASS] peek（6 格）
+[PASS] greet（8 格）
+[PASS] overdue（8 格）
+[PASS] idle_blink（6 格）
+[PASS] idle_grade（8 格）
+[PASS] mail（8 格）
+[PASS] drink（8 格）
+[PASS] stretch（8 格）
+[PASS] medicine（8 格）
+[PASS] focus（8 格）
+[PASS] watch（8 格）
+[PASS] note（8 格）
+[PASS] sign（8 格）
+預覽：C:\Users\cona0\Desktop\teacher-dashboard-repo\assets\pet\v3\_preview\overview.png
+
+結果：21/21 通過
+```
+
+## 範圍與接線
+
+僅新增第二批 raw／sheets、三張淘汰稿與更新本文件。第一批 11 張 sheets、原 reference、spec.json、check_sprites.py、normalize_raw.py、舊 frames 與應用程式均未修改。資料契約、權限、安裝與部署不受影響，無需重跑安裝或重新部署；未做應用程式功能測試，桌寵接線與實播由 Claude 後續處理。未 push、未合併、未打 tag。
+
+---
+
 # 重做 redo1（2026-09-28）
 
 分支 `codex/pet-sprites-v3-redo1`。依本次更新後的 `spec.json` 重生 idle、drag、sleep、warning、greet，共 34 格。使用原有 `reference/sheep_ref.png`、內建 image_gen 與現有 normalize_raw.py。未修改任何程式、spec 或驗收工具；其他六組 raw／sheets 保持原樣。
