@@ -875,12 +875,12 @@
     .deskpet { position: fixed; right: 20px; bottom: 18px; z-index: 850; display: grid; justify-items: center; touch-action: none; user-select: none; will-change: left, top; }
     .deskpet-bubble { position: relative; max-width: 190px; margin-bottom: -4px; padding: 8px 11px; border: 2px solid var(--primary); border-radius: 14px; background: #fffdf8; color: var(--primary-strong); box-shadow: var(--shadow); font-size: 12px; font-weight: 900; text-align: center; }
     .deskpet-bubble::after { content: ''; position: absolute; left: 50%; bottom: -8px; width: 12px; height: 12px; border-right: 2px solid var(--primary); border-bottom: 2px solid var(--primary); background: #fffdf8; transform: translateX(-50%) rotate(45deg); }
-    .deskpet-button { position: relative; width: 128px; height: 128px; padding: 0; border: 0; background: transparent; cursor: grab; filter: drop-shadow(0 9px 10px rgba(32,55,49,.18)); }
+    .deskpet-button { position: relative; width: 148px; height: 148px; padding: 0; border: 0; background: transparent; cursor: grab; filter: drop-shadow(0 9px 10px rgba(32,55,49,.18)); }
     .deskpet-button:active { cursor: grabbing; }
     .deskpet-button img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
     .deskpet.is-walking .deskpet-button { filter: drop-shadow(0 7px 8px rgba(32,55,49,.16)); }
     .deskpet.is-walking .deskpet-bubble { opacity: .82; }
-    .deskpet-count { position: absolute; top: 5px; right: 4px; display: grid; place-items: center; min-width: 26px; height: 26px; padding: 0 6px; border: 3px solid #fff; border-radius: 999px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 900; }
+    .deskpet-count { position: absolute; top: 24px; right: 22px; display: grid; place-items: center; min-width: 26px; height: 26px; padding: 0 6px; border: 3px solid #fff; border-radius: 999px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 900; }
     .deskpet-panel { position: fixed; right: 24px; bottom: 154px; z-index: 860; width: min(540px, calc(100vw - 32px)); max-height: min(780px, calc(100vh - 178px)); overflow: auto; border: 2px solid #9db8a8; border-radius: 22px; background: var(--surface); box-shadow: 0 22px 70px rgba(22,42,36,.28); }
     .deskpet-panel[hidden] { display: none; }
     .deskpet-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 15px 16px 11px; border-bottom: 1px dashed #b9cbbf; background: #f0f6f1; }
@@ -1001,7 +1001,7 @@
       .project-flow-track { grid-template-columns: 1fr; overflow: visible; }
       .project-flow-step:not(:last-child)::after { content: '↓'; top: auto; right: 50%; bottom: -22px; transform: translateX(50%); }
       .deskpet { right: 9px; bottom: 9px; }
-      .deskpet-button { width: 88px; height: 88px; }
+      .deskpet-button { width: 100px; height: 100px; }
       .deskpet-bubble { max-width: 150px; font-size: 12px; }
       .deskpet-panel { right: 10px; bottom: 112px; max-height: calc(100vh - 130px); }
       .deskpet-dashboard { grid-template-columns: 1fr; }

@@ -477,7 +477,20 @@ for (const fake of ["createGoogleCalendarEvent:", "syncTeachingProgressCalendar:
 assert.doesNotMatch(indexHtml, /serverCall\('(createGoogleCalendarEvent|syncTeachingProgressCalendar|uploadWorkspaceFile|listWorkspaceFiles)'/, "雲端功能不得再走 google.script.run");
 
 // 2026-09-06 文件同步契約：小綿助 v2.0、雲端功能改真、PDF 工具、作文批改不限張數、允許名單新行為
-assert.match(installHtml, /小綿助 v2\.[01]/, "安裝更新指南應介紹小綿助 v2.0 與升級步驟");
+assert.match(installHtml, /小綿助 v2\.\d/, "安裝更新指南應介紹小綿助 v2.x 與升級步驟");
+// 2026-09-28 小綿助 v2.3 新畫風：文件要講到新畫風與投影時睡覺；網頁版動畫也換新（新檔每個 < 200KB）
+{
+  const aboutText = fs.readFileSync(path.join(projectRoot, "About.html"), "utf8");
+  const introText = fs.readFileSync(path.join(projectRoot, "Intro.html"), "utf8");
+  assert.match(aboutText, /新畫風[\s\S]{0,400}全螢幕/, "About 應介紹 v2.3 新畫風與投影／全螢幕時睡覺");
+  assert.match(introText, /新畫風（v2\.3 新）/, "Intro 應列出 v2.3 新畫風");
+  assert.match(installHtml, /投影或全螢幕<\/strong>時牠會自己睡覺/, "安裝教學應提醒投影時小綿助會睡覺");
+  for (const state of ["drag", "idle", "listen", "sleep", "success", "think", "walk_left", "walk_right", "warning"]) {
+    const size = fs.statSync(path.join(projectRoot, "assets", "pet", `pet_${state}.webp`)).size;
+    assert.ok(size < 200000, `網頁版 pet_${state}.webp 應為 v3 新畫風（舊版約 600KB）`);
+  }
+  assert.ok(fs.existsSync(path.join(projectRoot, "assets", "pet", "v3", "CODEX_HANDOFF.md")), "v3 動作圖交接手冊應保留在 repo");
+}
 assert.match(installHtml, /寫入 Google 日曆、存檔到雲端硬碟/, "更新指南授權說明應含日曆與雲端硬碟");
 assert.match(installHtml, /以前只是模擬/, "更新指南應說明雲端功能已改為真實寫入");
 assert.match(installHtml, /📎 PDF 工具/, "更新指南應列出 PDF 工具");

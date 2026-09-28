@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 import time
 from datetime import date
@@ -137,6 +138,48 @@ class ForegroundMonitor:
             return buffer.value
         except Exception:  # noqa: BLE001 - 偵測失敗只當作沒有視窗
             return ""
+
+    @staticmethod
+    def is_fullscreen() -> bool:
+        """作用中視窗是否蓋滿整個螢幕（投影片放映、全螢幕影片、大屏）。
+
+        只比對視窗外框與所在螢幕的範圍，不讀內容、不截圖。桌面本身與
+        小綿助自己的視窗不算。
+        """
+        if sys.platform != "win32":
+            return False
+        try:
+            import ctypes
+            from ctypes import wintypes
+
+            user32 = ctypes.windll.user32
+            handle = user32.GetForegroundWindow()
+            if not handle:
+                return False
+            pid = wintypes.DWORD()
+            user32.GetWindowThreadProcessId(handle, ctypes.byref(pid))
+            if pid.value == os.getpid():
+                return False
+            class_name = ctypes.create_unicode_buffer(64)
+            user32.GetClassNameW(handle, class_name, 64)
+            if class_name.value in ("Progman", "WorkerW", "Shell_TrayWnd", "Shell_SecondaryTrayWnd"):
+                return False
+            rect = wintypes.RECT()
+            if not user32.GetWindowRect(handle, ctypes.byref(rect)):
+                return False
+
+            class MONITORINFO(ctypes.Structure):
+                _fields_ = [("cbSize", wintypes.DWORD), ("rcMonitor", wintypes.RECT), ("rcWork", wintypes.RECT), ("dwFlags", wintypes.DWORD)]
+
+            monitor = user32.MonitorFromWindow(handle, 2)  # MONITOR_DEFAULTTONEAREST
+            info = MONITORINFO()
+            info.cbSize = ctypes.sizeof(MONITORINFO)
+            if not user32.GetMonitorInfoW(monitor, ctypes.byref(info)):
+                return False
+            screen = info.rcMonitor
+            return rect.left <= screen.left and rect.top <= screen.top and rect.right >= screen.right and rect.bottom >= screen.bottom
+        except Exception:  # noqa: BLE001 - 偵測失敗就當作不是全螢幕
+            return False
 
     @staticmethod
     def classify(title: str, keywords: list[str], whitelist: list[str]) -> str:

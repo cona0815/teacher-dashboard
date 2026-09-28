@@ -1,4 +1,4 @@
-"""Windows desktop preview for the original 小綿助 animation set."""
+"""Windows desktop preview for the 小綿助 animation set (v3 art)."""
 
 from __future__ import annotations
 
@@ -24,38 +24,73 @@ if sys.platform == "win32":
 
 TRANSPARENT = "#ff00ff"
 WINDOW_WIDTH = 330
-WINDOW_HEIGHT = 236
-PET_SIZE = 164
+WINDOW_HEIGHT = 256
+# v3 畫風：各動作統一角色大小後，羊本體約佔格子 66%（舊版約 76%），
+# 桌寵放大到 184 讓平常在螢幕上的大小與舊版相當。
+PET_SIZE = 184
 PET_TOP = 68
 BUBBLE_WRAP = 286
 ERROR_LOG = Path.home() / "XiaoMianZhuSecretary" / "desktop_pet.log"
 
 
 class DesktopPetPreview:
+    # 播放速度對齊 assets/pet/v3/spec.json 的 ms。
     FRAME_DELAYS = {
         "drag": 125,
+        "greet": 140,
         "idle": 200,
         "listen": 155,
+        "overdue": 140,
+        "peek": 160,
+        "peek_left": 160,
         "sleep": 290,
         "success": 110,
         "think": 145,
-        # Use the complete 16-frame gait cycle.  Keeping the cadence in sync
-        # with the web animation prevents the lamb from appearing to limp.
-        "walk_left": 75,
-        "walk_right": 75,
+        "walk_left": 110,
+        "walk_right": 110,
         "warning": 140,
+        # 第二批（選用）：資料夾在才載入
+        "idle_blink": 160,
+        "idle_grade": 200,
+        "mail": 140,
+        "drink": 160,
+        "stretch": 160,
+        "medicine": 140,
+        "focus": 220,
+        "watch": 150,
+        "note": 150,
+        "sign": 150,
     }
 
+    # 必要動作：缺任何一張就不啟動（打包漏檔要立刻發現）。
     FRAME_COUNTS = {
         "drag": 6,
+        "greet": 8,
         "idle": 6,
         "listen": 6,
+        "overdue": 8,
+        "peek": 6,
+        "peek_left": 6,
         "sleep": 6,
         "success": 8,
         "think": 8,
-        "walk_left": 16,
-        "walk_right": 16,
+        "walk_left": 8,
+        "walk_right": 8,
         "warning": 8,
+    }
+
+    # 第二批動作：還沒交件時資料夾不存在，程式改用 fallback 動作。
+    OPTIONAL_FRAME_COUNTS = {
+        "idle_blink": 6,
+        "idle_grade": 8,
+        "mail": 8,
+        "drink": 8,
+        "stretch": 8,
+        "medicine": 8,
+        "focus": 8,
+        "watch": 8,
+        "note": 8,
+        "sign": 8,
     }
 
     def __init__(self) -> None:
@@ -161,10 +196,14 @@ class DesktopPetPreview:
 
     def _load_frames(self) -> dict[str, list[ImageTk.PhotoImage]]:
         result: dict[str, list[ImageTk.PhotoImage]] = {}
-        for state, count in self.FRAME_COUNTS.items():
+        wanted = [(state, count, True) for state, count in self.FRAME_COUNTS.items()]
+        wanted += [(state, count, False) for state, count in self.OPTIONAL_FRAME_COUNTS.items()]
+        for state, count, required in wanted:
             folder = self.assets_root / f"pet_{state}"
             paths = sorted(folder.glob("*.png"))
             if len(paths) != count:
+                if not required:
+                    continue
                 raise FileNotFoundError(f"{folder} 應有 {count} 張動畫，目前找到 {len(paths)} 張。")
             result[state] = []
             for path in paths:
@@ -179,12 +218,19 @@ class DesktopPetPreview:
                     cleaned_pixels.append((red, green, blue, 0 if is_magenta_fringe or alpha < 32 else 255))
                 image.putdata(cleaned_pixels)
                 result[state].append(ImageTk.PhotoImage(image))
-            # Walk assets are authored as a complete, ordered gait cycle.
-            # Keep that order instead of mirroring it at runtime: the
-            # generated frames already alternate weight-bearing legs and
-            # include the return-to-contact pose. Mirroring here made the
-            # rear hoof appear to snap backwards and read as an injury.
+            # walk_left／peek_left 由 assets/pet/v3/install_frames.py 預先鏡像好，
+            # 這裡照順序載入，不在執行時翻轉。
         return result
+
+    def has_state(self, state: str) -> bool:
+        return state in self.frames
+
+    def pick_state(self, *states: str) -> str:
+        """回傳第一個有載入的動作（第二批動作還沒交件時自動退回舊動作）。"""
+        for state in states:
+            if state in self.frames:
+                return state
+        return "idle"
 
     def run(self) -> None:
         self.root.mainloop()
@@ -196,6 +242,10 @@ class DesktopPetPreview:
         after_state: str = "idle",
         message: str | None = None,
     ) -> None:
+        if state not in self.frames:
+            state = "idle"
+        if after_state not in self.frames:
+            after_state = "idle"
         self.walking = state.startswith("walk_")
         self.state = state
         self.frame_index = 0
@@ -232,6 +282,9 @@ class DesktopPetPreview:
                 if self.loop_limit is not None and self.completed_loops >= self.loop_limit:
                     next_state = self.after_state
                     self.play(next_state)
+                    if next_state == "idle" and self.wandering:
+                        # 提醒或回饋動作播完後，過一會兒再出去走走（不打斷別的動作）
+                        self.root.after(random.randint(4000, 8000), lambda: self.state == "idle" and not self.walking and self.start_walking())
             self._render_frame()
         self.root.after(self.FRAME_DELAYS[self.state], self._animation_tick)
 

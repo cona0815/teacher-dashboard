@@ -390,6 +390,15 @@ class BubbleWindow:
         if notice is not None:
             self.on_closed(notice, reason)
 
+    def hide_quietly(self) -> None:
+        """收起泡泡但不算看過（投影／全螢幕時暫時藏起來，之後會再顯示）。"""
+        on_closed = self.on_closed
+        self.on_closed = lambda _notice, _reason: None
+        try:
+            self.close("hidden")
+        finally:
+            self.on_closed = on_closed
+
     @property
     def visible(self) -> bool:
         return self.notice is not None

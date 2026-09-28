@@ -237,7 +237,7 @@ textarea,input{font-family:inherit;font-size:14px;border:1.5px solid var(--line)
 details summary{cursor:pointer;font-weight:800;color:var(--strong)}
 .seat-ok{color:#1c6b45}.seat-bad{color:var(--danger);font-weight:800}
 </style></head><body>
-<header><h1>🐑 __PET_NAME__ 教師秘書</h1><div class="meta">本機頁面（127.0.0.1）｜v2.2｜<span id="stamp">載入中</span>｜每 15 秒自動更新</div></header>
+<header><h1>🐑 __PET_NAME__ 教師秘書</h1><div class="meta">本機頁面（127.0.0.1）｜v2.3｜<span id="stamp">載入中</span>｜每 15 秒自動更新</div></header>
 <main>
   <section class="card soft" style="grid-column:1/-1"><h2>☀ 今日簡報</h2><div id="brief" class="empty">載入中……</div></section>
 
@@ -632,12 +632,16 @@ class SecretaryPet(DesktopPetPreview):
         self.focus_status = "focus"
         self.focus_recent_title = ""
         self.peek_until = 0
+        self.peek_return_x: int | None = None
+        self.rest_reason = ""          # "" / "quiet"（下班安靜時段）/ "fullscreen"（投影、全螢幕）
+        self.deferred_notice: Notice | None = None
         self.cuddle_target: int | None = None
         self.mouse_last: tuple[int, int] = (-1, -1)
         self.mouse_idle_since = time.time()
         self._configure_cloud()
         self.root.after(8000, self._cloud_tick)
         self.root.after(2500, self._focus_tick)
+        self.root.after(3000, self._rest_tick)
         self.root.after(1500, self._mouse_tick)
         # ---- v2.1：會聽的小綿助 ----
         self.voice = VoiceEngine()
@@ -654,10 +658,15 @@ class SecretaryPet(DesktopPetPreview):
             self.root.after(100, self.root.destroy)
 
     # ------------------------------------------------------------------ v2.2 顯示層
+    # v3 畫風的羊在 512 格裡上方留了放道具（太陽、驚嘆號）的空間；
+    # 泡泡、狀態卡、選單以「羊身體大概的範圍」定位，才不會離羊頭太遠。
+    PET_BODY_INSET = (0.12, 0.16, 0.12, 0.04)   # 左、上、右、下（佔格子比例）
+
     def _pet_screen_box(self) -> tuple:
         left = self.x + (self.win_w - self.pet_px) // 2
         top = self.y + int(PET_TOP * self.dpi_scale)
-        return (left, top, left + self.pet_px, top + self.pet_px)
+        il, it, ir, ib = (int(v * self.pet_px) for v in self.PET_BODY_INSET)
+        return (left + il, top + it, left + self.pet_px - ir, top + self.pet_px - ib)
 
     def notify(self, text: str, level: str = "chatter", key: str = "", tag: str = "", actions: list | None = None) -> None:
         if not text:
@@ -678,7 +687,41 @@ class SecretaryPet(DesktopPetPreview):
                 pass
         self._badge_tick(reschedule=False)
 
+    # 通知種類 → 動作（依序找第一個已安裝的；第二批動作還沒交件時退回後面的）
+    NOTICE_ANIMATIONS = {
+        "overdue": ("overdue", "warning"),
+        "line": ("mail",),
+        "water": ("drink",),
+        "move": ("stretch",),
+        "med": ("medicine", "warning"),
+        "focus": ("watch", "warning"),
+    }
+
+    def _notice_animation(self, notice: Notice) -> str:
+        key = (notice.key or "").split(":", 1)[0]
+        choices = self.NOTICE_ANIMATIONS.get(key)
+        if not choices:
+            return ""
+        for state in choices:
+            if self.has_state(state):
+                return state
+        return ""
+
     def _display_notice(self, notice: Notice) -> None:
+        if self.rest_reason == "fullscreen" and notice.level not in ("feedback",):
+            # 投影／全螢幕中不跳泡泡（學生看得到）；閒聊直接丟掉，其餘等離開全螢幕再說。
+            if notice.level == "chatter":
+                nxt = self.notices.close_current(read=False)
+                if nxt is not None:
+                    self._display_notice(nxt)
+            else:
+                self.deferred_notice = notice
+            self._badge_tick(reschedule=False)
+            return
+        state = self._notice_animation(notice)
+        if state and not self.drag_origin:
+            self.cuddle_target = None
+            self.play(state, 2, "sleep" if self.rest_reason else "idle")
         if self.ui_ok:
             try:
                 self.ui_bubble.show(notice)
@@ -737,9 +780,13 @@ class SecretaryPet(DesktopPetPreview):
         try:
             counts = self._badge_counts()
             s = self.dpi_scale
-            x = (self.win_w - self.pet_px) // 2 + self.pet_px - int(44 * s)
-            y = int(PET_TOP * s) + int(4 * s)
-            self.badge.set(counts["overdue"] + counts["line"], x, y)
+            # 貼在羊頭右上（v3 羊頭頂約在格子 29% 高的位置）
+            x = (self.win_w - self.pet_px) // 2 + int(self.pet_px * 0.70)
+            y = int(PET_TOP * s) + int(self.pet_px * 0.22)
+            count = counts["overdue"] + counts["line"]
+            if getattr(self, "rest_reason", "") == "fullscreen":
+                count = 0   # 投影中不顯示紅點（學生看得到）
+            self.badge.set(count, x, y)
         except (tk.TclError, ValueError, TypeError):
             pass
         if reschedule:
@@ -1503,7 +1550,7 @@ class SecretaryPet(DesktopPetPreview):
     # v2.0 行為豐富化：探頭、蹭滑鼠
     # ------------------------------------------------------------------
     def start_walking(self) -> None:
-        if self.paused or self.drag_origin:
+        if self.paused or self.drag_origin or getattr(self, "rest_reason", ""):
             return
         super().start_walking()
         if random.random() < 0.3:
@@ -1537,16 +1584,95 @@ class SecretaryPet(DesktopPetPreview):
             max_x = max(0, self.screen_width - self.win_w)
             at_edge = (self.x <= 0 and self.walk_direction < 0) or (self.x >= max_x and self.walk_direction > 0)
             if at_edge and self.walk_stop_at - now_ms > 20_000:
-                # 探頭：到了邊緣停兩秒張望，然後走回來
-                self.peek_until = now_ms + 2200
-                self.walk_stop_at = now_ms + random.randint(4000, 7000)
-                self.play("think", 2, "idle")
-                self.walking = True
-                self.walk_direction *= -1
-                self.root.after(2300, lambda: (not self.paused and not self.drag_origin) and self.play("walk_left" if self.walk_direction < 0 else "walk_right"))
+                self._start_peek(now_ms)
                 self.root.after(30, self._movement_tick)
                 return
         super()._movement_tick()
+
+    def _start_peek(self, now_ms: int) -> None:
+        """走到螢幕邊緣：躲到螢幕外，只探頭進來張望一下，再走回來。"""
+        right_edge = self.walk_direction > 0
+        state = "peek" if right_edge else "peek_left"
+        loops = 2
+        duration = len(self.frames[state]) * self.FRAME_DELAYS[state] * loops
+        self.peek_return_x = self.x
+        margin = (self.win_w - self.pet_px) // 2
+        # 讓羊的格子邊緣剛好貼齊螢幕邊緣（視窗可以超出螢幕）
+        self.x = self.screen_width - margin - self.pet_px if right_edge else -margin
+        self.root.geometry(f"+{self.x}+{self.y}")
+        self.peek_until = now_ms + duration + 60
+        self.walk_stop_at = now_ms + duration + random.randint(4000, 7000)
+        self.play(state, loops, "idle")
+        self.walking = True
+        self.walk_direction *= -1
+        self.root.after(duration + 80, self._finish_peek)
+
+    def _finish_peek(self) -> None:
+        if self.drag_origin:
+            self.peek_return_x = None   # 使用者正在拖，不要把視窗拉回去
+            return
+        if self.peek_return_x is not None:
+            self.x = self.peek_return_x
+            self.peek_return_x = None
+            self.root.geometry(f"+{self.x}+{self.y}")
+        if not self.paused and not self.drag_origin and not self.rest_reason:
+            self.play("walk_left" if self.walk_direction < 0 else "walk_right")
+
+    # ------------------------------------------------------------------
+    # v3：下班安靜時段、投影／全螢幕時睡覺
+    # ------------------------------------------------------------------
+    def _rest_tick(self) -> None:
+        try:
+            reason = ""
+            if self.data.get("settings", {}).get("sleep_when_fullscreen", True) and self.focus_monitor.is_fullscreen():
+                reason = "fullscreen"
+            elif self._in_quiet_hours():
+                reason = "quiet"
+            if reason != self.rest_reason:
+                was = self.rest_reason
+                self.rest_reason = reason
+                self._badge_tick(reschedule=False)
+                if reason:
+                    self._enter_rest()
+                else:
+                    self._leave_rest(was)
+            elif reason and self.state == "idle" and not self.drag_origin and self.notices.current is None:
+                # 拖曳完或提醒動畫播完後回到睡覺
+                self.play("sleep", None, "sleep")
+        except Exception:  # noqa: BLE001 - 偵測失敗不能影響桌寵
+            pass
+        try:
+            self.root.after(3000, self._rest_tick)
+        except tk.TclError:
+            pass
+
+    def _enter_rest(self) -> None:
+        self.walking = False
+        self.cuddle_target = None
+        if self.peek_return_x is not None:
+            self._finish_peek()
+        if self.rest_reason == "fullscreen" and self.ui_ok and self.ui_bubble.visible and self.notices.current is not None:
+            current = self.notices.current
+            if current.level == "chatter":
+                self.ui_bubble.close("dismiss")
+            else:
+                # 已經跳出來的提醒先收起來，離開全螢幕再顯示
+                self.deferred_notice = current
+                try:
+                    self.ui_bubble.hide_quietly()
+                except (AttributeError, tk.TclError):
+                    pass
+        if not self.drag_origin:
+            self.play("sleep", None, "sleep")
+
+    def _leave_rest(self, was: str) -> None:
+        if self.drag_origin:
+            return
+        self.play("idle")
+        deferred, self.deferred_notice = self.deferred_notice, None
+        if deferred is not None and self.notices.current is deferred:
+            self.root.after(600, lambda: self.notices.current is deferred and self._display_notice(deferred))
+        self.root.after(2500 if was == "fullscreen" else 1500, self.start_walking)
 
     def _mouse_tick(self) -> None:
         try:
@@ -1556,7 +1682,7 @@ class SecretaryPet(DesktopPetPreview):
                 self.mouse_idle_since = time.time()
             idle = time.time() - self.mouse_idle_since
             near = abs(pointer[0] - (self.x + self.win_w // 2)) < 420 and abs(pointer[1] - self.y) < 320
-            if idle > 30 and near and self.cuddle_target is None and not self.walking and not self.drag_origin and not self.paused and random.random() < 0.15:
+            if idle > 30 and near and not self.rest_reason and self.cuddle_target is None and not self.walking and not self.drag_origin and not self.paused and random.random() < 0.15:
                 self.cuddle_target = max(0, min(self.screen_width - self.win_w, pointer[0] - self.win_w // 2))
                 self.mouse_idle_since = time.time()
         except tk.TclError:
@@ -1711,7 +1837,8 @@ class SecretaryPet(DesktopPetPreview):
             self._render_dashboard()
         except (tk.TclError, AttributeError, KeyError):
             pass
-        self.play("success", 2, "idle", message, level="feedback")
+        reaction = self.pick_state("note", "success") if message.startswith("🎤 已記下") else "success"
+        self.play(reaction, 2, "idle", message, level="feedback")
 
     def _voice_payload(self) -> dict:
         settings = self.data.get("settings", {})
@@ -2012,10 +2139,28 @@ class SecretaryPet(DesktopPetPreview):
         try:
             if bubble:
                 self.root.after(0, lambda: self.notify(bubble, "feedback"))
+            reaction = self._action_animation(action, payload)
+            if reaction:
+                self.root.after(0, lambda: self.play(reaction, 2, "sleep" if self.rest_reason else "idle"))
             self.root.after(0, lambda: self._badge_tick(reschedule=False))
         except tk.TclError:
             pass
         return self._panel_payload()
+
+    ACTION_ANIMATIONS = {
+        "water": ("drink", "success"),
+        "move_done": ("stretch", "success"),
+        "medicine_done": ("success",),
+        "prompt_set": ("sign", "success"),
+    }
+
+    def _action_animation(self, action: str, payload: dict) -> str:
+        if action == "prompt_set" and payload.get("clear"):
+            return ""
+        if action == "focus_session":
+            return self.pick_state("focus", "think") if int(payload.get("minutes") or 0) > 0 else self.pick_state("success")
+        choices = self.ACTION_ANIMATIONS.get(action)
+        return self.pick_state(*choices) if choices else ""
 
     def _panel_html(self) -> str:
         return PANEL_PAGE_HTML.replace("__PET_NAME__", self._pet_name())
@@ -2480,6 +2625,12 @@ class SecretaryPet(DesktopPetPreview):
     def _opening_brief(self) -> None:
         if self._in_quiet_hours():
             return
+        self.walking = False
+        self.play("greet", 1, "idle")
+        self.show_bubble(f"早安！{self._pet_name()}來上班了～")
+        self.root.after(1500, self._opening_brief_notices)
+
+    def _opening_brief_notices(self) -> None:
         today = date.today().isoformat()
         active = [task for task in self.data["tasks"] if task.get("status") != "已完成"]
         overdue = [task for task in active if task.get("due_date") and task["due_date"] < today]
@@ -2752,7 +2903,7 @@ class SecretaryPet(DesktopPetPreview):
         self.attachment_content_cache = {}
         self._render_attachments()
         self._render_notes()
-        self.play("success", 2, "idle", "記事已保存在本機。", level="feedback")
+        self.play(self.pick_state("note", "success"), 2, "idle", "記事已保存在本機。", level="feedback")
 
 
 if __name__ == "__main__":

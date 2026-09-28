@@ -403,3 +403,50 @@ class NoticeQueueTest(unittest.TestCase):
         body = source[start:source.index("\n    def ", start + 10)]
         self.assertIn("self.popup.open", body)
         self.assertNotIn("tk_popup", body)
+
+
+class PetV3AssetsTest(unittest.TestCase):
+    """v3 動作圖：安裝好的單格圖要和程式的格數、規格表一致。"""
+
+    def setUp(self):
+        from pathlib import Path
+        from desktop_pet_preview import DesktopPetPreview
+
+        self.root = Path(__file__).resolve().parents[1]
+        self.pet = DesktopPetPreview
+        self.frames = self.root / "assets" / "pet" / "frames"
+        self.spec = json.loads((self.root / "assets" / "pet" / "v3" / "spec.json").read_text(encoding="utf-8"))
+
+    def test_required_frames_installed_with_exact_counts(self):
+        from PIL import Image
+
+        for state, count in self.pet.FRAME_COUNTS.items():
+            paths = sorted((self.frames / f"pet_{state}").glob("*.png"))
+            self.assertEqual(len(paths), count, state)
+            with Image.open(paths[0]) as image:
+                self.assertEqual(image.size, (512, 512), state)
+                self.assertEqual(image.mode, "RGBA", state)
+
+    def test_optional_frames_either_absent_or_complete(self):
+        for state, count in self.pet.OPTIONAL_FRAME_COUNTS.items():
+            paths = sorted((self.frames / f"pet_{state}").glob("*.png"))
+            self.assertIn(len(paths), (0, count), state)
+
+    def test_counts_match_spec_and_every_state_has_speed(self):
+        spec = {a["name"]: a["frames"] for a in self.spec["actions"]}
+        mirrored = {"walk_left": "walk_right", "peek_left": "peek"}
+        for state, count in {**self.pet.FRAME_COUNTS, **self.pet.OPTIONAL_FRAME_COUNTS}.items():
+            self.assertEqual(spec[mirrored.get(state, state)], count, state)
+            self.assertIn(state, self.pet.FRAME_DELAYS, state)
+        self.assertEqual(set(spec) - set(self.pet.FRAME_COUNTS) - set(self.pet.OPTIONAL_FRAME_COUNTS), set())
+
+    def test_notice_and_action_animations_use_known_states(self):
+        known = set(self.pet.FRAME_COUNTS) | set(self.pet.OPTIONAL_FRAME_COUNTS)
+        for choices in list(SecretaryPet.NOTICE_ANIMATIONS.values()) + list(SecretaryPet.ACTION_ANIMATIONS.values()):
+            for state in choices:
+                self.assertIn(state, known)
+
+    def test_fullscreen_probe_never_raises(self):
+        from desktop_pet_cloud import ForegroundMonitor
+
+        self.assertIsInstance(ForegroundMonitor.is_fullscreen(), bool)
