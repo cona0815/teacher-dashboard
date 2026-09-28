@@ -10,7 +10,7 @@
 - 站姿動作：量奶油色身體（頭頂到身體底）的高度。眼睛大小在每次生成間
   會差 10～15%，用眼睛當尺會讓 idle 忽大忽小，所以站姿一律量身體。
 - 會變形的動作（spec 的 free_scale：drag、sleep、stretch、peek）：身體被拉長
-  或縮成一團，改用眼睛直徑（閉眼時用頭上葉子面積）換算成等效身高。
+  或縮成一團，改用眼睛直徑（閉眼時用頭上葉子面積）對齊 idle 的眼睛／葉子大小。
 
 輸出：assets/pet/frames/pet_<動作>/pet_<動作>_NN.png（512x512，alpha 只有 0／255）。
 由 Claude 維護；Codex 不需要執行。
@@ -183,10 +183,15 @@ def main() -> int:
         body = None if a.get("free_scale") else body_height(frames)
         info[a["name"]] = {"action": a, "frames": frames, "eye": eye, "leaf": leaf, "body": body, "box": union_bbox(frames)}
 
-    # 站姿動作的「身高／眼睛」「身高／葉子」比例，用來換算會變形的動作
+    # 會變形的動作要和「平常發呆的羊」眼睛、葉子一樣大，所以用 idle 的比例換算。
+    # （不用全體中位數：每加一批新動作，中位數就會變，drag／sleep／peek 會跟著忽大忽小）
+    ref = info.get("idle") if info.get("idle", {}).get("body") else None
     standing = [v for v in info.values() if v["body"]]
-    body_per_eye = statistics.median([v["body"] / v["eye"] for v in standing if v["eye"]] or [17.0])
-    body_per_leaf = statistics.median([v["body"] / v["leaf"] for v in standing if v["leaf"]] or [8.5])
+    if ref and ref["eye"] and ref["leaf"]:
+        body_per_eye, body_per_leaf = ref["body"] / ref["eye"], ref["body"] / ref["leaf"]
+    else:
+        body_per_eye = statistics.median([v["body"] / v["eye"] for v in standing if v["eye"]] or [17.0])
+        body_per_leaf = statistics.median([v["body"] / v["leaf"] for v in standing if v["leaf"]] or [8.5])
     for v in info.values():
         if v["body"]:
             v["size"], v["ruler"] = v["body"], "身體"

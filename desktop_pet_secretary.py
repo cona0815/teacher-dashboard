@@ -642,6 +642,7 @@ class SecretaryPet(DesktopPetPreview):
         self.root.after(8000, self._cloud_tick)
         self.root.after(2500, self._focus_tick)
         self.root.after(3000, self._rest_tick)
+        self.root.after(15_000, self._idle_variety_tick)
         self.root.after(1500, self._mouse_tick)
         # ---- v2.1：會聽的小綿助 ----
         self.voice = VoiceEngine()
@@ -1643,6 +1644,24 @@ class SecretaryPet(DesktopPetPreview):
             pass
         try:
             self.root.after(3000, self._rest_tick)
+        except tk.TclError:
+            pass
+
+    def _idle_variety_tick(self) -> None:
+        """待機時偶爾眨眼、改作業，看起來比較有生命感。"""
+        try:
+            calm = (self.state == "idle" and not self.walking and not self.drag_origin and not self.paused
+                    and not self.rest_reason and self.notices.current is None and self.cuddle_target is None)
+            if calm:
+                roll = random.random()
+                if roll < 0.55 and self.has_state("idle_blink"):
+                    self.play("idle_blink", 1, "idle")
+                elif roll < 0.8 and self.has_state("idle_grade"):
+                    self.play("idle_grade", 2, "idle")
+        except Exception:  # noqa: BLE001 - 裝飾動作失敗不能影響桌寵
+            pass
+        try:
+            self.root.after(random.randint(12_000, 25_000), self._idle_variety_tick)
         except tk.TclError:
             pass
 
