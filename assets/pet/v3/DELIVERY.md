@@ -1,3 +1,57 @@
+# 重做 redo1（2026-09-28）
+
+分支 `codex/pet-sprites-v3-redo1`。依本次更新後的 `spec.json` 重生 idle、drag、sleep、warning、greet，共 34 格。使用原有 `reference/sheep_ref.png`、內建 image_gen 與現有 normalize_raw.py。未修改任何程式、spec 或驗收工具；其他六組 raw／sheets 保持原樣。
+
+## 修改與檢視結果
+
+| 動作 | 格數 | 結果 | 重做內容及檢視 |
+|---|---:|---|---|
+| idle | 6 | PASS | 葉根全程在畫面右側，只彎葉尖。第二次生成後奶油色輪廓外框高度六格皆 382 px、寬度 379～383 px，外框寬差約 1.06%、高差 0%；頭部比例與眼睛位置目視穩定。 |
+| drag | 6 | PASS | 恢復圓頭和短圓雲朵毛，不再尖錐；圓口、垂腳與左右擺動。第一稿多畫人手已淘汰，第二稿第 3 格葉片換側，經 image_gen 修正後六格固定同側。 |
+| sleep | 6 | PASS | 改為側躺的圓毛球，臉靠右下、腳完全收進毛裡，閉眼彎線、緩慢呼吸；沒有 z 或任何字母。 |
+| warning | 8 | PASS | 全程正面、淺跳。奶油色身體外框第 1／8 格高 319 px，第 3／7 格高 301／304 px，蹲姿約 94.4%／95.3%，高於 85%。落地底線 y=488、最高騰空底線約 y=459；驚嘆號貼近毛頂。沒有 WARN。 |
+| greet | 8 | PASS | 固定自身左前腳（畫面右側）揮動，另一側維持放下。太陽從毛後露出後逐格升高，八格都可見；金色區域頂端 y 約為 148、141、127、109、99、89、75、65，沒有中途突然出現或消失。 |
+
+已讀取五個 `_preview/*.gif` 的全部 34 格，透過現有工具解碼為逐格接觸表，以眼睛檢視頭形、腳的位置、葉片、側躺、正面方向及太陽連續位置；並檢查最終 `_preview/overview.png`。屬逐格動畫檢視，未宣稱在桌寵程式中實播。GIF 時間量化沿用原工具，drag 的 125 ms 在 GIF 中為 120 ms；spec 未改。
+
+「輪廓小於 3%」量測以排除綠葉／黑臉後的奶油色身體外框長寬為依據，不等同逐像素輪廓距離。結果加上逐格目視支持小幅呼吸；未藉逐格縮放或複製格子湊數。
+
+## 原圖留存與重現
+
+舊的五張原圖已按要求移至 `raw/rejected/<動作>-v1.png`，新的原圖在 `raw/<動作>.png`。redo1 未採用的稿件另存 `idle-redo1-attempt1.png`、`drag-redo1-attempt1.png`、`drag-redo1-attempt2.png`，沒有覆寫舊備份。
+
+每次生成都使用更新後的 action prompt 與 common_prompt 的角色、透明底、單橫排、無字、無洋紅限制。補充提示：idle 固定頭高及眼睛 y；drag 隱形提起、不畫人手且禁止尖毛；sleep 明確側躺而非坐姿；warning 固定正面及 95% 蹲高；greet 明確自身左腳對應畫面右側並指定太陽每格上升。最終 idle 與 drag 使用 image_gen 參考編輯改善，不使用程式繪製／變形角色。
+
+```sh
+python assets/pet/v3/normalize_raw.py --only idle drag sleep warning greet
+python assets/pet/v3/check_sprites.py --only idle drag sleep warning greet --preview
+```
+
+## 需要老師重生的圖（redo1）
+
+本次五項動作修正均已可辨識，沒有尚未處理的指定動作問題。仍有生成式圖片的微小輪廓差異，並非數學上逐像素相同。greet 的細小太陽光芒經現有清理程式去雜點後大多消失，成為金色圓太陽，最後一格仍有短光芒；上升動作與同手揮動正確，若要求光芒也完全一致，建議日後重生提示指定「solid gold sun disk without detached rays」。未為此修改清理程式。舊版下方的待重生清單保留作歷史，這五張以上方 redo1 結果為準。
+
+## check_sprites 完整輸出（redo1）
+
+命令：`python assets/pet/v3/check_sprites.py --only idle drag sleep warning greet --preview`。退出碼 0；5 PASS、0 WARN、0 FAIL。Pillow 的 API 淘汰提示不是 sprite WARN。
+
+```text
+C:\Users\cona0\Desktop\teacher-dashboard-repo\assets\pet\v3\check_sprites.py:80: DeprecationWarning: Image.Image.getdata is deprecated and will be removed in Pillow 14 (2027-10-15). Use get_flattened_data instead.
+  magenta = sum(1 for r, g, b, a in fr.getdata() if a >= 32 and is_magenta(r, g, b))
+[PASS] idle（6 格）
+[PASS] drag（6 格）
+[PASS] sleep（6 格）
+[PASS] warning（8 格）
+[PASS] greet（8 格）
+預覽：C:\Users\cona0\Desktop\teacher-dashboard-repo\assets\pet\v3\_preview\overview.png
+
+結果：5/5 通過
+```
+
+僅更新指定五張 sheets、其 raw／備份與本文件。無應用程式、資料契約、權限、安裝或部署變更。未 push、未合併。
+
+---
+
 # 交件說明：phase 1（2026-09-28）
 
 分支：`codex/pet-sprites-v3-phase1`。本次只交圖與整理工具，不接桌寵程式。
