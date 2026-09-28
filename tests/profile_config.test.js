@@ -598,3 +598,9 @@ assert.match(fs.readFileSync(path.join(__dirname, '..', 'assets', 'version.js'),
 // 使用說明選單：部署方法／系統使用方法／網頁介紹
 assert.match(indexHtml, /id="helpMenuButton"/, "工作台應有使用說明按鈕");
 ['Install.html', 'About.html', 'Intro.html'].forEach(name => assert.match(indexHtml, new RegExp('class="help-card" href="' + name.replace('.', '\.') + '"'), '使用說明應連到 ' + name));
+
+// 2026-09-28 減重版版面：標頭降高、指標列、工具箱分組、篩選預設收合、緊湊模式、小字 ≥ 11px
+assert.match(indexHtml, /class="toolbox-group-label">溝通</, "工具箱應分組");
+assert.match(indexHtml, /function setFilterPanelOpen/, "篩選欄應可收合並記住狀態");
+assert.match(indexHtml, /id="compactToggleButton"/, "應有緊湊模式");
+assert.doesNotMatch(indexHtml.slice(indexHtml.indexOf('<style>'), indexHtml.indexOf('</style>')), /font-size:\s*(?:9|10|10\.5)px/, "樣式表不得再有 9–10.5px 小字");
