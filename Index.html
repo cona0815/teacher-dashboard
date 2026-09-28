@@ -1946,10 +1946,10 @@
       </div>
       <div class="settings-tabs" role="tablist" aria-label="設定分類">
         <button class="settings-tab active" type="button" role="tab" aria-selected="true" data-settings-tab="teacher">教師資訊</button>
-        <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="privacy">敏感資料</button>
-        <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="api">AI 設定</button>
+        <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="linebot">① 雲端／LINE 小幫手</button>
+        <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="api">② AI 設定</button>
         <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="pet">小綿助</button>
-        <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="linebot">LINE 小幫手</button>
+        <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="privacy">敏感資料</button>
         <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="backup">備份與還原</button>
         <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="security">資料與資安</button>
         <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="license">授權</button>
@@ -2008,7 +2008,7 @@
       </section>
 
       <section class="settings-panel" data-settings-panel="api">
-        <p class="settings-note">開啟後才會顯示「AI 行政助理」版面。送出前請先檢查去識別化預覽；API 金鑰只保存在這台電腦的目前瀏覽器，不會寫入 GitHub 或備份檔。</p>
+        <p class="settings-note"><strong>難度 2</strong>：只要一把 🔑E（<a class="settings-link" href="Install.html#tier2" target="_blank" rel="noopener">安裝教學難度 2</a>，約 3 分鐘）。開啟後才會顯示「AI 行政助理」版面。送出前請先檢查去識別化預覽；API 金鑰只保存在這台電腦的目前瀏覽器，不會寫入 GitHub 或備份檔。</p>
         <label class="check-row" style="margin-bottom:14px"><input type="checkbox" id="aiEnabled">開啟 AI 功能</label>
         <p style="margin:0 0 14px;font-size:12px">沒有金鑰？前往 <a class="settings-link" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio 申請 Gemini API 金鑰</a>。Google 提供部分模型的免費用量，仍受當時的配額與服務條款限制。</p>
         <div class="form-grid" style="padding:0">
@@ -2037,7 +2037,7 @@
             <div class="api-secret-note">⚠ 網站安全政策目前只預先放行 Gemini／OpenAI／Grok 官方網域；其他自訂網域可能被瀏覽器擋下。</div>
           </div>
           <div class="field field-wide">
-            <label for="apiKey">🔑E API 金鑰＝教學裡的「AI 金鑰」　<a href="Install.html#part2" target="_blank" rel="noopener" style="font-weight:600">如何取得？📖</a></label>
+            <label for="apiKey">🔑E API 金鑰＝教學裡的「AI 金鑰」　<a href="Install.html#tier1" target="_blank" rel="noopener" style="font-weight:600">如何取得？📖</a></label>
             <input class="input" id="apiKey" type="password" autocomplete="off" placeholder="貼上 🔑E（選 Gemini 時，與 LINE 小幫手指令碼屬性的 GEMINI_API_KEY 是同一把，可共用）">
             <label class="check-row" style="margin-top:8px"><input type="checkbox" id="rememberApiKey" checked>記住在這台電腦的目前瀏覽器（關閉後不用重打）</label>
             <div class="api-secret-note">金鑰不會放進備份檔或 GitHub。共用電腦請取消勾選，金鑰便只保留到關閉此瀏覽器分頁。</div>
@@ -2100,15 +2100,15 @@
       </section>
 
       <section class="settings-panel" data-settings-panel="linebot">
-        <p class="settings-note">LINE 小幫手是選用功能：在 LINE 隨手傳文字、語音或照片，訊息會先進工作台的「LINE 收件匣」，由你確認後才建立任務或記事。不設定時，工作台與桌面小綿助完全不受影響。需要自行部署一份 Google Apps Script（免費），資料留在你自己的 Google 帳號。</p>
+        <p class="settings-note"><strong>難度 1（雲端大腦）</strong>：照<a class="settings-link" href="Install.html#tier1" target="_blank" rel="noopener">安裝教學難度 1</a>複製一份 Google 程式後，這裡只要填 🌐 與 🔑C，就能用晨間大屏、雲端聯絡本、Google 日曆／Tasks／表單／雲端硬碟。<strong>難度 3（LINE）</strong>的設定在 LINE 與 Google 那邊做，這裡不用填 🔑A；做完後 LINE 訊息會進「LINE 收件匣」由你確認再建立。不設定時，工作台與桌面小綿助完全不受影響。</p>
         <label class="check-row" style="margin-bottom:14px"><input type="checkbox" id="lineBridgeEnabled">啟用 LINE 小幫手同步</label>
         <div class="form-grid" style="padding:0">
           <div class="field field-wide">
-            <label for="lineGasUrl">🌐 Apps Script 部署網址（/exec 結尾）＝教學裡的「🌐 機器人網址」　<a href="Install.html#part2" target="_blank" rel="noopener" style="font-weight:600">還沒有？看申請教學 📖</a></label>
+            <label for="lineGasUrl">🌐 Apps Script 部署網址（/exec 結尾）＝教學裡的「🌐 機器人網址」　<a href="Install.html#tier1" target="_blank" rel="noopener" style="font-weight:600">還沒有？看難度 1 教學 📖</a></label>
             <input class="input" id="lineGasUrl" type="url" autocomplete="off" placeholder="貼上 🌐 機器人網址：https://script.google.com/macros/s/……/exec">
           </div>
           <div class="field field-wide">
-            <label for="lineSyncToken">🔑C 同步金鑰＝教學裡的「工作台同步金鑰」（執行 setupLineBot 後取得）　<a href="Install.html#part2" target="_blank" rel="noopener" style="font-weight:600">如何取得？📖</a></label>
+            <label for="lineSyncToken">🔑C 同步金鑰＝教學裡的「工作台同步金鑰」（執行 setupLineBot 後取得）　<a href="Install.html#tier1" target="_blank" rel="noopener" style="font-weight:600">如何取得？📖</a></label>
             <input class="input" id="lineSyncToken" type="password" autocomplete="off" placeholder="貼上 🔑C（LINE_SYNC_TOKEN，不是教室金鑰 🔑D）">
             <label class="check-row" style="margin-top:8px"><input type="checkbox" id="rememberLineSyncToken" checked>記住在這台電腦的目前瀏覽器</label>
             <div class="api-secret-note">同步金鑰與網址不會放進 JSON 備份或 GitHub。共用電腦請取消勾選，金鑰便只保留到關閉此瀏覽器分頁。</div>

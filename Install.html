@@ -22,6 +22,13 @@
     h2 { color:var(--primary-strong); font-size:22px; margin-bottom:6px; }
     h3 { color:var(--primary-strong); font-size:17px; margin:18px 0 6px; }
     .lead { color:var(--muted); font-size:14px; margin-bottom:10px; }
+    .tier-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:12px; margin:14px 0 22px; }
+    .tier-card { display:block; border:2px solid var(--line); border-radius:14px; padding:14px 16px; background:#fff; text-decoration:none; color:inherit; transition:.12s; }
+    .tier-card:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(30,50,40,.12); }
+    .tier-card b { display:block; font-size:17px; margin-bottom:6px; }
+    .tier-card .meta { display:block; font-size:13px; color:var(--muted); line-height:1.5; }
+    .tier-card.t1 { border-color:#5fa87f; } .tier-card.t2 { border-color:#d8a33a; } .tier-card.t3 { border-color:#d46a5a; }
+    .tier-title { margin-top:36px; padding-top:16px; border-top:3px dashed var(--line); }
     .step { display:flex; gap:12px; margin:14px 0; }
     .step-no { flex:0 0 34px; height:34px; border-radius:50%; background:var(--primary); color:#fff; font-weight:900; font-size:17px; display:flex; align-items:center; justify-content:center; margin-top:3px; }
     .step-body { min-width:0; flex:1; }
@@ -67,7 +74,7 @@
   <nav class="toc"><div class="wrap">
     <a href="#part0">先看這裡</a>
     <a href="#part1">A. 工作台</a>
-    <a href="#part2">B. LINE 小幫手</a>
+    <a href="#part2">B. 雲端設定（三種難度）</a>
     <a href="#part3">C. 晨間大屏</a>
     <a href="#part4">D. 每天怎麼用</a>
     <a href="#part5">E. 疑難排解</a>
@@ -79,16 +86,18 @@
 
   <main>
     <section id="part0">
-      <h2>🧭 先看這裡：整套系統有三層，用多少裝多少</h2>
+      <h2>🧭 先看這裡：先用免設定的工作台，再照「難度」挑要不要往下裝</h2>
       <table>
-        <tr><th>層級</th><th>要裝什麼</th><th>能做什麼</th></tr>
-        <tr><td>① 工作台網頁</td><td><strong>什麼都不用裝</strong>，開網址就能用</td><td>任務清單、日曆、教學進度排課、記事、JSON 備份</td></tr>
-        <tr><td>② 晨間大屏</td><td>需要先完成 B（因為要雲端同步）</td><td>教室電腦點名、收作業、黑板聯絡本、統計報表</td></tr>
-        <tr><td>③ LINE 小幫手</td><td>照本頁 B 部分部署一次（約 40–60 分鐘，只做一次）</td><td>LINE 傳文字／語音／照片建任務、寫聯絡本、每日簡報、家長訊息草稿</td></tr>
+        <tr><th>層級</th><th>要做什麼</th><th>能做什麼</th></tr>
+        <tr><td>Part A 工作台網頁</td><td><strong>什麼都不用裝</strong>，開網址就能用</td><td>任務清單、日曆、教學進度排課、記事、JSON 備份、教材小工場的本機工具</td></tr>
+        <tr><td>Part B 🟢 難度 1 雲端大腦（GAS）</td><td>按按鈕複製一份程式到自己的 Google，約 15 分鐘</td><td>晨間大屏（點名、收作業、聯絡本、統計）、雲端備份、Google 日曆／Tasks／表單／雲端硬碟、小綿助直連</td></tr>
+        <tr><td>Part B 🟡 難度 2 AI 金鑰</td><td>到 Google AI Studio 申請一串字，約 3 分鐘</td><td>AI 行政助理、訊息整合站、教材小工場 AI 工具、小綿助語音輸入</td></tr>
+        <tr><td>Part B 🔴 難度 3 LINE 小幫手</td><td>LINE 官方後台設定，約 30 分鐘（需先完成難度 1）</td><td>LINE 傳文字／語音／照片建任務、晨間回報推播、家長訊息草稿、大屏提示遙控</td></tr>
+        <tr><td>Part C 晨間大屏</td><td>教室電腦開網址、填 🌐＋🔑D，10 分鐘（需難度 1）</td><td>教室觸控點名、收作業、黑板聯絡本、班級工具</td></tr>
       </table>
       <div class="ok">
         🧑‍🏫 <strong>新手只要記得兩件事：</strong><br>
-        ① 照 <strong>A → B → C</strong> 的順序做，每一步都會告訴你「按什麼、會看到什麼」。<br>
+        ① 先做 <strong>A</strong>，再從 <strong>B 挑難度</strong>（建議 1 → 2 → 3，可以只做一個），最後 <strong>C</strong> 接大屏；每一步都會告訴你「按什麼、會看到什麼」。<br>
         ② 安裝途中會拿到幾串「金鑰」（一長串亂碼）——出現時<strong>複製到記事本、標上教學說的符號</strong>（🔑A、🔑B…）；之後每個要貼的欄位上都印著同樣符號，<strong>照符號貼就對了</strong>。
       </div>
       <details class="box">
@@ -153,18 +162,18 @@
         <strong>會用到的名詞（先有個印象就好）：</strong><br>
         ・<strong>Google 試算表</strong>＝像 Excel 的雲端表格，當作 LINE 訊息的「轉運倉庫」。<br>
         ・<strong>Apps Script（GAS）</strong>＝Google 提供的免費小程式空間，我們把「機器人的大腦」貼進去。<br>
-        ・<strong>金鑰</strong>＝一長串亂碼，功能像鑰匙：拿到鑰匙的人才能開門。本系統必要的有 4 把＋1 個網址，另有 1 把選用的 AI 金鑰（🔑E），全部用下面的符號標記。<strong>請把每一把都存進記事本並標上符號</strong>，之後每個要貼的欄位上都印著同樣符號，照著貼就對了。
+        ・<strong>金鑰</strong>＝一長串亂碼，功能像鑰匙：拿到鑰匙的人才能開門。難度 1 會拿到 3 把＋1 個網址（🔑B、🔑C、🔑D、🌐），難度 2 一把（🔑E），難度 3 一把（🔑A），全部用下面的符號標記。<strong>請把每一把都存進記事本並標上符號</strong>，之後每個要貼的欄位上都印著同樣符號，照著貼就對了。
       </div>
       <div class="box">
         <strong>🗝 符號對照表（超重要！設定畫面的欄位上印著一模一樣的符號，照著貼就對了）：</strong>
         <table>
           <tr><th>符號</th><th>這是什麼</th><th>哪裡取得</th><th>貼到哪裡</th></tr>
-          <tr><td><strong>🔑A</strong></td><td>Channel access token</td><td>Part B 第 1 關，LINE Developers 按 Issue 發行</td><td>Apps Script「指令碼屬性」的 <code>LINE_CHANNEL_ACCESS_TOKEN</code>（第 3 關）</td></tr>
-          <tr><td><strong>🔑B</strong></td><td>Webhook 驗證參數</td><td rowspan="3">Part B 第 2 關，執行 <code>setupLineBot</code> 後的「執行紀錄」（隨時可再執行查看）</td><td>接在機器人網址後面：<code>🌐?hook=🔑B</code>（第 5 關）</td></tr>
+          <tr><td><strong>🔑A</strong></td><td>Channel access token</td><td>難度 3 第 1 關，LINE Developers 按 Issue 發行</td><td>Apps Script「指令碼屬性」的 <code>LINE_CHANNEL_ACCESS_TOKEN</code>（難度 3 第 2 關）</td></tr>
+          <tr><td><strong>🔑B</strong></td><td>Webhook 驗證參數</td><td rowspan="3">難度 1 第 1 關，試算表選單「① 初始化」彈出的視窗（隨時可用「🔑 顯示我的金鑰」再看）</td><td>接在機器人網址後面：<code>🌐?hook=🔑B</code>（難度 3 第 3 關）</td></tr>
           <tr><td><strong>🔑C</strong></td><td>工作台同步金鑰（老師專用，可查歷史）</td><td>工作台「⚙ 設定 → LINE 小幫手 → <strong>🔑C 同步金鑰</strong>」欄；大屏「查詢統計」也用這把</td></tr>
           <tr><td><strong>🔑D</strong></td><td>教室大屏金鑰（教室專用，只能報當天）</td><td>大屏「⚙ 設定 → <strong>🔑D 教室大屏金鑰</strong>」欄（教室電腦只放這把）</td></tr>
-          <tr><td><strong>🌐</strong></td><td>機器人網址（/exec 結尾）</td><td>Part B 第 4 關，部署後產生的網頁應用程式 URL</td><td>工作台與大屏的「<strong>🌐 Apps Script 部署網址</strong>」欄，以及第 5 關的 Webhook URL</td></tr>
-          <tr><td><strong>🔑E</strong></td><td>AI 金鑰（選用，Gemini API）</td><td><a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a> 免費申請</td><td>兩處共用同一把：Apps Script「指令碼屬性」的 <code>GEMINI_API_KEY</code>（第 3 關，讓 LINE 能聽語音、看照片）＋工作台「⚙ 設定 → AI 設定 → <strong>🔑E API 金鑰</strong>」欄（開啟 AI 行政助理）</td></tr>
+          <tr><td><strong>🌐</strong></td><td>機器人網址（/exec 結尾）</td><td>難度 1 第 2 關，部署後產生的網頁應用程式 URL</td><td>工作台與大屏的「<strong>🌐 Apps Script 部署網址</strong>」欄，以及難度 3 第 3 關的 Webhook URL</td></tr>
+          <tr><td><strong>🔑E</strong></td><td>AI 金鑰（選用，Gemini API）</td><td><a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a> 免費申請</td><td>難度 2 申請；三處共用同一把：工作台「⚙ 設定 → ② AI 設定 → <strong>🔑E API 金鑰</strong>」欄、小綿助秘書頁「🎙 語音輸入」、（做了難度 3 才需要）Apps Script「指令碼屬性」的 <code>GEMINI_API_KEY</code></td></tr>
         </table>
       </div>
 
@@ -257,65 +266,17 @@
     </section>
 
     <section id="part2">
-      <h2>🅱 Part B：部署 LINE 小幫手（40–60 分鐘，一生只做一次）</h2>
-      <p class="lead">做完這部分，你會擁有一個「只聽你的話」的 LINE 機器人。過程有 7 關，每一關都很短。</p>
-      <figure class="diagram">
-        <svg viewBox="0 0 780 190" role="img" aria-label="Part B 七關流程：建立官方帳號、貼上程式、插入金鑰、部署、接上 LINE、鎖門、設定自動化">
-          <line x1="70" y1="52" x2="710" y2="52" stroke="#cddcd6" stroke-width="3"/>
-          <line x1="70" y1="140" x2="390" y2="140" stroke="#cddcd6" stroke-width="3"/>
-
-          <circle cx="70" cy="52" r="21" class="d-box-primary"/><text class="d-title" x="70" y="58" text-anchor="middle">1</text>
-          <text class="d-text" x="70" y="92" text-anchor="middle">建立官方帳號</text><text class="d-small" x="70" y="109" text-anchor="middle">拿到 🔑A</text>
-
-          <circle cx="230" cy="52" r="21" class="d-box-primary"/><text class="d-title" x="230" y="58" text-anchor="middle">2</text>
-          <text class="d-text" x="230" y="92" text-anchor="middle">一鍵副本</text><text class="d-small" x="230" y="109" text-anchor="middle">拿到 🔑B🔑C🔑D</text>
-
-          <circle cx="390" cy="52" r="21" class="d-box-primary"/><text class="d-title" x="390" y="58" text-anchor="middle">3</text>
-          <text class="d-text" x="390" y="92" text-anchor="middle">插進鑰匙</text><text class="d-small" x="390" y="109" text-anchor="middle">指令碼屬性</text>
-
-          <circle cx="550" cy="52" r="21" class="d-box-primary"/><text class="d-title" x="550" y="58" text-anchor="middle">4</text>
-          <text class="d-text" x="550" y="92" text-anchor="middle">部署</text><text class="d-small" x="550" y="109" text-anchor="middle">拿到 🌐 網址</text>
-
-          <circle cx="710" cy="52" r="21" class="d-box-primary"/><text class="d-title" x="710" y="58" text-anchor="middle">5</text>
-          <text class="d-text" x="710" y="92" text-anchor="middle">接上 LINE</text><text class="d-small" x="710" y="109" text-anchor="middle">🌐?hook=🔑B</text>
-
-          <circle cx="70" cy="140" r="21" class="d-box-primary"/><text class="d-title" x="70" y="146" text-anchor="middle">6</text>
-          <text class="d-text" x="70" y="180" text-anchor="middle">鎖門（我的ID）</text>
-
-          <circle cx="230" cy="140" r="21" class="d-box-primary"/><text class="d-title" x="230" y="146" text-anchor="middle">7</text>
-          <text class="d-text" x="230" y="180" text-anchor="middle">設定自動化</text>
-
-          <circle cx="390" cy="140" r="21" fill="#e3f6ec" stroke="#5fa87f" stroke-width="2"/><text class="d-title" x="390" y="147" text-anchor="middle">✅</text>
-          <text class="d-text" x="390" y="180" text-anchor="middle">傳「推播設定」驗收</text>
-        </svg>
-        <figcaption>第 5 關結束時機器人就會回話了；第 6、7 關是上鎖與排程，做完傳「推播設定」驗收。</figcaption>
-      </figure>
-
-      <h3>第 1 關：建立 LINE 官方帳號（＝機器人的身體）</h3>
-      <div class="box">
-        <strong>⚠️ 先搞清楚：這一關會用到 LINE 的「兩個」網站（會開成兩個分頁，來回跳是正常的）</strong>
-        <table>
-          <tr><th>標記</th><th>網站</th><th>它是什麼</th><th>在這裡做的事</th></tr>
-          <tr><td><strong style="color:#1d9e5f">🟩 網站①</strong></td><td><a href="https://developers.line.biz/console/" target="_blank" rel="noopener"><strong>developers.line.biz</strong></a><br>（Developers Console）</td><td>工程師後台</td><td>建 Provider、發行 🔑A、關自動回覆、掃 QR、（第 5 關）接 Webhook</td></tr>
-          <tr><td><strong style="color:#2273c9">🟦 網站②</strong></td><td><a href="https://manager.line.biz/" target="_blank" rel="noopener"><strong>manager.line.biz</strong></a><br>（官方帳號管理畫面）</td><td>店家後台</td><td>建立官方帳號、啟用 Messaging API</td></tr>
-        </table>
-        <span class="lead">迷路時看瀏覽器網址列開頭是 <code>developers</code>（🟩）還是 <code>manager</code>（🟦），再對照下面每一步開頭的標記。</span>
+      <h2>🅱 Part B：雲端設定，照難度三選（想用多少裝多少）</h2>
+      <p class="lead">Part A 之後的設定分成<strong>三個難度，各自獨立，可以只做其中一個</strong>；只有難度 3（LINE）要先做完難度 1。建議順序 1 → 2 → 3，每一段做完都有「✅ 完成」的驗收。</p>
+      <div class="tier-cards">
+        <a class="tier-card t1" href="#tier1"><b>🟢 難度 1｜Google 雲端大腦（GAS）</b><span class="meta">約 15 分鐘・按按鈕複製一份程式，不用貼程式碼</span><span class="meta">拿到：🔑B 🔑C 🔑D 🌐</span><span class="meta">解鎖：晨間大屏、雲端聯絡本與備份、Google 日曆／Tasks／表單／雲端硬碟、小綿助直連</span></a>
+        <a class="tier-card t2" href="#tier2"><b>🟡 難度 2｜AI 金鑰（Gemini）</b><span class="meta">約 3 分鐘・申請一串字貼進設定</span><span class="meta">拿到：🔑E</span><span class="meta">解鎖：AI 行政助理、訊息整合站、教材小工場、小綿助語音輸入</span></a>
+        <a class="tier-card t3" href="#tier3"><b>🔴 難度 3｜LINE 小幫手</b><span class="meta">約 30 分鐘・要在 LINE 官方後台來回設定・需先完成難度 1</span><span class="meta">拿到：🔑A</span><span class="meta">解鎖：LINE 傳文字／語音／照片建任務、晨間回報推播、家長訊息草稿、大屏提示遙控</span></a>
       </div>
-      <div class="step"><div class="step-no">1</div><div class="step-body"><strong style="color:#1d9e5f">🟩 網站①</strong>｜用電腦開 <a href="https://developers.line.biz/console/" target="_blank" rel="noopener">developers.line.biz/console</a> → 點「Log in with LINE account」，用你手機 LINE 的帳號密碼登入。<br><span class="lead">（登不進去？手機 LINE → 設定 → 帳號，先設定 Email 與密碼。）</span></div></div>
-      <div class="step"><div class="step-no">2</div><div class="step-body"><strong style="color:#1d9e5f">🟩 網站①</strong>｜左側「Providers」→ 按綠色「<strong>Create</strong>」→ 名稱隨便打（例：<code>我的教師工具</code>）→ Create。</div></div>
-      <div class="step"><div class="step-no">3</div><div class="step-body"><strong style="color:#1d9e5f">🟩 網站①</strong>｜點「<strong>Create a Messaging API channel</strong>」→ 頁面會告訴你「無法直接建立」→ 按綠色「<strong>Create a LINE Official Account</strong>」→ 這時會<strong>開新分頁跳到 🟦 網站②</strong>。</div></div>
-      <div class="step"><div class="step-no">4</div><div class="step-body"><strong style="color:#2273c9">🟦 網站②</strong>｜填「建立LINE官方帳號」表單：<br>・帳號名稱：例如 <code>班級小幫手</code>（學生家長看到的名字）<br>・電子郵件：你的 Email<br>・業種：選「<strong>學校</strong>」→「<strong>小學</strong>」<br>・其他照預設 → 同意條款 → 按「確定」。</div></div>
-      <div class="step"><div class="step-no">5</div><div class="step-body"><strong style="color:#2273c9">🟦 網站②</strong>｜完成頁會問要不要認證帳號 → 按下面的「<strong>稍後進行認證（前往管理畫面）</strong>」就好（<strong>不需要</strong>申請認證，免費一般帳號就夠用）。</div></div>
-      <div class="step"><div class="step-no">6</div><div class="step-body"><strong style="color:#2273c9">🟦 網站②</strong>｜在管理畫面右上「<strong>設定</strong>」→ 左側「<strong>Messaging API</strong>」→ 按「<strong>啟用</strong>」→ 選你第 2 步建立的 Provider（我的教師工具）→ 確定。</div></div>
-      <div class="step"><div class="step-no">7</div><div class="step-body">
-        <strong style="color:#1d9e5f">🟩 網站①</strong>｜切回 <a href="https://developers.line.biz/console/" target="_blank" rel="noopener">Developers Console</a> 的分頁，點進你的 Provider，會看到剛誕生的 channel → 點進去 → 上方「<strong>Messaging API</strong>」分頁，做三件事：<br>
-        ① 捲到最下面「Channel access token」按「<strong>Issue（發行）</strong>」→ 出現一大串字 → 複製到記事本，標記 <strong>🔑A</strong>。<br>
-        ② 「LINE Official Account features」區：把「自動回覆訊息」和「加入好友的歡迎訊息」都<strong>停用</strong>（點 Edit 進去關）。<br>
-        ③ 用手機 LINE「加入好友 → 行動條碼」掃這頁的 QR Code，把機器人加為好友。
-      </div></div>
-      <div class="ok">✅ LINE 這邊先告一段落（記事本裡應該有 🔑A）。第 4 關拿到機器人網址後，會再回來這裡接上 Webhook（第 5 關）——分兩段是因為 Webhook 要填的網址，得等部署後才會誕生。</div>
 
-      <h3>第 2 關：一鍵建立試算表副本（＝機器人的大腦）</h3>
+      <h2 id="tier1" class="tier-title">🟢 難度 1：Google 雲端大腦（GAS）— 約 15 分鐘，不碰程式碼</h2>
+      <p class="lead">三關：一鍵複製試算表副本 → 部署拿到 🌐 → 工作台貼上 🌐＋🔑C。全部在你自己的 Google 帳號裡完成（建議用<strong>個人 Gmail</strong>，學校帳號可能被管理員限制）。</p>
+      <h3 id="tier1-1">第 1 關：一鍵建立試算表副本（＝你的雲端大腦）</h3>
       <p class="lead">程式已經預先裝在範本試算表裡——點下方按鈕複製一份到你自己的 Google 雲端硬碟，<strong>完全不用貼任何程式碼</strong>。（建議用<strong>個人 Gmail</strong> 登入，學校帳號可能被管理員限制）</p>
       <p style="text-align:center;margin:20px 0">
         <a href="https://docs.google.com/spreadsheets/d/1mP1N5VOtHnaiZAVlAJ5KATyY0G4EyQ50x6vMzR1j5UU/copy" target="_blank" rel="noopener" style="display:inline-block;background:#1d9e5f;color:#fff;font-size:19px;font-weight:900;padding:14px 32px;border-radius:14px;text-decoration:none;box-shadow:0 3px 10px rgba(20,80,50,.3)">📄 點此一鍵建立試算表副本（直接複製）</a>
@@ -335,26 +296,64 @@
         <div class="step"><div class="step-no">3</div><div class="step-body">函式下拉選單選 <code>setupLineBot</code> → 按「執行」→ 完成授權（進階 → 前往 → 允許）→ 下方「執行紀錄」抄下 🔑B、🔑C、🔑D。</div></div>
       </details>
 
-      <h3>第 3 關：把鑰匙插進去（指令碼屬性）</h3>
-      <div class="step"><div class="step-no">1</div><div class="step-body">在你的副本試算表上方選單「<strong>擴充功能 → Apps Script</strong>」開啟程式編輯器（這是整個安裝中少數要進編輯器的時刻）→ 左側點齒輪「<strong>專案設定</strong>」→ 捲到最下面「<strong>指令碼屬性</strong>」→「新增指令碼屬性」，逐筆加入：
-        <table>
-          <tr><th>屬性（照抄）</th><th>值</th></tr>
-          <tr><td><code>LINE_CHANNEL_ACCESS_TOKEN</code></td><td>貼 🔑A（第 1 關那串最長的）</td></tr>
-          <tr><td><code>GEMINI_API_KEY</code></td><td>貼 <strong>🔑E</strong>（選填。到 <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a> 免費申請，記事本標為 🔑E。不填也能用，但語音、照片、自然語言分類會停用；同一把之後也貼進工作台「AI 設定」開啟 AI 行政助理）</td></tr>
-        </table>
-        按「儲存指令碼屬性」。（還有一個 <code>LINE_ALLOWED_USER_IDS</code> 留到第 6 關。）
-      </div></div>
-
-      <h3>第 4 關：部署（＝把機器人開機）</h3>
+      <h3>第 2 關：部署（＝把大腦開機，拿到 🌐 網址）</h3>
       <div class="step"><div class="step-no">1</div><div class="step-body">右上「<strong>部署 → 新增部署</strong>」→ 點左邊齒輪 ⚙ 選「<strong>網頁應用程式</strong>」。</div></div>
       <div class="step"><div class="step-no">2</div><div class="step-body">設定兩項：執行身分「<strong>我</strong>」、具有存取權的使用者「<strong>任何人</strong>」（⚠ 一定要選任何人，安全由亂數金鑰把關）→ 按「部署」。</div></div>
       <div class="step"><div class="step-no">3</div><div class="step-body">複製產生的「<strong>網頁應用程式 URL</strong>」（<code>https://script.google.com/macros/s/…/exec</code> 結尾）＝ <strong>🌐 你的機器人網址</strong>，存到記事本。<br><span class="lead">✔ 檢查：把這網址貼到瀏覽器打開，看到 <code>{"ok":true,…}</code> 就代表機器人活著。</span><br><span class="lead">🔁 以後更新程式：要用「部署 → 管理部署 → ✏️ 編輯 → 版本選『新版本』→ 部署」，網址才不會變。</span></div></div>
 
-      <h3>第 5 關：接上 LINE（Webhook）</h3>
+      <h3>第 3 關：把工作台接上（🌐＋🔑C）</h3>
+      <div class="step"><div class="step-no">1</div><div class="step-body">回工作台網頁 →「⚙ 設定 → <strong>① 雲端／LINE 小幫手</strong>」→ 勾「啟用」→ 「<strong>🌐 Apps Script 部署網址</strong>」欄貼 🌐、「<strong>🔑C 同步金鑰</strong>」欄貼 🔑C（欄位上印著同樣符號，照符號貼就對了）→ 按「<strong>測試連線</strong>」→ 成功後按「<strong>立即同步</strong>」。</div></div>
+      <div class="ok">✅ <strong>難度 1 完成！</strong>工作台多出「聯絡本」按鈕；任務可一鍵加 Google 日曆、記事可同步 Google Tasks、AI 可直接建 Google 表單、檔案可歸檔到雲端硬碟。接著到 <a href="#part3">Part C</a> 用同一個 🌐＋🔑D 把教室大屏接上。想在 LINE 上用，再做難度 3。</div>
+
+      <h2 id="tier2" class="tier-title">🟡 難度 2：AI 金鑰 🔑E（Gemini）— 約 3 分鐘，只是申請一串字</h2>
+      <p class="lead">解鎖：工作台「AI 行政助理」（PDF／訊息拆成任務與記事）、「訊息整合站」、教材小工場全部 AI 工具（學習單、作文批改、海報生圖、圖像簡報…）、小綿助語音輸入。做了難度 3 的話，同一把也讓 LINE 聽得懂語音與照片。<strong>不需要難度 1</strong>，工作台開著就能用。</p>
+      <div class="step"><div class="step-no">1</div><div class="step-body"><strong class="t">申請金鑰</strong><br>開 <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">aistudio.google.com/app/apikey</a> → 用 Google 帳號登入 → 「<strong>Create API key</strong>」→ 複製那串 <code>AIza</code> 開頭的字 → 存到記事本，標記 <strong>🔑E</strong>。<br><span class="lead">免費額度就夠一般老師使用；金鑰等於你的 Google 帳號額度，不要貼給別人。</span></div></div>
+      <div class="step"><div class="step-no">2</div><div class="step-body"><strong class="t">貼進工作台</strong><br>工作台「⚙ 設定 → <strong>② AI 設定（🔑E）</strong>」→ 勾「開啟 AI 功能」→ AI 服務選 <strong>Google Gemini</strong> → 「🔑E API 金鑰」欄貼上 → 按「🔄 取得清單」選一個 Flash 模型 → 儲存。<br><span class="lead">✔ 檢查：教師工具箱出現「AI 行政助理」按鈕；教材小工場左上顯示「🔑 已沿用工作台的 Gemini 金鑰」。</span></div></div>
+      <div class="step"><div class="step-no">3</div><div class="step-body"><strong class="t">（選用）貼進小綿助，按住說話就出字</strong><br>雙擊桌面上的小綿助 → 秘書頁「🎙 語音輸入 → ⚙ 設定」貼同一把 🔑E → 儲存。之後任何程式按住右 Ctrl 說話、放開就貼上整理好的繁體中文。</div></div>
+      <div class="step"><div class="step-no">4</div><div class="step-body"><strong class="t">（做了難度 3 才需要）貼進 LINE 小幫手</strong><br>Apps Script「指令碼屬性」新增 <code>GEMINI_API_KEY</code>＝🔑E（見難度 3 第 2 關），LINE 就能聽語音、看照片。</div></div>
+      <div class="ok">✅ <strong>難度 2 完成！</strong>AI 只在你按下「分析」「生成」時才呼叫，送出前工作台會先去識別化；金鑰只存在這台電腦的瀏覽器（與小綿助資料檔），不進備份、不進 GitHub。</div>
+
+      <h2 id="tier3" class="tier-title">🔴 難度 3：LINE 小幫手 — 約 30 分鐘，需先完成難度 1</h2>
+      <p class="lead">五關：建立 LINE 官方帳號拿 🔑A → 插進指令碼屬性 → 用難度 1 的 🌐 接上 Webhook → 鎖門 → 自動化與驗收。LINE 的兩個後台網站會來回跳，每一步開頭都標了 🟩／🟦。</p>
+      <h3 id="tier3-1">第 1 關：建立 LINE 官方帳號（＝機器人的身體）</h3>
+      <div class="box">
+        <strong>⚠️ 先搞清楚：這一關會用到 LINE 的「兩個」網站（會開成兩個分頁，來回跳是正常的）</strong>
+        <table>
+          <tr><th>標記</th><th>網站</th><th>它是什麼</th><th>在這裡做的事</th></tr>
+          <tr><td><strong style="color:#1d9e5f">🟩 網站①</strong></td><td><a href="https://developers.line.biz/console/" target="_blank" rel="noopener"><strong>developers.line.biz</strong></a><br>（Developers Console）</td><td>工程師後台</td><td>建 Provider、發行 🔑A、關自動回覆、掃 QR、（第 3 關）接 Webhook</td></tr>
+          <tr><td><strong style="color:#2273c9">🟦 網站②</strong></td><td><a href="https://manager.line.biz/" target="_blank" rel="noopener"><strong>manager.line.biz</strong></a><br>（官方帳號管理畫面）</td><td>店家後台</td><td>建立官方帳號、啟用 Messaging API</td></tr>
+        </table>
+        <span class="lead">迷路時看瀏覽器網址列開頭是 <code>developers</code>（🟩）還是 <code>manager</code>（🟦），再對照下面每一步開頭的標記。</span>
+      </div>
+      <div class="step"><div class="step-no">1</div><div class="step-body"><strong style="color:#1d9e5f">🟩 網站①</strong>｜用電腦開 <a href="https://developers.line.biz/console/" target="_blank" rel="noopener">developers.line.biz/console</a> → 點「Log in with LINE account」，用你手機 LINE 的帳號密碼登入。<br><span class="lead">（登不進去？手機 LINE → 設定 → 帳號，先設定 Email 與密碼。）</span></div></div>
+      <div class="step"><div class="step-no">2</div><div class="step-body"><strong style="color:#1d9e5f">🟩 網站①</strong>｜左側「Providers」→ 按綠色「<strong>Create</strong>」→ 名稱隨便打（例：<code>我的教師工具</code>）→ Create。</div></div>
+      <div class="step"><div class="step-no">3</div><div class="step-body"><strong style="color:#1d9e5f">🟩 網站①</strong>｜點「<strong>Create a Messaging API channel</strong>」→ 頁面會告訴你「無法直接建立」→ 按綠色「<strong>Create a LINE Official Account</strong>」→ 這時會<strong>開新分頁跳到 🟦 網站②</strong>。</div></div>
+      <div class="step"><div class="step-no">4</div><div class="step-body"><strong style="color:#2273c9">🟦 網站②</strong>｜填「建立LINE官方帳號」表單：<br>・帳號名稱：例如 <code>班級小幫手</code>（學生家長看到的名字）<br>・電子郵件：你的 Email<br>・業種：選「<strong>學校</strong>」→「<strong>小學</strong>」<br>・其他照預設 → 同意條款 → 按「確定」。</div></div>
+      <div class="step"><div class="step-no">5</div><div class="step-body"><strong style="color:#2273c9">🟦 網站②</strong>｜完成頁會問要不要認證帳號 → 按下面的「<strong>稍後進行認證（前往管理畫面）</strong>」就好（<strong>不需要</strong>申請認證，免費一般帳號就夠用）。</div></div>
+      <div class="step"><div class="step-no">6</div><div class="step-body"><strong style="color:#2273c9">🟦 網站②</strong>｜在管理畫面右上「<strong>設定</strong>」→ 左側「<strong>Messaging API</strong>」→ 按「<strong>啟用</strong>」→ 選你第 2 步建立的 Provider（我的教師工具）→ 確定。</div></div>
+      <div class="step"><div class="step-no">7</div><div class="step-body">
+        <strong style="color:#1d9e5f">🟩 網站①</strong>｜切回 <a href="https://developers.line.biz/console/" target="_blank" rel="noopener">Developers Console</a> 的分頁，點進你的 Provider，會看到剛誕生的 channel → 點進去 → 上方「<strong>Messaging API</strong>」分頁，做三件事：<br>
+        ① 捲到最下面「Channel access token」按「<strong>Issue（發行）</strong>」→ 出現一大串字 → 複製到記事本，標記 <strong>🔑A</strong>。<br>
+        ② 「LINE Official Account features」區：把「自動回覆訊息」和「加入好友的歡迎訊息」都<strong>停用</strong>（點 Edit 進去關）。<br>
+        ③ 用手機 LINE「加入好友 → 行動條碼」掃這頁的 QR Code，把機器人加為好友。
+      </div></div>
+      <div class="ok">✅ LINE 這邊先告一段落（記事本裡應該有 🔑A）。第 3 關會再回來這裡接上 Webhook，用的是<strong>難度 1 第 2 關拿到的 🌐 機器人網址</strong>。</div>
+
+      <h3>第 2 關：把 🔑A 插進去（指令碼屬性）</h3>
+      <div class="step"><div class="step-no">1</div><div class="step-body">在你的副本試算表上方選單「<strong>擴充功能 → Apps Script</strong>」開啟程式編輯器（這是整個安裝中少數要進編輯器的時刻）→ 左側點齒輪「<strong>專案設定</strong>」→ 捲到最下面「<strong>指令碼屬性</strong>」→「新增指令碼屬性」，逐筆加入：
+        <table>
+          <tr><th>屬性（照抄）</th><th>值</th></tr>
+          <tr><td><code>LINE_CHANNEL_ACCESS_TOKEN</code></td><td>貼 🔑A（第 1 關那串最長的）</td></tr>
+          <tr><td><code>GEMINI_API_KEY</code></td><td>貼 <strong>🔑E</strong>（選填：<a href="#tier2">難度 2</a> 申請的那一把。不填也能用，但 LINE 的語音、照片辨識與自然語言分類會停用）</td></tr>
+        </table>
+        按「儲存指令碼屬性」。（還有一個 <code>LINE_ALLOWED_USER_IDS</code> 留到第 4 關。）
+      </div></div>
+
+      <h3>第 3 關：接上 LINE（Webhook）</h3>
       <div class="step"><div class="step-no">1</div><div class="step-body">
         <strong class="t">先在記事本把網址「拼」好（最容易出錯的一步，慢慢來）</strong><br>
         開記事本，照順序拼出一整串：<br>
-        ① 貼上 <strong>🌐 機器人網址</strong>（<code>…/exec</code> 結尾那串）<br>
+        ① 貼上 <strong>🌐 機器人網址</strong>（難度 1 第 2 關拿到、<code>…/exec</code> 結尾那串）<br>
         ② 緊接著打 <code>?hook=</code>（問號、h、o、o、k、等號，共 6 個字元）<br>
         ③ 緊接著貼上 <strong>🔑B</strong>（初始化彈窗裡「Webhook 驗證參數」那串亂碼）<br>
         拼好會長這樣（一整行、中間沒有任何空格或換行）：
@@ -377,11 +376,11 @@
       </div></div>
       <div class="step"><div class="step-no">5</div><div class="step-body">🎉 <strong>見證時刻</strong>：用手機對機器人傳「<code>說明</code>」→ 它會回你一整段使用說明。有回話就是全線打通了！<br><span class="lead">沒回話？最常見三個原因：①網址拼錯（回到第 1 步重拼）②「Use webhook」開關沒開 ③官方帳號的「自動回覆訊息」沒關（第 1 關第 7 步）。</span></div></div>
 
-      <h3>第 6 關：鎖門（只聽你的話）</h3>
+      <h3>第 4 關：鎖門（只聽你的話）</h3>
       <div class="step"><div class="step-no">1</div><div class="step-body">對機器人傳「<code>我的ID</code>」→ 它回一串 <code>U</code> 開頭的字 → 複製。</div></div>
       <div class="step"><div class="step-no">2</div><div class="step-body">回 Apps Script「指令碼屬性」新增：屬性 <code>LINE_ALLOWED_USER_IDS</code>、值＝那串 U 開頭的字。從此陌生人加這個機器人都不會有任何反應。</div></div>
 
-      <h3>第 7 關：設定自動化（點一下選單就好）</h3>
+      <h3>第 5 關：設定自動化與驗收（點一下選單就好）</h3>
       <div class="step"><div class="step-no">1</div><div class="step-body">回到你的試算表 → 上方選單「<strong>🤖 LINE 小幫手 → ③ 設定自動化排程（提醒／關懷）</strong>」。<br><span class="lead">（也可以在 Apps Script 編輯器選 <code>setupTriggers</code> 按「執行」，效果相同。）</span><br>
         自動建立 4 個排程：<strong>每日簡報備援</strong>（8–9 點，預設關閉）、<strong>未點名提醒</strong>（8:20 起智慧檢查）、<strong>下午整合推播</strong>（16–17 點，三項功能共用，預設全關）、<strong>每週家長關懷</strong>（週五下午）。<br>
         <span class="lead">⚠️ 若這是「更新程式碼後」再執行，會跳出授權畫面（因為新版要用到雲端硬碟備份功能）→ 一樣點「進階 → 前往…（不安全）→ 允許」即可。</span></div></div>
@@ -404,14 +403,10 @@
         <p class="lead">沒回應？請檢查：① 程式碼是否貼完整並存檔 ② 是否已重新「部署 → 管理部署 → 新版本」 ③ <code>LINE_ALLOWED_USER_IDS</code> 是否填了你自己的 ID——第 2 版起沒填時機器人會回覆你的 userId 請你填入，不會執行指令。</p>
       </div></div>
 
-      <h3>最後：把工作台接上機器人</h3>
-      <div class="step"><div class="step-no">1</div><div class="step-body">回工作台網頁 →「⚙ 設定 → <strong>LINE 小幫手</strong>」→ 勾「啟用」→ 「<strong>🌐 Apps Script 部署網址</strong>」欄貼 🌐、「<strong>🔑C 同步金鑰</strong>」欄貼 🔑C（欄位上印著同樣符號，照符號貼就對了）→ 按「<strong>測試連線</strong>」→ 成功後按「<strong>立即同步</strong>」。</div></div>
-      <div class="ok">✅ 完成！教師工具箱會出現「LINE 收件匣」與「聯絡本」按鈕。用手機傳「明天要收回條」再按立即同步，收件匣就有東西了。</div>
-
     </section>
 
     <section id="part3">
-      <h2>🅲 Part C：設置晨間大屏（教室電腦，10 分鐘）</h2>
+      <h2>🅲 Part C：設置晨間大屏（教室電腦，10 分鐘；需先完成難度 1）</h2>
       <div class="step"><div class="step-no">1</div><div class="step-body">
         <strong class="t">在教室電腦（接投影機或觸控大屏）開啟大屏網址</strong>
         <div class="copyrow"><code id="urlMorning">（載入中…）</code><button class="copy-btn" data-copy="#urlMorning">複製</button></div>
@@ -425,7 +420,7 @@
           <tr><td>科目管理／作業名稱</td><td>點亮要收作業的科目；不夠的自己新增</td></tr>
           <tr><td>四個時間</td><td>預設 08:00 遲到界線／08:05 未填轉未到／08:08 點名推播 LINE／08:40 作業推播 LINE，皆可自訂<br><span class="lead">（按「💾 存到雲端」只存資料不推播；每 5 分鐘與離開頁面時也會自動存）</span></td></tr>
           <tr><td>聯絡本字體</td><td>五種任選——一般：標準／粉圓／芫荽；注音：注音芫荽／注音粉圓。低年級選注音體，每個字旁邊自動標注音。第一次切換要等字型下載（約 4–9 MB），之後會快取</td></tr>
-          <tr><td>🌐 Apps Script 部署網址</td><td>貼 <strong>🌐</strong> 機器人網址（跟 Part B 同一個；欄位上印著 🌐 符號）</td></tr>
+          <tr><td>🌐 Apps Script 部署網址</td><td>貼 <strong>🌐</strong> 機器人網址（難度 1 第 2 關拿到的那個；欄位上印著 🌐 符號）</td></tr>
           <tr><td>🔑D 教室大屏金鑰</td><td>貼 <strong>🔑D</strong>（欄位上印著 🔑D 符號。⚠ 教室電腦只填這把，別填 🔑C——D 的權限只限當天回報，被學生玩到也拿不到你的資料）</td></tr>
         </table>
       </div></div>
@@ -449,7 +444,7 @@
         <strong class="t">（內建）🧰 班級工具——不用任何設定，點開就能用</strong>
         <p>大屏的「班級工具」分頁內建六個班級經營小工具：<strong>抽籤機</strong>（轉盤／扭蛋／抓娃娃，抽完不放回、可排除今日缺席）、<strong>檢核板</strong>（清點回條簽名）、<strong>計分板</strong>、<strong>隨機分組</strong>、<strong>安靜偵測</strong>、<strong>定評小幫手</strong>（考試日全螢幕大時鐘）。全部只存教室電腦、不進雲端統計。各工具的使用情境見<a href="About.html" target="_blank" rel="noopener">系統說明</a>。</p>
       </div></div>
-      <div class="ok">✅ 測一下：點幾個座號 → 點科目收作業 → 按「📤 送出」→ 你的手機 LINE 應該立刻收到晨間回報！</div>
+      <div class="ok">✅ 測一下：點幾個座號 → 點科目收作業 → 按「📤 送出」→ 工作台日曆會出現今日出缺摘要；做了難度 3 的話，手機 LINE 也會立刻收到晨間回報！</div>
     </section>
 
     <section id="part4">
@@ -560,7 +555,7 @@
           <tr><td><code>DRIVE_BACKUP_MAX_MB</code></td><td>單檔上限，預設 20（MB）</td></tr>
           <tr><td><code>CLASS_NOTES</code></td><td>代課包裡要附上的班級注意事項（選填）</td></tr>
         </table>
-        <span class="lead">⚠️ 此功能需要雲端硬碟權限：更新程式碼後第一次執行會再跳一次授權，照第 2 關第 5 步的方式允許即可。備份會佔用你 Google 帳號的免費容量（與 Gmail 共用 15GB）。</span>
+        <span class="lead">⚠️ 此功能需要雲端硬碟權限：更新程式碼後第一次執行會再跳一次授權，照難度 1 第 1 關第 3 步的方式允許即可。備份會佔用你 Google 帳號的免費容量（與 Gmail 共用 15GB）。</span>
       </div>
     </section>
 
@@ -614,7 +609,7 @@
       <h3>升級三步驟（原網址、原金鑰、原資料通通不變）</h3>
       <ol class="steps">
         <li><strong>網站免更新</strong>：網頁版會自動是最新版，重新整理（F5）就好。書籤、金鑰、本機資料全部照舊。</li>
-        <li><strong>更新 LINE 小幫手程式（有裝 B 部分的老師才要做）</strong>：
+        <li><strong>更新雲端大腦程式（有做難度 1 的老師才要做）</strong>：
           <ol>
             <li>開你的「line小幫手」試算表 → 擴充功能 → Apps Script</li>
             <li>按這顆按鈕取得最新程式碼：<br>
