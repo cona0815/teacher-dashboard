@@ -14,7 +14,7 @@
     {"name": "success", "phase": 1, "frames": 8, "loop": false, "ms": 110, "hop": true, "trigger": "任務完成、語音變任務、各種操作成功", "prompt": "stamps a round green check-mark stamp on a paper, then jumps up happily with sparkles"},
     {"name": "warning", "phase": 1, "frames": 8, "loop": false, "ms": 140, "hop": true, "trigger": "一般提醒、出錯時", "prompt": "fixed front view in every frame, small alert hop, a bold exclamation mark shape appears close above the tuft, ears perk up; crouch frames stay at least 85% of standing height, shallow hop"},
     {"name": "peek", "phase": 1, "frames": 6, "loop": false, "ms": 160, "hop": false, "free_scale": true, "free_center": true, "trigger": "走到螢幕邊緣探頭", "prompt": "only the head and front hooves peek in from the right edge of the frame, look around, then slide back out"},
-    {"name": "greet", "phase": 1, "frames": 8, "loop": false, "ms": 140, "hop": true, "trigger": "開機時的開場簡報", "prompt": "waves one front hoof hello, a small gold sun rises above the head, happy face"},
+    {"name": "greet", "phase": 1, "frames": 8, "loop": false, "ms": 140, "hop": true, "trigger": "開機時的開場簡報", "prompt": "waves hello with the same front hoof (its left front hoof) in every frame while the other front hoof stays down, happy face; a small gold sun rises gradually above the head across the frames instead of appearing suddenly"},
     {"name": "overdue", "phase": 1, "frames": 8, "loop": false, "ms": 140, "hop": true, "trigger": "任務逾期提醒", "prompt": "holds up a small desk calendar with one day circled in tomato red, worried face, small hop"},
 
     {"name": "idle_blink", "phase": 2, "frames": 6, "loop": false, "ms": 160, "hop": false, "trigger": "待機時隨機穿插", "prompt": "front 3/4 view, slow blink (eyes become short lines, then open), small head tilt"},
