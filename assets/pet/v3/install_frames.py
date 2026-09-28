@@ -6,8 +6,11 @@
 
 為什麼要統一大小：每張 sheet 在自己的 512 格裡已經置中對齊，但不同動作的
 縮放比例不同（頭上有太陽、驚嘆號的動作會被整組縮小），直接播放時切換動作
-會忽大忽小。這裡用「眼睛黑點的直徑」當尺，把每個動作縮放到同一個角色大小；
-閉眼的動作（sleep）改用頭上葉子的面積換算。
+會忽大忽小。這裡把每個動作縮放到同一個「身高」：
+- 站姿動作：量奶油色身體（頭頂到身體底）的高度。眼睛大小在每次生成間
+  會差 10～15%，用眼睛當尺會讓 idle 忽大忽小，所以站姿一律量身體。
+- 會變形的動作（spec 的 free_scale：drag、sleep、stretch、peek）：身體被拉長
+  或縮成一團，改用眼睛直徑（閉眼時用頭上葉子面積）換算成等效身高。
 
 輸出：assets/pet/frames/pet_<動作>/pet_<動作>_NN.png（512x512，alpha 只有 0／255）。
 由 Claude 維護；Codex 不需要執行。
@@ -96,6 +99,23 @@ def load_frames(action: dict) -> list[Image.Image]:
     return [sheet.crop((i * SIZE, 0, (i + 1) * SIZE, SIZE)) for i in range(action["frames"])]
 
 
+def body_height(frames: list[Image.Image]) -> float | None:
+    """奶油色身體的高度（排除葉子、臉、道具、白紙）。取 75 百分位，偏向站直的格子。"""
+    heights = []
+    for fr in frames:
+        small = fr.resize((MEASURE, MEASURE), Image.NEAREST)
+        px = small.load()
+        rows = [y for y in range(MEASURE) if any(
+            (lambda r, g, b, a: a > 128 and r > 215 and g > 200 and b > 180 and min(r, g, b) < 246 and r - b > 8)(*px[x, y])
+            for x in range(MEASURE))]
+        if rows:
+            heights.append((rows[-1] - rows[0]) * SIZE / MEASURE)
+    if not heights:
+        return None
+    heights.sort()
+    return heights[min(len(heights) - 1, int(len(heights) * 0.75))]
+
+
 def measure(frames: list[Image.Image]) -> tuple[float | None, float | None]:
     eyes = [d for fr in frames for d in eye_diameters(fr)]
     leaves = [v for v in (leaf_size(fr) for fr in frames) if v]
@@ -152,7 +172,7 @@ def transform(frame: Image.Image, scale: float, anchor, shift=(0, 0)) -> Image.I
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true")
-    ap.add_argument("--target-eye", type=float, default=19.0, help="統一的眼睛直徑（px，512 尺度）。預設 19：頭上有道具的 greet／warning 會受格子限制略小；填 0 則自動取全部都放得下的值")
+    ap.add_argument("--target-body", type=float, default=336.0, help="統一的身高（px，512 尺度）。預設 336＝約佔格子 66%%，桌寵 PET_SIZE 184 依此設定")
     args = ap.parse_args()
 
     actions = [a for a in SPEC["actions"] if (SHEETS / f"{a['name']}.png").exists()]
@@ -160,18 +180,26 @@ def main() -> int:
     for a in actions:
         frames = load_frames(a)
         eye, leaf = measure(frames)
-        info[a["name"]] = {"action": a, "frames": frames, "eye": eye, "leaf": leaf, "box": union_bbox(frames)}
+        body = None if a.get("free_scale") else body_height(frames)
+        info[a["name"]] = {"action": a, "frames": frames, "eye": eye, "leaf": leaf, "body": body, "box": union_bbox(frames)}
 
-    ratios = [v["leaf"] / v["eye"] for v in info.values() if v["eye"] and v["leaf"]]
-    leaf_per_eye = statistics.median(ratios) if ratios else 2.0
+    # 站姿動作的「身高／眼睛」「身高／葉子」比例，用來換算會變形的動作
+    standing = [v for v in info.values() if v["body"]]
+    body_per_eye = statistics.median([v["body"] / v["eye"] for v in standing if v["eye"]] or [17.0])
+    body_per_leaf = statistics.median([v["body"] / v["leaf"] for v in standing if v["leaf"]] or [8.5])
     for v in info.values():
-        v["size"] = v["eye"] or (v["leaf"] / leaf_per_eye if v["leaf"] else None)
+        if v["body"]:
+            v["size"], v["ruler"] = v["body"], "身體"
+        elif v["eye"]:
+            v["size"], v["ruler"] = v["eye"] * body_per_eye, "眼睛"
+        elif v["leaf"]:
+            v["size"], v["ruler"] = v["leaf"] * body_per_leaf, "葉子"
+        else:
+            v["size"], v["ruler"] = None, "無"
         v["fit"] = max_fit_scale(v["action"], v["box"])
 
-    # 自動目標：所有有尺寸的動作都能放進格子裡的最大眼睛直徑
-    feasible = [v["size"] * v["fit"] for v in info.values() if v["size"]]
-    target = args.target_eye or round(min(feasible), 1)  # 0 → 自動
-    print(f"葉子/眼睛比 {leaf_per_eye:.2f}；統一眼睛直徑 {target}px（512 尺度）")
+    target = args.target_body
+    print(f"身高/眼睛 {body_per_eye:.1f}、身高/葉子 {body_per_leaf:.2f}；統一身高 {target:.0f}px（512 尺度）")
 
     for name, v in info.items():
         a = v["action"]
@@ -183,8 +211,8 @@ def main() -> int:
         if name == "drag":
             cx, cy = (v["box"][0] + v["box"][2]) / 2, (v["box"][1] + v["box"][3]) / 2
             shift = (SIZE / 2 - cx, SIZE / 2 - cy)
-        final_eye = (v["size"] or 0) * scale
-        print(f"  {name:11s} 量到 {v['size'] and round(v['size'], 1)}px → 縮放 {scale:.3f} → {final_eye:.1f}px{'（受格子限制）' if capped else ''}")
+        final = (v["size"] or 0) * scale
+        print(f"  {name:11s} 用{v['ruler']}量 {v['size'] and round(v['size'])}px → 縮放 {scale:.3f} → {final:.0f}px{'（受格子限制）' if capped else ''}")
         if args.dry_run:
             continue
         out = FRAMES / f"pet_{name}"
