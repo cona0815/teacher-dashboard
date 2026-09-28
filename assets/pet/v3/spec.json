@@ -1,0 +1,31 @@
+{
+  "version": 3,
+  "frame_size": 512,
+  "baseline_y": 488,
+  "palette_props": ["#1F514A", "#7FB89A", "#D8A33A", "#D9573F", "#A9CFE8", "#FFFFFF"],
+  "common_prompt": "Use the uploaded sheep as the exact character reference: same proportions, cream color, kaomoji face (two black dot eyes and a small \"ω\" mouth), floppy ears, wool tuft and green leaf. Do not redesign it.\nCreate a sprite sheet: ONE horizontal row of N equal square frames, each frame 512x512, no gaps, no borders.\nThe sheep is centered and the same size in every frame (about 75% of frame height), feet always on the same baseline near the bottom. Props must stay inside the frame.\nFlat 2D vector, no outline, crisp hard edges, no motion blur, no glow, no semi-transparent shadows, no ground, no text, no letters, no numbers, no logos. Transparent background.\nProps use only these flat colors: deep green #1F514A, soft green #7FB89A, warm gold #D8A33A, tomato red #D9573F, pale blue #A9CFE8, white.\nAction (N = {frames}): {action_prompt}",
+  "actions": [
+    {"name": "idle", "phase": 1, "frames": 6, "loop": true, "ms": 200, "hop": false, "trigger": "平常待機", "prompt": "front 3/4 view, gentle breathing, body rises and falls slightly, leaf sways"},
+    {"name": "walk_right", "phase": 1, "frames": 8, "loop": true, "ms": 110, "hop": true, "trigger": "在桌面巡邏（朝左由 Claude 鏡像產生 walk_left）", "prompt": "side view facing right, happy bouncy walk, legs alternate, body bobs, ears flop"},
+    {"name": "drag", "phase": 1, "frames": 6, "loop": true, "ms": 125, "hop": true, "free_scale": true, "trigger": "滑鼠拖曳", "prompt": "lifted by the scruff, dangling in the air, legs swinging, surprised round \"o\" mouth"},
+    {"name": "sleep", "phase": 1, "frames": 6, "loop": true, "ms": 290, "hop": false, "free_scale": true, "trigger": "下班安靜時段、全螢幕投影上課時", "prompt": "curled into a round wool ball, eyes as short curved lines, a small \"z\" shape floats up and fades"},
+    {"name": "listen", "phase": 1, "frames": 6, "loop": true, "ms": 155, "hop": false, "trigger": "按住右 Ctrl／右 Alt 語音輸入錄音中", "prompt": "head tilted toward a small microphone, one ear raised, small sound-wave arcs near the ear"},
+    {"name": "think", "phase": 1, "frames": 8, "loop": true, "ms": 145, "hop": false, "trigger": "AI 或語音整理中、AI 行政助理分析中", "prompt": "shuffles and sorts a small stack of papers, looks up, three dots appear one by one above the head"},
+    {"name": "success", "phase": 1, "frames": 8, "loop": false, "ms": 110, "hop": true, "trigger": "任務完成、語音變任務、各種操作成功", "prompt": "stamps a round green check-mark stamp on a paper, then jumps up happily with sparkles"},
+    {"name": "warning", "phase": 1, "frames": 8, "loop": false, "ms": 140, "hop": true, "trigger": "一般提醒、出錯時", "prompt": "small alert hop, a bold exclamation mark shape appears above the head, ears perk up"},
+    {"name": "peek", "phase": 1, "frames": 6, "loop": false, "ms": 160, "hop": false, "free_scale": true, "free_center": true, "trigger": "走到螢幕邊緣探頭", "prompt": "only the head and front hooves peek in from the right edge of the frame, look around, then slide back out"},
+    {"name": "greet", "phase": 1, "frames": 8, "loop": false, "ms": 140, "hop": true, "trigger": "開機時的開場簡報", "prompt": "waves one front hoof hello, a small gold sun rises above the head, happy face"},
+    {"name": "overdue", "phase": 1, "frames": 8, "loop": false, "ms": 140, "hop": true, "trigger": "任務逾期提醒", "prompt": "holds up a small desk calendar with one day circled in tomato red, worried face, small hop"},
+
+    {"name": "idle_blink", "phase": 2, "frames": 6, "loop": false, "ms": 160, "hop": false, "trigger": "待機時隨機穿插", "prompt": "front 3/4 view, slow blink (eyes become short lines, then open), small head tilt"},
+    {"name": "idle_grade", "phase": 2, "frames": 8, "loop": true, "ms": 200, "hop": false, "trigger": "待機時隨機穿插（改作業）", "prompt": "sitting, holding a small red pen, marking check marks on an open exercise book, head nods"},
+    {"name": "mail", "phase": 2, "frames": 8, "loop": false, "ms": 140, "hop": true, "trigger": "LINE 小幫手有新訊息待整理", "prompt": "hugs a small green speech-bubble shape (no logo, no text), hops once, the bubble wiggles"},
+    {"name": "drink", "phase": 2, "frames": 8, "loop": false, "ms": 160, "hop": false, "trigger": "喝水提醒、按「喝了」、右鍵「喝水 +1」", "prompt": "holds a pale blue cup with both front hooves, sips, happy sigh with closed eyes"},
+    {"name": "stretch", "phase": 2, "frames": 8, "loop": false, "ms": 160, "hop": false, "free_scale": true, "trigger": "起身提醒、按「動過了」", "prompt": "big stretch, front legs reach forward, back arches, then relaxes and shakes its wool"},
+    {"name": "medicine", "phase": 2, "frames": 8, "loop": false, "ms": 140, "hop": false, "trigger": "服藥提醒", "prompt": "taps a small gold alarm clock that rings (short vibration lines), a small pill box beside it"},
+    {"name": "focus", "phase": 2, "frames": 8, "loop": true, "ms": 220, "hop": false, "trigger": "專注 25／50 分鐘模式中", "prompt": "sitting and reading an open book, a small tomato-shaped timer beside it, pages turn slowly"},
+    {"name": "watch", "phase": 2, "frames": 8, "loop": false, "ms": 150, "hop": false, "trigger": "分心提醒（滑 YouTube、IG 太久）", "prompt": "holds small binoculars up to its eyes, peeks toward the viewer, then lowers them with a pout"},
+    {"name": "note", "phase": 2, "frames": 8, "loop": false, "ms": 150, "hop": false, "trigger": "記事存好、語音「說給小綿助」變記事", "prompt": "writes on a small square sticky note with a pencil, then sticks it up beside itself"},
+    {"name": "sign", "phase": 2, "frames": 8, "loop": false, "ms": 150, "hop": false, "trigger": "遙控教室大屏提示送出", "prompt": "raises a small blank signboard (deep green board, white border, no text) high above its head"}
+  ]
+}
