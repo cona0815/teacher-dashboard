@@ -55,21 +55,21 @@ function setupLineBot() {
     properties.setProperty('CLASSROOM_TOKEN', Utilities.getUuid().replace(/-/g, ''));
   }
   var summary = [
-    '✅ LINE 小幫手初始化完成。',
+    '✅ 初始化完成！三把金鑰已存好（隨時可用選單「🔑 顯示我的金鑰」再看）。',
     '',
-    '請接著在「專案設定 → 指令碼屬性」確認／填入：',
-    '1. LINE_CHANNEL_ACCESS_TOKEN：LINE Developers 的 Channel access token（必填）。',
-    '2. LINE_ALLOWED_USER_IDS：你自己的 LINE userId（強烈建議，鎖定只回應你本人；多個以逗號分隔）。',
-    '3. GEMINI_API_KEY：Gemini 金鑰（選填；沒填時改用「任務：」「記：」等前綴規則）。',
-    '',
-    'Webhook 網址（貼到 LINE Developers 的 Webhook URL）：',
-    '  <部署後的 /exec 網址>?hook=' + properties.getProperty('LINE_WEBHOOK_TOKEN'),
-    '',
-    '工作台同步金鑰（貼到教師工作台「系統設定 → LINE 小幫手」）：',
+    '【難度 1：雲端大腦】現在就要用這兩把，抄到記事本：',
+    '🔑C 工作台同步金鑰 → 工作台「⚙ 設定 → ① 雲端／LINE 小幫手」、小綿助雲端連線',
     '  ' + properties.getProperty('LINE_SYNC_TOKEN'),
+    '🔑D 教室大屏金鑰 → 晨間大屏「⚙ 設定」（教室電腦只放這把）',
+    '  ' + properties.getProperty('CLASSROOM_TOKEN'),
+    '下一步：擴充功能 → Apps Script → 部署 → 新增部署（網頁應用程式／執行身分：我／存取權：任何人），拿到 🌐 /exec 網址。',
     '',
-    '教室大屏金鑰（貼到 Morning.html 大屏頁的設定；權限只限當日點名與作業回報）：',
-    '  ' + properties.getProperty('CLASSROOM_TOKEN')
+    '【難度 3：LINE 小幫手】做 LINE 時才用，現在先不用管：',
+    '🔑B Webhook 驗證參數 → 接在 🌐 後面：🌐?hook=🔑B（部署後「📋 安裝總表」的 🔗 列會自動拼好）',
+    '  ' + properties.getProperty('LINE_WEBHOOK_TOKEN'),
+    'LINE Token 用選單「② 填入 LINE Token」，鎖門用選單「③ 填入我的 LINE userId」，排程用選單「⑤」。',
+    '',
+    '【難度 2：AI】（選填）要讓 LINE 聽語音、看照片，用選單「④ 填入 Gemini 金鑰」。'
   ].join('\n');
   Logger.log(summary);
   return summary;
@@ -86,11 +86,11 @@ function onOpen() {
   try {
     SpreadsheetApp.getUi()
       .createMenu('🤖 LINE 小幫手')
-      .addItem('① 初始化（建資料表＋產生金鑰＋安裝總表）', 'menuSetupLineBot')
-      .addItem('② 填入 LINE Token（🔑A）', 'menuSetTokenA')
-      .addItem('③ 填入我的 LINE userId（鎖門）', 'menuSetUserId')
+      .addItem('① 初始化（難度 1：建資料表＋產生金鑰）', 'menuSetupLineBot')
+      .addItem('② 填入 LINE Token（🔑A，難度 3）', 'menuSetTokenA')
+      .addItem('③ 填入我的 LINE userId（鎖門，難度 3）', 'menuSetUserId')
       .addItem('④ 填入 Gemini 金鑰（🔑E，選填）', 'menuSetGeminiKey')
-      .addItem('⑤ 設定自動化排程（提醒／關懷）', 'menuSetupTriggers')
+      .addItem('⑤ 設定自動化排程（提醒／關懷，難度 3）', 'menuSetupTriggers')
       .addSeparator()
       .addItem('📋 更新安裝總表（看進度與代號）', 'menuBuildSetupSheet')
       .addItem('🔑 顯示我的金鑰', 'menuShowKeys')
@@ -167,15 +167,15 @@ function buildSetupSheet_() {
 
   var rows = [
     ['代號', '這是什麼', '值（可直接複製）', '取得處', '要貼到哪裡', '狀態'],
-    ['🔑A', 'LINE Channel Token', hasA ? '（已安全存入，不顯示）' : '【請用選單②填入】', 'LINE Developers → Messaging API → Issue', '本表選單「② 填入 LINE Token」', mask(hasA)],
-    ['🔑B', 'Webhook 驗證參數', hookToken || '【請先執行選單①】', '選單① 自動產生', '不用單獨貼；已組進下方 Webhook 網址', hookToken ? '✅ 已產生' : '⬜'],
-    ['🌐', '機器人網址（/exec）', deployed ? execUrl : '【尚未部署：部署→新增部署→網頁應用程式→任何人】', '部署後產生', '工作台與大屏的「🌐」欄位', deployed ? '✅ 已部署' : '⬜ 未部署'],
-    ['🔗', 'Webhook 完整網址', webhookUrl || '（等 🌐 部署完成後按選單📋更新，會自動組好）', '本表自動組合', 'LINE 的 Webhook URL 欄（貼上→儲存→開啟 Use webhook）', webhookUrl ? '✅ 可複製' : '⬜'],
-    ['🔑C', '工作台同步金鑰', String(props.getProperty('LINE_SYNC_TOKEN') || '【請先執行選單①】'), '選單① 自動產生', '教師工作台「⚙ 設定 → LINE 小幫手 → 🔑C」', props.getProperty('LINE_SYNC_TOKEN') ? '✅ 已產生' : '⬜'],
-    ['🔑D', '教室大屏金鑰', String(props.getProperty('CLASSROOM_TOKEN') || '【請先執行選單①】'), '選單① 自動產生', '晨間大屏「⚙ 設定 → 🔑D」（教室電腦只放這把）', props.getProperty('CLASSROOM_TOKEN') ? '✅ 已產生' : '⬜'],
-    ['👤', '我的 LINE userId', hasUser ? '（已設定，機器人只回應你）' : '【對機器人傳「我的ID」後用選單③填入】', 'LINE 傳「我的ID」', '本表選單「③ 填入我的 LINE userId」', mask(hasUser)],
+    ['🔑A', '（難度 3）LINE Channel Token', hasA ? '（已安全存入，不顯示）' : '【請用選單②填入】', 'LINE Developers → Messaging API → Issue', '本表選單「② 填入 LINE Token」', mask(hasA)],
+    ['🔑B', '（難度 3）Webhook 驗證參數', hookToken || '【請先執行選單①】', '選單① 自動產生', '不用單獨貼；已組進下方 Webhook 網址', hookToken ? '✅ 已產生' : '⬜'],
+    ['🌐', '（難度 1）機器人網址（/exec）', deployed ? execUrl : '【尚未部署：部署→新增部署→網頁應用程式→任何人】', '部署後產生', '工作台與大屏的「🌐」欄位', deployed ? '✅ 已部署' : '⬜ 未部署'],
+    ['🔗', '（難度 3）Webhook 完整網址', webhookUrl || '（等 🌐 部署完成後按選單📋更新，會自動組好）', '本表自動組合', 'LINE 的 Webhook URL 欄（貼上→儲存→開啟 Use webhook）', webhookUrl ? '✅ 可複製' : '⬜'],
+    ['🔑C', '（難度 1）工作台同步金鑰', String(props.getProperty('LINE_SYNC_TOKEN') || '【請先執行選單①】'), '選單① 自動產生', '教師工作台「⚙ 設定 → ① 雲端／LINE 小幫手 → 🔑C」、小綿助雲端連線', props.getProperty('LINE_SYNC_TOKEN') ? '✅ 已產生' : '⬜'],
+    ['🔑D', '（難度 1）教室大屏金鑰', String(props.getProperty('CLASSROOM_TOKEN') || '【請先執行選單①】'), '選單① 自動產生', '晨間大屏「⚙ 設定 → 🔑D」（教室電腦只放這把）', props.getProperty('CLASSROOM_TOKEN') ? '✅ 已產生' : '⬜'],
+    ['👤', '（難度 3）我的 LINE userId', hasUser ? '（已設定，機器人只回應你）' : '【對機器人傳「我的ID」後用選單③填入】', 'LINE 傳「我的ID」', '本表選單「③ 填入我的 LINE userId」', mask(hasUser)],
     ['ℹ️', '程式版本', BOT_VERSION, '網站 Install 第 2 版更新指南', '比網站上的版本舊就用「一鍵複製 LineBot.gs」更新', '✅'],
-    ['🔑E', 'Gemini 金鑰（選填）', hasE ? '（已安全存入，不顯示）' : '【選填：用選單④填入】', 'aistudio.google.com/app/apikey', '本表選單「④ 填入 Gemini 金鑰」＋工作台 AI 設定', hasE ? '✅ 已填' : '⬜ 未填（可先跳過）']
+    ['🔑E', '（難度 2）Gemini 金鑰（選填）', hasE ? '（已安全存入，不顯示）' : '【選填：用選單④填入】', 'aistudio.google.com/app/apikey', '本表選單「④ 填入 Gemini 金鑰」＋工作台 AI 設定', hasE ? '✅ 已填' : '⬜ 未填（可先跳過）']
   ];
   sheet.getRange(1, 1, rows.length, 6).setValues(rows);
   sheet.getRange(1, 1, 1, 6).setFontWeight('bold').setBackground('#e8f2ee');
@@ -201,7 +201,7 @@ function menuShowDialog_(title, text) {
 function menuSetupLineBot() {
   var summary = setupLineBot();
   buildSetupSheet_();
-  menuShowDialog_('✅ LINE 小幫手初始化完成', summary + '\n\n📋 已同時建立「安裝總表」分頁（試算表最前面）——之後照總表逐格補齊、用選單②③④直接填入即可。');
+  menuShowDialog_('✅ 初始化完成', summary + '\n\n📋 已同時建立「安裝總表」分頁（試算表最前面），每一把的狀態與要貼的位置都在那裡。');
 }
 
 function menuShowVersion() {
@@ -220,14 +220,14 @@ function menuShowKeys() {
   var properties = PropertiesService.getScriptProperties();
   if (!properties.getProperty('LINE_SYNC_TOKEN')) { menuSetupLineBot(); return; }
   menuShowDialog_('我的金鑰', [
-    'Webhook 驗證參數 🔑B（接在機器人網址後：?hook=🔑B）：',
-    '  ' + properties.getProperty('LINE_WEBHOOK_TOKEN'),
-    '',
-    '工作台同步金鑰 🔑C（貼到工作台「⚙ 設定 → LINE 小幫手」）：',
+    '【難度 1】🔑C 工作台同步金鑰（工作台「① 雲端／LINE 小幫手」、小綿助雲端連線）：',
     '  ' + properties.getProperty('LINE_SYNC_TOKEN'),
     '',
-    '教室大屏金鑰 🔑D（貼到晨間大屏「⚙ 設定」）：',
-    '  ' + properties.getProperty('CLASSROOM_TOKEN')
+    '【難度 1】🔑D 教室大屏金鑰（晨間大屏「⚙ 設定」）：',
+    '  ' + properties.getProperty('CLASSROOM_TOKEN'),
+    '',
+    '【難度 3】🔑B Webhook 驗證參數（接在 🌐 後面：?hook=🔑B）：',
+    '  ' + properties.getProperty('LINE_WEBHOOK_TOKEN')
   ].join('\n'));
 }
 
@@ -476,7 +476,7 @@ function doGet() {
 }
 
 // 程式版本（每次發布都要更新；試算表選單「ℹ️ 程式版本」、LINE 傳「版本」、工作台連線檢查都會顯示）
-var BOT_VERSION = '2026-09-07 22:30';
+var BOT_VERSION = '2026-09-28 14:48';
 
 function lineBotJson_(payload) {
   return ContentService.createTextOutput(JSON.stringify(payload)).setMimeType(ContentService.MimeType.JSON);

@@ -604,3 +604,17 @@ assert.match(indexHtml, /class="toolbox-group-label">溝通</, "工具箱應分�
 assert.match(indexHtml, /function setFilterPanelOpen/, "篩選欄應可收合並記住狀態");
 assert.match(indexHtml, /id="compactToggleButton"/, "應有緊湊模式");
 assert.doesNotMatch(indexHtml.slice(indexHtml.indexOf('<style>'), indexHtml.indexOf('</style>')), /font-size:\s*(?:9|10|10\.5)px/, "樣式表不得再有 9–10.5px 小字");
+
+// 2026-09-28 安裝教學重寫：三種難度＋每關 SVG 操作示意圖；選單名稱與 GAS 一致
+for (const id of ["tier1", "tier2", "tier3", "part2", "part3", "pet", "part5", "part6", "partv2", "part7"]) {
+  assert.match(installHtml, new RegExp(`id="${id}"`), `安裝教學應有錨點 #${id}`);
+}
+assert.ok((installHtml.match(/class="diagram steps"/g) || []).length >= 7, "安裝教學每個難度都應附 SVG 操作示意圖");
+assert.doesNotMatch(installHtml, /② 顯示我的金鑰/, "選單沒有「② 顯示我的金鑰」，應為「🔑 顯示我的金鑰」");
+for (const menu of ["② 填入 LINE Token", "③ 填入我的 LINE userId", "④ 填入 Gemini 金鑰", "⑤ 設定自動化排程", "🔑 顯示我的金鑰", "📋 更新安裝總表"]) {
+  assert.match(installHtml, new RegExp(menu.replace(/[()]/g, "\\$&")), `安裝教學應使用實際選單名稱「${menu}」`);
+  assert.match(lineBotSource, new RegExp(menu.replace(/[()]/g, "\\$&")), `GAS 選單應有「${menu}」`);
+}
+assert.match(installHtml, /🔑B（Webhook 驗證參數）先不用管/, "難度 1 應說明 🔑B 先不用");
+assert.match(lineBotSource, /【難度 1：雲端大腦】現在就要用這兩把/, "初始化彈窗應依難度分段");
+assert.match(lineBotSource, /BOT_VERSION = '\d{4}-\d{2}-\d{2} \d{2}:\d{2}'/, "GAS 版本日期");

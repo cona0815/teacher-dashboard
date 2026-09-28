@@ -742,8 +742,8 @@
           <div class="field"><label>① 點名推播（出缺＋今日任務／記事／逾期）</label><input id="setupAutoNotifyTime" type="time" value="08:08"></div>
           <div class="field"><label>② 作業推播（點名＋作業繳交到 LINE）</label><input id="setupAutoHomeworkNotifyTime" type="time" value="08:40"></div>
           <div class="field"><label>補交回溯天數</label><input id="setupLookbackDays" type="number" min="1" max="60" value="30"></div>
-          <div class="field" style="grid-column:1/-1"><label>🌐 Apps Script 部署網址（/exec 結尾，與 LINE 小幫手同一份）＝教學裡的「🌐 機器人網址」　<a href="Install.html#part2" target="_blank" rel="noopener" style="font-weight:700">還沒有？看申請教學 📖</a></label><input id="setupGasUrl" type="url" placeholder="貼上 🌐 機器人網址：https://script.google.com/macros/s/……/exec"></div>
-          <div class="field" style="grid-column:1/-1"><label>🔑D 教室大屏金鑰＝教學裡的「教室大屏金鑰」（執行 setupLineBot 後取得的 CLASSROOM_TOKEN）　<a href="Install.html#part2" target="_blank" rel="noopener" style="font-weight:700">如何取得？📖</a></label><input id="setupClassroomToken" type="password" autocomplete="off" placeholder="貼上 🔑D（教室只放這把；老師金鑰 🔑C 不要貼這裡）"></div>
+          <div class="field" style="grid-column:1/-1"><label>🌐 Apps Script 部署網址（/exec 結尾，與 LINE 小幫手同一份）＝教學裡的「🌐 機器人網址」　<a href="Install.html#tier1" target="_blank" rel="noopener" style="font-weight:700">還沒有？看申請教學 📖</a></label><input id="setupGasUrl" type="url" placeholder="貼上 🌐 機器人網址：https://script.google.com/macros/s/……/exec"></div>
+          <div class="field" style="grid-column:1/-1"><label>🔑D 教室大屏金鑰＝教學裡的「教室大屏金鑰」（執行 setupLineBot 後取得的 CLASSROOM_TOKEN）　<a href="Install.html#tier1" target="_blank" rel="noopener" style="font-weight:700">如何取得？📖</a></label><input id="setupClassroomToken" type="password" autocomplete="off" placeholder="貼上 🔑D（教室只放這把；老師金鑰 🔑C 不要貼這裡）"></div>
           <div class="field" style="grid-column:1/-1"><label>🔑C 老師查詢金鑰（選填；填了才能用「查詢」分頁看歷史統計。⚠️ 教室公用電腦建議不要填）</label><input id="setupTeacherToken" type="password" autocomplete="off" placeholder="貼上 🔑C 工作台同步金鑰（老師自己的電腦才填）"></div>
         </div>
         <button class="primary-button" type="button" id="saveSetupButton" style="margin-top:14px;font-size:18px;padding:12px 26px">儲存設定</button>
