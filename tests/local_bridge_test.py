@@ -329,3 +329,77 @@ class VoiceModuleTest(unittest.TestCase):
         import pathlib
         source = pathlib.Path(__file__).resolve().parent.parent.joinpath("desktop_pet_secretary.py").read_text(encoding="utf-8")
         self.assertNotIn("urlopen(", source)
+
+
+class NoticeQueueTest(unittest.TestCase):
+    """v2.2 訊息分級排隊：重要不被蓋、閒聊有待看就不講、勿擾只放行重要與操作回應。"""
+
+    def _q(self):
+        from desktop_pet_ui import NoticeQueue
+        return NoticeQueue([])
+
+    def test_urgent_never_overwritten(self):
+        from desktop_pet_ui import Notice
+        q = self._q()
+        self.assertEqual(q.push(Notice("吃藥", "urgent", key="med")), "show")
+        self.assertEqual(q.push(Notice("LINE 2 則", "urgent", key="line")), "queued")
+        self.assertEqual(q.push(Notice("喝水", "normal", key="water")), "queued")
+        self.assertEqual(q.push(Notice("好的", "feedback")), "queued")
+        self.assertEqual(q.current.text, "吃藥")
+        self.assertEqual(q.close_current().text, "LINE 2 則")
+
+    def test_chatter_dropped_when_anything_pending(self):
+        from desktop_pet_ui import Notice
+        q = self._q()
+        self.assertEqual(q.push(Notice("我去巡一下", "chatter")), "show")
+        q.close_current()
+        q.push(Notice("吃藥", "urgent"))
+        self.assertEqual(q.push(Notice("我去巡一下", "chatter")), "dropped")
+
+    def test_urgent_preempts_normal_and_requeues_it(self):
+        from desktop_pet_ui import Notice
+        q = self._q()
+        q.push(Notice("喝水", "normal", key="water"))
+        self.assertEqual(q.push(Notice("逾期 3 件", "urgent", key="overdue")), "show")
+        self.assertEqual(q.pending[0].text, "喝水")
+
+    def test_key_dedupe_and_update(self):
+        from desktop_pet_ui import Notice
+        q = self._q()
+        q.push(Notice("LINE 1 則", "urgent", key="line"))
+        self.assertEqual(q.push(Notice("LINE 3 則", "urgent", key="line")), "update")
+        self.assertEqual(q.current.text, "LINE 3 則")
+        self.assertEqual(sum(1 for e in q.log if e["key"] == "line"), 1)
+
+    def test_dnd_only_urgent_and_feedback(self):
+        import time as _t
+        from desktop_pet_ui import Notice
+        q = self._q()
+        q.dnd_until = _t.time() + 60
+        self.assertEqual(q.push(Notice("喝水", "normal")), "dropped")
+        self.assertEqual(q.push(Notice("我去巡一下", "chatter")), "dropped")
+        self.assertEqual(q.push(Notice("吃藥", "urgent")), "show")
+        self.assertEqual(len(q.log), 2)   # 勿擾期間的一般提醒仍寫進通知紀錄
+
+    def test_timeout_keeps_urgent_unread(self):
+        from desktop_pet_ui import Notice
+        q = self._q()
+        q.push(Notice("逾期 3 件", "urgent", key="overdue"))
+        q.close_current(read=False)
+        self.assertEqual(q.unread_count(), 1)
+        q.mark_all_read()
+        self.assertEqual(q.unread_count(), 0)
+
+    def test_duration_bounds(self):
+        from desktop_pet_ui import Notice
+        self.assertEqual(Notice("短", "normal").duration_ms(), 3090)
+        self.assertEqual(Notice("字" * 200, "normal").duration_ms(), 10000)
+        self.assertGreaterEqual(Notice("吃藥", "urgent").duration_ms(), 8000)
+
+    def test_right_click_does_not_use_tk_menu(self):
+        import pathlib
+        source = pathlib.Path(__file__).resolve().parent.parent.joinpath("desktop_pet_secretary.py").read_text(encoding="utf-8")
+        start = source.index("def _show_menu")
+        body = source[start:source.index("\n    def ", start + 10)]
+        self.assertIn("self.popup.open", body)
+        self.assertNotIn("tk_popup", body)

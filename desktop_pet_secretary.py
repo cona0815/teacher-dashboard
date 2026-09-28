@@ -25,7 +25,8 @@ from tkinter import filedialog, messagebox, ttk
 
 from PIL import Image, ImageGrab
 
-from desktop_pet_preview import ERROR_LOG, DesktopPetPreview
+from desktop_pet_preview import ERROR_LOG, PET_TOP, DesktopPetPreview
+from desktop_pet_ui import BadgeCanvas, BubbleWindow, HoverCard, Notice, NoticeQueue, PopupMenu
 from desktop_pet_cloud import CloudLink, DEFAULT_FOCUS_KEYWORDS, FocusTracker, ForegroundMonitor, cloud_url_allowed
 from desktop_pet_voice import (
     HOTKEY_CHOICES, POLISH_STYLES, VOCAB_PRESETS, HotkeyListener, Recorder, VoiceEngine, VoiceError,
@@ -236,7 +237,7 @@ textarea,input{font-family:inherit;font-size:14px;border:1.5px solid var(--line)
 details summary{cursor:pointer;font-weight:800;color:var(--strong)}
 .seat-ok{color:#1c6b45}.seat-bad{color:var(--danger);font-weight:800}
 </style></head><body>
-<header><h1>🐑 __PET_NAME__ 教師秘書</h1><div class="meta">本機頁面（127.0.0.1）｜v2.1｜<span id="stamp">載入中</span>｜每 15 秒自動更新</div></header>
+<header><h1>🐑 __PET_NAME__ 教師秘書</h1><div class="meta">本機頁面（127.0.0.1）｜v2.2｜<span id="stamp">載入中</span>｜每 15 秒自動更新</div></header>
 <main>
   <section class="card soft" style="grid-column:1/-1"><h2>☀ 今日簡報</h2><div id="brief" class="empty">載入中……</div></section>
 
@@ -310,6 +311,12 @@ details summary{cursor:pointer;font-weight:800;color:var(--strong)}
         <span class="note-meta">只在按住快捷鍵時錄音；音檔只送 Gemini 或 Groq 官方 API、不存檔；金鑰只存在這台電腦。</span></div>
     </details></section>
 
+  <section class="card"><h2>🕘 最近通知 <span class="tag" id="noticeUnread"></span></h2>
+    <ul id="noticeLog"></ul>
+    <div class="row"><button class="light" onclick="actx({action:'notices_read'})">全部標為已讀</button>
+      <button class="light" id="dndBtn" onclick="toggleDnd()">🔕 勿擾 1 小時</button>
+      <span class="note-meta">錯過的泡泡都在這裡；紅字＝重要且還沒看。</span></div></section>
+
   <section class="card"><h2>📮 待追蹤</h2><ul id="tracking"></ul></section>
 
   <section class="card"><h2>💬 快速記事</h2>
@@ -352,7 +359,7 @@ async function load(){
     if(document.activeElement!==$('cfgMoveInterval'))$('cfgMoveInterval').value=String(d.health.moveInterval);
     const med=d.health.medicineTimes;
     $('medicine').innerHTML=med.length?med.map(t=>d.health.medicineDone.includes(t)?`<span class="tag">✅ ${t}</span>`:`<span class="tag">⏰ ${t}</span> <button class="light" style="padding:2px 10px" onclick="act('medicine_done','${t}')">已服用</button>`).join(' '):'未設定';
-    renderCloud(d.cloud||{});renderFocus(d.focus||{});renderVoice(d.voice||{});
+    renderCloud(d.cloud||{});renderFocus(d.focus||{});renderVoice(d.voice||{});renderNotices(d.notices||{});
     $('medManage').innerHTML=med.length?med.map(t=>`<span class="tag">${t} <button class="light" style="padding:0 8px" title="移除" onclick="actx({action:'remove_medicine_time',time:'${t}'})">✖</button></span>`).join(' '):'<span class="note-meta">尚未設定服藥時間。</span>';
   }catch(e){$('brief').textContent='讀取失敗：'+e.message;}
 }
@@ -410,6 +417,15 @@ function renderVoice(v){
 async function saveVoice(){await actx({action:'set_voice',enabled:$('voOn').checked,provider:$('voProvider').value,geminiKey:$('voGemini').value.trim(),groqKey:$('voGroq').value.trim(),hotkey:$('voHotkey').value,petHotkey:$('voPetHotkey').value,style:$('voStyle').value,vocab:$('voVocab').value,customVocab:$('voCustom').value.trim(),geminiModel:$('voModel').value.trim()});$('voGemini').value='';$('voGroq').value='';}
 async function clearKey(which){if(!confirm('確定清除這把金鑰？'))return;await actx(which==='gemini'?{action:'set_voice',clearGeminiKey:true}:{action:'set_voice',clearGroqKey:true});}
 async function testVoice(){const r=await(await fetch('/panel-action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'voice_test'})})).json().catch(()=>null);if(!r||!r.ok){alert('❌ '+(r&&r.error||'無法測試'));return;}$('voiceStatus').innerHTML='🔴 請說話（3 秒）……';setTimeout(load,4500);setTimeout(load,9000);}
+let dndOn=false;
+function renderNotices(n){
+  const log=n.log||[];
+  fill('noticeLog',log,e=>`<li${!e.read&&e.level==='urgent'?' style="color:var(--danger);font-weight:700"':''}><span class="note-meta">${esc(e.time||'')}</span> ${e.tag?`<span class="tag">${esc(e.tag)}</span>`:''}${esc(e.text)}</li>`,'還沒有通知');
+  $('noticeUnread').textContent=n.unread?`${n.unread} 則未看`:'';
+  dndOn=(n.dndUntil||0)*1000>Date.now();
+  $('dndBtn').textContent=dndOn?`🔔 取消勿擾（到 ${new Date(n.dndUntil*1000).toTimeString().slice(0,5)}）`:'🔕 勿擾 1 小時';
+}
+function toggleDnd(){actx({action:'dnd',minutes:dndOn?0:60});}
 async function saveFocusKw(){await actx({action:'set_focus',keywords:$('focusKw').value.split(/[、,，\s]+/).filter(Boolean)});}
 function cloudCfg(){try{return JSON.parse(localStorage.getItem('petPanelCloud')||'null')||{}}catch(e){return{}}}
 function saveCloudCfg(){localStorage.setItem('petPanelCloud',JSON.stringify({url:$('cfgUrl').value.trim(),token:$('cfgToken').value.trim(),cls:$('cfgClass').value.trim()}));loadCloud();}
@@ -579,8 +595,24 @@ class SecretaryPet(DesktopPetPreview):
         self.bridge_server: LocalBridgeServer | None = None
         self.bridge_thread: threading.Thread | None = None
         self.bridge_error = ""
+        # ---- v2.2：資訊顯示層（浮動對話泡泡、分級排隊、角標、狀態卡、右鍵小選單）----
+        self.notices = NoticeQueue(self.data.setdefault("notice_log", []))
+        try:
+            self.notices.dnd_until = float(settings.get("dnd_until") or 0)
+        except (TypeError, ValueError):
+            self.notices.dnd_until = 0.0
+        self.ui_ok = True
+        self.bubble.place_forget()
+        self.ui_bubble = BubbleWindow(self.root, self.dpi_scale, self._pet_screen_box, self._on_bubble_action, self._on_bubble_closed)
+        self.badge = BadgeCanvas(self.root, self.dpi_scale, self._show_card_briefly)
+        self.card = HoverCard(self.root, self.dpi_scale, self._pet_screen_box)
+        self.popup = PopupMenu(self.root, self.dpi_scale)
+        self.card_job: str | None = None
+        self.pet_label.bind("<Enter>", self._on_pet_enter, add="+")
+        self.pet_label.bind("<Leave>", self._on_pet_leave, add="+")
+        self.root.after(1500, self._badge_tick)
 
-        # 秘書面板改由瀏覽器呈現；右鍵與雙擊桌寵都直接開啟（不再使用 Tk 選單）。
+        # 秘書面板改由瀏覽器呈現；雙擊開秘書頁，右鍵是 v2.2 自己畫的小選單。
         for widget in (self.root, self.pet_label):
             widget.bind("<Double-Button-1>", lambda _e: self.open_secretary_page())
         self.root.after(4000, self._visibility_heartbeat)
@@ -620,6 +652,185 @@ class SecretaryPet(DesktopPetPreview):
         if not settings.get("enabled", True):
             self.root.withdraw()
             self.root.after(100, self.root.destroy)
+
+    # ------------------------------------------------------------------ v2.2 顯示層
+    def _pet_screen_box(self) -> tuple:
+        left = self.x + (self.win_w - self.pet_px) // 2
+        top = self.y + int(PET_TOP * self.dpi_scale)
+        return (left, top, left + self.pet_px, top + self.pet_px)
+
+    def notify(self, text: str, level: str = "chatter", key: str = "", tag: str = "", actions: list | None = None) -> None:
+        if not text:
+            return
+        notice = Notice(text=str(text), level=level, key=key, tag=tag, actions=list(actions or []))
+        decision = self.notices.push(notice)
+        if level in ("urgent", "normal"):
+            try:
+                self._save_data()
+            except OSError:
+                pass
+        if decision == "show":
+            self._display_notice(notice)
+        elif decision == "update" and self.ui_bubble.visible:
+            try:
+                self.ui_bubble.update_text(self.notices.current)
+            except tk.TclError:
+                pass
+        self._badge_tick(reschedule=False)
+
+    def _display_notice(self, notice: Notice) -> None:
+        if self.ui_ok:
+            try:
+                self.ui_bubble.show(notice)
+                return
+            except tk.TclError:
+                self.ui_ok = False   # 這台機器浮動視窗畫不出來 → 退回舊的內嵌文字
+        DesktopPetPreview.show_bubble(self, notice.text, notice.duration_ms())
+        self.root.after(notice.duration_ms(), lambda: self._on_bubble_closed(notice, "timeout"))
+
+    def show_bubble(self, message: str, duration: int = 2200, level: str = "chatter") -> None:
+        del duration
+        self.notify(message, level)
+
+    def play(self, state: str, loops: int | None = None, after_state: str = "idle", message: str | None = None, level: str = "chatter") -> None:
+        super().play(state, loops, after_state, None)
+        if message:
+            self.notify(message, level)
+
+    def _on_bubble_closed(self, notice: Notice, reason: str) -> None:
+        if self.notices.current is not notice:
+            return
+        nxt = self.notices.close_current(read=reason != "timeout")
+        try:
+            self._save_data()
+        except OSError:
+            pass
+        if nxt is not None:
+            self.root.after(450, lambda: self.notices.current is nxt and self._display_notice(nxt))
+        self._badge_tick(reschedule=False)
+
+    def _on_bubble_action(self, notice: Notice, action_id: str) -> None:
+        if action_id == "open":
+            self.open_secretary_page()
+        elif action_id == "later":
+            again = Notice(text=notice.text, level=notice.level, key=notice.key, tag=notice.tag, actions=notice.actions)
+            self.root.after(10 * 60_000, lambda: self.notify(again.text, again.level, again.key, again.tag, again.actions))
+            self.notify("好，10 分鐘後再提醒你。", "feedback")
+        elif action_id in ("water", "move_done"):
+            self._panel_apply_action({"action": action_id})
+        elif action_id.startswith("med:"):
+            self._panel_apply_action({"action": "medicine_done", "time": action_id[4:]})
+
+    def _badge_counts(self) -> dict:
+        today = date.today().isoformat()
+        active = [t for t in self.data.get("tasks", []) if t.get("status") != "已完成"]
+        local_overdue = sum(1 for t in active if t.get("due_date") and t["due_date"] < today)
+        due_today = sum(1 for t in active if t.get("due_date") == today)
+        state = getattr(self, "cloud_state", {}) or {}
+        snapshot = state.get("snapshot") or {}
+        cloud_overdue = int(snapshot.get("overdueCount") or len(snapshot.get("overdueTasks") or []))
+        cloud_today = len(snapshot.get("todayTasks") or [])
+        line = int(state.get("lineCount") or 0)
+        return {"overdue": max(local_overdue, cloud_overdue), "today": max(due_today, cloud_today), "line": line}
+
+    def _badge_tick(self, reschedule: bool = True) -> None:
+        try:
+            counts = self._badge_counts()
+            s = self.dpi_scale
+            x = (self.win_w - self.pet_px) // 2 + self.pet_px - int(44 * s)
+            y = int(PET_TOP * s) + int(4 * s)
+            self.badge.set(counts["overdue"] + counts["line"], x, y)
+        except (tk.TclError, ValueError, TypeError):
+            pass
+        if reschedule:
+            try:
+                self.root.after(20_000, self._badge_tick)
+            except tk.TclError:
+                pass
+
+    def _card_rows(self) -> tuple:
+        counts = self._badge_counts()
+        health = self.data.get("health", {})
+        rows = [f"📌 今日期限 {counts['today']} 件　⚠ 逾期 {counts['overdue']} 件"]
+        rows.append(f"📱 LINE 待整理 {counts['line']} 則" if self._cloud_enabled() else "📱 LINE：尚未連線（秘書頁可設定）")
+        try:
+            moved = int((datetime.now() - datetime.fromisoformat(health.get("last_move"))).total_seconds() // 60)
+        except (TypeError, ValueError):
+            moved = 0
+        rows.append(f"💧 喝水 {int(health.get('water_count') or 0)} 杯　🚶 {max(0, moved)} 分鐘沒起身")
+        rows.append(f"🍅 專注 {int(health.get('focus_seconds') or 0) // 60} 分　分心 {int(health.get('drift_seconds') or 0) // 60} 分")
+        done = set(health.get("medicine_done_times") or [])
+        upcoming = [t for t in self._medicine_times() if t not in done]
+        if upcoming:
+            rows.append(f"💊 下次服藥 {upcoming[0]}")
+        if self.notices.in_dnd():
+            rows.append(f"🔕 勿擾到 {datetime.fromtimestamp(self.notices.dnd_until).strftime('%H:%M')}")
+        unread = self.notices.unread_count()
+        if unread:
+            rows.append(f"🕘 {unread} 則重要通知沒看到（秘書頁看紀錄）")
+        return rows
+
+    def _show_card(self) -> None:
+        self.card_job = None
+        if self.drag_origin or self.popup.is_open:
+            return
+        try:
+            self.card.show(f"{self._pet_name()} 的今日狀態", self._card_rows(), "右鍵：小選單　雙擊：秘書頁")
+        except tk.TclError:
+            pass
+
+    def _show_card_briefly(self) -> None:
+        self._show_card()
+        self.root.after(6000, self.card.hide)
+
+    def _on_pet_enter(self, _event=None) -> None:
+        if self.card_job:
+            self.root.after_cancel(self.card_job)
+        self.card_job = self.root.after(650, self._show_card)
+
+    def _on_pet_leave(self, _event=None) -> None:
+        if self.card_job:
+            self.root.after_cancel(self.card_job)
+            self.card_job = None
+        self.root.after(250, self.card.hide)
+
+    def _quick(self, action: str, **extra) -> None:
+        payload = {"action": action}
+        payload.update(extra)
+        self._panel_apply_action(payload)
+
+    def _toggle_dnd(self) -> None:
+        settings = self.data.setdefault("settings", {})
+        if self.notices.in_dnd():
+            self.notices.dnd_until = 0.0
+            message = "🔔 勿擾已取消。"
+        else:
+            self.notices.dnd_until = time.time() + 3600
+            message = "🔕 勿擾 1 小時：只剩吃藥等重要提醒會跳出來。"
+        settings["dnd_until"] = self.notices.dnd_until
+        self._save_data()
+        self.notify(message, "feedback")
+
+    def _menu_voice(self) -> None:
+        if not self.voice.ready:
+            self.notify("還沒有 🔑E 金鑰：秘書頁「🎙 語音輸入」貼上後就能說話記事。", "feedback", actions=[("打開秘書頁", "open")])
+            return
+        self._voice_begin("petclick")
+
+    def _menu_items(self) -> list:
+        items = [
+            ("💧 喝水 +1", lambda: self._quick("water")),
+            ("🚶 起身活動完成", lambda: self._quick("move_done")),
+            ("🍅 專注 25 分鐘", lambda: self._quick("focus_session", minutes=25)),
+            ("🎙 語音記事（說完點我一下）", self._menu_voice),
+            None,
+            ("📋 看全部（秘書頁）", self.open_secretary_page),
+            ("🔔 取消勿擾" if self.notices.in_dnd() else "🔕 勿擾 1 小時", self._toggle_dnd),
+            ("▶ 繼續走動" if self.paused else "⏸ 暫停走動", self.toggle_pause),
+            None,
+            ("✖ 關閉小綿助", self.root.destroy),
+        ]
+        return items
 
     def _pet_name(self) -> str:
         return str(self.data.get("settings", {}).get("pet_name") or "小綿助")
@@ -723,7 +934,15 @@ class SecretaryPet(DesktopPetPreview):
             self.data["settings"]["pet_y"] = int(self.y)
             self._save_data()
         if not moved:
-            # 左鍵不再建立任何視窗，只播放一句打氣話。
+            if self.recorder.active and self.voice_state.get("mode") == "petclick":
+                self._voice_end("petclick")
+                return
+            if self.notices.current is None and self.notices.pending:
+                nxt = self.notices.close_current()
+                if nxt is not None:
+                    self._display_notice(nxt)
+                    return
+            # 左鍵不建立任何視窗，只播放一句打氣話（閒聊等級，有待看訊息時不講）。
             self._show_random_cheer()
         self.root.after(4200, self.start_walking)
 
@@ -1136,17 +1355,21 @@ class SecretaryPet(DesktopPetPreview):
         organize_button.configure(text=f"交給{name}整理")
         self.menu.entryconfigure(0, label=f"開啟{name}秘書")
         self._schedule_cheer()
-        self.play("success", 2, "idle", f"好！以後可以叫我{name}。")
+        self.play("success", 2, "idle", f"好！以後可以叫我{name}。", level="feedback")
 
     # ------------------------------------------------------------------
     # 瀏覽器版秘書面板：資料與動作由本機橋接供應，畫面交給瀏覽器渲染。
     # （部分機器的 Tk 文字繪製不穩定；瀏覽器在任何顯示環境都可靠。）
     # ------------------------------------------------------------------
 
-    def _show_menu(self, _event: tk.Event) -> str:
-        # Tk 右鍵選單與面板同屬會在部分機器崩潰／消失的繪圖管線；
-        # 右鍵改為直接開啟瀏覽器版秘書（暫停、關閉等功能都在秘書頁上）。
-        self.open_secretary_page()
+    def _show_menu(self, event: tk.Event) -> str:
+        # v1.6：tk.Menu 在部分機器會讓桌寵整隻消失，所以不用它；
+        # v2.2：改用自己畫的浮動小選單（Canvas＋Toplevel），畫不出來才退回開秘書頁。
+        self.card.hide()
+        try:
+            self.popup.open(event.x_root, event.y_root, self._menu_items(), avoid=self._pet_screen_box())
+        except tk.TclError:
+            self.open_secretary_page()
         return "break"
 
     def _visibility_heartbeat(self) -> None:
@@ -1156,18 +1379,20 @@ class SecretaryPet(DesktopPetPreview):
                 self.root.deiconify()
                 self.root.attributes("-topmost", True)
                 self.root.lift()
+                if getattr(self, "ui_bubble", None) is not None and self.ui_bubble.visible and self.ui_bubble.win is not None:
+                    self.ui_bubble.win.lift()
         except tk.TclError:
             return
         self.root.after(4000, self._visibility_heartbeat)
 
     def open_secretary_page(self) -> None:
         if self.bridge_error:
-            self.show_bubble("本機服務未啟動，秘書頁開不了；請重新啟動小綿助。", 3200)
+            self.notify("本機服務未啟動，秘書頁開不了；請重新啟動小綿助。", "normal")
             return
         import webbrowser
 
         webbrowser.open(f"http://{BRIDGE_HOST}:{BRIDGE_PORT}/panel")
-        self.play("success", 2, "idle", "秘書頁開好了！")
+        self.play("success", 2, "idle", "秘書頁開好了！", level="feedback")
 
     # ------------------------------------------------------------------
     # v2.0 雲端直連（方案 B）：每 N 分鐘在背景執行緒拉一次，只讀不寫
@@ -1206,17 +1431,18 @@ class SecretaryPet(DesktopPetPreview):
     def _apply_cloud_result(self, result: dict) -> None:
         self.cloud_state = result
         line_count = int(result.get("lineCount") or 0)
+        self._badge_tick(reschedule=False)
         if "lineCount" in result:
             if self.cloud_last_line_count >= 0 and line_count > self.cloud_last_line_count:
                 self.play("success", 2, "idle")
-                self.show_bubble(f"📱 LINE 有 {line_count} 則待整理！", 4200)
+                self.notify(f"LINE 有 {line_count} 則待整理。", "urgent", key="line", tag="📱 LINE 新訊息", actions=[("打開", "open"), ("晚點", "later")])
             self.cloud_last_line_count = line_count
         snapshot = result.get("snapshot") or {}
         overdue = int(snapshot.get("overdueCount") or len(snapshot.get("overdueTasks") or []))
         today = date.today().isoformat()
         if overdue and self.cloud_overdue_alerted_date != today and not self._in_quiet_hours():
             self.cloud_overdue_alerted_date = today
-            self.show_bubble(f"☁️ 工作台有 {overdue} 件逾期任務，記得處理。", 4200)
+            self.notify(f"工作台有 {overdue} 件逾期任務，記得處理。", "urgent", key="overdue", tag="⚠ 逾期", actions=[("打開", "open"), ("晚點", "later")])
 
     def _cloud_prompt_set(self, text: str, img: str = "class_focus.png", clear: bool = False) -> dict:
         if not self._cloud_enabled():
@@ -1270,8 +1496,8 @@ class SecretaryPet(DesktopPetPreview):
         message = random.choice(self.SCOLD_MESSAGES)
         if self.focus_tracker.in_session:
             message = "專注時間！" + message
-        self.play("warning", 4, "idle", message)
-        self.show_bubble(message, 5200)
+        self.play("warning", 4, "idle")
+        self.notify(message, "normal", key="focus", tag="🍅 專注")
 
     # ------------------------------------------------------------------
     # v2.0 行為豐富化：探頭、蹭滑鼠
@@ -1375,24 +1601,24 @@ class SecretaryPet(DesktopPetPreview):
             return
         if not self.voice.ready:
             self.voice_state.update({"status": "idle", "lastError": "尚未填入 🔑E Gemini 金鑰：雙擊小綿助 → 🎙 語音輸入"})
-            self.play("warning", 2, "idle", "還沒有金鑰，先到秘書頁「🎙 語音輸入」貼 🔑E。")
+            self.play("warning", 2, "idle", "還沒有金鑰，先到秘書頁「🎙 語音輸入」貼 🔑E。", level="feedback")
             return
         try:
             self.recorder.start()
         except VoiceError as error:
             self.voice_state.update({"status": "idle", "lastError": str(error)})
-            self.play("warning", 2, "idle", "麥克風打不開：" + str(error)[:40])
+            self.play("warning", 2, "idle", "麥克風打不開：" + str(error)[:40], level="feedback")
             return
         self.voice_state.update({"status": "listening", "mode": mode, "lastError": ""})
-        hint = {"type": "我在聽……放開就打字", "pet": "我在聽……放開就幫你記", "handoff": "我在聽……再按一次停止"}.get(mode, "我在聽……")
-        self.play("listen", None, "listen", hint)
+        hint = {"type": "我在聽……放開就打字", "pet": "我在聽……放開就幫你記", "handoff": "我在聽……再按一次停止", "petclick": "我在聽……說完點我一下"}.get(mode, "我在聽……")
+        self.play("listen", None, "listen", hint, level="feedback")
 
     def _voice_end(self, mode: str) -> None:
         if not self.recorder.active:
             return
         audio = self.recorder.stop()
         self.voice_state["status"] = "thinking"
-        self.play("think", None, "think", "整理中……")
+        self.play("think", None, "think", "整理中……", level="feedback")
         threading.Thread(target=self._voice_worker, args=(mode, audio), name="xiaomianzhu-voice", daemon=True).start()
 
     def _voice_worker(self, mode: str, audio) -> None:
@@ -1409,24 +1635,24 @@ class SecretaryPet(DesktopPetPreview):
         self.voice_state.update({"status": "idle", "lastAt": datetime.now().strftime("%H:%M:%S")})
         if error:
             self.voice_state["lastError"] = error
-            self.play("warning", 2, "idle", error[:60])
+            self.play("warning", 2, "idle", error[:60], level="feedback")
             return
         if not text:
-            self.play("think", 1, "idle", "我聽不清楚，請再說一次。")
+            self.play("think", 1, "idle", "我聽不清楚，請再說一次。", level="feedback")
             return
         self.voice_state["lastText"] = text[:200]
         if mode == "test":
-            self.play("success", 2, "idle", "聽到了：" + text[:40])
+            self.play("success", 2, "idle", "聽到了：" + text[:40], level="feedback")
             return
         if mode == "type":
             self._voice_type_text(text)
-            self.play("success", 1, "idle", f"已輸入 {len(text)} 字（{self.voice.last_provider}）")
+            self.play("success", 1, "idle", f"已輸入 {len(text)} 字（{self.voice.last_provider}）", level="feedback")
         elif mode == "handoff":
             widget = self.panel_widgets.get("handoff") if self.panel_widgets else None
             if widget is not None:
                 try:
                     widget.insert("end", text)
-                    self.play("success", 1, "idle", "已放進交代欄，確認後按「整理」。")
+                    self.play("success", 1, "idle", "已放進交代欄，確認後按「整理」。", level="feedback")
                     return
                 except tk.TclError:
                     pass
@@ -1485,7 +1711,7 @@ class SecretaryPet(DesktopPetPreview):
             self._render_dashboard()
         except (tk.TclError, AttributeError, KeyError):
             pass
-        self.play("success", 2, "idle", message)
+        self.play("success", 2, "idle", message, level="feedback")
 
     def _voice_payload(self) -> dict:
         settings = self.data.get("settings", {})
@@ -1559,6 +1785,11 @@ class SecretaryPet(DesktopPetPreview):
                     "lastError": getattr(getattr(self, "cloud", None), "last_error", ""),
                 },
                 "voice": self._voice_payload() if hasattr(self, "_voice_payload") else {},
+                "notices": {
+                    "log": [dict(entry) for entry in (self.data.get("notice_log") or [])[:20]],
+                    "dndUntil": float(getattr(getattr(self, "notices", None), "dnd_until", 0) or 0),
+                    "unread": getattr(self, "notices", None).unread_count() if hasattr(self, "notices") else 0,
+                },
                 "focus": {
                     "enabled": bool(self.data.get("settings", {}).get("focus_enabled", True)),
                     "keywords": list(self.data.get("settings", {}).get("focus_keywords") or []),
@@ -1582,10 +1813,12 @@ class SecretaryPet(DesktopPetPreview):
             if action == "water":
                 health["water_count"] = int(health.get("water_count") or 0) + 1
                 health["last_water"] = now
+                self.health_alerted["water"] = False
                 bubble = f"喝水第 {health['water_count']} 杯，讚！"
             elif action == "move_done":
                 health["last_move"] = now
                 health["move_done_date"] = today
+                self.health_alerted["move"] = False
                 bubble = "起身活動完成，繼續加油！"
             elif action == "medicine_done":
                 slot = str(payload.get("time") or "")
@@ -1750,6 +1983,17 @@ class SecretaryPet(DesktopPetPreview):
                     whitelist.append(title)
                     whitelist[:] = whitelist[-20:]
                 bubble = "好，這個視窗今天不再提醒。"
+            elif action == "notices_read":
+                self.notices.mark_all_read()
+                bubble = ""
+            elif action == "dnd":
+                try:
+                    minutes = int(payload.get("minutes") or 0)
+                except (TypeError, ValueError):
+                    minutes = 0
+                self.notices.dnd_until = time.time() + minutes * 60 if minutes > 0 else 0.0
+                self.data.setdefault("settings", {})["dnd_until"] = self.notices.dnd_until
+                bubble = f"🔕 勿擾 {minutes} 分鐘（吃藥等重要提醒仍會跳出）。" if minutes > 0 else "🔔 勿擾已取消。"
             elif action == "toggle_pause":
                 try:
                     self.root.after(0, self.toggle_pause)
@@ -1766,7 +2010,9 @@ class SecretaryPet(DesktopPetPreview):
                 return {"ok": False, "error": f"未知動作：{action}"}
             self._save_data()
         try:
-            self.root.after(0, lambda: self.show_bubble(bubble, 2600))
+            if bubble:
+                self.root.after(0, lambda: self.notify(bubble, "feedback"))
+            self.root.after(0, lambda: self._badge_tick(reschedule=False))
         except tk.TclError:
             pass
         return self._panel_payload()
@@ -2167,7 +2413,7 @@ class SecretaryPet(DesktopPetPreview):
             message = f"{selected} 的服藥紀錄已完成。"
         self._save_data()
         self._render_health()
-        self.play("success", 2, "idle", message)
+        self.play("success", 2, "idle", message, level="feedback")
 
     def _set_medicine_time(self, value: str) -> None:
         value = value.strip()
@@ -2197,7 +2443,7 @@ class SecretaryPet(DesktopPetPreview):
         if not self.data.get("settings", {}).get("health_reminders", True) or self._in_quiet_hours():
             self.root.after(60_000, self._health_tick)
             return
-        alerts: list[str] = []
+        alerts: list[tuple[str, str]] = []
         move_interval = max(5, int(health.get("move_interval", 60)))
         water_interval = max(5, int(health.get("water_interval", 60)))
         for key, field, minutes, message in [
@@ -2210,18 +2456,25 @@ class SecretaryPet(DesktopPetPreview):
                 elapsed = timedelta()
             if elapsed >= timedelta(minutes=minutes) and not self.health_alerted[key]:
                 self.health_alerted[key] = True
-                alerts.append(message)
+                alerts.append((key, message))
         current_time = now.strftime("%H:%M")
         done_times = set(health.get("medicine_done_times", []))
         alerted_times = set(health.get("medicine_alerted_times", []))
         for med_time in self._medicine_times():
             if current_time >= med_time and med_time not in done_times and med_time not in alerted_times:
                 alerted_times.add(med_time)
-                alerts.append(f"服藥提醒時間 {med_time} 到了，請依自己的醫囑處理。")
+                alerts.append((f"med:{med_time}", f"服藥提醒時間 {med_time} 到了，請依自己的醫囑處理。"))
                 break
         health["medicine_alerted_times"] = sorted(alerted_times)
         if alerts:
-            self.play("warning", 3, "idle", alerts[0])
+            self.play("warning", 3, "idle")
+            for kind, message in alerts:
+                if kind.startswith("med:"):
+                    self.notify(message, "urgent", key=kind, tag="💊 服藥", actions=[("吃了", kind), ("晚點", "later")])
+                elif kind == "water":
+                    self.notify(message, "normal", key="water", tag="💧 喝水", actions=[("喝了", "water"), ("晚點", "later")])
+                else:
+                    self.notify(message, "normal", key="move", tag="🚶 起身", actions=[("動過了", "move_done"), ("晚點", "later")])
         self.root.after(60_000, self._health_tick)
 
     def _opening_brief(self) -> None:
@@ -2232,9 +2485,10 @@ class SecretaryPet(DesktopPetPreview):
         overdue = [task for task in active if task.get("due_date") and task["due_date"] < today]
         due = [task for task in active if task.get("due_date") == today]
         if overdue:
-            self.show_bubble(f"有 {len(overdue)} 件逾期任務，要先看看嗎？", 4200)
+            first = str(overdue[0].get("title") or "")[:18]
+            self.notify(f"有 {len(overdue)} 件逾期任務，先處理「{first}」？", "urgent", key="overdue", tag="⚠ 逾期", actions=[("打開", "open"), ("晚點", "later")])
         elif due:
-            self.show_bubble(f"今天有 {len(due)} 件期限任務。", 3600)
+            self.notify(f"今天有 {len(due)} 件期限任務。", "normal", key="due", tag="📌 今日", actions=[("打開", "open")])
 
     def _choose_attachments(self) -> None:
         paths = filedialog.askopenfilenames(
@@ -2413,7 +2667,7 @@ class SecretaryPet(DesktopPetPreview):
             messagebox.showinfo(APP_NAME, "請輸入交代內容，或加入圖片／檔案。", parent=self.panel)
             return
         if self.attachments:
-            self.show_bubble("正在讀取附件內容……", 3000)
+            self.notify("正在讀取附件內容……", "feedback")
             if self.panel:
                 self.panel.update_idletasks()
             self._persist_attachments()
@@ -2445,7 +2699,7 @@ class SecretaryPet(DesktopPetPreview):
         frame: tk.Frame = self.panel_widgets["draft_frame"]  # type: ignore[assignment]
         frame.pack(fill="x", pady=(10, 0))
         frame.lift()
-        self.play("think", 2, "idle", "我整理好了，請你確認。")
+        self.play("think", 2, "idle", "我整理好了，請你確認。", level="feedback")
 
     @staticmethod
     def _parse_date(text: str) -> str:
@@ -2473,7 +2727,7 @@ class SecretaryPet(DesktopPetPreview):
         frame: tk.Frame = self.panel_widgets["draft_frame"]  # type: ignore[assignment]
         frame.pack_forget()
         self._render_dashboard()
-        self.play("success", 2, "idle", "完成！已加入桌面秘書任務清單。")
+        self.play("success", 2, "idle", "完成！已加入桌面秘書任務清單。", level="feedback")
 
     def _save_note(self) -> None:
         handoff: tk.Text = self.panel_widgets["handoff"]  # type: ignore[assignment]
@@ -2498,7 +2752,7 @@ class SecretaryPet(DesktopPetPreview):
         self.attachment_content_cache = {}
         self._render_attachments()
         self._render_notes()
-        self.play("success", 2, "idle", "記事已保存在本機。")
+        self.play("success", 2, "idle", "記事已保存在本機。", level="feedback")
 
 
 if __name__ == "__main__":
