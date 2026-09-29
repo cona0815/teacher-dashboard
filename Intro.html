@@ -308,6 +308,10 @@
   }
   footer a { color: var(--grass); }
   footer p { margin: 0 0 8px; }
+  .promo { padding-top: 34px; }
+  .promo-frame { position: relative; border-radius: 22px; overflow: hidden; background: #122F2A; box-shadow: 0 24px 60px rgba(18,47,42,.28); aspect-ratio: 16 / 9; }
+  .promo-frame video { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .promo-note { margin-top: 10px; font-size: 14px; color: var(--muted, #657570); text-align: center; }
 </style>
 
 </head>
@@ -369,6 +373,21 @@
 
 <main>
 
+  <!-- 宣傳影片 -->
+  <section class="promo" id="video">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow">48 秒看懂</div>
+        <h2>老師每天在忍的那些事，交給它</h2>
+        <p>LINE 訊息整理、在家寫聯絡本、點名收作業、班級工具、AI 起草教材，加上會提醒你喝水的小綿助。</p>
+      </div>
+      <div class="promo-frame">
+        <video controls playsinline preload="metadata" poster="assets/video/teacher-dashboard-48s.jpg" src="assets/video/teacher-dashboard-48s.mp4" aria-label="教師工作台 48 秒介紹影片"></video>
+      </div>
+      <p class="promo-note">影片使用虛構的示範資料；AI 結果為示範內容。</p>
+    </div>
+  </section>
+
   <!-- 三層 -->
   <section>
     <div class="wrap">
@@ -425,6 +444,19 @@
 
       <div class="cards">
         <article class="card">
+          <span class="kicker">今日聯絡本・在家就能寫</span>
+          <p class="pain">晚上才想到明天要帶什麼，卻得等到學校才能寫聯絡本。</p>
+          <h3>不用到學校：LINE 或工作台寫好，隔天大屏黑板自動出現</h3>
+          <ul>
+            <li><strong>在家用 LINE 傳一句就好</strong>——「聯絡本：數習P.20、帶直笛」，小幫手回覆「已寫入」，隔天大屏一開就在黑板上</li>
+            <li>或打開工作台網頁（手機也行），用下拉選單逐項輸入，右邊迷你黑板即時預覽</li>
+            <li><strong>臨時要改也不用跑回教室</strong>，黑板自己會換<span class="lead">（約一分鐘內；急的話按大屏「重新整理」立刻生效）</span></li>
+            <li>學生照抄黑板，老師不用再一直唸；五種字體任選，低年級可切注音體</li>
+            <li>想先寫下週的也行，它會問你要存哪一天</li>
+          </ul>
+        </article>
+
+        <article class="card">
           <span class="kicker">晨間大屏</span>
           <p class="pain">早自習點名收作業，弄到上課鐘響還沒完。</p>
           <h3>座號點一下就好，8:08 它自己回報</h3>
@@ -445,19 +477,6 @@
             <li>沒交的自動變灰不能點；點一下＝待訂正，改完再點＝完成</li>
             <li>誰還沒訂正完，依座號／按科目／日曆都查得到</li>
             <li>近 30 天跨日累計，不是只有今天；清完的版面自己收起來</li>
-          </ul>
-        </article>
-
-        <article class="card">
-          <span class="kicker">今日聯絡本</span>
-          <p class="pain">聯絡本抄到手酸，還要一直唸給學生聽。</p>
-          <h3>黑板風聯絡本自動投影，學生照抄</h3>
-          <ul>
-            <li>前一晚在工作台用下拉選單輸入，隔天大屏一開就在</li>
-            <li><strong>臨時要改？對 LINE 說一句就好</strong>——傳「聯絡本：數習P.20、帶直笛」，
-              <strong>人不用跑回教室</strong>，黑板自己會換<span class="lead">（約一分鐘內；急的話按大屏「重新整理」立刻生效）</span></li>
-            <li>五種字體任選，低年級可切注音體（注音芫荽／注音粉圓）</li>
-            <li>想先寫下週的也行，它會問你要存哪一天</li>
           </ul>
         </article>
 
@@ -602,7 +621,7 @@
       <div class="timeline">
         <div class="tl">
           <span class="when">前一晚</span>
-          <p class="what"><strong>寫明天的聯絡本</strong>
+          <p class="what"><strong>在家寫明天的聯絡本</strong>
             <span class="note">工作台用下拉選單快速輸入，或直接對 LINE 說「聯絡本：數習P.20、帶直笛」。想先寫下週的也行，它會問你要存哪一天。</span></p>
         </div>
         <div class="tl">

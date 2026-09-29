@@ -490,6 +490,11 @@ assert.match(installHtml, /小綿助 v2\.\d/, "安裝更新指南應介紹小綿
     assert.ok(size < 200000, `網頁版 pet_${state}.webp 應為 v3 新畫風（舊版約 600KB）`);
   }
   assert.ok(fs.existsSync(path.join(projectRoot, "assets", "pet", "v3", "CODEX_HANDOFF.md")), "v3 動作圖交接手冊應保留在 repo");
+  // 2026-09-29 介紹頁：48 秒宣傳影片＋「在家就能寫聯絡本」亮點
+  assert.match(introText, /<video[^>]+src="assets\/video\/teacher-dashboard-48s\.mp4"/, "Intro 應嵌入 48 秒宣傳影片");
+  assert.ok(fs.statSync(path.join(projectRoot, "assets", "video", "teacher-dashboard-48s.mp4")).size < 15 * 1024 * 1024, "宣傳影片應壓縮在 15MB 以內");
+  assert.ok(fs.existsSync(path.join(projectRoot, "assets", "video", "teacher-dashboard-48s.jpg")), "宣傳影片應有封面圖");
+  assert.match(introText, /不用到學校：LINE 或工作台寫好，隔天大屏黑板自動出現/, "Intro 應把在家寫聯絡本列為亮點");
 }
 assert.match(installHtml, /寫入 Google 日曆、存檔到雲端硬碟/, "更新指南授權說明應含日曆與雲端硬碟");
 assert.match(installHtml, /以前只是模擬/, "更新指南應說明雲端功能已改為真實寫入");
