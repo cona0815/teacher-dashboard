@@ -111,15 +111,63 @@
     .d-qr { fill:#1c302d; }
     .d-ss { fill:#1c6fbf; } .d-sswtxt { font-size:11px; fill:#dcebff; } .d-sslink { font-size:12px; font-weight:800; fill:#fff; text-decoration:underline; }
     .d-selcode { fill:#b9d4f5; }
+
+    /* ===== 版面：深色固定導覽列＋開頭＋編號章節卡片 ===== */
+    body { font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif; }
+    .topnav { position:sticky; top:0; z-index:30; background:rgba(23,63,58,.95); backdrop-filter:blur(8px); }
+    .topnav .bar { max-width:1100px; margin:0 auto; padding:8px 16px; display:flex; align-items:center; gap:6px; min-height:60px; }
+    .topnav .brand { display:flex; align-items:center; gap:10px; color:#fff; text-decoration:none; margin-right:auto; font-weight:900; font-size:16px; line-height:1.2; }
+    .topnav .brand .logo { width:38px; height:38px; border-radius:11px; background:#d8a33a; display:grid; place-items:center; font-size:20px; flex:0 0 38px; }
+    .topnav .brand small { display:block; font-size:12px; font-weight:500; color:#bfd9d0; }
+    .topnav .nl { color:#e6f1ed; text-decoration:none; font-size:13.5px; font-weight:800; padding:5px 8px; border-radius:8px; white-space:nowrap; }
+    .topnav .nl:hover { background:rgba(255,255,255,.12); }
+    .topnav .cta { background:#d8a33a; color:#2b1e03; text-decoration:none; font-weight:900; font-size:14px; padding:7px 16px; border-radius:999px; white-space:nowrap; margin-left:6px; }
+    @media (max-width:1060px) { .topnav .nl { display:none; } }
+    header.hero { background:transparent; color:var(--ink); text-align:center; padding:40px 16px 8px; max-width:900px; margin:0 auto; }
+    header.hero p { opacity:1; margin-top:0; }
+    header.hero .pillcta { color:var(--ink); }
+    .hero .badge { display:inline-block; background:#fbf1da; color:#7a5410; border:1px solid #ebd39c; font-weight:800; font-size:13px; padding:4px 14px; border-radius:999px; }
+    .hero h1 { font-size:clamp(28px,4.4vw,42px); line-height:1.3; margin:14px 0 10px; font-weight:900; color:var(--ink); }
+    .hero h1 em { font-style:normal; color:var(--primary); }
+    .hero p.intro { color:var(--muted); max-width:720px; margin:0 auto; font-size:15.5px; }
+    .hero .pillcta { margin-top:16px; display:inline-flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:center; background:#fff; border:1px solid var(--line); border-radius:999px; padding:6px 6px 6px 18px; font-size:14px; }
+    .hero .pillcta a { background:var(--primary); color:#fff; text-decoration:none; font-weight:800; padding:6px 16px; border-radius:999px; }
+    nav.toc { position:static; background:transparent; border:0; padding:18px 0 0; }
+    nav.toc .wrap { justify-content:center; max-width:900px; }
+    nav.toc a { background:#fff; border:1px solid var(--line); box-shadow:0 2px 6px rgba(18,47,42,.05); }
+    main { padding:20px 0 80px; }
+    section { border:0; border-radius:18px; box-shadow:0 10px 25px -8px rgba(18,47,42,.14); padding:26px 26px; }
+    section.tier1, section.tier2, section.tier3 { border:0; }
+    section.tier1 { border-top:5px solid #5fa87f; } section.tier2 { border-top:5px solid #d8a33a; } section.tier3 { border-top:5px solid #d46a5a; }
+    .sec-head { display:flex; gap:14px; align-items:flex-start; margin-bottom:10px; }
+    .sec-icon { flex:0 0 50px; height:50px; border-radius:14px; background:var(--soft); display:grid; place-items:center; font-size:25px; line-height:1; }
+    section.tier1 .sec-icon { background:#eef8f2; } section.tier2 .sec-icon { background:#fff8e6; } section.tier3 .sec-icon { background:#fdf0ee; }
+    .sec-titles { flex:1; min-width:0; padding-top:4px; }
+    .sec-titles h2 { font-size:clamp(20px,2.6vw,23px); line-height:1.4; margin-bottom:2px; }
+    .sec-num { color:var(--primary); margin-right:4px; }
+    section.tier1 .sec-num { color:#2f8a5b; } section.tier2 .sec-num { color:#b07d12; } section.tier3 .sec-num { color:#b5523f; }
+    @media (max-width:640px) { section { padding:20px 16px; } .sec-icon { flex-basis:42px; height:42px; font-size:21px; } table { display:block; overflow-x:auto; -webkit-overflow-scrolling:touch; } code { overflow-wrap:anywhere; word-break:break-all; } header.hero .pillcta { border-radius:18px; padding:10px 12px; } }
   </style>
 </head>
 <body>
-  <header>
-    <div class="wrap">
-      <h1>📖 安裝教學（第 2 版）</h1>
-      <p>先用<strong>免設定</strong>的工作台；想要更多功能，再照「<strong>難度</strong>」挑要不要往下裝。三個難度各自獨立，每一步都附操作畫面，<strong>照紅框點</strong>就對了。</p>
-      <p>還在考慮要不要用？先看<a href="Intro.html" style="color:inherit;font-weight:800">一頁式功能介紹</a>，那頁也適合直接轉給同事。</p>
-    </div>
+  <div class="topnav"><div class="bar">
+    <a class="brand" href="#top"><span class="logo">📖</span><span>安裝教學（第 2 版）<small>教師工作台・部署方法</small></span></a>
+    <a class="nl" href="#part0">🧭 開始前</a>
+    <a class="nl" href="#tier1">🟢 難度 1</a>
+    <a class="nl" href="#tier2">🟡 難度 2</a>
+    <a class="nl" href="#tier3">🔴 難度 3</a>
+    <a class="nl" href="#part3">📺 晨間大屏</a>
+    <a class="nl" href="#pet">🐑 小綿助</a>
+    <a class="nl" href="#part5">🛟 疑難排解</a>
+    <a class="nl" href="#partv2">🆕 舊版升級</a>
+    <a class="cta" href="Index.html">開始使用工作台 →</a>
+  </div></div>
+
+  <header class="hero" id="top">
+    <span class="badge">🟢 難度 1 → 🟡 難度 2 → 🔴 難度 3・每一步都附操作畫面</span>
+    <h1>📖 安裝教學（第 2 版）<br><em>照紅框點就對了</em></h1>
+    <p class="intro">先用<strong>免設定</strong>的工作台；想要更多功能，再照「<strong>難度</strong>」挑要不要往下裝。三個難度各自獨立，每一步都附操作畫面，<strong>照紅框點</strong>就對了。</p>
+    <div class="pillcta">還在考慮要不要用？先看一頁式功能介紹，那頁也適合直接轉給同事。 <a href="Intro.html">一頁式功能介紹 →</a></div>
   </header>
 
   <nav class="toc"><div class="wrap">
@@ -140,7 +188,7 @@
 
   <main>
     <section id="part0">
-      <h2>🧭 開始前：你想用到哪裡？</h2>
+      <div class="sec-head"><div class="sec-icon">🧭</div><div class="sec-titles"><h2><span class="sec-num">1.</span>開始前：你想用到哪裡？</h2></div></div>
       <p class="lead">不必一次全裝。工作台打開就能用；後面三個難度<strong>各自獨立，可以只做一個</strong>。</p>
       <figure class="diagram"><svg viewBox="0 0 780 300" role="img" aria-label="安裝路線圖（點方框可跳到該難度）：先用免設定的工作台，再依難度選擇雲端大腦、AI 金鑰、LINE 小幫手">
 <defs><marker id="ar-road" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
@@ -221,7 +269,7 @@ LINE userId（難度 3，U 開頭）：</pre>
     </section>
 
     <section id="part1">
-      <h2>🅰 Part A：開始使用工作台（3 分鐘，免設定）</h2>
+      <div class="sec-head"><div class="sec-icon">🅰</div><div class="sec-titles"><h2><span class="sec-num">2.</span>Part A：開始使用工作台（3 分鐘，免設定）</h2></div></div>
       <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="Part A 操作畫面">
 <defs><marker id="ar-pa" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
 <rect class="d-win" x="8" y="8" width="236" height="170" rx="8"/><rect class="d-wbar" x="9" y="9" width="234" height="19" rx="7"/><rect class="d-wbar" x="9" y="20" width="234" height="8" rx="0"/><circle cx="18" cy="18" r="3" fill="#e0766a"/><circle cx="27" cy="18" r="3" fill="#e8c15a"/><circle cx="36" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="46" y="22" text-anchor="start">瀏覽器</text><rect class="d-field" x="18" y="38" width="192" height="22" rx="4"/><text class="d-mono" x="24" y="53" text-anchor="start">t-borad2026.netlify.app</text><text class="d-title2" x="222" y="54" text-anchor="middle">☆</text><rect class="d-hl" x="212" y="37" width="22" height="24" rx="5"/><rect class="d-hdr" x="18" y="70" width="216" height="34" rx="6"/><text class="d-white" x="28" y="92" text-anchor="start">教師工作台</text><rect class="d-ph" x="18" y="112" width="216" height="22" rx="4"/><rect class="d-ph" x="18" y="140" width="216" height="22" rx="4"/>
@@ -255,7 +303,7 @@ LINE userId（難度 3，U 開頭）：</pre>
 
     <section id="tier1" class="tier1">
       <span id="part2"></span>
-      <div class="tier-head"><h2>🟢 難度 1：Google 雲端大腦（GAS）</h2><span class="pill">約 15 分鐘</span><span class="pill">不碰程式碼</span></div>
+      <div class="sec-head"><div class="sec-icon">🟢</div><div class="sec-titles"><div class="tier-head"><h2><span class="sec-num">3.</span>難度 1：Google 雲端大腦（GAS）</h2><span class="pill">約 15 分鐘</span><span class="pill">不碰程式碼</span></div></div></div>
       <p class="lead">在你自己的 Google 帳號複製一份程式，當作你的「雲端大腦」。<strong>先在瀏覽器登入 Google</strong>（右上角看得到你的頭像），建議用<strong>個人 Gmail</strong>（學校帳號可能被管理員擋）。</p>
       <div class="gets"><span>會拿到：🌐 🔑C 🔑D</span><span>（🔑B 會一起產生，難度 3 才用）</span></div>
 
@@ -363,7 +411,7 @@ LINE userId（難度 3，U 開頭）：</pre>
     </section>
 
     <section id="tier2" class="tier2">
-      <div class="tier-head"><h2>🟡 難度 2：AI 金鑰 🔑E（Gemini）</h2><span class="pill">約 3 分鐘</span><span class="pill">不需要難度 1</span></div>
+      <div class="sec-head"><div class="sec-icon">🟡</div><div class="sec-titles"><div class="tier-head"><h2><span class="sec-num">4.</span>難度 2：AI 金鑰 🔑E（Gemini）</h2><span class="pill">約 3 分鐘</span><span class="pill">不需要難度 1</span></div></div></div>
       <p class="lead">申請一串免費金鑰貼進設定，就打開 AI 行政助理（PDF／訊息拆成任務與記事）、訊息整合站、教材小工場全部 AI 工具（學習單、作文批改、海報生圖、圖像簡報…）、小綿助語音輸入。</p>
       <div class="gets"><span>會拿到：🔑E</span></div>
       <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="難度 2 操作畫面">
@@ -394,7 +442,7 @@ LINE userId（難度 3，U 開頭）：</pre>
     </section>
 
     <section id="tier3" class="tier3">
-      <div class="tier-head"><h2>🔴 難度 3：LINE 小幫手</h2><span class="pill">約 30 分鐘</span><span class="pill need">需先完成難度 1</span></div>
+      <div class="sec-head"><div class="sec-icon">🔴</div><div class="sec-titles"><div class="tier-head"><h2><span class="sec-num">5.</span>難度 3：LINE 小幫手</h2><span class="pill">約 30 分鐘</span><span class="pill need">需先完成難度 1</span></div></div></div>
       <p class="lead">申請你自己的 LINE 官方帳號，接上難度 1 的雲端大腦。做完就能在 LINE 傳文字／語音／照片建任務、寫聯絡本、每天早上收到點名回報。<strong>建議用電腦操作，手機放旁邊</strong>（要掃 QR、傳訊息）。</p>
       <div class="gets"><span>會拿到：🔑A</span><span>會用到：難度 1 的 🌐 與 🔑B</span></div>
       <figure class="diagram"><svg viewBox="0 0 780 170" role="img" aria-label="難度 3 五關流程：建立 LINE 官方帳號、選單②貼 🔑A、接 Webhook、選單③鎖門、選單⑤自動化並驗收">
@@ -577,7 +625,7 @@ LINE userId（難度 3，U 開頭）：</pre>
     </section>
 
     <section id="part3">
-      <div class="tier-head"><h2>📺 晨間大屏（教室電腦）</h2><span class="pill">10 分鐘</span><span class="pill need">需先完成難度 1</span></div>
+      <div class="sec-head"><div class="sec-icon">📺</div><div class="sec-titles"><div class="tier-head"><h2><span class="sec-num">6.</span>晨間大屏（教室電腦）</h2><span class="pill">10 分鐘</span><span class="pill need">需先完成難度 1</span></div></div></div>
       <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="晨間大屏設定操作畫面">
 <defs><marker id="ar-pc" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
 <rect class="d-win" x="8" y="8" width="170" height="170" rx="8"/><rect class="d-wbar" x="9" y="9" width="168" height="19" rx="7"/><rect class="d-wbar" x="9" y="20" width="168" height="8" rx="0"/><circle cx="18" cy="18" r="3" fill="#e0766a"/><circle cx="27" cy="18" r="3" fill="#e8c15a"/><circle cx="36" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="46" y="22" text-anchor="start">晨間大屏（教室電腦）</text><rect class="d-btn-l" x="16" y="36" width="36" height="20" rx="5"/><text class="d-btxt-d" x="34" y="50" text-anchor="middle">點名</text><rect class="d-btn-l" x="57" y="36" width="36" height="20" rx="5"/><text class="d-btxt-d" x="75" y="50" text-anchor="middle">作業</text><rect class="d-btn-l" x="98" y="36" width="25" height="20" rx="5"/><text class="d-btxt-d" x="110" y="50" text-anchor="middle">…</text><rect class="d-btn-a" x="128" y="36" width="36" height="20" rx="5"/><text class="d-btxt-d" x="146" y="50" text-anchor="middle">設定</text><rect class="d-hl" x="125" y="33" width="42" height="26" rx="6"/><path class="d-cursor" d="M154,48 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/><rect class="d-seat" x="20" y="68" width="23" height="26" rx="4"/><rect class="d-seat" x="49" y="68" width="23" height="26" rx="4"/><rect class="d-seat" x="78" y="68" width="23" height="26" rx="4"/><rect class="d-seat" x="108" y="68" width="23" height="26" rx="4"/><rect class="d-seat" x="137" y="68" width="23" height="26" rx="4"/><rect class="d-seat" x="20" y="100" width="23" height="26" rx="4"/><rect class="d-seat" x="49" y="100" width="23" height="26" rx="4"/><rect class="d-seat" x="78" y="100" width="23" height="26" rx="4"/><rect class="d-seat" x="108" y="100" width="23" height="26" rx="4"/><rect class="d-seat" x="137" y="100" width="23" height="26" rx="4"/><rect class="d-seat" x="20" y="132" width="23" height="26" rx="4"/><rect class="d-seat" x="49" y="132" width="23" height="26" rx="4"/><rect class="d-seat" x="78" y="132" width="23" height="26" rx="4"/><rect class="d-seat" x="108" y="132" width="23" height="26" rx="4"/><rect class="d-seat" x="137" y="132" width="23" height="26" rx="4"/>
@@ -635,7 +683,7 @@ LINE userId（難度 3，U 開頭）：</pre>
     </section>
 
     <section id="pet">
-      <div class="tier-head"><h2>🐑 桌面小綿助（選用，Windows）</h2><span class="pill">3 分鐘</span></div>
+      <div class="sec-head"><div class="sec-icon">🐑</div><div class="sec-titles"><div class="tier-head"><h2><span class="sec-num">7.</span>桌面小綿助（選用，Windows）</h2><span class="pill">3 分鐘</span></div></div></div>
       <p class="lead">免安裝的桌面小夥伴：健康提醒、分心提醒、專注模式；做了難度 1 可以直連你的資料，做了難度 2 可以按住說話就出字。</p>
       <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="小綿助安裝操作畫面">
 <defs><marker id="ar-peta" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
@@ -672,7 +720,7 @@ LINE userId（難度 3，U 開頭）：</pre>
     </section>
 
     <section id="part4">
-      <h2>🅳 Part D：每天怎麼用（日常流程）</h2>
+      <div class="sec-head"><div class="sec-icon">🅳</div><div class="sec-titles"><h2><span class="sec-num">8.</span>Part D：每天怎麼用（日常流程）</h2></div></div>
       <figure class="diagram">
         <svg viewBox="0 0 780 250" role="img" aria-label="一天的自動化時間軸：前一晚寫聯絡本、晨間點名收作業、8:05 自動未到、8:08 推播點名、8:40 推播作業、16:00 選用推播">
           <defs>
@@ -784,7 +832,7 @@ LINE userId（難度 3，U 開頭）：</pre>
     </section>
 
     <section id="part5">
-      <h2>🛟 疑難排解</h2>
+      <div class="sec-head"><div class="sec-icon">🛟</div><div class="sec-titles"><h2><span class="sec-num">9.</span>疑難排解</h2></div></div>
       <table>
         <tr><th>症狀</th><th>難度</th><th>解法</th></tr>
         <tr><td>按綠色按鈕後說「沒有權限」或要登入</td><td>🟢 1</td><td>先在瀏覽器登入 Google（建議個人 Gmail），再點一次按鈕</td></tr>
@@ -807,7 +855,7 @@ LINE userId（難度 3，U 開頭）：</pre>
     </section>
 
     <section id="part6">
-      <h2>🔐 備份與安全</h2>
+      <div class="sec-head"><div class="sec-icon">🔐</div><div class="sec-titles"><h2><span class="sec-num">10.</span>備份與安全</h2></div></div>
       <ul>
         <li><strong>☁️ 雲端備份（做了難度 1 才有）</strong>：工作台「設定 → 備份與還原 → 立即雲端備份」，整份存進<strong>你自己的試算表</strong>（「工作台備份」分頁），保留最近 10 份，預設每天開啟工作台時自動備份。換電腦時「查看雲端備份 → 還原這份」。</li>
         <li><strong>每週一次</strong>：「設定 → 備份與還原 → 下載 JSON 備份」（不含金鑰，可安心存隨身碟），不依賴任何服務的離線保險。</li>
@@ -820,7 +868,7 @@ LINE userId（難度 3，U 開頭）：</pre>
     </section>
 
     <section id="partv2">
-      <h2>🆕 已經在用舊版？升級看這裡</h2>
+      <div class="sec-head"><div class="sec-icon">🆕</div><div class="sec-titles"><h2><span class="sec-num">11.</span>已經在用舊版？升級看這裡</h2></div></div>
       <p class="lead">怎麼知道自己的版本？網站每頁左下角有「版本 日期 時間」；雲端大腦在試算表選單「🤖 LINE 小幫手 → ℹ️ 程式版本」或對機器人傳「版本」。<strong>本段下方會顯示網站上最新的 LineBot.gs 版本</strong>，比你的新就照下面更新。全新安裝的老師照上面做就是最新版，這段可以跳過。</p>
       <h3>第 2 版多了什麼？</h3>
       <table>
@@ -878,7 +926,7 @@ LINE userId（難度 3，U 開頭）：</pre>
     </section>
 
     <section id="part7">
-      <h2>©️ 版權與授權資料</h2>
+      <div class="sec-head"><div class="sec-icon">©️</div><div class="sec-titles"><h2><span class="sec-num">12.</span>版權與授權資料</h2></div></div>
       <p>本系統為開源軟體，採 <strong>MIT License</strong> 授權，可自由使用、修改與分享（需保留授權聲明）。分享給其他老師時，請一併保留本說明。</p>
       <table>
         <tr><th>項目</th><th>來源與授權</th></tr>
