@@ -28,7 +28,7 @@ jobs:
         run: |
           pyinstaller --clean --noconfirm --windowed --onedir `
             --name XiaoMianZhu `
-            --add-data "assets/pet;assets/pet" `
+            --add-data "assets/pet/frames;assets/pet/frames" `
             --add-data "windows_ocr.ps1;." `
             --hidden-import pypdf --hidden-import docx `
             --hidden-import openpyxl --hidden-import pptx `
