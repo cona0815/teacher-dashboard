@@ -431,6 +431,15 @@ assert.match(studioHtml, /setCropBox/, "PDF 工具應支援裁切");
 assert.match(noticesText, /pdf-lib/, "第三方聲明應記錄 pdf-lib");
 assert.match(morningHtml, /data-tool="tomato"/, "班級工具應含番茄鐘分頁");
 assert.match(morningHtml, /tomatoFullscreenButton/, "番茄鐘應支援全螢幕播放");
+// 2026-10 班級工具動畫大升級：吉祥物內嵌、投影模式、hidden 不被樣式蓋掉
+assert.match(morningHtml, /const SHEEP = \{\s*idle: 'data:image\/webp;base64,/, "小綿羊吉祥物應內嵌為 WebP（大屏維持單檔可攜）");
+for (const tool of ["lottery", "check", "score", "group", "quiet"]) {
+  assert.match(morningHtml, new RegExp(`data-fs-panel="${tool}"`), `班級工具「${tool}」應有投影模式`);
+}
+assert.match(morningHtml, /\.tool-opts\[hidden\], \.tomato-edit\[hidden\]/, "有 hidden 的編輯列與番茄鐘編輯框必須真的藏起來");
+for (const fx of ["lot-bulbs", "check-ring", "score-crown", "group-pool", "quietNeedle", "tomatoRing", "promptTiles"]) {
+  assert.match(morningHtml, new RegExp(fx), `班級工具動畫元件缺少「${fx}」`);
+}
 
 const netlifyConfig = fs.readFileSync(path.join(projectRoot, "netlify.toml"), "utf8");
 for (const header of ["Content-Security-Policy", "X-Content-Type-Options", "Referrer-Policy", "Permissions-Policy"]) {
