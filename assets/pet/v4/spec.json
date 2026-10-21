@@ -1,0 +1,58 @@
+{
+  "version": 4,
+  "fps": 30,
+  "canvas": 512,
+  "baseline_y": 488,
+  "center_x": 256,
+  "character_height": 336,
+  "neutral_pose": "idle 第 1 格：正面 3/4、四腳著地、眼睛睜開、嘴巴 ω、耳朵自然下垂",
+  "views": {
+    "front": "正面 3/4（多數動作）",
+    "side": "正側面朝右（走路、轉身）；朝左由 Claude 鏡像"
+  },
+  "parts": {
+    "required": ["body", "head", "ear_l", "ear_r", "leg_fl", "leg_fr", "leg_bl", "leg_br", "tail", "top_accessory"],
+    "faces": {
+      "eyes": ["open", "half", "closed", "happy", "surprised", "worried", "sleepy"],
+      "mouth": ["smile", "o", "wide", "worried", "yawn", "flat"],
+      "extras": ["blush", "sweat", "zzz_bubble", "sparkle"]
+    },
+    "note": "每個零件一張透明 PNG（建議 1024px 繪製、正面與側面各一套），另附 pivots.json 標出每個零件的旋轉軸心與父子關係。外表由老師決定，名稱與軸心規則不變。"
+  },
+  "actions": [
+    {"name": "idle", "group": "基本", "view": "front", "frames": 90, "loop": true, "ground": true, "trigger": "平常待機", "beats": "0–90 呼吸一次（身體高度 ±1.5%、2 格延遲帶動頭）；耳朵與頭頂飾品比身體慢 3–4 格跟隨擺動；60–66 一隻耳朵輕彈一下"},
+    {"name": "idle_blink", "group": "基本", "view": "front", "frames": 14, "loop": false, "ground": true, "trigger": "待機時隨機穿插（每 6–12 秒）", "beats": "0–3 眼睛 half、4–6 closed、7–9 half、10–13 open；頭微微下點 1–2px"},
+    {"name": "idle_look", "group": "基本", "view": "front", "frames": 60, "loop": false, "ground": true, "trigger": "待機時隨機穿插（看看左右）", "beats": "0–12 頭轉向左（眼睛先動、頭晚 2 格）、12–24 停住、24–40 轉向右、40–52 停住、52–60 回正"},
+    {"name": "idle_grade", "group": "基本", "view": "front", "frames": 72, "loop": true, "ground": true, "trigger": "待機時隨機穿插（改作業）", "beats": "坐姿；每 24 格一次：筆提起 6 格→打勾 4 格（手腕快、筆尾慢）→頭點一下 6 格→停 8 格", "props": ["筆", "作業本"]},
+    {"name": "happy", "group": "基本", "view": "front", "frames": 30, "loop": false, "ground": true, "trigger": "點一下小綿助、蹭滑鼠、打氣話", "beats": "0–6 預備下蹲（擠壓 6%）、6–14 小跳（伸展 5%）、14–20 落地擠壓、20–30 左右扭兩下回正；眼睛 happy、blush"},
+
+    {"name": "walk_right", "group": "移動", "view": "side", "frames": 30, "loop": true, "ground": true, "trigger": "在桌面巡邏（朝左由 Claude 鏡像）", "beats": "一個循環兩步；每步前腳往前 31px（512 畫布）且著地期間不滑步；身體在每步最低點下沉 6px、最高點上提 4px；耳朵與尾巴落後 3 格擺動；第 30 格要能無縫接回第 1 格"},
+    {"name": "turn", "group": "移動", "view": "side", "frames": 12, "loop": false, "ground": true, "trigger": "走路換方向（從朝右轉成朝左；反方向由 Claude 鏡像）", "beats": "0–3 預備身體略縮、3–9 轉到正面再轉到朝左（頭先轉、身體晚 2 格）、9–12 穩住"},
+    {"name": "peek", "group": "移動", "view": "front", "frames": 60, "loop": false, "ground": false, "free_center": true, "trigger": "走到螢幕右邊緣，躲出去再探頭（左邊由 Claude 鏡像）", "beats": "0–14 從畫布右側滑入只露出頭與前腳（ease-out）、14–40 左右張望一次並眨眼、40–60 縮回右側消失（ease-in）"},
+
+    {"name": "drag_pick", "group": "拖曳", "view": "front", "frames": 8, "loop": false, "ground": false, "trigger": "滑鼠按住拎起的瞬間", "beats": "0–3 被拎起、身體伸展 8%、眼睛 surprised、嘴 o；3–8 腳縮起"},
+    {"name": "drag", "group": "拖曳", "view": "front", "frames": 36, "loop": true, "ground": false, "trigger": "拖曳中", "beats": "以頸後為軸像鐘擺左右各 8°；四隻腳與耳朵比身體晚 3 格甩動；第 36 格無縫接第 1 格"},
+    {"name": "drop", "group": "拖曳", "view": "front", "frames": 16, "loop": false, "ground": true, "trigger": "放開滑鼠落地", "beats": "0–4 下落（伸展）、4–7 著地擠壓 10%、7–12 回彈 4%、12–16 回到基準姿勢；耳朵落地時下甩再彈回"},
+
+    {"name": "sleep_in", "group": "睡覺", "view": "front", "frames": 30, "loop": false, "ground": true, "trigger": "進入下班時段或投影全螢幕", "beats": "0–12 打哈欠（嘴 yawn、眼 sleepy）、12–30 趴下蜷成一團；最後一格＝sleep 第 1 格"},
+    {"name": "sleep", "group": "睡覺", "view": "front", "frames": 120, "loop": true, "ground": true, "free_scale": true, "trigger": "下班時段、投影全螢幕時", "beats": "4 秒一次慢呼吸（身體 ±2%）；耳朵偶爾抖一下（第 70 格）；zzz 泡泡緩慢上飄淡出（不是字母，是圓形泡泡）"},
+    {"name": "sleep_out", "group": "睡覺", "view": "front", "frames": 30, "loop": false, "ground": true, "trigger": "離開下班時段或全螢幕", "beats": "0–10 睜眼揉眼、10–22 起身伸懶腰、22–30 抖一抖回到基準姿勢"},
+
+    {"name": "listen", "group": "語音", "view": "front", "frames": 48, "loop": true, "ground": true, "trigger": "按住右 Ctrl／右 Alt 錄音中", "beats": "頭側傾 10°、一隻耳朵豎起並每 24 格微動；聲波弧線由小到大淡出（實心粗線）", "props": ["麥克風"]},
+    {"name": "think", "group": "語音", "view": "front", "frames": 48, "loop": true, "ground": true, "trigger": "AI 或語音整理中", "beats": "頭微抬、眼睛看上方；頭頂三個圓點依序出現（每點 8 格）再一起淡出；身體輕微左右搖 2°"},
+
+    {"name": "success", "group": "回饋", "view": "front", "frames": 36, "loop": false, "ground": true, "trigger": "任務完成、語音變任務、操作成功", "beats": "0–6 預備下蹲、6–16 跳起（最高 40px、伸展 6%）、16–20 落地擠壓 10%、20–28 回彈並舉前腳歡呼、28–36 回到基準姿勢；sparkle 在最高點閃出"},
+    {"name": "warning", "group": "回饋", "view": "front", "frames": 30, "loop": false, "ground": true, "trigger": "一般提醒、出錯時", "beats": "0–4 一驚（身體縮 4%、眼 surprised）、4–10 小跳 18px、10–14 落地、驚嘆號形狀從頭頂彈出（實心，非文字）、14–30 回正"},
+
+    {"name": "greet", "group": "通知", "view": "front", "frames": 48, "loop": false, "ground": true, "trigger": "開機時的開場簡報", "beats": "0–8 抬起固定同一隻前腳、8–36 揮手三次（手腕晚 2 格、ease-in-out）、36–48 放下回正；眼 happy"},
+    {"name": "overdue", "group": "通知", "view": "front", "frames": 48, "loop": false, "ground": true, "trigger": "任務逾期提醒", "beats": "0–10 舉起小月曆、10–30 月曆上一圈紅圈畫出來、30–40 擔心表情點頭兩下、40–48 放下", "props": ["空白月曆"]},
+    {"name": "mail", "group": "通知", "view": "front", "frames": 40, "loop": false, "ground": true, "trigger": "LINE 小幫手有新訊息", "beats": "0–8 抱住對話框形狀、8–20 對話框彈跳兩下、20–32 小跳、32–40 回正", "props": ["空白對話框"]},
+    {"name": "drink", "group": "通知", "view": "front", "frames": 48, "loop": false, "ground": true, "trigger": "喝水提醒、按「喝了」", "beats": "0–10 雙手捧杯舉起、10–30 喝兩口（頭後仰、喉部起伏）、30–40 滿足閉眼 happy、40–48 放下", "props": ["水杯"]},
+    {"name": "stretch", "group": "通知", "view": "front", "frames": 54, "loop": false, "ground": true, "free_scale": true, "trigger": "起身提醒、按「動過了」", "beats": "0–14 前腳往前伸、背拱起（伸展 10%）、14–24 停住、24–40 起身、40–54 抖毛（耳朵與毛延遲擺動）回正"},
+    {"name": "medicine", "group": "通知", "view": "front", "frames": 48, "loop": false, "ground": true, "trigger": "服藥提醒", "beats": "0–10 指向旁邊的鬧鐘、10–30 鬧鐘震動（鬧鐘本身左右抖、粗短震動線）、30–48 拍一下鬧鐘停止並回正", "props": ["鬧鐘（空白鐘面）", "藥盒"]},
+    {"name": "focus", "group": "通知", "view": "front", "frames": 96, "loop": true, "ground": true, "trigger": "專注時段進行中", "beats": "坐著看書；每 48 格翻一頁（頁面有弧線翻動）；眼睛左右讀字的小移動；呼吸持續", "props": ["書（空白頁）", "番茄計時器"]},
+    {"name": "watch", "group": "通知", "view": "front", "frames": 54, "loop": false, "ground": true, "trigger": "分心提醒（滑 YouTube、IG 太久）", "beats": "0–10 舉起望遠鏡、10–36 從左慢慢掃到中間停住、36–46 放下噘嘴、46–54 回正", "props": ["望遠鏡"]},
+    {"name": "note", "group": "通知", "view": "front", "frames": 54, "loop": false, "ground": true, "trigger": "記事存好、語音變記事", "beats": "0–30 在便利貼上畫兩條波浪線（筆跡逐格出現）、30–44 把便利貼貼到旁邊、44–54 拍拍手回正", "props": ["便利貼", "筆"]},
+    {"name": "sign", "group": "通知", "view": "front", "frames": 48, "loop": false, "ground": true, "trigger": "大屏提示送出、抽籤揭曉", "beats": "0–12 雙手把空白看板舉到頭頂、12–40 左右晃兩下展示、40–48 放下；看板整塊完全空白（系統會在上面疊字）", "props": ["空白看板"]}
+  ]
+}
