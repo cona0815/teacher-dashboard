@@ -5,38 +5,175 @@
   "baseline_y": 488,
   "center_x": 256,
   "character_height": 336,
-  "neutral_pose": "idle 第 1 格：正面 3/4、四腳著地、眼睛睜開、嘴巴 ω、耳朵自然下垂",
+  "neutral_pose": "每個角色自己的 idle 第 1 格（四足角色多半站姿，貓可以是端坐）",
   "views": {
     "front": "正面 3/4（多數動作）",
-    "side": "正側面朝右（走路、轉身）；朝左由 Claude 鏡像"
+    "side": "正側面朝右（走路、跑步、轉身）；朝左由 Claude 鏡像"
   },
-  "parts": {
-    "required": ["body", "head", "ear_l", "ear_r", "leg_fl", "leg_fr", "leg_bl", "leg_br", "tail", "top_accessory"],
-    "faces": {
-      "eyes": ["open", "half", "closed", "happy", "surprised", "worried", "sleepy"],
-      "mouth": ["smile", "o", "wide", "worried", "yawn", "flat"],
-      "extras": ["blush", "sweat", "zzz_bubble", "sparkle"]
+  "characters": [
+    {
+      "id": "sheep",
+      "name": "綿羊（小綿助本尊）",
+      "anatomy": "quadruped",
+      "neutral": "四腳站立、正面 3/4",
+      "personality": "溫和、愛睏",
+      "motion_style": "動作柔軟、落地回彈大、毛團比身體晚 4 格跟上",
+      "quirks": "idle 裡嘴巴偶爾咀嚼；耳朵是垂耳，甩動幅度大"
     },
-    "note": "每個零件一張透明 PNG（建議 1024px 繪製、正面與側面各一套），另附 pivots.json 標出每個零件的旋轉軸心與父子關係。外表由老師決定，名稱與軸心規則不變。"
+    {
+      "id": "tabby",
+      "name": "灰白虎斑貓",
+      "anatomy": "quadruped",
+      "neutral": "端坐、正面",
+      "personality": "好奇、愛乾淨",
+      "motion_style": "起動快、停得輕；notice 反應最快",
+      "quirks": "鬍鬚 whiskers 跟著頭延遲擺動；groom 機率高"
+    },
+    {
+      "id": "blackcat",
+      "name": "黑貓",
+      "anatomy": "quadruped",
+      "neutral": "端坐、側 3/4、尾巴往上捲",
+      "personality": "高冷、慢條斯理",
+      "motion_style": "所有動作振幅小一點、更滑順；只有被摸時才熱情",
+      "quirks": "尾巴分兩節（tail、tail_tip），尾巴尖獨立慢慢捲；全黑身體要靠眼睛與輪廓高光表現表情"
+    },
+    {
+      "id": "samoyed",
+      "name": "薩摩耶",
+      "anatomy": "quadruped",
+      "neutral": "四腳站立、正面 3/4、嘴巴微笑",
+      "personality": "熱情親人",
+      "motion_style": "尾巴一直慢搖；開心時整個屁股一起搖",
+      "quirks": "毛很蓬：另有 fluff_chest、fluff_back 零件做次級晃動；pet 時吐舌頭 tongue"
+    },
+    {
+      "id": "shiba",
+      "name": "柴犬",
+      "anatomy": "quadruped",
+      "neutral": "四腳站立、正面 3/4",
+      "personality": "活潑、有點倔強",
+      "motion_style": "最有彈性：hop、run 振幅最大；捲尾像彈簧",
+      "quirks": "bored 時會故意把頭轉開不理人（變體）"
+    },
+    {
+      "id": "robot",
+      "name": "小機器人",
+      "anatomy": "biped",
+      "neutral": "雙腳站立、雙手扠腰、螢幕臉微笑",
+      "personality": "認真的小助手",
+      "motion_style": "機械感：起停比動物快、停住時有一個小過衝再微震 2 格，但仍然要緩動，不能等速",
+      "quirks": "表情全在螢幕上（eyes／mouth 是發光圖形，螢幕本身不動）；耳機兩側 ear_l／ear_r 當耳朵；天線是 top_accessory；沒有尾巴"
+    }
+  ],
+  "parts": {
+    "required": [
+      "body",
+      "head",
+      "ear_l",
+      "ear_r",
+      "leg_fl",
+      "leg_fr",
+      "leg_bl",
+      "leg_br"
+    ],
+    "optional": [
+      "tail",
+      "tail_tip",
+      "top_accessory",
+      "whiskers",
+      "fluff_chest",
+      "fluff_back",
+      "tongue"
+    ],
+    "biped_mapping": "robot：leg_fl／leg_fr＝左右手臂，leg_bl／leg_br＝左右腿，ear_l／ear_r＝耳機，top_accessory＝天線；tail 不用",
+    "faces": {
+      "eyes": [
+        "open",
+        "half",
+        "closed",
+        "happy",
+        "surprised",
+        "worried",
+        "sleepy"
+      ],
+      "mouth": [
+        "smile",
+        "o",
+        "wide",
+        "worried",
+        "yawn",
+        "flat"
+      ],
+      "extras": [
+        "blush",
+        "sweat",
+        "zzz_bubble",
+        "sparkle",
+        "heart"
+      ]
+    },
+    "note": "每個角色一套零件（建議 1024px 繪製、正面與側面各一套）＋自己的 pivots.json。動作關鍵影格六個角色共用，角色不合的地方用 overrides 改。"
   },
+  "alive_rules": [
+    "永遠在呼吸：任何停住的姿勢都有 ±1.5% 起伏，沒有完全靜止的格子",
+    "超過 2 秒的動作（loop 除外的 sleep、focus 也要）裡至少眨眼一次，眼睛刻意閉著的段落除外",
+    "次級動作：耳朵、尾巴、毛、天線、鬍鬚都比身體晚 2–4 格，停下時多晃一下",
+    "重心：每一格都要看得出重量在哪隻腳上；跳之前先蹲，落地一定擠壓",
+    "不對稱：兩隻耳朵、兩隻腳不要同時同幅度動，至少錯開 1–2 格",
+    "個性：同一個動作，六個角色的振幅與節奏依 characters 的 motion_style 調整",
+    "不畫影子：腳下的影子由桌寵引擎畫，才能跟著視窗高度變化"
+  ],
+  "groups_order": [
+    "基本",
+    "生命感",
+    "移動",
+    "拖曳",
+    "睡覺",
+    "語音",
+    "回饋",
+    "通知"
+  ],
   "actions": [
-    {"name": "idle", "group": "基本", "view": "front", "frames": 90, "loop": true, "ground": true, "trigger": "平常待機", "beats": "0–90 呼吸一次（身體高度 ±1.5%、2 格延遲帶動頭）；耳朵與頭頂飾品比身體慢 3–4 格跟隨擺動；60–66 一隻耳朵輕彈一下"},
+    {"name": "idle", "group": "基本", "view": "front", "frames": 90, "loop": true, "ground": true, "trigger": "平常待機", "beats": "0–90 呼吸一次（身體高度 ±1.5%、2 格延遲帶動頭）；耳朵與頭頂飾品比身體慢 3–4 格跟隨擺動；60–66 一隻耳朵輕彈一下；黑貓、虎斑貓的 idle 是端坐"},
     {"name": "idle_blink", "group": "基本", "view": "front", "frames": 14, "loop": false, "ground": true, "trigger": "待機時隨機穿插（每 6–12 秒）", "beats": "0–3 眼睛 half、4–6 closed、7–9 half、10–13 open；頭微微下點 1–2px"},
     {"name": "idle_look", "group": "基本", "view": "front", "frames": 60, "loop": false, "ground": true, "trigger": "待機時隨機穿插（看看左右）", "beats": "0–12 頭轉向左（眼睛先動、頭晚 2 格）、12–24 停住、24–40 轉向右、40–52 停住、52–60 回正"},
     {"name": "idle_grade", "group": "基本", "view": "front", "frames": 72, "loop": true, "ground": true, "trigger": "待機時隨機穿插（改作業）", "beats": "坐姿；每 24 格一次：筆提起 6 格→打勾 4 格（手腕快、筆尾慢）→頭點一下 6 格→停 8 格", "props": ["筆", "作業本"]},
     {"name": "happy", "group": "基本", "view": "front", "frames": 30, "loop": false, "ground": true, "trigger": "點一下小綿助、蹭滑鼠、打氣話", "beats": "0–6 預備下蹲（擠壓 6%）、6–14 小跳（伸展 5%）、14–20 落地擠壓、20–30 左右扭兩下回正；眼睛 happy、blush"},
 
-    {"name": "walk_right", "group": "移動", "view": "side", "frames": 30, "loop": true, "ground": true, "trigger": "在桌面巡邏（朝左由 Claude 鏡像）", "beats": "一個循環兩步；每步前腳往前 31px（512 畫布）且著地期間不滑步；身體在每步最低點下沉 6px、最高點上提 4px；耳朵與尾巴落後 3 格擺動；第 30 格要能無縫接回第 1 格"},
+    {"name": "gaze", "group": "生命感", "view": "front", "frames": 25, "kind": "poses", "loop": false, "ground": true, "trigger": "眼睛跟著滑鼠游標（引擎依游標方向一格一格移向目標，不是播放）", "beats": "5×5 看的方向：第 1–5 格是最上面一列、由左到右，第 21–25 格是最下面一列；第 13 格（正中）＝基準姿勢；最左右頭轉 14°、最上下 10°；眼珠偏移是頭的 2 倍；相鄰兩格只差一小步"},
+    {"name": "notice", "group": "生命感", "view": "front", "frames": 18, "loop": false, "ground": true, "trigger": "游標靠近到 150px 內", "beats": "0–4 耳朵豎起（左耳先、右耳晚 1 格）、4–10 眼睛睜大一點、頭往前探 4px、10–18 回正但耳朵最後才放下"},
+    {"name": "pet", "group": "生命感", "view": "front", "frames": 48, "loop": true, "ground": true, "trigger": "滑鼠在頭上來回摸（來回 3 次以上）", "beats": "眼 happy＋blush；頭往一側蹭、身體跟著慢半拍；狗的尾巴快搖、貓的尾巴慢擺、羊的毛抖；第 24 格冒一顆 heart", "variants": {"robot": "螢幕表情變成兩顆 heart、天線開心地左右晃"}},
+    {"name": "poke_head", "group": "生命感", "view": "front", "frames": 20, "loop": false, "ground": true, "trigger": "點頭頂", "beats": "0–3 縮脖子（擠壓 8%、眼 closed）、3–10 彈回伸展 4%、10–20 甩甩頭回正，耳朵最後才停"},
+    {"name": "poke_belly", "group": "生命感", "view": "front", "frames": 24, "loop": false, "ground": true, "trigger": "點身體下半部", "beats": "0–4 一縮、4–18 左右扭著笑（嘴 wide、眼 happy、身體左右各 6°）、18–24 回正"},
+    {"name": "startle", "group": "生命感", "view": "front", "frames": 18, "loop": false, "ground": true, "trigger": "游標高速衝過來", "beats": "0–2 嚇一跳（眼 surprised、毛或天線豎起）、2–8 往後小跳 12px、8–18 落地穩住、拍拍胸口回正"},
+    {"name": "yawn", "group": "生命感", "view": "front", "frames": 40, "loop": false, "ground": true, "trigger": "待機穿插；下午 1–3 點機率提高", "beats": "0–8 頭後仰預備、8–24 嘴 yawn 張到最大、眼 sleepy、前腳往前伸一下、24–40 咂嘴、眨眼回正", "variants": {"robot": "螢幕表情 sleepy，螢幕角落出現一條電量低的短橫條再消失"}},
+    {"name": "sit_down", "group": "生命感", "view": "front", "frames": 16, "loop": false, "ground": true, "ends_into": "sit", "trigger": "待機時隨機坐一下", "beats": "0–4 重心往後、4–12 屁股著地（擠壓 6%）、12–16 穩住；最後一格＝sit 第 1 格（端坐的貓：改成趴下）"},
+    {"name": "sit", "group": "生命感", "view": "front", "frames": 90, "loop": true, "ground": true, "trigger": "坐著休息（3–10 秒）", "beats": "坐姿呼吸；第 50 格尾巴拍地一下；第 70 格眨眼"},
+    {"name": "stand_up", "group": "生命感", "view": "front", "frames": 16, "loop": false, "ground": true, "starts_from": "sit", "trigger": "從坐姿站起來", "beats": "0–4 前傾預備、4–12 撐起來（伸展 4%）、12–16 回到基準姿勢"},
+    {"name": "scratch_ear", "group": "生命感", "view": "front", "frames": 60, "loop": false, "ground": true, "trigger": "待機穿插", "beats": "0–10 坐下、10–46 後腳搔耳朵（3 格一次、頭歪向那一側、眼睛半閉很享受）、46–60 抖一下站回基準姿勢", "variants": {"robot": "轉一轉耳機旋鈕調收訊，螢幕表情專心"}},
+    {"name": "groom", "group": "生命感", "view": "front", "frames": 60, "loop": false, "ground": true, "trigger": "待機穿插（貓的機率最高）", "beats": "0–12 舉起前腳、12–40 舔腳掌 3 次（tongue）、40–56 用腳掌抹臉、56–60 回正", "variants": {"robot": "用手掌擦螢幕臉，擦過的地方表情閃一下"}},
+    {"name": "sneeze", "group": "生命感", "view": "front", "frames": 30, "loop": false, "ground": true, "trigger": "待機穿插（很少，每小時最多一次）", "beats": "0–12 啊…啊…頭後仰兩次、一次比一次大；12–16 哈啾（頭猛往前點、全身擠壓 10%）；16–30 甩甩頭回正", "variants": {"robot": "當機一下：螢幕雜訊 3 格、全身抖 2px、表情重開"}},
+    {"name": "bored", "group": "生命感", "view": "front", "frames": 60, "loop": false, "ground": true, "trigger": "老師 10 分鐘沒動電腦", "beats": "0–14 嘆一口氣（身體下沉、耳朵垂下）、14–44 趴下巴靠前腳、眼睛左右看、44–60 起身回正", "variants": {"shiba": "故意把頭轉開、噘嘴，不理人", "robot": "坐下晃腳，螢幕表情 flat"}},
+    {"name": "hop", "group": "生命感", "view": "front", "frames": 20, "loop": false, "ground": true, "trigger": "開心時穿插；連續完成任務", "beats": "0–4 預備蹲、4–12 原地跳 24px（弧線、伸展 5%）、12–16 落地擠壓、16–20 回正"},
+    {"name": "watch_typing", "group": "生命感", "view": "front", "frames": 72, "loop": true, "ground": true, "trigger": "老師正在連續打字", "beats": "看向畫面下方；眼睛由左往右慢慢讀、讀完一行跳回左邊；每 24 格點頭一下像在認真看"},
+    {"name": "tail_chase", "group": "生命感", "view": "front", "frames": 60, "loop": false, "ground": true, "trigger": "彩蛋（一天最多一次）", "beats": "0–8 發現自己的尾巴、8–48 原地轉兩圈追（先加速再減速；可用正面、側面、鏡像加 X 縮放假裝轉身，不必畫背面）、48–60 頭暈搖晃回正", "variants": {"robot": "原地轉一圈做掃描，螢幕顯示一條掃描線由上往下"}},
+
+    {"name": "walk_right", "group": "移動", "view": "side", "frames": 30, "loop": true, "ground": true, "trigger": "在桌面巡邏（朝左由 Claude 鏡像）", "beats": "一個循環兩步；每步前腳往前 31px（512 畫布）且著地期間不滑步；身體在每步最低點下沉 6px、最高點上提 4px；耳朵與尾巴落後 3 格擺動；第 30 格要能無縫接回第 1 格", "variants": {"robot": "雙腳走路：手臂反向擺、每步前進 31px、著地不滑步"}},
     {"name": "turn", "group": "移動", "view": "side", "frames": 12, "loop": false, "ground": true, "trigger": "走路換方向（從朝右轉成朝左；反方向由 Claude 鏡像）", "beats": "0–3 預備身體略縮、3–9 轉到正面再轉到朝左（頭先轉、身體晚 2 格）、9–12 穩住"},
+    {"name": "run_right", "group": "移動", "view": "side", "frames": 20, "loop": true, "ground": true, "trigger": "趕去通知、追游標", "beats": "一個循環是一次完整奔跑步（有一段騰空）；每循環前進 62px 且著地時不滑步；身體起伏 10px；耳朵與尾巴落後 2 格", "variants": {"robot": "雙腳小跑步，手臂大幅擺動"}},
     {"name": "peek", "group": "移動", "view": "front", "frames": 60, "loop": false, "ground": false, "free_center": true, "trigger": "走到螢幕右邊緣，躲出去再探頭（左邊由 Claude 鏡像）", "beats": "0–14 從畫布右側滑入只露出頭與前腳（ease-out）、14–40 左右張望一次並眨眼、40–60 縮回右側消失（ease-in）"},
+    {"name": "fall", "group": "移動", "view": "front", "frames": 12, "loop": true, "ground": false, "trigger": "被甩出去、從視窗邊緣掉下來", "beats": "四肢亂划、耳朵往上飄、眼 surprised、嘴 o；循環"},
+    {"name": "land", "group": "移動", "view": "front", "frames": 20, "loop": false, "ground": true, "starts_from": "fall", "trigger": "掉到地上（工作列或視窗頂端）", "beats": "0–4 著地擠壓 10%、4–10 回彈、10–20 甩甩頭、眼睛暈一下（closed→open）回到基準姿勢"},
+    {"name": "perch", "group": "移動", "view": "front", "frames": 90, "loop": true, "ground": false, "ground_line": 400, "trigger": "坐在其他視窗的頂端邊緣上", "beats": "屁股坐在 y=400 的邊緣線上；前腳搭在邊緣、後腳和尾巴垂到邊緣下面輕輕交替晃；呼吸持續；第 60 格往下看一眼"},
 
-    {"name": "drag_pick", "group": "拖曳", "view": "front", "frames": 8, "loop": false, "ground": false, "trigger": "滑鼠按住拎起的瞬間", "beats": "0–3 被拎起、身體伸展 8%、眼睛 surprised、嘴 o；3–8 腳縮起"},
+    {"name": "drag_pick", "group": "拖曳", "view": "front", "frames": 8, "loop": false, "ground": false, "trigger": "滑鼠按住拎起的瞬間", "beats": "0–3 被拎起、身體伸展 8%、眼睛 surprised、嘴 o；3–8 腳縮起", "ends_into": "drag"},
     {"name": "drag", "group": "拖曳", "view": "front", "frames": 36, "loop": true, "ground": false, "trigger": "拖曳中", "beats": "以頸後為軸像鐘擺左右各 8°；四隻腳與耳朵比身體晚 3 格甩動；第 36 格無縫接第 1 格"},
-    {"name": "drop", "group": "拖曳", "view": "front", "frames": 16, "loop": false, "ground": true, "trigger": "放開滑鼠落地", "beats": "0–4 下落（伸展）、4–7 著地擠壓 10%、7–12 回彈 4%、12–16 回到基準姿勢；耳朵落地時下甩再彈回"},
+    {"name": "drop", "group": "拖曳", "view": "front", "frames": 16, "loop": false, "ground": true, "trigger": "放開滑鼠落地", "beats": "0–4 下落（伸展）、4–7 著地擠壓 10%、7–12 回彈 4%、12–16 回到基準姿勢；耳朵落地時下甩再彈回", "starts_from": "drag"},
 
-    {"name": "sleep_in", "group": "睡覺", "view": "front", "frames": 30, "loop": false, "ground": true, "trigger": "進入下班時段或投影全螢幕", "beats": "0–12 打哈欠（嘴 yawn、眼 sleepy）、12–30 趴下蜷成一團；最後一格＝sleep 第 1 格"},
+    {"name": "sleep_in", "group": "睡覺", "view": "front", "frames": 30, "loop": false, "ground": true, "trigger": "進入下班時段或投影全螢幕", "beats": "0–12 打哈欠（嘴 yawn、眼 sleepy）、12–30 趴下蜷成一團；最後一格＝sleep 第 1 格", "ends_into": "sleep"},
     {"name": "sleep", "group": "睡覺", "view": "front", "frames": 120, "loop": true, "ground": true, "free_scale": true, "trigger": "下班時段、投影全螢幕時", "beats": "4 秒一次慢呼吸（身體 ±2%）；耳朵偶爾抖一下（第 70 格）；zzz 泡泡緩慢上飄淡出（不是字母，是圓形泡泡）"},
-    {"name": "sleep_out", "group": "睡覺", "view": "front", "frames": 30, "loop": false, "ground": true, "trigger": "離開下班時段或全螢幕", "beats": "0–10 睜眼揉眼、10–22 起身伸懶腰、22–30 抖一抖回到基準姿勢"},
+    {"name": "sleep_out", "group": "睡覺", "view": "front", "frames": 30, "loop": false, "ground": true, "trigger": "離開下班時段或全螢幕", "beats": "0–10 睜眼揉眼、10–22 起身伸懶腰、22–30 抖一抖回到基準姿勢", "starts_from": "sleep"},
 
     {"name": "listen", "group": "語音", "view": "front", "frames": 48, "loop": true, "ground": true, "trigger": "按住右 Ctrl／右 Alt 錄音中", "beats": "頭側傾 10°、一隻耳朵豎起並每 24 格微動；聲波弧線由小到大淡出（實心粗線）", "props": ["麥克風"]},
     {"name": "think", "group": "語音", "view": "front", "frames": 48, "loop": true, "ground": true, "trigger": "AI 或語音整理中", "beats": "頭微抬、眼睛看上方；頭頂三個圓點依序出現（每點 8 格）再一起淡出；身體輕微左右搖 2°"},
@@ -47,7 +184,7 @@
     {"name": "greet", "group": "通知", "view": "front", "frames": 48, "loop": false, "ground": true, "trigger": "開機時的開場簡報", "beats": "0–8 抬起固定同一隻前腳、8–36 揮手三次（手腕晚 2 格、ease-in-out）、36–48 放下回正；眼 happy"},
     {"name": "overdue", "group": "通知", "view": "front", "frames": 48, "loop": false, "ground": true, "trigger": "任務逾期提醒", "beats": "0–10 舉起小月曆、10–30 月曆上一圈紅圈畫出來、30–40 擔心表情點頭兩下、40–48 放下", "props": ["空白月曆"]},
     {"name": "mail", "group": "通知", "view": "front", "frames": 40, "loop": false, "ground": true, "trigger": "LINE 小幫手有新訊息", "beats": "0–8 抱住對話框形狀、8–20 對話框彈跳兩下、20–32 小跳、32–40 回正", "props": ["空白對話框"]},
-    {"name": "drink", "group": "通知", "view": "front", "frames": 48, "loop": false, "ground": true, "trigger": "喝水提醒、按「喝了」", "beats": "0–10 雙手捧杯舉起、10–30 喝兩口（頭後仰、喉部起伏）、30–40 滿足閉眼 happy、40–48 放下", "props": ["水杯"]},
+    {"name": "drink", "group": "通知", "view": "front", "frames": 48, "loop": false, "ground": true, "trigger": "喝水提醒、按「喝了」", "beats": "0–10 雙手捧杯舉起、10–30 喝兩口（頭後仰、喉部起伏）、30–40 滿足閉眼 happy、40–48 放下", "props": ["水杯"], "variants": {"robot": "捧著杯子形狀的電池充電：螢幕顯示滿足表情"}},
     {"name": "stretch", "group": "通知", "view": "front", "frames": 54, "loop": false, "ground": true, "free_scale": true, "trigger": "起身提醒、按「動過了」", "beats": "0–14 前腳往前伸、背拱起（伸展 10%）、14–24 停住、24–40 起身、40–54 抖毛（耳朵與毛延遲擺動）回正"},
     {"name": "medicine", "group": "通知", "view": "front", "frames": 48, "loop": false, "ground": true, "trigger": "服藥提醒", "beats": "0–10 指向旁邊的鬧鐘、10–30 鬧鐘震動（鬧鐘本身左右抖、粗短震動線）、30–48 拍一下鬧鐘停止並回正", "props": ["鬧鐘（空白鐘面）", "藥盒"]},
     {"name": "focus", "group": "通知", "view": "front", "frames": 96, "loop": true, "ground": true, "trigger": "專注時段進行中", "beats": "坐著看書；每 48 格翻一頁（頁面有弧線翻動）；眼睛左右讀字的小移動；呼吸持續", "props": ["書（空白頁）", "番茄計時器"]},
