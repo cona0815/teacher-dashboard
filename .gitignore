@@ -10,3 +10,5 @@ __pycache__/
 venv/
 dist/
 CLAUDE_HANDOFF.md
+assets/art/_masters/
+assets/art/_review/

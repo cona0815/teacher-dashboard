@@ -1,0 +1,479 @@
+{
+  "version": 1,
+  "reference": {
+    "characters": "assets/pet/v4/reference/<lamb|cat|dog|robot>/<姿勢>.png",
+    "note": "老師自己的正式角色美術（小綿助家族）。所有插圖的角色外表、配色、筆觸都以此為準。"
+  },
+  "style": [
+    "角色只用小綿助家族：lamb（小綿羊）、cat（橘虎斑貓）、dog（薩摩耶）、robot（藍白懸浮機器人），外表照 reference，項圈獎牌、配色、頭身比都不能變",
+    "不畫人類（沒有學生、沒有老師人物），角色就是班上的學生",
+    "筆觸照 reference：柔和漸層陰影、毛絨毛邊、暖棕色描邊（不是黑線）、腮紅、眼睛兩點高光",
+    "光源統一在左上；地面只畫一個柔和的橢圓影子，不畫整片背景",
+    "圖裡不可以有任何文字、數字、字母、商標；系統會在圖的上方顯示大字",
+    "示範正確行為（quiet_loud 是唯一的錯誤示範）；不要危險動作",
+    "台灣國小教室的物件：單人課桌椅、聯絡簿、不鏽鋼分格餐盤、掃把畚箕、樓梯扶手",
+    "每張插圖用該分類的強調色點綴（道具、光暈），但角色本身的顏色不變"
+  ],
+  "formats": {
+    "prompt": {
+      "master": [
+        1920,
+        1440
+      ],
+      "web": [
+        960,
+        720
+      ],
+      "web_format": "webp",
+      "web_max_kb": 160,
+      "background": "transparent",
+      "display": "晨間大屏「大屏提示」：文字在上、圖在下，投影全螢幕時圖高約 38vh（1080p 約 410px），要在教室後排 8 公尺外看懂",
+      "safe_area": "主體外框（不透明像素）落在畫布 6%–94% 之內，不要貼邊"
+    },
+    "quiet": {
+      "master": [
+        1600,
+        1600
+      ],
+      "web": [
+        800,
+        800
+      ],
+      "web_format": "webp",
+      "web_max_kb": 120,
+      "background": "transparent",
+      "display": "「安靜偵測」中間的角色，平常高 230px、投影時放大；系統會加上漂浮、搖晃動畫",
+      "safe_area": "主體外框落在 6%–94% 之內"
+    },
+    "icon": {
+      "master": [
+        1024,
+        1024
+      ],
+      "web": [
+        256,
+        256
+      ],
+      "web_format": "webp",
+      "web_max_kb": 30,
+      "background": "transparent",
+      "display": "介面圖示，實際顯示 22–80px；系統會自己加圓角色塊底，圖示本身不要畫底色方塊",
+      "safe_area": "主體外框落在 8%–92% 之內，置中",
+      "rules": "一個圖示一個主物件、輪廓粗而清楚，縮到 22px 還認得出來；物件可以有小小的臉（點點眼＋腮紅）讓它可愛，但不要細節雜訊"
+    }
+  },
+  "paths": {
+    "web": "assets/art/<kind>/<id>.webp（kind = prompt、quiet、icon）",
+    "master": "assets/art/_masters/<kind>/<id>.png（不 commit）",
+    "review": "assets/art/_review/（check_art.py --review 產生，不 commit）"
+  },
+  "prompt": [
+    {
+      "id": "focus_teacher",
+      "text": "上課囉！眼睛看老師",
+      "accent": "#1f7a52",
+      "cast": "lamb, cat, dog, robot",
+      "scene": "四隻並排坐在小課桌後面，全部抬頭、眼睛直直看向觀眾（老師的方向），lamb 在正中間最大、雙前蹄放桌上"
+    },
+    {
+      "id": "sit_up",
+      "text": "坐姿端正，抬頭挺胸",
+      "accent": "#1f7a52",
+      "cast": "lamb（主）, cat",
+      "scene": "lamb 坐在椅子上挺胸、背打直、雙蹄放膝上，表情驕傲；旁邊 cat 正在把背挺直跟著學；身後一條淡綠色直線光暈強調「直」"
+    },
+    {
+      "id": "sit_fast",
+      "text": "動作快，三秒內坐好",
+      "accent": "#1f7a52",
+      "cast": "dog（主）",
+      "scene": "dog 一個箭步衝向椅子、身體有速度線，屁股快要坐到椅子上；頭上方三顆圓燈（兩顆亮、一顆暗）表示倒數，不可用數字"
+    },
+    {
+      "id": "raise_hand",
+      "text": "發言請舉手，輪流說",
+      "accent": "#1f7a52",
+      "cast": "cat（主）, dog, robot",
+      "scene": "cat 坐在座位上高高舉起前腳、嘴巴閉著等待；後面 dog 和 robot 也舉手但安靜等待輪到自己"
+    },
+    {
+      "id": "quiet_zero",
+      "text": "安靜！音量零級",
+      "accent": "#1f7a52",
+      "cast": "lamb（主）",
+      "scene": "lamb 正面大特寫（半身），一隻前蹄豎在嘴前做「噓」，眼睛溫柔；旁邊一個圓形音量表指針停在最左邊（只用圖形，不要刻度數字）"
+    },
+    {
+      "id": "whisper",
+      "text": "輕聲討論，別吵到隔壁組",
+      "accent": "#1f7a52",
+      "cast": "cat, dog",
+      "scene": "cat 和 dog 頭靠在一起小聲說話，前腳擋在嘴邊，周圍只有很小很淡的聲波弧線；畫面另一側有一張空桌子保持距離感"
+    },
+    {
+      "id": "hand_in",
+      "text": "收作業囉，交給小組長",
+      "accent": "#2457e6",
+      "cast": "dog, lamb",
+      "scene": "dog 雙手捧一疊作業本交出去，lamb 手臂戴藍色臂章（組長，不寫字）伸手接過，兩隻都笑"
+    },
+    {
+      "id": "correction",
+      "text": "訂正完拿給老師檢查",
+      "accent": "#2457e6",
+      "cast": "cat（主）",
+      "scene": "cat 雙手把一本攤開的作業本往前遞（朝觀眾），本子上看得到紅筆訂正的線條和勾勾（線條，不是文字）"
+    },
+    {
+      "id": "self_check",
+      "text": "寫完的同學自己再檢查一遍",
+      "accent": "#2457e6",
+      "cast": "robot（主）",
+      "scene": "robot 坐在桌前，一手拿放大鏡仔細看自己的作業本，螢幕臉表情專心，胸口晶片亮著"
+    },
+    {
+      "id": "reading",
+      "text": "閱讀時間，安靜看書",
+      "accent": "#2457e6",
+      "cast": "lamb（主）",
+      "scene": "lamb 坐在小地墊上捧著一本打開的書看得入迷，書頁透出柔和光；旁邊疊兩本書"
+    },
+    {
+      "id": "self_study",
+      "text": "自習時間，完成自己的進度",
+      "accent": "#2457e6",
+      "cast": "robot, cat",
+      "scene": "robot 和 cat 各自在自己的桌子寫作業，低頭專心；桌角各有一個小沙漏"
+    },
+    {
+      "id": "circle_question",
+      "text": "不會的先圈起來，等一下問",
+      "accent": "#2457e6",
+      "cast": "dog（主）",
+      "scene": "dog 拿鉛筆在作業本上畫一個大圓圈，頭上冒出一個圓形泡泡、裡面是問號形狀（問號是符號，可以）"
+    },
+    {
+      "id": "drink_toilet",
+      "text": "下課先喝水、上廁所",
+      "accent": "#d0631a",
+      "cast": "dog（主）, cat",
+      "scene": "dog 仰頭用水壺喝水；後方 cat 走向一扇有水滴圖示的門（不可寫 WC 或任何字）"
+    },
+    {
+      "id": "lunch",
+      "text": "吃飯不說話，細嚼慢嚥",
+      "accent": "#d0631a",
+      "cast": "lamb, cat, dog, robot",
+      "scene": "四隻圍著桌子吃營養午餐（不鏽鋼分格餐盤），嘴巴閉著咀嚼、表情滿足；robot 的盤子裡放電池形狀的食物"
+    },
+    {
+      "id": "nap",
+      "text": "午休時間，趴下休息",
+      "accent": "#d0631a",
+      "cast": "lamb, cat, dog, robot",
+      "scene": "四隻趴在課桌上睡覺，臉頰壓在前腳上，頭上飄著圓形 zzz 泡泡（只用圓形，不用字母）；robot 螢幕表情是閉眼"
+    },
+    {
+      "id": "cleaning",
+      "text": "打掃時間，責任區掃乾淨",
+      "accent": "#d0631a",
+      "cast": "lamb, robot, cat",
+      "scene": "lamb 拿掃把、cat 拿畚箕、robot 拿拖把，三隻一起打掃，地板亮晶晶的閃光"
+    },
+    {
+      "id": "tidy_bag",
+      "text": "整理書包，檢查抽屜",
+      "accent": "#d0631a",
+      "cast": "cat（主）",
+      "scene": "cat 把課本放進打開的書包，旁邊課桌抽屜拉開、裡面整整齊齊"
+    },
+    {
+      "id": "line_up",
+      "text": "排隊囉！快、靜、齊",
+      "accent": "#7b4fb8",
+      "cast": "lamb, cat, dog, robot",
+      "scene": "四隻排成一直線（側面 3/4 角度，由前到後），每隻雙手放身體兩側、嘴巴閉著、間距一樣"
+    },
+    {
+      "id": "hallway",
+      "text": "到走廊排隊，不推不擠",
+      "accent": "#7b4fb8",
+      "cast": "cat, dog, lamb",
+      "scene": "三隻在走廊上排隊往前走，彼此保持一個手臂的距離，地上有淡淡的排隊腳印標記"
+    },
+    {
+      "id": "stairs",
+      "text": "上下樓梯靠右走、不奔跑",
+      "accent": "#7b4fb8",
+      "cast": "lamb, dog",
+      "scene": "一段樓梯，lamb 和 dog 靠樓梯右側扶手一步一步慢慢走，右側扶手明顯；左側空著"
+    },
+    {
+      "id": "special_room",
+      "text": "專科教室集合，帶課本鉛筆盒",
+      "accent": "#7b4fb8",
+      "cast": "robot, cat, lamb",
+      "scene": "三隻排隊往前走，每隻都抱著課本和鉛筆盒，表情期待"
+    },
+    {
+      "id": "go_home",
+      "text": "準備放學：桌面清空、帶齊物品",
+      "accent": "#7b4fb8",
+      "cast": "lamb, cat, dog, robot",
+      "scene": "四隻背好書包站在乾淨的空桌子旁邊揮手說再見，背景一道夕陽色的柔光圓"
+    },
+    {
+      "id": "custom_default",
+      "text": "（老師自訂的提示）",
+      "accent": "#1f7a52",
+      "cast": "lamb（主）",
+      "scene": "lamb 站著，一隻前蹄往上指（指向圖上方系統顯示的文字），另一隻扠腰，表情自信；適合任何提醒"
+    }
+  ],
+  "quiet": [
+    {
+      "id": "quiet_super",
+      "state": "超安靜（遠低於門檻）",
+      "accent": "#1f7a52",
+      "cast": "lamb",
+      "scene": "lamb 閉眼微笑、雙蹄合十放胸前，周圍飄著幾顆小星星，很平靜"
+    },
+    {
+      "id": "quiet_good",
+      "state": "安靜（低於門檻）",
+      "accent": "#1f7a52",
+      "cast": "cat",
+      "scene": "cat 一隻前腳豎在嘴前「噓」，眼睛眨一隻，表情俏皮"
+    },
+    {
+      "id": "quiet_warn",
+      "state": "有點聲音（接近門檻）",
+      "accent": "#d0631a",
+      "cast": "dog",
+      "scene": "dog 耳朵往後壓、雙前腳摀住一邊耳朵，表情有點擔心，頭旁邊冒一滴汗"
+    },
+    {
+      "id": "quiet_loud",
+      "state": "太吵了（超過門檻）",
+      "accent": "#cf4433",
+      "cast": "lamb, cat, dog, robot",
+      "scene": "四隻同時摀住耳朵、表情崩潰（眼睛變成螺旋或 >< 形狀），周圍很多鋸齒狀聲波，robot 螢幕顯示雜訊；這是唯一一張「錯誤示範」"
+    }
+  ],
+  "icon": [
+    {
+      "id": "tab_rollcall",
+      "label": "點名",
+      "used_in": "Morning.html 分頁",
+      "subject": "點名板夾著一張打勾名單、上面一個小鈴鐺"
+    },
+    {
+      "id": "tab_homework",
+      "label": "作業繳交",
+      "used_in": "Morning.html 分頁",
+      "subject": "打開的書包露出作業本"
+    },
+    {
+      "id": "tab_makeup",
+      "label": "作業補交",
+      "used_in": "Morning.html 分頁",
+      "subject": "作業本旁邊一個沙漏"
+    },
+    {
+      "id": "tab_correct",
+      "label": "作業訂正",
+      "used_in": "Morning.html 分頁",
+      "subject": "紅筆斜放在打勾的作業本上"
+    },
+    {
+      "id": "tab_query",
+      "label": "查詢統計",
+      "used_in": "Morning.html 分頁",
+      "subject": "放大鏡壓在長條圖上"
+    },
+    {
+      "id": "tab_tools",
+      "label": "班級工具",
+      "used_in": "Morning.html 分頁",
+      "subject": "打開的工具箱，裡面露出骰子和碼錶"
+    },
+    {
+      "id": "tab_setup",
+      "label": "設定",
+      "used_in": "Morning.html 分頁",
+      "subject": "圓圓的齒輪，中間一顆鈕扣"
+    },
+    {
+      "id": "contact_book",
+      "label": "聯絡本",
+      "used_in": "Morning.html 聯絡本標題、Index.html 聯絡本",
+      "subject": "一本綠色封面的聯絡簿，夾著鉛筆"
+    },
+    {
+      "id": "tool_lottery",
+      "label": "抽籤機",
+      "used_in": "Morning.html 班級工具",
+      "subject": "彩色轉盤加一根紅色指針"
+    },
+    {
+      "id": "tool_check",
+      "label": "檢核板",
+      "used_in": "Morning.html 班級工具",
+      "subject": "板夾上三格勾勾"
+    },
+    {
+      "id": "tool_score",
+      "label": "計分板",
+      "used_in": "Morning.html 班級工具",
+      "subject": "金色獎盃"
+    },
+    {
+      "id": "tool_group",
+      "label": "隨機分組",
+      "used_in": "Morning.html 班級工具",
+      "subject": "三顆不同顏色的小球分成兩堆"
+    },
+    {
+      "id": "tool_quiet",
+      "label": "安靜偵測",
+      "used_in": "Morning.html 班級工具",
+      "subject": "麥克風旁邊一條平平的聲波"
+    },
+    {
+      "id": "tool_exam",
+      "label": "定評小幫手",
+      "used_in": "Morning.html 班級工具",
+      "subject": "考卷加一支鉛筆和小時鐘"
+    },
+    {
+      "id": "tool_tomato",
+      "label": "番茄鐘",
+      "used_in": "Morning.html 班級工具",
+      "subject": "番茄形狀的計時器"
+    },
+    {
+      "id": "tool_prompt",
+      "label": "大屏提示",
+      "used_in": "Morning.html 班級工具",
+      "subject": "大聲公（擴音器）"
+    },
+    {
+      "id": "sum_todo",
+      "label": "待辦總數",
+      "used_in": "Index.html 摘要卡",
+      "subject": "一疊便條紙，最上面一張有三條線"
+    },
+    {
+      "id": "sum_weekly",
+      "label": "本週重點",
+      "used_in": "Index.html 摘要卡",
+      "subject": "一顆金色星星"
+    },
+    {
+      "id": "sum_waiting",
+      "label": "等待回覆",
+      "used_in": "Index.html 摘要卡、Board.html",
+      "subject": "沙漏"
+    },
+    {
+      "id": "sum_duetoday",
+      "label": "今日截止",
+      "used_in": "Index.html 摘要卡、Board.html",
+      "subject": "鬧鐘"
+    },
+    {
+      "id": "sum_overdue",
+      "label": "逾期追蹤",
+      "used_in": "Index.html 摘要卡",
+      "subject": "搖晃中的手搖鈴"
+    },
+    {
+      "id": "sum_done",
+      "label": "本期完成",
+      "used_in": "Index.html 摘要卡、Board.html",
+      "subject": "起飛的小火箭"
+    },
+    {
+      "id": "sum_urgent",
+      "label": "高優先",
+      "used_in": "Board.html KPI",
+      "subject": "紅色旗子插在文件上"
+    },
+    {
+      "id": "panel_toolbox",
+      "label": "教師工具箱",
+      "used_in": "Index.html",
+      "subject": "手提工具箱"
+    },
+    {
+      "id": "panel_progress",
+      "label": "教學與評量進度",
+      "used_in": "Index.html",
+      "subject": "指南針"
+    },
+    {
+      "id": "panel_ai",
+      "label": "AI 行政助理",
+      "used_in": "Index.html",
+      "subject": "機器人頭（用 robot 角色的頭，正面）"
+    },
+    {
+      "id": "panel_line_inbox",
+      "label": "LINE 收件匣",
+      "used_in": "Index.html",
+      "subject": "綠色對話框形狀的信箱（不可用 LINE 商標）"
+    },
+    {
+      "id": "panel_message_hub",
+      "label": "訊息整合站",
+      "used_in": "Index.html",
+      "subject": "郵筒"
+    },
+    {
+      "id": "panel_filter",
+      "label": "篩選任務",
+      "used_in": "Index.html",
+      "subject": "漏斗"
+    },
+    {
+      "id": "panel_tasks",
+      "label": "任務清單",
+      "used_in": "Index.html、小綿助圖片載入失敗時的備用圖",
+      "subject": "鉛筆加一張打勾清單"
+    },
+    {
+      "id": "role_grade_lead",
+      "label": "學年主任",
+      "used_in": "Index.html 身分切換、Board.html 標題",
+      "subject": "dog 半身，拿著板夾和小擴音器"
+    },
+    {
+      "id": "role_admin",
+      "label": "行政",
+      "used_in": "Index.html 身分切換",
+      "subject": "robot 半身，抱著一疊公文夾"
+    },
+    {
+      "id": "role_homeroom",
+      "label": "導師",
+      "used_in": "Index.html 身分切換",
+      "subject": "lamb 半身，戴項圈獎牌、身旁一面小班旗（無字）"
+    },
+    {
+      "id": "role_teacher",
+      "label": "教師",
+      "used_in": "Index.html 身分切換",
+      "subject": "cat 半身，抱著課本"
+    }
+  ],
+  "first_batch": [
+    "prompt/focus_teacher",
+    "prompt/nap",
+    "prompt/line_up",
+    "quiet/quiet_good",
+    "icon/tab_rollcall",
+    "icon/tool_lottery",
+    "icon/tool_tomato",
+    "icon/role_homeroom"
+  ]
+}
