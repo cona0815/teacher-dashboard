@@ -57,6 +57,8 @@ These files are distributed as part of this application, not as a standalone ill
 
 The original sheep character design, source frames and animation files under `assets/pet/` were created or generated specifically for this modified project and supplied by the project owner. They replace the former DeskPet white-cat artwork. No DeskPet white-cat artwork is included or loaded by the current interface, and the production fallback URL points only to this project's own `cona0815/teacher-dashboard` repository.
 
+The v5 animation pack under `assets/pet/v5/` (lamb, cat, dog and robot; 16 actions each) was produced for the project owner from the owner's own character designs (originally drawn for the owner's computer-classroom desktop pet) and is project-owned artwork. It contains no third-party characters.
+
 ## 小綿助 v2.1 voice input
 
 `desktop_pet_voice.py` is an original implementation written for this project (MIT). It reuses Traditional-Chinese polishing prompts, the teaching vocabulary list and the Whisper hallucination-marker list that the project owner authored in their own EZtype tool; no code from whisper-writer (GPL-3.0), of which EZtype is a fork, is included.

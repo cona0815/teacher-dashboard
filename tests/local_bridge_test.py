@@ -6,6 +6,8 @@ from urllib.request import Request, urlopen
 
 import tkinter as tk
 
+from desktop_pet_preview import DesktopPetPreview
+
 from desktop_pet_secretary import (
     LocalBridgeServer,
     SecretaryPet,
@@ -403,6 +405,72 @@ class NoticeQueueTest(unittest.TestCase):
         body = source[start:source.index("\n    def ", start + 10)]
         self.assertIn("self.popup.open", body)
         self.assertNotIn("tk_popup", body)
+
+
+class PetV5PackTest(unittest.TestCase):
+    """v5 動畫包：四隻角色都有 16 種動作，檔案與 manifest 一致，程式用到的動作名都對得到。"""
+
+    def setUp(self):
+        from desktop_pet_v5 import ALIASES, CHARACTERS, PACK_ROOT
+
+        self.root = PACK_ROOT
+        self.aliases = ALIASES
+        self.characters = CHARACTERS
+        self.manifest = json.loads((PACK_ROOT / "manifest.json").read_text(encoding="utf-8"))
+
+    def test_every_character_has_the_same_actions_and_files(self):
+        chars = self.manifest["characters"]
+        self.assertEqual(set(chars), set(self.characters))
+        actions = set(chars["lamb"])
+        self.assertEqual(len(actions), 16)
+        for char, items in chars.items():
+            self.assertEqual(set(items), actions, char)
+            for action, info in items.items():
+                path = self.root / info["file"]
+                self.assertTrue(path.is_file(), f"{char}/{action}")
+                self.assertEqual(sum(info["durations"]), info["duration_ms"], f"{char}/{action}")
+                self.assertEqual(info["duration_ms"], info["source_frames"] * 40, f"{char}/{action}")
+                self.assertEqual(len(info["durations"]), info["unique_frames"], f"{char}/{action}")
+
+    def test_webp_frames_match_manifest(self):
+        from PIL import Image
+
+        info = self.manifest["characters"]["robot"]["remind"]
+        with Image.open(self.root / info["file"]) as image:
+            self.assertEqual(image.n_frames, len(info["durations"]))
+            self.assertEqual(image.size, (320, 320))
+            image.seek(image.n_frames // 2)
+            image.load()
+            self.assertEqual(image.info["duration"], info["durations"][image.n_frames // 2])
+            self.assertEqual(image.convert("RGBA").getchannel("A").getextrema()[0], 0)   # 真的有透明
+
+    def test_every_state_the_program_uses_maps_to_a_v5_action(self):
+        actions = set(self.manifest["characters"]["lamb"])
+        for state, action in self.aliases.items():
+            self.assertIn(action, actions, state)
+        used = set(DesktopPetPreview.FRAME_COUNTS) | set(DesktopPetPreview.OPTIONAL_FRAME_COUNTS)
+        for choices in list(SecretaryPet.NOTICE_ANIMATIONS.values()) + list(SecretaryPet.ACTION_ANIMATIONS.values()):
+            used |= set(choices)
+        missing = {s for s in used if s not in self.aliases} - {"walk_left", "walk_right", "peek", "peek_left"}
+        self.assertEqual(missing, set())
+
+    def test_player_decodes_lazily_and_releases(self):
+        from desktop_pet_v5 import PetPack
+
+        pack = PetPack(self.root, "cat", 64, layered=True)
+        states = pack.states()
+        self.assertNotIn("walk_right", states)
+        player = states["success"]
+        self.assertTrue(all(frame is None for frame in player.cache))
+        frame = player.frame(3)
+        self.assertEqual(frame.size, (64, 64))
+        self.assertIsNotNone(player.cache[3])
+        for name in ("idle", "listen", "think", "note", "success"):
+            pack.touch(states[name])
+        self.assertTrue(all(f is None for f in player.cache) or len(pack.recent) <= PetPack.KEEP)
+        self.assertTrue(pack.set_character("robot"))
+        self.assertFalse(pack.set_character("robot"))
+        self.assertFalse(pack.set_character("shiba"))
 
 
 class PetV3AssetsTest(unittest.TestCase):

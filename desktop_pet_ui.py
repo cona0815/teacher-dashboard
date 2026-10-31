@@ -414,17 +414,19 @@ class BadgeCanvas:
         self.font = tkfont.Font(family=FONT, size=9, weight="bold")
         self.count = -1
 
-    def set(self, count: int, x: int, y: int) -> None:
+    def set(self, count: int, x: int, y: int) -> bool:
+        """回傳角標有沒有改變（分層視窗模式要重畫）。"""
+        self.pos = (x, y)
         if count == self.count:
             if count > 0:
                 self.canvas.place(x=x, y=y)
-            return
+            return False
         self.count = count
         c = self.canvas
         c.delete("all")
         if count <= 0:
             c.place_forget()
-            return
+            return True
         text = str(count) if count < 100 else "99+"
         s = self.s
         w = max(22 * s, self.font.measure(text) + 12 * s)
@@ -433,6 +435,25 @@ class BadgeCanvas:
         c.create_text(w / 2 + 1, 11 * s, text=text, font=self.font, fill="#ffffff")
         c.place(x=x, y=y)
         c.tk.call("raise", c._w)   # Canvas.lift 是 tag_raise，這裡要的是把整個角標疊到小綿羊上面
+        return True
+
+    def paint(self, image) -> None:
+        """分層視窗看不到 Canvas，角標要畫進桌寵那張圖；Canvas 仍留在原位接點擊。"""
+        if self.count <= 0 or not getattr(self, "pos", None):
+            return
+        from PIL import ImageDraw, ImageFont
+
+        s = self.s
+        text = str(self.count) if self.count < 100 else "99+"
+        try:
+            font = ImageFont.truetype("msjhbd.ttc", int(12 * s))
+        except OSError:
+            font = ImageFont.load_default()
+        draw = ImageDraw.Draw(image)
+        w = max(22 * s, draw.textlength(text, font=font) + 12 * s)
+        x, y = self.pos
+        draw.rounded_rectangle((x + 1, y + 1, x + w, y + 21 * s), radius=10 * s, fill=PALETTE["badge"], outline="#ffffff", width=max(2, int(2 * s)))
+        draw.text((x + w / 2 + 1, y + 11 * s), text, font=font, fill="#ffffff", anchor="mm")
 
 
 class HoverCard:

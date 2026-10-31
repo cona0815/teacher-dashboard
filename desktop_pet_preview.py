@@ -1,4 +1,7 @@
-"""Windows desktop preview for the 小綿助 animation set (v3 art)."""
+"""Windows desktop preview for the 小綿助 animation set.
+
+有 assets/pet/v5/ 動畫包時用 v5（四隻角色、分層視窗透明）；沒有時用舊的 v3 單格圖。
+"""
 
 from __future__ import annotations
 
@@ -10,6 +13,8 @@ from pathlib import Path
 from typing import Callable
 
 from PIL import Image, ImageTk
+
+from desktop_pet_v5 import DEFAULT_CHARACTER, PACK_ROOT, LayeredWindow, PetPack, premultiply
 
 if sys.platform == "win32":
     # 宣告 DPI 感知：高解析縮放螢幕上，非感知程式會被 Windows 點陣拉伸，
@@ -101,13 +106,17 @@ class DesktopPetPreview:
         self.root.overrideredirect(True)
         self.root.attributes("-topmost", True)
         self.root.configure(bg=TRANSPARENT)
-        if sys.platform == "win32":
-            self.root.wm_attributes("-transparentcolor", TRANSPARENT)
 
         self.dpi_scale = max(1.0, self.root.winfo_fpixels("1i") / 96.0)
         self.win_w = int(WINDOW_WIDTH * self.dpi_scale)
         self.win_h = int(WINDOW_HEIGHT * self.dpi_scale)
         self.pet_px = int(PET_SIZE * self.dpi_scale)
+        # v5：分層視窗畫每像素透明（不能同時用 -transparentcolor，否則 UpdateLayeredWindow 會失敗）
+        self.layered = LayeredWindow.attach(self.root) if (PACK_ROOT / "manifest.json").is_file() else None
+        self.pack = PetPack.find(DEFAULT_CHARACTER, self.pet_px, layered=self.layered is not None)
+        if self.layered is None and sys.platform == "win32":
+            self.root.wm_attributes("-transparentcolor", TRANSPARENT)
+        self._last_shown: tuple | None = None
         self.screen_width = self.root.winfo_screenwidth()
         self.screen_height = self.root.winfo_screenheight()
         # Start in a clearly visible position for local testing. The real
@@ -176,7 +185,7 @@ class DesktopPetPreview:
         self.root.protocol("WM_DELETE_WINDOW", self.root.destroy)
         self._render_frame()
         self.root.after(850, self._hide_bubble)
-        self.root.after(self.FRAME_DELAYS[self.state], self._animation_tick)
+        self.root.after(self.frame_delay(), self._animation_tick)
         self.root.after(30, self._movement_tick)
         self.root.after(2600, self.start_walking)
 
@@ -194,7 +203,9 @@ class DesktopPetPreview:
         except tk.TclError:
             pass
 
-    def _load_frames(self) -> dict[str, list[ImageTk.PhotoImage]]:
+    def _load_frames(self) -> dict:
+        if self.pack is not None:
+            return self.pack.states()
         result: dict[str, list[ImageTk.PhotoImage]] = {}
         wanted = [(state, count, True) for state, count in self.FRAME_COUNTS.items()]
         wanted += [(state, count, False) for state, count in self.OPTIONAL_FRAME_COUNTS.items()]
@@ -224,6 +235,26 @@ class DesktopPetPreview:
 
     def has_state(self, state: str) -> bool:
         return state in self.frames
+
+    @property
+    def character(self) -> str:
+        return self.pack.character if self.pack is not None else "lamb"
+
+    def set_character(self, character: str) -> bool:
+        """換角色（v5）：重建播放器，從目前的動作接著播。"""
+        if self.pack is None or not self.pack.set_character(character):
+            return False
+        self.frames = self.pack.states()
+        self.play(self.state if self.state in self.frames else "idle")
+        return True
+
+    def frame_delay(self) -> int:
+        if self.pack is not None:
+            return self.frames[self.state].delay(self.frame_index)
+        return self.FRAME_DELAYS[self.state]
+
+    def _paint_overlays(self, canvas: Image.Image) -> None:
+        """分層視窗模式下，疊在羊身上的小東西（角標等）要畫進同一張圖；子類別覆寫。"""
 
     def pick_state(self, *states: str) -> str:
         """回傳第一個有載入的動作（第二批動作還沒交件時自動退回舊動作）。"""
@@ -268,9 +299,27 @@ class DesktopPetPreview:
         self.bubble_timer = None
 
     def _render_frame(self) -> None:
-        frame_set = self.frames[self.state]
-        self.pet_label.configure(image=frame_set[self.frame_index])
-        self.pet_label.image = frame_set[self.frame_index]
+        if self.pack is None:
+            frame_set = self.frames[self.state]
+            self.pet_label.configure(image=frame_set[self.frame_index])
+            self.pet_label.image = frame_set[self.frame_index]
+            return
+        player = self.frames[self.state]
+        self.pack.touch(player)
+        frame = player.frame(self.frame_index)
+        if self.layered is None:
+            photo = ImageTk.PhotoImage(frame)
+            self.pet_label.configure(image=photo)
+            self.pet_label.image = photo
+            return
+        key = (id(player), self.frame_index % len(player), getattr(self, "overlay_version", 0))
+        if key == self._last_shown:
+            return
+        canvas = Image.new("RGBA", (self.win_w, self.win_h), (0, 0, 0, 0))
+        canvas.alpha_composite(frame, ((self.win_w - self.pet_px) // 2, int(PET_TOP * self.dpi_scale)))
+        self._paint_overlays(canvas)
+        if self.layered.show(premultiply(canvas)):
+            self._last_shown = key
 
     def _animation_tick(self) -> None:
         if not self.paused:
@@ -286,11 +335,11 @@ class DesktopPetPreview:
                         # 提醒或回饋動作播完後，過一會兒再出去走走（不打斷別的動作）
                         self.root.after(random.randint(4000, 8000), lambda: self.state == "idle" and not self.walking and self.start_walking())
             self._render_frame()
-        self.root.after(self.FRAME_DELAYS[self.state], self._animation_tick)
+        self.root.after(self.frame_delay(), self._animation_tick)
 
     def start_walking(self) -> None:
-        if self.paused or self.drag_origin:
-            return
+        if self.paused or self.drag_origin or not self.has_state("walk_right"):
+            return   # v5 沒有走路動作：老師不要左右巡邏
         self.walk_direction = -1 if self.x > self.screen_width / 2 else 1
         self.walk_stop_at = self.root.tk.call("clock", "milliseconds") + random.randint(5000, 9000)
         self.play("walk_left" if self.walk_direction < 0 else "walk_right")

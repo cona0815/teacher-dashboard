@@ -26,6 +26,7 @@ from tkinter import filedialog, messagebox, ttk
 from PIL import Image, ImageGrab
 
 from desktop_pet_preview import ERROR_LOG, PET_TOP, DesktopPetPreview
+from desktop_pet_v5 import CHARACTERS
 from desktop_pet_ui import BadgeCanvas, BubbleWindow, HoverCard, Notice, NoticeQueue, PopupMenu
 from desktop_pet_cloud import CloudLink, DEFAULT_FOCUS_KEYWORDS, FocusTracker, ForegroundMonitor, cloud_url_allowed
 from desktop_pet_voice import (
@@ -237,7 +238,7 @@ textarea,input{font-family:inherit;font-size:14px;border:1.5px solid var(--line)
 details summary{cursor:pointer;font-weight:800;color:var(--strong)}
 .seat-ok{color:#1c6b45}.seat-bad{color:var(--danger);font-weight:800}
 </style></head><body>
-<header><h1>🐑 __PET_NAME__ 教師秘書</h1><div class="meta">本機頁面（127.0.0.1）｜v2.3｜<span id="stamp">載入中</span>｜每 15 秒自動更新</div></header>
+<header><h1>🐑 __PET_NAME__ 教師秘書</h1><div class="meta">本機頁面（127.0.0.1）｜v2.4｜<span id="stamp">載入中</span>｜每 15 秒自動更新</div></header>
 <main>
   <section class="card soft" style="grid-column:1/-1"><h2>☀ 今日簡報</h2><div id="brief" class="empty">載入中……</div></section>
 
@@ -483,6 +484,7 @@ def default_data() -> dict:
             "enabled": True,
             "autostart": False,
             "pet_name": "小綿助",
+            "pet_character": "lamb",
             "cheer_interval_minutes": 5,
             "startup_delay_seconds": 30,
             "health_reminders": True,
@@ -584,6 +586,7 @@ class SecretaryPet(DesktopPetPreview):
             except (TypeError, ValueError, tk.TclError):
                 pass
         self.root.title(f"{self._pet_name()}教師秘書")
+        self.set_character(str(settings.get("pet_character") or "lamb"))
         self.attachments: list[Path] = []
         self.attachment_content_cache: dict[str, str] = {}
         self.draft: dict | None = None
@@ -662,11 +665,20 @@ class SecretaryPet(DesktopPetPreview):
     # v3 畫風的羊在 512 格裡上方留了放道具（太陽、驚嘆號）的空間；
     # 泡泡、狀態卡、選單以「羊身體大概的範圍」定位，才不會離羊頭太遠。
     PET_BODY_INSET = (0.12, 0.16, 0.12, 0.04)   # 左、上、右、下（佔格子比例）
+    PET_BODY_INSET_V5 = (0.17, 0.14, 0.17, 0.13)   # v5 四隻角色 idle 的外框
+
+    def _body_inset(self) -> tuple:
+        return self.PET_BODY_INSET_V5 if self.pack is not None else self.PET_BODY_INSET
+
+    def _paint_overlays(self, canvas) -> None:
+        badge = getattr(self, "badge", None)
+        if badge is not None:
+            badge.paint(canvas)
 
     def _pet_screen_box(self) -> tuple:
         left = self.x + (self.win_w - self.pet_px) // 2
         top = self.y + int(PET_TOP * self.dpi_scale)
-        il, it, ir, ib = (int(v * self.pet_px) for v in self.PET_BODY_INSET)
+        il, it, ir, ib = (int(v * self.pet_px) for v in self._body_inset())
         return (left + il, top + it, left + self.pet_px - ir, top + self.pet_px - ib)
 
     def notify(self, text: str, level: str = "chatter", key: str = "", tag: str = "", actions: list | None = None) -> None:
@@ -781,13 +793,15 @@ class SecretaryPet(DesktopPetPreview):
         try:
             counts = self._badge_counts()
             s = self.dpi_scale
-            # 貼在羊頭右上（v3 羊頭頂約在格子 29% 高的位置）
+            # 貼在頭右上（v3 羊頭頂約在格子 29% 高；v5 四隻約在 14%）
             x = (self.win_w - self.pet_px) // 2 + int(self.pet_px * 0.70)
-            y = int(PET_TOP * s) + int(self.pet_px * 0.22)
+            y = int(PET_TOP * s) + int(self.pet_px * (0.10 if self.pack is not None else 0.22))
             count = counts["overdue"] + counts["line"]
             if getattr(self, "rest_reason", "") == "fullscreen":
                 count = 0   # 投影中不顯示紅點（學生看得到）
-            self.badge.set(count, x, y)
+            if self.badge.set(count, x, y) and self.layered is not None:
+                self.overlay_version = getattr(self, "overlay_version", 0) + 1
+                self._render_frame()
         except (tk.TclError, ValueError, TypeError):
             pass
         if reschedule:
@@ -874,11 +888,20 @@ class SecretaryPet(DesktopPetPreview):
             None,
             ("📋 看全部（秘書頁）", self.open_secretary_page),
             ("🔔 取消勿擾" if self.notices.in_dnd() else "🔕 勿擾 1 小時", self._toggle_dnd),
-            ("▶ 繼續走動" if self.paused else "⏸ 暫停走動", self.toggle_pause),
+            *([(f"🔄 換角色（現在：{CHARACTERS[self.character]}）", self._next_character)] if self.pack is not None else []),
+            ("▶ 繼續" if self.paused else ("⏸ 暫停走動" if self.has_state("walk_right") else "⏸ 暫停動作"), self.toggle_pause),
             None,
             ("✖ 關閉小綿助", self.root.destroy),
         ]
         return items
+
+    def _next_character(self) -> None:
+        order = list(CHARACTERS)
+        nxt = order[(order.index(self.character) + 1) % len(order)] if self.character in order else order[0]
+        if self.set_character(nxt):
+            self.data["settings"]["pet_character"] = nxt
+            self._save_data()
+            self.play("notice", 1, "idle", f"換成{CHARACTERS[nxt]}陪你囉！", level="feedback")
 
     def _pet_name(self) -> str:
         return str(self.data.get("settings", {}).get("pet_name") or "小綿助")
@@ -913,6 +936,7 @@ class SecretaryPet(DesktopPetPreview):
         settings.update(base.get("settings") or {})
         settings.update(load_external_settings())
         settings["pet_name"] = str(settings.get("pet_name") or "小綿助").strip()[:12] or "小綿助"
+        settings["pet_character"] = settings.get("pet_character") if settings.get("pet_character") in CHARACTERS else "lamb"
         try:
             settings["cheer_interval_minutes"] = min(120, max(0, int(settings.get("cheer_interval_minutes", 5))))
         except (TypeError, ValueError):
@@ -1540,7 +1564,8 @@ class SecretaryPet(DesktopPetPreview):
         # 衝到螢幕中央附近盯著你
         self.walking = False
         target = max(0, min(self.screen_width - self.win_w, self.screen_width // 2 - self.win_w // 2))
-        self.cuddle_target = target
+        if self.has_state("walk_right"):
+            self.cuddle_target = target   # v5 沒有走路：原地提醒
         message = random.choice(self.SCOLD_MESSAGES)
         if self.focus_tracker.in_session:
             message = "專注時間！" + message
@@ -1551,7 +1576,7 @@ class SecretaryPet(DesktopPetPreview):
     # v2.0 行為豐富化：探頭、蹭滑鼠
     # ------------------------------------------------------------------
     def start_walking(self) -> None:
-        if self.paused or self.drag_origin or getattr(self, "rest_reason", ""):
+        if self.paused or self.drag_origin or getattr(self, "rest_reason", "") or not self.has_state("walk_right"):
             return
         super().start_walking()
         if random.random() < 0.3:
@@ -1702,7 +1727,10 @@ class SecretaryPet(DesktopPetPreview):
             idle = time.time() - self.mouse_idle_since
             near = abs(pointer[0] - (self.x + self.win_w // 2)) < 420 and abs(pointer[1] - self.y) < 320
             if idle > 30 and near and not self.rest_reason and self.cuddle_target is None and not self.walking and not self.drag_origin and not self.paused and random.random() < 0.15:
-                self.cuddle_target = max(0, min(self.screen_width - self.win_w, pointer[0] - self.win_w // 2))
+                if self.has_state("walk_right"):
+                    self.cuddle_target = max(0, min(self.screen_width - self.win_w, pointer[0] - self.win_w // 2))
+                else:
+                    self.play("pet", 1, "idle", "蹭蹭～我在這裡陪你。")   # v5：原地撒嬌
                 self.mouse_idle_since = time.time()
         except tk.TclError:
             return
