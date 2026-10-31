@@ -476,7 +476,7 @@ function doGet() {
 }
 
 // 程式版本（每次發布都要更新；試算表選單「ℹ️ 程式版本」、LINE 傳「版本」、工作台連線檢查都會顯示）
-var BOT_VERSION = '2026-09-28 14:48';
+var BOT_VERSION = '2026-10-31 22:40';
 
 function lineBotJson_(payload) {
   return ContentService.createTextOutput(JSON.stringify(payload)).setMimeType(ContentService.MimeType.JSON);
@@ -574,6 +574,8 @@ var SCREEN_PROMPTS = [
   { key: '舉手', text: '發言請舉手，輪流說', img: 'raise_hand.png' },
   { key: '安靜', text: '安靜！音量零級', img: 'quiet_usagi.png' },
   { key: '討論', text: '輕聲討論，別吵到隔壁組', img: 'quiet_cat.png' },
+  { key: '回教室', text: '上課鐘響，回教室坐好', img: 'class_focus.png' },
+  { key: '下一節', text: '準備下一節的課本和用品', img: 'homework.png' },
   // 📚 作業與學習
   { key: '收作業', text: '收作業囉，交給小組長', img: 'homework.png' },
   { key: '訂正', text: '訂正完拿給老師檢查', img: 'homework.png' },
@@ -583,16 +585,25 @@ var SCREEN_PROMPTS = [
   { key: '發問', text: '不會的先圈起來，等一下問', img: 'raise_hand.png' },
   // 🍱 生活作息
   { key: '喝水', text: '下課先喝水、上廁所', img: 'drink_water.png' },
+  { key: '打菜', text: '午餐準備：洗手、拿餐具、排隊打菜', img: 'line_up.png' },
   { key: '吃飯', text: '吃飯不說話，細嚼慢嚥', img: 'quiet_cat.png' },
+  { key: '收餐具', text: '吃完收好餐具，擦乾淨桌面', img: 'cleaning.png' },
   { key: '午休', text: '午休時間，趴下休息', img: 'nap.png' },
   { key: '打掃', text: '打掃時間，責任區掃乾淨', img: 'cleaning.png' },
+  { key: '回收', text: '垃圾分類，做好資源回收', img: 'cleaning.png' },
   { key: '整理', text: '整理書包，檢查抽屜', img: 'cleaning.png' },
+  // 🦷 衛生健康
+  { key: '潔牙', text: '飯後潔牙，刷牙三分鐘', img: 'drink_water.png' },
+  { key: '洗手', text: '吃飯前，先用肥皂洗手', img: 'drink_water.png' },
+  { key: '咳嗽', text: '咳嗽打噴嚏，記得摀住口鼻', img: 'raise_hand.png' },
+  { key: '護眼', text: '眼睛休息一下，看看遠方', img: 'reading.png' },
   // 🚶 集合與移動
   { key: '排隊', text: '排隊囉！快、靜、齊', img: 'line_up.png' },
   { key: '走廊', text: '到走廊排隊，不推不擠', img: 'line_up.png' },
   { key: '樓梯', text: '上下樓梯靠右走、不奔跑', img: 'line_up.png' },
   { key: '專科', text: '專科教室集合，帶課本鉛筆盒', img: 'line_up.png' },
-  { key: '放學', text: '準備放學：桌面清空、帶齊物品', img: 'cleaning.png' }
+  { key: '放學', text: '準備放學：桌面清空、帶齊物品', img: 'cleaning.png' },
+  { key: '路隊', text: '放學路隊，跟著路隊長走', img: 'line_up.png' }
 ];
 
 function saveScreenPrompt_(text, img) {

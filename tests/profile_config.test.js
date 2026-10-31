@@ -402,6 +402,12 @@ assert.ok((lineBotSource.match(/key: '/g) || []).length >= 20, "大屏提示內�
 assert.match(morningHtml, /data-tool="prompt"/, "班級工具應含大屏提示分頁");
 assert.match(morningHtml, /prompt_get/, "大屏提示應輪詢 GAS 取得遠端指令");
 assert.match(morningHtml, /assets\/irasutoya\//, "大屏應使用本機 irasutoya 插圖（CSP 不允許外連圖）");
+assert.match(morningHtml, /config\.promptSchedules/, "大屏提示應可設定定時自動跳出");
+assert.match(morningHtml, /mode: 'breaks'/, "定時提示應支援「每節下課」");
+assert.match(morningHtml, /day\.promptFired/, "同一天同一時間只跳一次（重新整理不重跳）");
+assert.match(morningHtml, /飯後潔牙/, "大屏提示應含飯後潔牙");
+assert.match(morningHtml, /\.prompt-img \{ width: auto; height: auto; align-self: center; object-fit: contain; \}/, "全螢幕時提示插圖不可被拉變形");
+assert.match(morningHtml, /PROMPT_ART_DIR = 'assets\/art\/cozy\/prompt\/'/, "新插圖（動森風）放在 assets/art/cozy/prompt/");
 assert.match(morningHtml, /tomatoBreathe/, "番茄鐘跑動時應有呼吸動畫");
 assert.match(morningHtml, /youtube-nocookie\.com/, "番茄鐘音樂角應支援 YouTube 內嵌");
 assert.match(morningHtml, /config\.scores/, "計分板分數應永久保存（只有手動歸零）");
