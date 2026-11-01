@@ -645,7 +645,7 @@
       <div class="workbench">
         <div class="panel">
           <div class="field"><label>班級人數（座號 1～N）</label>
-            <input class="input" id="stCount" type="number" min="2" max="50" value="28"></div>
+            <input class="input" id="stCount" type="number" min="2" max="60" value="28"></div>
           <div class="field"><label>空號（用、分隔，可留白）</label>
             <input class="input" id="stSkip" placeholder="例：7、13"></div>
           <div class="field"><label>自訂名單（每行一個，填了就用名單、不用座號）</label>
@@ -1193,7 +1193,7 @@
       if (!payload.ok) throw new Error(payload.error || '雲端回應異常');
       return payload;
     }
-    ['wsGoButton', 'ntGoButton', 'mmGoButton', 'cmGoButton', 'poGoButton'].forEach(id => { $(id).dataset.label = $(id).textContent; });
+    ['wsGoButton', 'ntGoButton', 'mmGoButton', 'cmGoButton', 'poGoButton', 'dkOutlineButton'].forEach(id => { $(id).dataset.label = $(id).textContent; });
     ['wsImage', 'ntImage', 'mmImage'].forEach(id => attachZone(id));
     attachZone('esImages', { multiple: true });
     attachZone('rvImages', { multiple: true });
@@ -2153,8 +2153,8 @@
     function stPool() {
       const names = $('stNames').value.split('\n').map(s => s.trim()).filter(Boolean);
       if (names.length) return names.slice(0, 60);
-      const count = Math.max(2, Math.min(50, parseInt($('stCount').value, 10) || 28));
-      const skip = new Set($('stSkip').value.split(/[、,\s]+/).map(v => parseInt(v, 10)).filter(Boolean));
+      const count = Math.max(2, Math.min(60, parseInt($('stCount').value, 10) || 28));
+      const skip = new Set($('stSkip').value.split(/[、,，;；\s]+/).map(v => parseInt(v, 10)).filter(Boolean));
       return Array.from({ length: count }, (_, i) => i + 1).filter(n => !skip.has(n));
     }
     const stSeatLabel = seat => seat == null ? '' : (typeof seat === 'number' ? seat + '號' : String(seat));
@@ -2192,15 +2192,15 @@
         <p style="margin-top:16px;font-size:13px;color:#666">製表日期：${new Date().toLocaleDateString('zh-TW')}</p></div>`;
       $('stMeta').textContent = '拖拉座位即可移動（點兩下互換也行）；空位顯示為虛線框。';
     }
-    function stBuild(shuffle) {
-      const pool = stPool();
+    function stBuild(shuffle, keepOrder) {
+      const pool = keepOrder || stPool();
       if (shuffle) for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
       const layout = $('stLayout').value;
       const unit = (layout === 'island4' || layout === 'island6') ? stGroupSize() : (layout === 'pairs' ? 2 : stCols());
       const total = Math.ceil(pool.length / unit) * unit;
       stSeats = Array.from({ length: total }, (_, i) => pool[i] == null ? null : pool[i]);
       // 直向排列：把「一行一行由前到後」的順序轉成畫面用的「一排一排」索引
-      if (!shuffle && $('stDirection').value === 'col' && layout !== 'island4' && layout !== 'island6') {
+      if (!shuffle && !keepOrder && $('stDirection').value === 'col' && layout !== 'island4' && layout !== 'island6') {
         const cols = layout === 'pairs' ? Math.max(1, Math.round(stCols() / 2)) * 2 : stCols();
         const rows = Math.ceil(total / cols);
         const rearranged = Array.from({ length: rows * cols }, () => null);
@@ -2215,8 +2215,17 @@
     }
     $('stLayout').addEventListener('change', () => {
       $('stColsField').hidden = /island/.test($('stLayout').value);
-      if (stSeats.length) stBuild(false);
+      // 換排法：保留目前的座位順序（隨機重排或拖拉過的結果不會消失）
+      if (stSeats.length) stBuild(false, stSeats.filter(seat => seat != null));
     });
+    // 預設人數沿用晨間大屏的設定（同一台電腦）
+    try {
+      const board = JSON.parse(localStorage.getItem('morningBoardSettings') || 'null');
+      if (board && Number(board.seatCount)) {
+        $('stCount').value = Math.min(60, Math.max(2, Number(board.seatCount)));
+        if (Array.isArray(board.emptySeats) && board.emptySeats.length && !$('stSkip').value) $('stSkip').value = board.emptySeats.join('、');
+      }
+    } catch (e) {}
     $('stGoButton').addEventListener('click', () => stBuild(true));
     $('stShuffleButton').addEventListener('click', () => { if (!stSeats.length) return stBuild(true); stBuild(true); showToast('🎲 已隨機重排。'); });
     $('stOrderButton').addEventListener('click', () => { stBuild(false); showToast('🔢 已依座號排列。'); });

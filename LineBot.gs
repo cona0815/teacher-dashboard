@@ -476,7 +476,7 @@ function doGet() {
 }
 
 // 程式版本（每次發布都要更新；試算表選單「ℹ️ 程式版本」、LINE 傳「版本」、工作台連線檢查都會顯示）
-var BOT_VERSION = '2026-10-31 22:40';
+var BOT_VERSION = '2026-11-01 14:30';
 
 function lineBotJson_(payload) {
   return ContentService.createTextOutput(JSON.stringify(payload)).setMimeType(ContentService.MimeType.JSON);
@@ -1031,7 +1031,9 @@ function submitRollcall_(body) {
       }
     });
     if (rollcallRows.length) {
-      sheets.rollcall.getRange(sheets.rollcall.getLastRow() + 1, 1, rollcallRows.length, 4).setValues(rollcallRows);
+      var rollcallRange = sheets.rollcall.getRange(sheets.rollcall.getLastRow() + 1, 1, rollcallRows.length, 4);
+      rollcallRange.offset(0, 1, rollcallRows.length, 1).setNumberFormat('@');   // 班級欄存成文字：「0601」「6-1」不會被轉成數字或日期而比對不到
+      rollcallRange.setValues(rollcallRows);
     }
 
     var homeworkRows = [];
@@ -1058,7 +1060,9 @@ function submitRollcall_(body) {
       });
     });
     if (homeworkRows.length) {
-      sheets.homework.getRange(sheets.homework.getLastRow() + 1, 1, homeworkRows.length, 6).setValues(homeworkRows);
+      var homeworkRange = sheets.homework.getRange(sheets.homework.getLastRow() + 1, 1, homeworkRows.length, 6);
+      homeworkRange.offset(0, 1, homeworkRows.length, 3).setNumberFormat('@');   // 班級、科目、作業名稱存成文字（「1-2」不會變日期）
+      homeworkRange.setValues(homeworkRows);
     }
   } finally {
     lock.releaseLock();

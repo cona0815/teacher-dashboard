@@ -1197,6 +1197,11 @@
         completed: previewTasks.filter(t => t.status === '已完成').length
       });
       const previewResult = () => ({ tasks: previewTasks.filter(t => t.status !== '封存'), summary: previewSummary(), serverTime: new Date().toLocaleString('zh-TW', { hour12: false }) });
+      // 新編號＝現有最大編號＋1（備份還原時已封存的不在清單裡，用「筆數＋1」會撞號）
+      const nextPreviewTaskId = tasks => {
+        const max = tasks.reduce((m, t) => Math.max(m, Number(String(t.taskId || '').replace(/^T-/, '')) || 0), 0);
+        return `T-${String(max + 1).padStart(3, '0')}`;
+      };
       const api = {
         getBootstrapData: () => ({
           ...previewResult(), csrfToken: 'local-preview', appUrl: '',
@@ -1212,7 +1217,7 @@
           let savedTask;
           if (existing) savedTask = Object.assign(existing, payload);
           else {
-            savedTask = { ...payload, taskId: `T-${String(previewTasks.length + 1).padStart(3, '0')}` };
+            savedTask = { ...payload, taskId: nextPreviewTaskId(previewTasks) };
             if (savedTask.taskType === '主任務' && !savedTask.projectId) savedTask.projectId = savedTask.taskId;
             previewTasks.unshift(savedTask);
           }
@@ -3686,9 +3691,8 @@
             parentTaskId: '', projectId: '', csrfToken: state.csrfToken,
           });
           state.tasks = result.tasks || [];
-          state.filteredTasks = [...state.tasks];
           renderSummary(result.summary || {});
-          renderTasks();
+          applyFilters();   // 保留目前的篩選條件
           appendDeskpetDiary({ type: 'task-created', title: draft.title, taskId: result.task && result.task.taskId || '', time: new Date().toISOString() });
         }
         $('deskpetDraft').hidden = true;
@@ -4561,6 +4565,7 @@
       const date = $('contactBookDate')?.value;
       if (!date) return showToast('請先選日期。', true);
       $('contactBookMeta').textContent = '讀取中……';
+      $('contactBookSaveButton').disabled = true;
       try {
         const result = await callLineBridge('contactbook_get', { date });
         $('contactBookInput').value = result.text || '';
@@ -4569,9 +4574,13 @@
         $('contactBookMeta').textContent = result.updatedAt
           ? `最後更新 ${new Date(result.updatedAt).toLocaleString('zh-TW')}（${sourceLabel}）`
           : '這一天還沒有聯絡本內容。';
+        $('contactBookSaveButton').disabled = false;
       } catch (error) {
+        // 讀不到這一天：清空並鎖住儲存，避免把前一天的內容存到這一天
+        $('contactBookInput').value = '';
         renderContactVisual();
-        $('contactBookMeta').textContent = `讀取失敗：${error.message}`;
+        $('contactBookSaveButton').disabled = true;
+        $('contactBookMeta').textContent = `讀取失敗：${error.message}（為了避免蓋掉資料，暫時不能儲存；請重新整理或換日期再試）`;
       }
     }
     async function saveContactBookEntry() {
@@ -4627,7 +4636,9 @@
         : '') + past.map(rowHtml).join('');
     }
     async function copyLatestContactBookEntry() {
-      const target = contactBookHistory.find(entry => !entry.empty);
+      const current = $('contactBookDate').value;
+      // 清單是新到舊、含未來預排：只取比目前編輯日期早的最近一筆
+      const target = contactBookHistory.filter(entry => !entry.empty && entry.date < current).sort((a, b) => (a.date < b.date ? 1 : -1))[0];
       if (!target) return showToast('請先按「載入清單」，且需有至少一筆紀錄。', true);
       try {
         const result = await callLineBridge('contactbook_get', { date: target.date });
@@ -5439,9 +5450,8 @@
           });
         }
         state.tasks = result.tasks || [];
-        state.filteredTasks = [...state.tasks];
         renderSummary(result.summary || {});
-        renderTasks();
+        applyFilters();   // 保留目前的篩選條件
         closeTaskModal();
         showToast(savedSubtaskCount ? `專案與 ${savedSubtaskCount} 項子任務已儲存。` : '任務已儲存。');
       } catch (error) {
@@ -5485,9 +5495,8 @@
       try {
         const result = await serverCall('archiveTask', taskId, state.csrfToken);
         state.tasks = result.tasks || [];
-        state.filteredTasks = [...state.tasks];
         renderSummary(result.summary || {});
-        renderTasks();
+        applyFilters();   // 保留目前的篩選條件
         if ($('taskModal').classList.contains('open')) closeTaskModal();
         const archivedCount = Number(result.archivedCount) || 1;
         showToast(archivedCount > 1 ? `主任務與 ${archivedCount - 1} 項子任務已封存。` : '任務已封存。');
