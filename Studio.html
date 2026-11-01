@@ -267,6 +267,17 @@
     .doc-note { font-size:12.5px; color:#555; }
     .doc-ai-sign { margin-top:22px; padding-top:4px; border-top:1px solid #999; text-align:right; font-size:12px; color:#444; }
     .doc-blank-line { border-bottom:1px solid #555; height:30px; }
+    .sc-weeks { max-height:300px; overflow:auto; border:1.5px solid var(--line); border-radius:10px; padding:4px 8px; background:#fbfcfb; }
+    .sc-week { display:grid; grid-template-columns:auto 1fr; gap:6px; align-items:center; font-size:13px; padding:3px 0; border-bottom:1px solid #eef2ef; }
+    .sc-week label { display:inline-flex; gap:4px; align-items:center; font-weight:700; white-space:nowrap; cursor:pointer; }
+    .sc-week .input { padding:3px 8px; font-size:12.5px; }
+    .sc-week.off label { color:var(--danger); }
+    .sc-chip { display:inline-block; border:1.5px solid #8a9b93; border-radius:8px; padding:0 8px; margin:2px 4px 2px 0; background:#f6faf8; cursor:grab; font-size:13.5px; }
+    .sc-chip small { color:#666; font-size:11.5px; }
+    .sc-units.sc-over { background:#fff3d6; }
+    .sc-off-row td { background:#f1f1f1; color:#777; }
+    .sc-note:focus, .sc-title:focus { outline:2px dashed #e0a21a; outline-offset:1px; }
+    @media print { .sc-chip { border:0; background:none; padding:0; } }
     @media print {
       body { background:#fff; }
       header.app, .tabs, .workbench > .panel:first-child, .preview-bar, .toast, .hint, .warn, .status { display:none !important; }
@@ -313,6 +324,7 @@
     <button class="tab-button" type="button" data-page="plan">📋 計畫書</button>
     <button class="tab-button" type="button" data-page="minutes">🗒 會議紀錄</button>
     <button class="tab-button" type="button" data-page="lesson">📘 教案與觀議課</button>
+    <button class="tab-button" type="button" data-page="schedule">📅 教學進度表</button>
   </div>
 
   <main>
@@ -1196,6 +1208,43 @@
             <span class="status" id="lpMeta">🟡 AI 草稿，請核對後再交出；預覽區可以直接點字修改。</span>
           </div>
           <div class="preview-host" id="lpPreview"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 🗂 行政文書：📅 教學進度表（G5，不用 AI 也能用） -->
+    <section class="page" id="page-schedule">
+      <div class="workbench">
+        <div class="panel">
+          <div class="field"><label>學校名稱</label>
+            <input class="input docSchool" id="scSchool" placeholder="例：○○市○○國民小學"></div>
+          <div class="field"><label>年級／科目</label>
+            <div style="display:flex;gap:6px"><input class="input" id="scGrade" placeholder="例：五年級"><input class="input" id="scSubject" placeholder="例：數學"></div></div>
+          <div class="field"><label>學期起訖</label>
+            <div style="display:flex;gap:6px;align-items:center"><input class="input" type="date" id="scStart"><span>到</span><input class="input" type="date" id="scEnd"></div></div>
+          <div class="field"><label>每週節數</label>
+            <input class="input" type="number" id="scPerWeek" min="1" max="20" value="4"></div>
+          <div class="field"><label>週次（勾＝放假／停課，不排進度；右邊可寫評量或備註）</label>
+            <div class="sc-weeks" id="scWeekList"></div></div>
+          <div class="field"><label>課本目錄：單元清單（一行一個；要指定節數就寫「單元名｜節數」）</label>
+            <textarea class="textarea" id="scToc" style="min-height:140px" placeholder="例：&#10;一、分數的加減｜10&#10;二、小數的乘法&#10;三、長方體與正方體"></textarea></div>
+          <div class="field"><label>或拍目錄照片，讓 AI 抓單元（選用）</label>
+            <input class="input" type="file" id="scTocImage" accept="image/*">
+            <button class="mini" type="button" id="scTocAiButton" style="margin-top:6px">📷 AI 從目錄照片抓單元</button></div>
+          <button class="go-button" type="button" id="scGoButton">📅 產生進度表</button>
+          <div class="status" id="scStatus"></div>
+          <div class="hint">不用 AI 也能用：貼上單元清單就會<strong>自動平均分配到有效週次</strong>（沒寫節數的單元平均分；有寫節數就照節數排）。產生後可以<strong>直接拖拉單元</strong>到別的週，備註欄可以點字修改；匯出 Excel 給教務處。</div>
+        </div>
+        <div class="panel">
+          <div class="preview-bar">
+            <label class="es-confirm" id="scCheckedLabel" style="display:none"><input type="checkbox" id="scChecked"> 老師已核對</label>
+            <button class="mini" type="button" onclick="window.print()">🖨 列印</button>
+            <button class="mini" type="button" onclick="downloadPreview('scPreview','教學進度表','doc')">⬇ Word</button>
+            <button class="mini" type="button" onclick="downloadPdfFromHost('scPreview','教學進度表',false)">⬇ PDF</button>
+            <button class="mini" type="button" onclick="downloadPreview('scPreview','教學進度表','xls')">⬇ Excel</button>
+            <span class="status" id="scMeta">填好學期與單元清單，按「產生進度表」。</span>
+          </div>
+          <div class="preview-host" id="scPreview"></div>
         </div>
       </div>
     </section>
@@ -4069,6 +4118,186 @@
       docRender('lp', html);
       $('lpMeta').textContent = `🟡 AI 草稿（${periods} 節${fields.length ? '，已套學校格式' : ''}），代碼請對照課綱核對後再勾「老師已核對」。`;
       showToast('📘 教案草稿完成，請過目。');
+    });
+
+    // ============================================================
+    // 📅 教學進度表（G5）：週次 × 單元自動分配，可拖調、可匯出 Excel
+    // ============================================================
+    const SC = { weeks: [], perWeek: 4, aiUsed: false, off: new Set(), notes: {} };
+    const scIso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const scParse = v => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v || ''); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null; };
+    const scMd = d => `${d.getMonth() + 1}/${d.getDate()}`;
+    (function scDefaultTerm() {
+      const now = new Date(), y = now.getFullYear(), m = now.getMonth() + 1;
+      const [a, b] = m >= 8 ? [`${y}-08-30`, `${y + 1}-01-20`] : m === 1 ? [`${y - 1}-08-30`, `${y}-01-20`] : [`${y}-02-11`, `${y}-06-30`];
+      $('scStart').value = a; $('scEnd').value = b;
+    })();
+    // 依學期起訖切成週（週一到週五），保留老師勾過的放假週與備註
+    function scBuildWeeks() {
+      const start = scParse($('scStart').value), end = scParse($('scEnd').value);
+      const weeks = [];
+      if (start && end && end >= start) {
+        const monday = new Date(start); monday.setDate(monday.getDate() - (monday.getDay() + 6) % 7);
+        for (let i = 0; monday <= end && i < 30; i += 1) {
+          const friday = new Date(monday); friday.setDate(friday.getDate() + 4);
+          const from = monday < start ? new Date(start) : new Date(monday);
+          const to = friday > end ? new Date(end) : friday;
+          const key = scIso(monday);
+          weeks.push({ no: i + 1, key, from, to, off: SC.off.has(key), note: SC.notes[key] || '', items: [] });
+          monday.setDate(monday.getDate() + 7);
+        }
+      }
+      SC.weeks = weeks;
+      $('scWeekList').innerHTML = weeks.length ? weeks.map(w => `<div class="sc-week${w.off ? ' off' : ''}" data-key="${w.key}">
+          <label><input type="checkbox" class="scOff" data-key="${w.key}"${w.off ? ' checked' : ''}> 第${w.no}週 ${scMd(w.from)}–${scMd(w.to)}</label>
+          <input class="input scWeekNote" data-key="${w.key}" value="${escapeHtml(w.note)}" placeholder="評量／備註"></div>`).join('')
+        : '<div class="hint">請先填學期起訖日期。</div>';
+    }
+    $('scWeekList').addEventListener('change', e => {
+      const box = e.target.closest('.scOff');
+      if (!box) return;
+      if (box.checked) SC.off.add(box.dataset.key); else SC.off.delete(box.dataset.key);
+      box.closest('.sc-week').classList.toggle('off', box.checked);
+    });
+    $('scWeekList').addEventListener('input', e => {
+      const input = e.target.closest('.scWeekNote');
+      if (input) SC.notes[input.dataset.key] = input.value;
+    });
+    ['scStart', 'scEnd'].forEach(id => $(id).addEventListener('change', scBuildWeeks));
+    scBuildWeeks();
+    function scParseUnits() {
+      return $('scToc').value.split('\n').map(line => line.trim()).filter(Boolean).map(line => {
+        const m = /^(.*?)\s*[｜|，,\t]\s*(\d+)\s*節?$/.exec(line);
+        return m && m[1] ? { name: m[1].trim(), n: parseInt(m[2], 10) } : { name: line, n: 0 };
+      });
+    }
+    // 分配：沒寫節數→以「週」為單位平均分（單元少就一單元多週，單元多就一週多單元）；有寫節數→照節數依序填滿每週
+    function scAllocate(units, perWeek) {
+      SC.weeks.forEach(w => { w.items = []; w.over = false; });
+      const valid = SC.weeks.filter(w => !w.off);
+      if (!valid.length || !units.length) return { overflow: 0 };
+      const W = valid.length, U = units.length;
+      if (!units.some(u => u.n)) {
+        if (U <= W) {
+          let wi = 0;
+          units.forEach((u, i) => {
+            const span = Math.floor(W / U) + (i < W % U ? 1 : 0);
+            for (let k = 0; k < span; k += 1) valid[wi++].items.push({ name: u.name, n: perWeek });
+          });
+        } else {
+          let ui = 0;
+          valid.forEach((w, j) => {
+            const count = Math.floor(U / W) + (j < U % W ? 1 : 0);
+            for (let k = 0; k < count; k += 1) w.items.push({ name: units[ui++].name, n: Math.floor(perWeek / count) + (k < perWeek % count ? 1 : 0) });
+          });
+        }
+        return { overflow: 0 };
+      }
+      // 有指定節數：沒寫的單元平分剩下的節數（至少 1 節）
+      const total = W * perWeek;
+      const fixed = units.reduce((sum, u) => sum + (u.n || 0), 0);
+      const missing = units.filter(u => !u.n).length;
+      const share = missing ? Math.max(1, Math.floor(Math.max(0, total - fixed) / missing)) : 0;
+      let wi = 0, cap = perWeek, overflow = 0;
+      units.forEach(u => {
+        let left = u.n || share;
+        while (left > 0) {
+          if (wi >= W) { const last = valid[W - 1]; last.items.push({ name: u.name, n: left }); last.over = true; overflow += left; break; }
+          const take = Math.min(left, cap);
+          const week = valid[wi];
+          const prev = week.items[week.items.length - 1];
+          if (prev && prev.name === u.name) prev.n += take; else week.items.push({ name: u.name, n: take });
+          left -= take; cap -= take;
+          if (cap === 0) { wi += 1; cap = perWeek; }
+        }
+      });
+      return { overflow };
+    }
+    function scRender() {
+      const title = [$('scGrade').value.trim(), $('scSubject').value.trim()].filter(Boolean).join(' ');
+      const rows = SC.weeks.map((w, i) => {
+        const units = w.off ? '（放假／停課）' : (w.items.length
+          ? w.items.map((it, k) => `<span class="sc-chip" draggable="true" contenteditable="false" data-w="${i}" data-k="${k}">${escapeHtml(it.name)}<small>（${it.n} 節）</small></span>`).join('')
+          : '複習／彈性');
+        const periods = w.off ? 0 : (w.items.length ? w.items.reduce((s, it) => s + it.n, 0) : SC.perWeek);
+        return `<tr class="${w.off ? 'sc-off-row' : ''}"><td style="text-align:center">${w.no}</td><td>${scMd(w.from)}–${scMd(w.to)}</td>
+          <td class="sc-units${w.over ? ' sc-over' : ''}" data-w="${i}">${units}</td><td style="text-align:center">${periods}</td>
+          <td class="sc-note" contenteditable="true" data-w="${i}">${escapeHtml(w.note)}</td></tr>`;
+      }).join('');
+      $('scPreview').innerHTML = `<div class="sheet doc-sheet">
+        <div class="ws-head"><div class="ws-school">${escapeHtml(docSchool('scSchool') || '＿＿＿＿＿＿國民小學')}</div>
+          <div class="sc-title ws-title" contenteditable="true">${escapeHtml(title ? title + ' ' : '')}教學進度表</div></div>
+        <div class="ws-meta"><span>學期：${escapeHtml($('scStart').value)} 至 ${escapeHtml($('scEnd').value)}</span><span>每週 ${SC.perWeek} 節</span><span>有效週次 ${SC.weeks.filter(w => !w.off).length} 週</span></div>
+        <table class="doc-table sc-table"><colgroup><col style="width:8%"><col style="width:15%"><col><col style="width:8%"><col style="width:22%"></colgroup>
+          <tr><th>週次</th><th>日期區間</th><th>單元</th><th>節數</th><th>評量／備註</th></tr>${rows}</table>
+        <div class="ws-meta" style="margin-top:20px"><span>任課教師：＿＿＿＿＿＿</span><span>教務處：＿＿＿＿＿＿</span></div>
+        <div class="doc-ai-sign" contenteditable="false">AI 協助草擬，內容已由老師核對</div></div>`;
+      docApplyConfirm('sc');
+    }
+    $('scGoButton').addEventListener('click', () => {
+      const units = scParseUnits();
+      if (!units.length) return showToast('請先輸入單元清單（一行一個），或用目錄照片讓 AI 抓。', true);
+      scBuildWeeks();
+      if (!SC.weeks.length) return showToast('請先填正確的學期起訖日期。', true);
+      SC.perWeek = Math.max(1, Math.min(20, parseInt($('scPerWeek').value, 10) || 1));
+      const { overflow } = scAllocate(units, SC.perWeek);
+      if (!SC.weeks.some(w => !w.off)) return showToast('每一週都勾了放假，沒有可以排進度的週次。', true);
+      scRender();
+      const W = SC.weeks.filter(w => !w.off).length;
+      $('scMeta').textContent = `${units.length} 個單元 → ${W} 個有效週次（每週 ${SC.perWeek} 節）。可直接拖拉單元換週。`;
+      if (overflow) showToast(`單元節數比可用節數多 ${overflow} 節，已先放在最後一週（黃底），請調整。`, true);
+      else showToast('📅 進度表完成，可拖拉調整後匯出 Excel。');
+    });
+    // 拖拉單元到別週
+    $('scPreview').addEventListener('dragstart', e => {
+      const chip = e.target.closest('.sc-chip');
+      if (!chip) return;
+      e.dataTransfer.setData('text/plain', `${chip.dataset.w},${chip.dataset.k}`);
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    $('scPreview').addEventListener('dragover', e => { if (e.target.closest('.sc-units')) e.preventDefault(); });
+    $('scPreview').addEventListener('drop', e => {
+      const cell = e.target.closest('.sc-units');
+      if (!cell) return;
+      e.preventDefault();
+      const [w, k] = String(e.dataTransfer.getData('text/plain')).split(',').map(Number);
+      const to = Number(cell.dataset.w);
+      const from = SC.weeks[w];
+      if (!from || !from.items[k] || to === w) return;
+      if (SC.weeks[to].off) return showToast('這週已勾放假，不能排進度；要排請先取消勾選再重新產生。', true);
+      const [item] = from.items.splice(k, 1);
+      SC.weeks[to].items.push(item);
+      from.over = false;
+      scRender();
+    });
+    // 預覽區改備註也記回去（重新拖拉時不會消失）
+    $('scPreview').addEventListener('input', e => {
+      const note = e.target.closest('.sc-note');
+      if (!note) return;
+      const w = SC.weeks[Number(note.dataset.w)];
+      if (w) { w.note = note.textContent; SC.notes[w.key] = w.note; }
+      const side = $('scWeekList').querySelector(`.scWeekNote[data-key="${w && w.key}"]`);
+      if (side) side.value = w.note;
+    });
+    docBindConfirm('sc');
+    attachZone('scTocImage');
+    $('scTocAiButton').dataset.label = $('scTocAiButton').textContent;
+    $('scTocAiButton').addEventListener('click', async () => {
+      const file = zoneFirst('scTocImage');
+      if (!file) return showToast('請先選目錄照片；沒有照片也可以直接在上面打單元清單。', true);
+      const prompt = [
+        '附圖是臺灣國小課本的目錄頁。請抓出每一個「單元」（大單元或課次，依目錄的層級，不要抓頁碼）。',
+        '只回傳 JSON，不要其他文字。periods 只有目錄上有印節數或建議節數時才填數字，否則填 null，不要自己估。',
+        '格式：{"units":[{"name":"一、分數的加減","periods":null}]}'
+      ].join('\n');
+      const data = await docAi($('scTocAiButton'), $('scStatus'), prompt, async () => filesToParts([file], 1));
+      if (!data) return;
+      const units = docArr(data.units).map(u => typeof u === 'object' ? u : { name: u }).filter(u => u.name);
+      if (!units.length) return showToast('AI 沒有從照片抓到單元，請換一張清楚的照片或手動輸入。', true);
+      $('scToc').value = units.map(u => `${String(u.name).trim()}${u.periods ? '｜' + parseInt(u.periods, 10) : ''}`).join('\n');
+      SC.aiUsed = true;
+      $('scCheckedLabel').style.display = '';
+      showToast(`AI 抓到 ${units.length} 個單元，請核對後按「產生進度表」。`);
     });
   </script>
   <script src="assets/version.js"></script>

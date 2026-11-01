@@ -722,6 +722,17 @@ assert.match(studioHtml, /\[\{ label: '時間', width: '10%' \}, \{ label: '教�
 for (const title of ["'單元目標'", "'學習表現'", "'學習內容'", "'核心素養'", "'差異化教學'", "'評量方式'", "'觀課紀錄'", "'議課紀錄'"]) assert.ok(studioHtml.includes(title), `教案／觀議課應有 ${title}`);
 assert.match(studioHtml, /strengths 議課的優點恰好 3 項；suggestions 具體可行的建議恰好 2 項。教學者回應不要寫/, "議課紀錄：優點 3、建議 2、教學者回應留白");
 assert.match(studioHtml, /customFields 依序對每個欄位寫內容/, "教案可套學校欄位");
+// G5 📅 教學進度表
+assert.match(studioHtml, /data-page="schedule">📅 教學進度表/, "應有教學進度表分頁");
+{
+  const page = groupBPage("schedule");
+  for (const id of ["scStart", "scEnd", "scPerWeek", "scWeekList", "scToc", "scTocImage", "scTocAiButton", "scGoButton"]) assert.match(page, new RegExp(`id="${id}"`), `進度表應有 #${id}`);
+  assert.match(page, /downloadPreview\('scPreview','教學進度表','xls'\)/, "進度表應可匯出 Excel");
+}
+assert.match(studioHtml, /function scAllocate\(units, perWeek\)/, "進度表應自動分配單元到有效週次（不用 AI）");
+assert.match(studioHtml, /const valid = SC\.weeks\.filter\(w => !w\.off\)/, "放假週不排進度");
+assert.match(studioHtml, /class="sc-chip" draggable="true"/, "進度表單元可拖調");
+assert.match(studioHtml, /<th>週次<\/th><th>日期區間<\/th><th>單元<\/th><th>節數<\/th><th>評量／備註<\/th>/, "進度表欄位：週次、日期區間、單元、節數、評量／備註");
 // ===== 組B 行政文書 end =====
 
 // ===== 組A 行政文書 =====
