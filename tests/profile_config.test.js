@@ -755,3 +755,32 @@ for (const title of ["'主席報告'", "'討論事項'", "'臨時動議'", "'待
   assert.match(docsJs, /async function pushAdminDocPoint\(\)[\s\S]*?if \(!window\.confirm\(`確定要把這句送到教室大屏提示嗎？[\s\S]*?「\$\{text\}」[\s\S]*?return;[\s\S]*?await callLineBridge\('prompt_set', \{ text, img: 'class_focus\.png' \}\)/, "推到大屏要先確認並顯示句子，確認後才走 prompt_set");
   assert.match(docsJs, /\$\('aiDocPushButton'\)\.hidden = !ready;/, "沒有 LINE／GAS 設定時隱藏推送按鈕");
 }
+
+// ===== 組C 多班模式 =====
+// G10 大屏多班模式（科任）：第一個班沿用舊 key，其他班 key 後加「:班級」；點名、聯絡本仍屬第一個班
+{
+  const mh = fs.readFileSync(path.join(projectRoot, "Morning.html"), "utf8");
+  assert.match(mh, /id="setupClasses"/, "設定頁應有「我教的班級」欄");
+  assert.match(mh, /我教的班級/, "設定頁欄位名稱應為「我教的班級」");
+  assert.match(mh, /座號範圍與空號各班共用/, "設定頁應說明各班共用座號設定");
+  assert.match(mh, /id="classSwitch" hidden/, "班級切換鈕預設隱藏（單班＝舊畫面）");
+  assert.match(mh, /const CURRENT_CLASS_KEY = 'morningCurrentClass'/, "目前班應存在 morningCurrentClass");
+  assert.match(mh, /return out\.length >= 2 \? out\.slice\(0, 12\) : \[\]/, "不到兩班時 classes 應為空陣列（行為與單班相同）");
+  assert.match(mh, /return !isMultiClass\(\) \|\| cls === state\.settings\.classes\[0\] \? '' : ':' \+ cls;/, "第一個班沿用舊 key，其他班加「:班級」");
+  assert.match(mh, /const SETTINGS_KEY = 'morningBoardSettings'/, "設定 key 不可改名");
+  assert.match(mh, /const STATE_PREFIX = 'morningBoardState:'/, "當日狀態 key 不可改名");
+  assert.match(mh, /const CONFIG_KEY = 'morningToolsConfig'/, "班級工具設定 key 不可改名");
+  assert.match(mh, /const DAY_PREFIX = 'morningToolsDay:'/, "班級工具當日 key 不可改名");
+  assert.match(mh, /const CLASS_CONFIG_FIELDS = \['scores', 'teamNames', 'teamCount'\]/, "計分板分數與隊名每班一份");
+  assert.match(mh, /const CLASS_DAY_FIELDS = \['drawn', 'boards', 'groups'\]/, "已抽名單、檢核板、分組結果每班一份");
+  assert.match(mh, /localStorage\.setItem\(STATE_PREFIX \+ todayKey\(\) \+ suffix, JSON\.stringify\(\{ boards: state\.boards \}\)\)/, "作業繳交版面每班一份，別班只存 boards");
+  assert.match(mh, /JSON\.stringify\(\{ attendance: state\.attendance, boards: firstBoards, flags: state\.flags \}\)/, "別班畫面改點名仍寫回第一個班、不蓋掉第一個班的版面");
+  assert.match(mh, /const target = cls \|\| \(push !== 'none' \? firstClass\(\) : currentClass\(\)\)/, "推播只送第一個班，一般存檔送目前的班");
+  assert.match(mh, /const attendance = \(isFirst \? Object\.entries\(state\.attendance\) : \[\]\)/, "點名只屬第一個班");
+  assert.match(mh, /date: todayKey\(\), className: cls, attendance, homework, push/, "送出雲端的 className 用指定班");
+  assert.doesNotMatch(mh, /action: 'classroom_missing', token: state\.settings\.classroomToken, className: state\.settings\.className/, "補交／訂正應讀目前的班");
+  assert.match(mh, /action: 'contactbook_get', token: state\.settings\.classroomToken, className: state\.settings\.className/, "聯絡本仍屬第一個班");
+  assert.match(mh, /new CustomEvent\('morning:classchange'/, "切班要通知班級工具重新載入");
+  assert.match(mh, /if \(lotteryBusy\) event\.preventDefault\(\)/, "抽籤進行中不可切班");
+  assert.match(mh, /if \(toolsClassSuffix\(\)\) return absent;/, "別班沒有點名資料，抽籤分組不排除第一個班的缺席");
+}

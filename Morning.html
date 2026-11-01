@@ -18,6 +18,12 @@
     body { font-family: "Microsoft JhengHei", "Noto Sans TC", sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; }
     header { background: var(--surface); border-bottom: 2px solid var(--line); padding: 5px 18px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; position: sticky; top: 0; z-index: 20; }
     .brand { font-size: 20px; font-weight: 900; color: var(--primary-strong); }
+    /* G10 多班模式：班級切換鈕（只有設定兩班以上才出現） */
+    .class-switch { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .class-switch[hidden] { display: none; }
+    .class-pill { border: 2px solid var(--line); background: var(--surface); color: var(--primary-strong); border-radius: 999px; padding: 3px 14px; font-size: 16px; font-weight: 900; cursor: pointer; font-family: inherit; }
+    .class-pill.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .class-switch-note { font-size: 13px; font-weight: 700; color: var(--muted); }
     .today-label { font-size: 16px; font-weight: 700; color: var(--muted); }
     .clock { font-size: 30px; font-weight: 900; font-variant-numeric: tabular-nums; color: var(--primary-strong); margin-left: auto; }
     .countdown-box { display: flex; align-items: center; gap: 7px; background: var(--ok-soft); border: 2px solid var(--line); border-radius: 12px; padding: 3px 10px; }
@@ -173,6 +179,7 @@
 <body>
   <header>
     <div class="brand" id="classNameLabel">晨間大屏</div>
+    <div class="class-switch" id="classSwitch" hidden></div>
     <div class="today-label" id="todayLabel"></div>
     <div class="clock" id="bigClock">--:--:--</div>
     <div class="countdown-box" id="countdownBox">
@@ -978,6 +985,8 @@
             <input id="setupPin" maxlength="12" placeholder="1234" autocomplete="off">
             <div class="status-text" style="margin-top:4px">留空＝不上鎖。這是防止學生隨手亂改的門檻，不是加密保護——真正的機密請不要只靠它。</div></div>
           <div class="field"><label>班級名稱（例：601）</label><input id="setupClassName" maxlength="20" placeholder="601"></div>
+          <div class="field"><label>我教的班級（科任多班用，例：601、602、603）</label><input id="setupClasses" maxlength="160" placeholder="留空＝只有上面這一班">
+            <div class="status-text" style="margin-top:4px">用頓號或逗號分隔。第一個班＝上面的「班級名稱」，點名、聯絡本、自動推播都只屬於它。設兩班以上時，左上角會出現班級切換鈕；計分板、檢核板、抽籤已抽名單、分組結果與作業繳交版面每班各一份，切班不互蓋。座號範圍與空號各班共用下方的設定。</div></div>
           <div class="field"><label>大屏標題（顯示在左上角，可自訂）</label><input id="setupBoardTitle" maxlength="20" placeholder="晨間大屏"></div>
           <div class="field"><label>聯絡本字體（低年級可選注音體）</label><select id="setupContactFont">
             <optgroup label="一般字體">
@@ -1051,7 +1060,7 @@
     const CONTACT_FONTS = ['default', 'huninn', 'iansui', 'bpmf', 'bpmfhuninn'];
     const state = {
       settings: {
-        className: '', boardTitle: '晨間大屏', contactFont: 'default', correctColor: 'brown', seatCount: 26, emptySeats: [],
+        className: '', classes: [], boardTitle: '晨間大屏', contactFont: 'default', correctColor: 'brown', seatCount: 26, emptySeats: [],
         setupPin: '1234',
         subjects: [], assignmentTypes: ['習作', '試卷', '作業本', '學習單', '其他'],
         gasUrl: '', classroomToken: '', teacherToken: '',
@@ -1067,6 +1076,7 @@
       countdown: { remaining: 0, running: false },
       submitting: false,
       dirty: false,          // 有未存到雲端的異動；每 5 分鐘與離開頁面時自動存檔
+      dirtyFirst: false,     // 多班模式：在別班畫面改到第一個班的點名，也要存回第一個班
       lastCloudSaveAt: ''
     };
     const $ = id => document.getElementById(id);
@@ -1106,6 +1116,31 @@
       return state.settings.subjects.filter(item => item.enabled).map(item => item.name);
     }
 
+    // ---------- 多班模式（G10）：第一個班＝className、沿用舊 key；其他班的 key 後面加「:班級」 ----------
+    const CURRENT_CLASS_KEY = 'morningCurrentClass';
+    /** 把「601、602」整理成不重複的班級陣列，第一個固定是 className；不到兩班就回傳 []（單班＝舊行為）。 */
+    function normalizeClassList(className, list) {
+      const items = (Array.isArray(list) ? list : String(list || '').split(/[、,，;；\s]+/))
+        .map(value => String(value || '').trim().slice(0, 20)).filter(Boolean);
+      const out = [];
+      [String(className || '').trim(), ...items].forEach(name => { if (name && !out.includes(name)) out.push(name); });
+      return out.length >= 2 ? out.slice(0, 12) : [];
+    }
+    function isMultiClass() { return state.settings.classes.length >= 2; }
+    function teachingClasses() { return isMultiClass() ? state.settings.classes : [state.settings.className]; }
+    function firstClass() { return teachingClasses()[0]; }
+    function currentClass() {
+      if (!isMultiClass()) return state.settings.className;
+      let saved = '';
+      try { saved = localStorage.getItem(CURRENT_CLASS_KEY) || ''; } catch (error) {}
+      return state.settings.classes.includes(saved) ? saved : state.settings.classes[0];
+    }
+    function isFirstClass() { return currentClass() === firstClass(); }
+    /** 第一個班（或單班）回傳 ''＝舊 key；其他班回傳「:602」。 */
+    function classKeySuffix(cls = currentClass()) {
+      return !isMultiClass() || cls === state.settings.classes[0] ? '' : ':' + cls;
+    }
+
     // ---------- 設定（含 v1 → v2 遷移） ----------
     function loadSettings() {
       try {
@@ -1113,6 +1148,8 @@
         if (saved && typeof saved === 'object') {
           const s = state.settings;
           s.className = String(saved.className || '');
+          s.classes = normalizeClassList(s.className, saved.classes);
+          if (!s.className && s.classes.length) s.className = s.classes[0];
           s.boardTitle = String(saved.boardTitle || '').trim().slice(0, 20) || '晨間大屏';
           s.contactFont = CONTACT_FONTS.includes(saved.contactFont) ? saved.contactFont : 'default';
           // 舊版沒有這個欄位，第一次載入就套用預設密碼 1234
@@ -1173,14 +1210,40 @@
           };
         }
       } catch (error) {}
+      // 多班模式且目前不是第一個班：點名與旗標照舊讀第一個班，作業繳交版面改讀本班的「:班級」key
+      if (classKeySuffix()) state.boards = loadClassBoards(classKeySuffix());
       for (let index = localStorage.length - 1; index >= 0; index -= 1) {
         const key = localStorage.key(index);
         if (key && key.startsWith(STATE_PREFIX) && key.slice(STATE_PREFIX.length) < shiftDate(todayKey(), -7)) localStorage.removeItem(key);
       }
     }
+    /** 讀某一班今天的作業繳交版面（suffix ''＝第一個班的舊 key）。 */
+    function loadClassBoards(suffix) {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STATE_PREFIX + todayKey() + suffix) || 'null');
+        const boards = saved && Array.isArray(saved.boards) ? saved.boards.filter(board => board && board.subject) : [];
+        const seenIds = new Set();
+        boards.forEach(board => {
+          if (!board.id || seenIds.has(board.id)) board.id = `b${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+          seenIds.add(board.id);
+        });
+        return boards;
+      } catch (error) { return []; }
+    }
     function saveTodayState() {
       state.dirty = true;   // 有異動就標記；autoCloudSaveTick 會在 5 分鐘內存到雲端（不推播）
-      localStorage.setItem(STATE_PREFIX + todayKey(), JSON.stringify({ attendance: state.attendance, boards: state.boards, flags: state.flags }));
+      const suffix = classKeySuffix();
+      if (!suffix) {
+        localStorage.setItem(STATE_PREFIX + todayKey(), JSON.stringify({ attendance: state.attendance, boards: state.boards, flags: state.flags }));
+        return;
+      }
+      // 別班畫面：點名、旗標仍寫回第一個班的舊 key（保留第一個班的版面），本班版面寫到「:班級」key
+      let saved = null;
+      try { saved = JSON.parse(localStorage.getItem(STATE_PREFIX + todayKey()) || 'null'); } catch (error) {}
+      const firstBoards = saved && Array.isArray(saved.boards) ? saved.boards : [];
+      if (JSON.stringify((saved && saved.attendance) || {}) !== JSON.stringify(state.attendance)) state.dirtyFirst = true;
+      localStorage.setItem(STATE_PREFIX + todayKey(), JSON.stringify({ attendance: state.attendance, boards: firstBoards, flags: state.flags }));
+      localStorage.setItem(STATE_PREFIX + todayKey() + suffix, JSON.stringify({ boards: state.boards }));
     }
 
     // ---------- 時鐘、倒數與自動化 ----------
@@ -1601,7 +1664,7 @@
       }
       $('correctStatus').textContent = '載入中……';
       try {
-        const result = await callGas({ action: 'classroom_missing', token: state.settings.classroomToken, className: state.settings.className, days: state.settings.lookbackDays });
+        const result = await callGas({ action: 'classroom_missing', token: state.settings.classroomToken, className: currentClass(), days: state.settings.lookbackDays });
         const all = Array.isArray(result.corrections) ? result.corrections : [];
         // 清單只留「還沒訂正完」的；已完成的只在狀態列報個數字，不佔畫面。
         state.correct.items = all.filter(item => item.status === '待訂正');
@@ -1645,7 +1708,7 @@
       }
       try {
         const result = await callGas({
-          action: 'homework_resubmit', token: state.settings.classroomToken, className: state.settings.className,
+          action: 'homework_resubmit', token: state.settings.classroomToken, className: currentClass(),
           date, subject, assignment, seat
         });
         if (!result.updated) showToast('雲端找不到這一筆（可能已處理過），已從清單移除。');
@@ -1827,13 +1890,16 @@
     }
 
     // ---------- 送出回報 ----------
-    function buildSubmitPayload(push = 'none') {
+    function buildSubmitPayload(push = 'none', cls = currentClass()) {
       const seatsNow = new Set(activeSeats());
-      const attendance = Object.entries(state.attendance)
+      // 多班模式：點名只屬於第一個班；作業版面用指定那一班的
+      const isFirst = cls === firstClass();
+      const boards = cls === currentClass() ? state.boards : loadClassBoards(classKeySuffix(cls));
+      const attendance = (isFirst ? Object.entries(state.attendance) : [])
         .filter(([seat]) => seatsNow.has(Number(seat)))
         .filter(([, status]) => ['病假', '事假', '遲到', '未到'].includes(status))
         .map(([seat, status]) => ({ seat: Number(seat), status }));
-      const homework = state.boards.map(board => {
+      const homework = boards.map(board => {
         const missing = [];
         const resubmitted = [];
         const correcting = [];
@@ -1847,7 +1913,7 @@
         });
         return { subject: board.subject, assignment: board.assignment, missing, resubmitted, correcting, corrected };
       });
-      return { action: 'rollcall_submit', token: state.settings.classroomToken, date: todayKey(), className: state.settings.className, attendance, homework, push };
+      return { action: 'rollcall_submit', token: state.settings.classroomToken, date: todayKey(), className: cls, attendance, homework, push };
     }
     async function callGas(payload) {
       const gasUrl = state.settings.gasUrl.trim();
@@ -1870,26 +1936,30 @@
      * 送出到雲端。push 決定要不要推播老師 LINE：
      * 'none'（預設）＝只存資料；'attendance'＝點名推播；'full'＝點名＋作業推播。
      */
-    async function submitReport({ auto = false, push = 'none', silent = false } = {}) {
+    async function submitReport({ auto = false, push = 'none', silent = false, cls = '' } = {}) {
       if (state.submitting) return;
       if (!state.settings.className) return auto || silent ? undefined : showToast('請先在「設定」填入班級名稱。', true);
       if (!state.settings.classroomToken) return auto || silent ? undefined : showToast('請先在「設定」填入教室大屏金鑰。', true);
-      const blanks = activeSeats().filter(seat => !state.attendance[seat]).length;
+      // 多班模式：推播（點名／點名＋作業）只送第一個班；一般存檔送目前畫面上的班
+      const target = cls || (push !== 'none' ? firstClass() : currentClass());
+      const classTag = isMultiClass() ? `【${target}】` : '';
+      const blanks = target === firstClass() ? activeSeats().filter(seat => !state.attendance[seat]).length : 0;
       if (!auto && !silent && blanks > 0 && !window.confirm(`還有 ${blanks} 個座號未填（不會列入缺席）。確定存到雲端？`)) return;
       state.submitting = true;
       $('submitButton').disabled = true;
       if (!silent) $('submitStatus').textContent = auto ? '自動回報中……' : '存到雲端中……';
       try {
-        const result = await callGas(buildSubmitPayload(push));
+        const result = await callGas(buildSubmitPayload(push, target));
         const time = new Date().toLocaleTimeString('zh-TW', { hour12: false });
-        state.dirty = false;
+        if (target === currentClass()) state.dirty = false;
+        if (target === firstClass()) state.dirtyFirst = false;
         state.lastCloudSaveAt = time;
         const pushedNote = result.pushed
           ? `，並推播到老師 LINE（${push === 'attendance' ? '點名' : '點名＋作業'}）`
           : '';
-        $('submitStatus').textContent = silent
+        $('submitStatus').textContent = classTag + (silent
           ? `已自動存到雲端（${time}）。`
-          : `已存到雲端（${time}${auto ? '・自動' : ''}）${pushedNote}。同一天重存會覆蓋更新。`;
+          : `已存到雲端（${time}${auto ? '・自動' : ''}）${pushedNote}。同一天重存會覆蓋更新。`);
         if (!silent) showToast(auto ? '⏰ 已自動回報並推播老師 LINE。' : '✅ 已存到雲端（不會打擾 LINE）。');
       } catch (error) {
         $('submitStatus').textContent = `${silent ? '自動存檔' : '存到雲端'}失敗：${error.message}`;
@@ -1905,24 +1975,30 @@
     }
 
     /** 每 5 分鐘自動存檔一次；只有真的有異動才連線，不推播 LINE。 */
-    function autoCloudSaveTick() {
-      if (!state.dirty || state.submitting) return;
+    async function autoCloudSaveTick() {
+      if ((!state.dirty && !state.dirtyFirst) || state.submitting) return;
       if (!state.settings.className || !state.settings.classroomToken || !state.settings.gasUrl) return;
-      submitReport({ silent: true, push: 'none' });
+      if (state.dirty) await submitReport({ silent: true, push: 'none' });
+      // 多班模式：在別班畫面改過第一個班的點名，也補存第一個班
+      if (state.dirtyFirst && !isFirstClass()) await submitReport({ silent: true, push: 'none', cls: firstClass() });
     }
 
     /** 關閉分頁或切走時保底存一次；用 keepalive 讓請求在頁面卸載後仍能送達。 */
     function flushCloudSaveOnExit() {
-      if (!state.dirty || !state.settings.className || !state.settings.classroomToken) return;
+      if ((!state.dirty && !state.dirtyFirst) || !state.settings.className || !state.settings.classroomToken) return;
       const gasUrl = state.settings.gasUrl.trim();
       if (!/^https:\/\/script\.google\.com\/macros\//.test(gasUrl)) return;
+      const targets = [];
+      if (state.dirty) targets.push(currentClass());
+      if (state.dirtyFirst && !targets.includes(firstClass())) targets.push(firstClass());
       try {
-        fetch(gasUrl, {
+        targets.forEach(cls => fetch(gasUrl, {
           method: 'POST', keepalive: true, redirect: 'follow', cache: 'no-store',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify(buildSubmitPayload('none'))
-        }).catch(() => {});
+          body: JSON.stringify(buildSubmitPayload('none', cls))
+        }).catch(() => {}));
         state.dirty = false;
+        state.dirtyFirst = false;
       } catch (error) {}
     }
 
@@ -1934,7 +2010,7 @@
       }
       $('makeupStatus').textContent = '載入中……';
       try {
-        const result = await callGas({ action: 'classroom_missing', token: state.settings.classroomToken, className: state.settings.className, days: state.settings.lookbackDays });
+        const result = await callGas({ action: 'classroom_missing', token: state.settings.classroomToken, className: currentClass(), days: state.settings.lookbackDays });
         // 新版 GAS 回傳 pending（含待訂正）；舊版只有 missing，兩者都相容。
         state.makeup.items = Array.isArray(result.pending) ? result.pending
           : (Array.isArray(result.missing) ? result.missing : []);
@@ -2041,7 +2117,7 @@
       const item = state.makeup.items.find(entry => makeupItemKey(entry) === key);
       if (!item) return;
       try {
-        const result = await callGas({ action: 'homework_resubmit', token: state.settings.classroomToken, className: state.settings.className, date: item.date, subject: item.subject, assignment: item.assignment || '', seat: item.seat });
+        const result = await callGas({ action: 'homework_resubmit', token: state.settings.classroomToken, className: currentClass(), date: item.date, subject: item.subject, assignment: item.assignment || '', seat: item.seat });
         const wasCorrecting = item.status === '待訂正';
         if (!result.updated) showToast('雲端找不到這筆紀錄（可能已處理過），已從清單移除。');
         else showToast(`✅ ${item.seat}號 ${workLabel(item.subject, item.assignment)} ${wasCorrecting ? '訂正完成' : '補交完成'}！`);
@@ -2198,12 +2274,49 @@
       $('subjectManager').innerHTML = state.settings.subjects.map((item, index) =>
         `<span class="subject-toggle${item.enabled ? ' on' : ''}" data-subject-index="${index}">${escapeHtml(item.name)}${item.enabled ? ' ✓' : ''}</span>`).join('');
     }
+    function renderClassSwitch() {
+      const s = state.settings;
+      const shown = currentClass();
+      $('classNameLabel').textContent = shown ? `${shown}｜${s.boardTitle}` : s.boardTitle;
+      const host = $('classSwitch');
+      if (!isMultiClass()) { host.hidden = true; host.innerHTML = ''; return; }
+      host.hidden = false;
+      host.innerHTML = s.classes.map(cls => `<button class="class-pill${cls === shown ? ' active' : ''}" type="button" data-class-pill="${escapeHtml(cls)}" title="切換到 ${escapeHtml(cls)}">${escapeHtml(cls)}</button>`).join('')
+        + (shown !== s.classes[0] ? `<span class="class-switch-note">點名、聯絡本仍是 ${escapeHtml(s.classes[0])}</span>` : '');
+    }
+    /** 切班後重新載入這一班的作業版面，並通知班級工具換資料。 */
+    function reloadClassData() {
+      state.boards = loadClassBoards(classKeySuffix());
+      state.makeup.items = []; state.makeup.loaded = false;
+      state.correct.items = []; state.correct.loaded = false; state.correct.doneCount = 0;
+      state.correct.sticky = []; state.correct.showSettled = false;
+      renderClassSwitch();
+      renderBoards();
+      renderMakeup();
+      renderCorrectStats();
+      if ($('page-makeup').classList.contains('active')) loadMakeup();
+      if ($('page-correct').classList.contains('active')) loadCorrectStats();
+      document.dispatchEvent(new CustomEvent('morning:classchange', { detail: { className: currentClass(), suffix: classKeySuffix() } }));
+    }
+    function switchClass(cls) {
+      if (!isMultiClass() || !state.settings.classes.includes(cls) || cls === currentClass()) return;
+      // 抽籤動畫跑到一半不能切（結果會記到另一班）
+      if (!document.dispatchEvent(new CustomEvent('morning:beforeclasschange', { cancelable: true }))) {
+        showToast('抽籤進行中，抽完再切換班級。', true);
+        return;
+      }
+      flushCloudSaveOnExit();   // 離開前把這班未存的異動送到雲端（不推播）
+      try { localStorage.setItem(CURRENT_CLASS_KEY, cls); } catch (error) {}
+      reloadClassData();
+      showToast(`已切換到 ${cls}。`);
+    }
     function applySettingsToUi() {
       const s = state.settings;
-      $('classNameLabel').textContent = s.className ? `${s.className}｜${s.boardTitle}` : s.boardTitle;
+      renderClassSwitch();
       document.title = `${s.boardTitle}｜點名與作業繳交`;
       $('setupPin').value = s.setupPin;
       $('setupClassName').value = s.className;
+      $('setupClasses').value = s.classes.join('、');
       $('setupBoardTitle').value = s.boardTitle;
       $('setupContactFont').value = s.contactFont;
       $('setupCorrectColor').value = s.correctColor;
@@ -2230,8 +2343,13 @@
     }
     function saveSetupFromForm() {
       const s = state.settings;
+      const classBefore = currentClass();
+      const suffixBefore = classKeySuffix();
       s.setupPin = $('setupPin').value.trim().slice(0, 12);
       s.className = $('setupClassName').value.trim().slice(0, 20);
+      const classItems = $('setupClasses').value.split(/[、,，;；\s]+/).map(value => value.trim().slice(0, 20)).filter(Boolean);
+      if (!s.className && classItems.length) s.className = classItems[0];
+      s.classes = normalizeClassList(s.className, classItems);
       s.boardTitle = $('setupBoardTitle').value.trim().slice(0, 20) || '晨間大屏';
       s.contactFont = CONTACT_FONTS.includes($('setupContactFont').value) ? $('setupContactFont').value : 'default';
       if (CORRECT_COLORS[$('setupCorrectColor').value]) s.correctColor = $('setupCorrectColor').value;
@@ -2249,7 +2367,9 @@
       s.classroomToken = $('setupClassroomToken').value.trim();
       s.teacherToken = $('setupTeacherToken').value.trim();
       saveSettings();
+      const classChanged = currentClass() !== classBefore || classKeySuffix() !== suffixBefore;
       applySettingsToUi();
+      if (classChanged) reloadClassData();
       showToast('設定已儲存。');
     }
 
@@ -2395,6 +2515,10 @@
       }
     });
     $('submitButton').addEventListener('click', () => submitReport());
+    $('classSwitch').addEventListener('click', event => {
+      const pill = event.target.closest('[data-class-pill]');
+      if (pill) switchClass(pill.dataset.classPill);
+    });
     document.querySelectorAll('[data-countdown]').forEach(button => button.addEventListener('click', () => {
       state.countdown.remaining = Number(button.dataset.countdown);
       state.countdown.running = false;
@@ -2502,13 +2626,48 @@
   // 計分板分數改為永久保存（使用者要求：只有手動歸零）；舊版存在當日鍵的分數搬過來一次
   config.scores = Array.isArray(config.scores) ? config.scores : (day.scores.length ? day.scores.slice() : []);
   cleanupOldDays();
+  // G10 多班模式：這些欄位每班一份。第一個班（或單班）沿用舊 key；其他班寫到「key:班級」。
+  const CLASS_CONFIG_FIELDS = ['scores', 'teamNames', 'teamCount'];
+  const CLASS_DAY_FIELDS = ['drawn', 'boards', 'groups'];
+  if (toolsClassSuffix()) loadClassSlice();
 
   function loadJson(key, fallback) {
     try { const v = JSON.parse(localStorage.getItem(key) || 'null'); return v && typeof v === 'object' ? v : fallback; }
     catch (e) { return fallback; }
   }
-  function saveConfig() { try { localStorage.setItem(CONFIG_KEY, JSON.stringify(config)); } catch (e) {} }
-  function saveDay() { try { localStorage.setItem(DAY_PREFIX + todayKey(), JSON.stringify(day)); } catch (e) {} }
+  function toolsClassSuffix() { return typeof classKeySuffix === 'function' ? classKeySuffix() : ''; }
+  /** 把「共用欄位寫舊 key、本班欄位寫 :班級 key」拆開存；第一個班整包照舊存。 */
+  function saveSplit(baseKey, obj, fields) {
+    const suffix = toolsClassSuffix();
+    if (!suffix) { localStorage.setItem(baseKey, JSON.stringify(obj)); return; }
+    const stored = loadJson(baseKey, {});
+    const shared = Object.assign({}, obj);
+    const mine = {};
+    fields.forEach(field => {
+      mine[field] = obj[field];
+      if (field in stored) shared[field] = stored[field]; else delete shared[field];
+    });
+    localStorage.setItem(baseKey, JSON.stringify(shared));
+    localStorage.setItem(baseKey + suffix, JSON.stringify(mine));
+  }
+  function saveConfig() { try { saveSplit(CONFIG_KEY, config, CLASS_CONFIG_FIELDS); } catch (e) {} }
+  function saveDay() { try { saveSplit(DAY_PREFIX + todayKey(), day, CLASS_DAY_FIELDS); } catch (e) {} }
+  /** 切班（或開頁時目前不是第一個班）：重新讀這一班的計分板、檢核板、已抽名單、分組結果。 */
+  function loadClassSlice() {
+    const suffix = toolsClassSuffix();
+    const mainDay = loadJson(DAY_PREFIX + todayKey(), {});
+    const c = loadJson(CONFIG_KEY + suffix, {});
+    const d = suffix ? loadJson(DAY_PREFIX + todayKey() + suffix, {}) : mainDay;
+    CLASS_CONFIG_FIELDS.forEach(field => { if (field in c) config[field] = c[field]; else delete config[field]; });
+    CLASS_DAY_FIELDS.forEach(field => { if (field in d) day[field] = d[field]; else delete day[field]; });
+    config.teamNames = Array.isArray(config.teamNames) ? config.teamNames : [];
+    // 第一個班沿用舊版「分數存在當日鍵」的搬移規則
+    config.scores = Array.isArray(config.scores) ? config.scores
+      : (!suffix && Array.isArray(mainDay.scores) && mainDay.scores.length ? mainDay.scores.slice() : []);
+    day.drawn = Array.isArray(day.drawn) ? day.drawn : [];
+    day.boards = Array.isArray(day.boards) ? day.boards : [{ name: config.checkNames[0], done: {}, showMiss: false }];
+    day.groups = Array.isArray(day.groups) ? day.groups : [];
+  }
   function cleanupOldDays() {
     for (let i = localStorage.length - 1; i >= 0; i -= 1) {
       const key = localStorage.key(i);
@@ -2837,10 +2996,12 @@
   // 自動缺席時間（預設 08:05）一到，未填座號會自動轉「未到」；老師沒點名或只點請假的人時，
   // 全班都會變「未到」——這時不能把「未到」當缺席，否則抽籤、分組只剩少數號碼（2026-11-01 老師回報）。
   function rollcallTaken() {
+    if (toolsClassSuffix()) return false;   // 多班模式：點名只屬第一個班
     return activeSeats().some(seat => ['到', '遲到'].includes(state.attendance[seat] || ''));
   }
   function absentSeatSet() {
     const absent = new Set();
+    if (toolsClassSuffix()) return absent;   // 多班模式：別班沒有點名資料，不排除任何人
     const countMissing = rollcallTaken();
     activeSeats().forEach(seat => {
       const status = state.attendance[seat] || '';
@@ -2853,6 +3014,7 @@
     const s = state.settings;
     const empties = s.emptySeats.filter(n => n <= s.seatCount);
     let note = `座號 1～${s.seatCount}` + (empties.length ? `（空號 ${empties.join('、')}）` : '');
+    if (excludeAbsent && toolsClassSuffix()) return note + `・${currentClass()} 沒有點名資料，不排除缺席`;
     if (excludeAbsent) {
       const absent = [...absentSeatSet()].sort((a, b) => a - b);
       if (absent.length) note += `・排除今日缺席 ${absent.length} 人：${absent.join('、')}`;
@@ -3668,6 +3830,7 @@
       groups.push(shuffled.slice(cursor, cursor + take));
       cursor += take;
     }
+    day.groups = groups; saveDay();
     const wall = $('groupWall');
     const renderGroups = () => {
       let order = 0;
@@ -3700,6 +3863,19 @@
     if ($('lotSound').checked) { let c = 0; const t = setInterval(() => { beep(300 + Math.random() * 200, .04, 'square', .04); if (++c > 7) clearInterval(t); }, 90); }
     setTimeout(renderGroups, 800);
   });
+
+  /** 切班或重新整理時，把這一班上次的分組結果畫回來（不重播動畫）。 */
+  function renderSavedGroups() {
+    const wall = $('groupWall');
+    if (!wall) return;
+    wall.innerHTML = (day.groups || []).map((members, i) => {
+      const [g, soft, line] = TEAM_COLORS[i % TEAM_COLORS.length];
+      return `<div class="group-card" style="--g:${g};--g-soft:${soft};--g-line:${line}">
+          <h4>第 ${i + 1} 組（${members.length} 人）</h4>
+          <div class="members">${members.map(m => `<span>${escapeHtml(m)}</span>`).join('')}</div>
+        </div>`;
+    }).join('');
+  }
 
   // ================================================================
   // 🔇 安靜偵測
@@ -4369,6 +4545,22 @@
   updateLotStatus();
   renderCheckWall();
   renderScoreWall();
+  // G10 多班模式：只有設定兩班以上才把上次分組畫回來（單班維持舊行為）
+  if (typeof isMultiClass === 'function' && isMultiClass()) renderSavedGroups();
+  document.addEventListener('morning:beforeclasschange', event => { if (lotteryBusy) event.preventDefault(); });
+  document.addEventListener('morning:classchange', () => {
+    loadClassSlice();
+    $('lotResult').textContent = '？';
+    $('lotResult').classList.remove('reveal');
+    $('lotWheelHub').textContent = '🎯';
+    lotStage.classList.remove('revealed', 'spinning');
+    gacha.prize = null; gacha.key = '';
+    wheelFx.win = -1; wheelFx.pool = null;
+    updateLotStatus();
+    renderCheckWall();
+    renderScoreWall();
+    renderSavedGroups();
+  });
 })();
 </script>
   <script src="assets/version.js"></script>
