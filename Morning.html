@@ -999,6 +999,10 @@
               <option value="bpmfhuninn">注音粉圓（圓潤，低年級首選）</option>
             </optgroup>
           </select><div class="status-text" style="margin-top:4px">全部為開源可商用字型（SIL OFL 1.1）。第一次切換要等字型下載（約 4–9 MB），之後瀏覽器會快取。<br>教室電腦要常用的話，建議直接把字型<strong>安裝到 Windows</strong>——裝好之後完全不用下載，開啟也快很多：<a href="https://github.com/ButTaiwan/bpmfvs/releases" target="_blank" rel="noopener">注音字型</a>、<a href="https://github.com/justfont/Huninn/releases" target="_blank" rel="noopener">粉圓 Huninn</a>、<a href="https://github.com/ButTaiwan/iansui/releases" target="_blank" rel="noopener">芫荽 Iansui</a>（下載後點兩下字型檔 → 按「安裝」）。</div></div>
+          <div class="field"><label>大屏提示插圖風格</label><select id="setupPromptArt">
+            <option value="storybook">溫暖繪本（手繪水彩感）</option>
+            <option value="cozy">可愛動森風（圓潤小島玩具感）</option>
+          </select><div class="status-text" style="margin-top:4px">兩套都是原創插圖，存好馬上換。可愛動森風還在畫，沒畫好的句子先用溫暖繪本。</div></div>
           <div class="field"><label>「待訂正」的顏色</label><select id="setupCorrectColor">
             <option value="brown">米褐（沙褐）— 與介面最和諧</option>
             <option value="indigo">深靛藍 — 冷色穩重</option>
@@ -1058,9 +1062,10 @@
     const DEFAULT_ENABLED = ['國語', '數學', '英語', '自然', '社會', '聯絡簿', '通知單'];
     // 聯絡本可選的字體（全部開源可商用）：前三個一般、後三個國字旁自動標注音
     const CONTACT_FONTS = ['default', 'huninn', 'iansui', 'bpmf', 'bpmfhuninn'];
+    const PROMPT_ART_STYLE_KEYS = ['storybook', 'cozy'];   // 大屏提示插圖：溫暖繪本／可愛動森風
     const state = {
       settings: {
-        className: '', classes: [], boardTitle: '晨間大屏', contactFont: 'default', correctColor: 'brown', seatCount: 26, emptySeats: [],
+        className: '', classes: [], boardTitle: '晨間大屏', contactFont: 'default', promptArt: 'storybook', correctColor: 'brown', seatCount: 26, emptySeats: [],
         setupPin: '1234',
         subjects: [], assignmentTypes: ['習作', '試卷', '作業本', '學習單', '其他'],
         gasUrl: '', classroomToken: '', teacherToken: '',
@@ -1152,6 +1157,7 @@
           if (!s.className && s.classes.length) s.className = s.classes[0];
           s.boardTitle = String(saved.boardTitle || '').trim().slice(0, 20) || '晨間大屏';
           s.contactFont = CONTACT_FONTS.includes(saved.contactFont) ? saved.contactFont : 'default';
+          s.promptArt = PROMPT_ART_STYLE_KEYS.includes(saved.promptArt) ? saved.promptArt : 'storybook';
           // 舊版沒有這個欄位，第一次載入就套用預設密碼 1234
           s.setupPin = typeof saved.setupPin === 'string' ? saved.setupPin.slice(0, 12) : '1234';
           if (CORRECT_COLORS[saved.correctColor]) s.correctColor = saved.correctColor;
@@ -2319,6 +2325,8 @@
       $('setupClasses').value = s.classes.join('、');
       $('setupBoardTitle').value = s.boardTitle;
       $('setupContactFont').value = s.contactFont;
+      $('setupPromptArt').value = s.promptArt;
+      document.dispatchEvent(new Event('promptartchange'));
       $('setupCorrectColor').value = s.correctColor;
       applyCorrectColor();
       const chalkboard = document.querySelector('.chalkboard-inner');
@@ -2352,6 +2360,7 @@
       s.classes = normalizeClassList(s.className, classItems);
       s.boardTitle = $('setupBoardTitle').value.trim().slice(0, 20) || '晨間大屏';
       s.contactFont = CONTACT_FONTS.includes($('setupContactFont').value) ? $('setupContactFont').value : 'default';
+      s.promptArt = PROMPT_ART_STYLE_KEYS.includes($('setupPromptArt').value) ? $('setupPromptArt').value : 'storybook';
       if (CORRECT_COLORS[$('setupCorrectColor').value]) s.correctColor = $('setupCorrectColor').value;
       s.seatCount = Math.min(60, Math.max(1, Number($('setupSeatCount').value) || 26));
       s.emptySeats = $('setupEmptySeats').value.split(/[、,，;；\s]+/).map(Number).filter(n => n >= 1 && n <= s.seatCount);
@@ -4239,7 +4248,7 @@
   // 📣 大屏提示（內建班級經營句＋いらすとや插圖，純本機）
   // ================================================================
   (() => {
-    // id＝新插圖檔名（assets/art/cozy/prompt/<id>.webp）；img＝新圖還沒好之前用的舊圖
+    // id＝新插圖檔名（assets/art/<storybook|cozy>/prompt/<id>.webp）；img＝新圖還沒好之前用的舊圖
     const PROMPT_GROUPS = [
       { label: '🪑 上課秩序', items: [
         { id: 'focus_teacher', text: '上課囉！眼睛看老師', img: 'class_focus.png' },
@@ -4284,54 +4293,60 @@
         { id: 'go_home_line', text: '放學路隊，跟著路隊長走', img: 'line_up.png' }
       ] }
     ];
-    // 原創插圖「溫暖繪本」（ART-02 R4 驗收通過）；列在這裡的 id 用新圖，沒列的繼續用舊圖
-    const PROMPT_ART_READY = new Set([
-      'back_to_class',
-      'brush_teeth',
-      'circle_question',
-      'cleaning',
-      'correction',
-      'cover_cough',
-      'custom_default',
-      'drink_toilet',
-      'focus_teacher',
-      'go_home',
-      'go_home_line',
-      'hallway',
-      'hand_in',
-      'line_up',
-      'lunch',
-      'lunch_cleanup',
-      'lunch_prep',
-      'nap',
-      'prep_next',
-      'quiet_zero',
-      'raise_hand',
-      'reading',
-      'recycle',
-      'rest_eyes',
-      'self_check',
-      'self_study',
-      'sit_fast',
-      'sit_up',
-      'special_room',
-      'stairs',
-      'tidy_bag',
-      'wash_hands',
-      'whisper',
-    ]);
-    const PROMPT_ART_DIR = 'assets/art/cozy/prompt/';
+    // 原創插圖兩套，設定頁「大屏提示插圖風格」切換。ready 列出已驗收的 id；
+    // 選的風格沒有這張就用溫暖繪本，再沒有才用舊圖
+    const PROMPT_ART_STYLES = {
+      storybook: { dir: 'assets/art/storybook/prompt/', ready: new Set([   // 溫暖繪本（ART-02 R4）
+        'back_to_class',
+        'brush_teeth',
+        'circle_question',
+        'cleaning',
+        'correction',
+        'cover_cough',
+        'custom_default',
+        'drink_toilet',
+        'focus_teacher',
+        'go_home',
+        'go_home_line',
+        'hallway',
+        'hand_in',
+        'line_up',
+        'lunch',
+        'lunch_cleanup',
+        'lunch_prep',
+        'nap',
+        'prep_next',
+        'quiet_zero',
+        'raise_hand',
+        'reading',
+        'recycle',
+        'rest_eyes',
+        'self_check',
+        'self_study',
+        'sit_fast',
+        'sit_up',
+        'special_room',
+        'stairs',
+        'tidy_bag',
+        'wash_hands',
+        'whisper',
+      ]) },
+      cozy: { dir: 'assets/art/cozy/prompt/', ready: new Set([]) }   // 可愛動森風（ART-03 製作中）
+    };
+    function promptArtFile(id) {
+      const chosen = PROMPT_ART_STYLES[state.settings.promptArt] || PROMPT_ART_STYLES.storybook;
+      const style = [chosen, PROMPT_ART_STYLES.storybook].find(item => item.ready.has(id));
+      return style ? style.dir + id + '.webp' : '';
+    }
     function promptImgSrc(item) {
-      if (item && PROMPT_ART_READY.has(item.id)) return PROMPT_ART_DIR + item.id + '.webp';
-      return 'assets/irasutoya/' + ((item && item.img) || 'class_focus.png');
+      return (item && promptArtFile(item.id)) || 'assets/irasutoya/' + ((item && item.img) || 'class_focus.png');
     }
     // 自訂句（不在內建清單）的預設插圖
     function promptCustomImgSrc(legacyImg) {
-      if (PROMPT_ART_READY.has('custom_default')) return PROMPT_ART_DIR + 'custom_default.webp';
-      return 'assets/irasutoya/' + (/^[a-z_]+\.png$/.test(String(legacyImg || '')) ? legacyImg : 'class_focus.png');
+      return promptArtFile('custom_default') || 'assets/irasutoya/' + (/^[a-z_]+\.png$/.test(String(legacyImg || '')) ? legacyImg : 'class_focus.png');
     }
     function updatePromptCredit() {
-      const usingLegacy = PROMPTS.some(item => !PROMPT_ART_READY.has(item.id));
+      const usingLegacy = PROMPTS.some(item => !promptArtFile(item.id));
       $('promptCredit').innerHTML = '內建常用班級經營句，也可自訂文字' +
         (usingLegacy ? '；部分插圖：<a href="https://www.irasutoya.com/" target="_blank" rel="noopener">いらすとや</a>' : '') + '。純本機、不上傳。';
     }
@@ -4503,7 +4518,7 @@
       pop.querySelector('.pp-msg').textContent = text;
       const img = pop.querySelector('.pp-img');
       // 自訂句（例：LINE 傳來的提示）用自訂預設插圖；舊圖時期維持不顯示
-      img.hidden = !item && !PROMPT_ART_READY.has('custom_default');
+      img.hidden = !item && !promptArtFile('custom_default');
       if (!img.hidden) img.src = item ? promptImgSrc(item) : promptCustomImgSrc();
       popTotal = seconds * 1000; popUntil = Date.now() + popTotal;
       pop.hidden = false;
@@ -4514,6 +4529,13 @@
       if (item && index >= 0) { select.value = String(index); $('promptCustomText').value = entryOrItem.preset !== undefined ? (entryOrItem.text || '') : ''; applyPrompt(false); }
     }
     pop.querySelector('.pp-close').addEventListener('click', closePop);
+    // 設定頁換插圖風格：提示分頁與正在顯示的跳出畫面馬上換圖
+    document.addEventListener('promptartchange', () => {
+      applyPrompt(false);
+      updatePromptCredit();
+      const popImg = pop.querySelector('.pp-img');
+      if (!pop.hidden && popImg.src) popImg.src = popImg.getAttribute('src').replace(/assets\/art\/(storybook|cozy)\/prompt\/([a-z_]+)\.webp$/, (all, from, id) => promptArtFile(id) || all);
+    });
     document.addEventListener('keydown', event => { if (event.key === 'Escape' && !pop.hidden) closePop(); });
     $('promptSchedPreview').addEventListener('click', () => {
       const entry = config.promptSchedules.find(e => e.on) || config.promptSchedules[0];

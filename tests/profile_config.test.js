@@ -410,7 +410,8 @@ assert.match(morningHtml, /mode: 'breaks'/, "定時提示應支援「每節下�
 assert.match(morningHtml, /day\.promptFired/, "同一天同一時間只跳一次（重新整理不重跳）");
 assert.match(morningHtml, /飯後潔牙/, "大屏提示應含飯後潔牙");
 assert.match(morningHtml, /\.prompt-img \{ width: auto; height: auto; align-self: center; object-fit: contain; \}/, "全螢幕時提示插圖不可被拉變形");
-assert.match(morningHtml, /PROMPT_ART_DIR = 'assets\/art\/cozy\/prompt\/'/, "新插圖（動森風）放在 assets/art/cozy/prompt/");
+assert.match(morningHtml, /storybook: \{ dir: 'assets\/art\/storybook\/prompt\/'/, "溫暖繪本插圖放在 assets/art/storybook/prompt/");
+assert.match(morningHtml, /cozy: \{ dir: 'assets\/art\/cozy\/prompt\/'/, "可愛動森風插圖放在 assets/art/cozy/prompt/");
 assert.match(morningHtml, /tomatoBreathe/, "番茄鐘跑動時應有呼吸動畫");
 assert.match(morningHtml, /youtube-nocookie\.com/, "番茄鐘音樂角應支援 YouTube 內嵌");
 assert.match(morningHtml, /config\.scores/, "計分板分數應永久保存（只有手動歸零）");
@@ -842,14 +843,20 @@ assert.match(studioHtml, /section\('代課教師當日簽認'/, "代課包應有
 {
   const fsArt = require('fs');
   const pathArt = require('path');
-  const artDir = pathArt.join(__dirname, '..', 'assets', 'art', 'cozy', 'prompt');
-  const readyBlock = morningHtml.match(/const PROMPT_ART_READY = new Set\(\[([\s\S]*?)\]\);/);
-  assert.ok(readyBlock, '找得到 PROMPT_ART_READY');
+  const artDir = pathArt.join(__dirname, '..', 'assets', 'art', 'storybook', 'prompt');
+  const readyBlock = morningHtml.match(/storybook: \{ dir: '[^']+', ready: new Set\(\[([\s\S]*?)\]\) \}/);
+  assert.ok(readyBlock, '找得到溫暖繪本的 ready 清單');
   const readyIds = [...readyBlock[1].matchAll(/'([a-z_]+)'/g)].map(m => m[1]);
   assert.strictEqual(readyIds.length, 33, '32 句內建提示＋自訂預設圖都改用原創插圖');
   readyIds.forEach(id => assert.ok(fsArt.existsSync(pathArt.join(artDir, id + '.webp')), `插圖檔存在：${id}.webp`));
   const presetIds = [...morningHtml.matchAll(/\{ id: '([a-z_]+)', text: '[^']+', img: '[^']+' \}/g)].map(m => m[1]);
   presetIds.forEach(id => assert.ok(readyIds.includes(id), `內建提示 ${id} 有原創插圖`));
   assert.match(morningHtml, /function promptCustomImgSrc\(/, '自訂句有預設插圖');
+  // 兩套風格可切換：設定頁有選項、存進設定、沒畫好的退回溫暖繪本
+  assert.match(morningHtml, /<select id="setupPromptArt">[\s\S]*?value="storybook"[\s\S]*?value="cozy"/, '設定頁可選插圖風格');
+  assert.match(morningHtml, /const PROMPT_ART_STYLE_KEYS = \['storybook', 'cozy'\]/, '插圖風格只接受兩種值');
+  assert.match(morningHtml, /\[chosen, PROMPT_ART_STYLES\.storybook\]\.find/, '選的風格沒這張時退回溫暖繪本');
+  const cozyReady = (morningHtml.match(/cozy: \{ dir: '[^']+', ready: new Set\(\[([^\]]*)\]\) \}/) || [])[1] || '';
+  [...cozyReady.matchAll(/'([a-z_]+)'/g)].forEach(m => assert.ok(fsArt.existsSync(pathArt.join(__dirname, '..', 'assets', 'art', 'cozy', 'prompt', m[1] + '.webp')), `動森風插圖檔存在：${m[1]}.webp`));
 }
 // ── end ART-02 ──
