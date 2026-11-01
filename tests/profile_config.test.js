@@ -872,6 +872,7 @@ assert.match(studioHtml, /section\('代課教師當日簽認'/, "代課包應有
   assert.match(morningHtml, /state\.settings\.boardStyle === 'cozy' \? PROMPT_ART_STYLES\.cozy : PROMPT_ART_STYLES\.storybook/, '提示插圖跟著大屏風格');
   assert.match(morningHtml, /html\[data-board-style="cozy"\] \{/, '有動森風介面樣式');
   assert.match(morningHtml, /html\[data-board-style="cozy"\] \.board-card\.board-settled \{/, '動森風保留已完成版面的綠底');
+  assert.match(morningHtml, /html\[data-board-style="cozy"\] \.mascot \{ display: none !important; \}/, '動森風不放小綿羊吉祥物');
   // 動森風圖示：列在 COZY_ICON_READY 的檔案都要存在
   const iconReady = (morningHtml.match(/const COZY_ICON_READY = new Set\(\[([^\]]*)\]\)/) || [])[1];
   assert.ok(iconReady !== undefined, '找得到 COZY_ICON_READY');
