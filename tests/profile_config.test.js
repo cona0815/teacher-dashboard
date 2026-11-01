@@ -690,3 +690,32 @@ for (const title of ["'依據'", "'目的'", "'辦理情形'", "'參與人次'",
 assert.match(studioHtml, /\[\['學生', ''\], \['教職員', ''\], \['家長及來賓', ''\], \['合計', ''\]\]/, "參與人次欄留空給老師填");
 assert.match(studioHtml, /function docPhotoTable/, "活動照片應以 2×2 表格排版");
 // ===== 組B 行政文書 end =====
+
+// ===== 組A 行政文書 =====
+// G7 文書情境包：AI 行政助理「📝 行政文書」五種情境、固定格式、可編輯可複製、沒金鑰提示、不自動建任務
+{
+  const docsStart = indexHtml.indexOf("// ===== 📝 行政文書（G7/G9）");
+  const docsEnd = indexHtml.indexOf("// ===== 📝 行政文書 END =====");
+  assert.ok(docsStart > 0 && docsEnd > docsStart, "工作台應有行政文書程式區塊");
+  const docsJs = indexHtml.slice(docsStart, docsEnd);
+  assert.match(indexHtml, /<details class="ai-docs" id="aiDocsPanel">/, "AI 行政助理應有「📝 行政文書」區");
+  for (const [value, label] of [["memo", "簽呈"], ["notice", "校內公告"], ["reflection", "研習心得"], ["news", "活動新聞稿／學校臉書貼文"], ["parentLetter", "致家長信（活動通知・LINE 純文字版）"]]) {
+    assert.ok(indexHtml.includes(`<option value="${value}">${label}</option>`), `行政文書情境應有「${label}」`);
+    assert.match(docsJs, new RegExp(`\\n      ${value}: \\{`), `ADMIN_DOC_TYPES 應定義 ${value}`);
+  }
+  for (const heading of ["主旨：", "一、依據：", "二、緣由：", "三、內容：", "擬辦：", "'敬陳'"]) assert.ok(docsJs.includes(heading), `簽呈格式應有 ${heading}`);
+  for (const heading of ["【公告】", "對象：", "重點：", "時間地點：", "聯絡窗口："]) assert.ok(docsJs.includes(heading), `校內公告格式應有 ${heading}`);
+  for (const heading of ["研習名稱：", "研習時間：", "一、內容摘要", "二、心得與應用", "三、對教學的改變"]) assert.ok(docsJs.includes(heading), `研習心得格式應有 ${heading}`);
+  assert.match(docsJs, /正文 100 到 200 字/, "新聞稿應要求 100–200 字");
+  assert.match(docsJs, /function docHashtags[\s\S]*?slice\(0, 3\)[\s\S]*?while \(tags\.length < 3\)/, "新聞稿 hashtag 應固定三個");
+  assert.match(docsJs, /要能直接貼到 LINE：不要用 markdown 符號/, "致家長信應為可貼 LINE 的純文字");
+  assert.match(docsJs, /繁體中文與臺灣學校公文/, "prompt 應要求繁體中文與臺灣公文慣用語");
+  assert.match(docsJs, /不得出現任何學生姓名/, "prompt 應禁止學生姓名");
+  assert.match(docsJs, /redactSensitiveText\(raw\)/, "送 AI 前應先去識別化");
+  assert.match(indexHtml, /id="aiDocOutput" contenteditable="true"/, "結果應放在可編輯區");
+  assert.match(indexHtml, /id="aiDocCopyButton">📋 複製</, "結果應可複製");
+  assert.match(indexHtml, /草稿，請核對/, "結果應標草稿請核對");
+  assert.match(docsJs, /請先到設定填 \$\{name\} 金鑰/, "沒金鑰應提示先到設定填 Gemini 金鑰");
+  assert.match(indexHtml, /id="aiDocRetryButton" hidden>🔁 重試 AI</, "AI 失敗應可重試");
+  assert.doesNotMatch(docsJs, /serverCall\(|saveTask|applyTaskResult|taskDraft|renderTaskSuggestion/, "行政文書不得自動建任務");
+}
