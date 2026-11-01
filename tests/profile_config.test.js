@@ -700,6 +700,17 @@ for (const title of ["'活動流程表'", "'工作分配表'", "'經費概算表
 assert.match(studioHtml, /\[r\.item \|\| '', r\.unit \|\| '', r\.qty \|\| '', '', '', r\.note \|\| ''\]/, "經費表單價、金額一律留空");
 assert.match(studioHtml, /const PL_TRIP_INSURANCE = /, "校外教學應固定加保險段落");
 assert.match(studioHtml, /const PL_TRIP_CONSENT = /, "校外教學應固定加家長同意書提醒");
+// G3 🗒 會議紀錄
+assert.match(studioHtml, /data-page="minutes">🗒 會議紀錄/, "應有會議紀錄分頁");
+{
+  const page = groupBPage("minutes");
+  for (const id of ["mtName", "mtTime", "mtPlace", "mtChair", "mtAttend", "mtAudio", "mtText", "mtPhotos", "mtTodoCopy", "mtChecked"]) assert.match(page, new RegExp(`id="${id}"`), `會議紀錄應有 #${id}`);
+  assert.match(page, /accept="audio\/\*,\.m4a,\.mp3,\.webm/, "錄音檔應接受 m4a／mp3／webm");
+}
+assert.match(studioHtml, /m4a: 'audio\/mp4'/, "m4a 應以 audio/mp4 送 Gemini");
+assert.match(studioHtml, /audio\.size > 15 \* 1024 \* 1024/, "錄音檔應有 15MB 上限提示");
+assert.match(studioHtml, /\[\{ label: '事項' \}, \{ label: '負責', width: '24%' \}, \{ label: '期限', width: '22%' \}\]/, "待辦表應有事項、負責、期限欄");
+for (const title of ["'主席報告'", "'討論事項'", "'臨時動議'", "'待辦事項'", "'下次會議'"]) assert.ok(studioHtml.includes(title), `會議紀錄應有 ${title}`);
 // ===== 組B 行政文書 end =====
 
 // ===== 組A 行政文書 =====

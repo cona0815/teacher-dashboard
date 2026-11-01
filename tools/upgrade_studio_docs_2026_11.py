@@ -457,9 +457,145 @@ def g2():
 ''')
 
 
+# =====================================================================
+# G3：🗒 會議紀錄
+# =====================================================================
+def g3():
+    rep('''    <button class="tab-button" type="button" data-page="plan">📋 計畫書</button>''',
+        '''    <button class="tab-button" type="button" data-page="plan">📋 計畫書</button>
+    <button class="tab-button" type="button" data-page="minutes">🗒 會議紀錄</button>''')
+
+    add_html('''
+    <!-- 🗂 行政文書：🗒 會議紀錄（G3） -->
+    <section class="page" id="page-minutes">
+      <div class="workbench">
+        <div class="panel">
+          <div class="field"><label>學校名稱</label>
+            <input class="input docSchool" id="mtSchool" placeholder="例：○○市○○國民小學"></div>
+          <div class="field"><label>會議名稱</label>
+            <input class="input" id="mtName" placeholder="例：115 學年度第 1 學期第 2 次學年會議"></div>
+          <div class="field"><label>時間</label>
+            <input class="input" id="mtTime" placeholder="例：115 年 10 月 22 日（三）13:30"></div>
+          <div class="field"><label>地點</label>
+            <input class="input" id="mtPlace" placeholder="例：五年一班教室"></div>
+          <div class="field"><label>主席／紀錄</label>
+            <div style="display:flex;gap:6px"><input class="input" id="mtChair" placeholder="主席"><input class="input" id="mtRecorder" placeholder="紀錄"></div></div>
+          <div class="field"><label>出席人員（老師自己填，不會送給 AI）</label>
+            <input class="input" id="mtAttend" placeholder="例：五年級全體導師、教務主任"></div>
+          <div class="warn" style="margin:4px 0 10px">會議內容三選一（也可以混用）：<strong>錄音檔</strong>、<strong>逐字稿或筆記</strong>、<strong>白板／便利貼照片</strong>。</div>
+          <div class="field"><label>① 錄音檔（m4a／mp3／webm，單檔 15MB 以內，約 15 分鐘）</label>
+            <input class="input" type="file" id="mtAudio" accept="audio/*,.m4a,.mp3,.webm,.wav,.ogg"></div>
+          <div class="field"><label>② 逐字稿或筆記文字</label>
+            <textarea class="textarea" id="mtText" placeholder="貼上逐字稿、或會議中隨手記的重點"></textarea></div>
+          <div class="field"><label>③ 白板／便利貼照片（可多張）</label>
+            <input class="input" type="file" id="mtPhotos" accept="image/*" multiple></div>
+          <button class="go-button" type="button" id="mtGoButton">🤖 整理成會議紀錄</button>
+          <div class="status" id="mtStatus"></div>
+          <div class="hint">AI 整理成：主席報告、討論事項（議題、討論摘要、決議）、臨時動議、待辦事項表（事項、負責、期限）、下次會議。期限與負責人<strong>會議沒講到就留空</strong>；學生姓名一律不寫。</div>
+          <div class="es-records" id="mtTodoBox" hidden>
+            <h4>📋 待辦條列（貼到工作台「AI 行政助理」就會變成任務草稿）</h4>
+            <textarea class="textarea" id="mtTodoText" readonly style="min-height:110px"></textarea>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="preview-bar">
+            <label class="es-confirm" id="mtCheckedLabel"><input type="checkbox" id="mtChecked"> 老師已核對</label>
+            <button class="mini" type="button" onclick="window.print()">🖨 列印</button>
+            <button class="mini" type="button" onclick="downloadPreview('mtPreview','會議紀錄','doc')">⬇ Word</button>
+            <button class="mini" type="button" onclick="downloadPdfFromHost('mtPreview','會議紀錄',false)">⬇ PDF</button>
+            <button class="mini" type="button" id="mtTodoCopy">📋 複製待辦</button>
+            <span class="status" id="mtMeta">🟡 AI 草稿，請核對後再交出；預覽區可以直接點字修改。</span>
+          </div>
+          <div class="preview-host" id="mtPreview"></div>
+        </div>
+      </div>
+''')
+
+    add_js(r'''
+    // ============================================================
+    // 🗒 會議紀錄（G3）：錄音／逐字稿／白板照片 → 會議紀錄＋待辦表
+    // ============================================================
+    const MT_AUDIO_TYPES = { mp3: 'audio/mpeg', mpeg: 'audio/mpeg', mpga: 'audio/mpeg', m4a: 'audio/mp4', mp4: 'audio/mp4', aac: 'audio/aac', webm: 'audio/webm', wav: 'audio/wav', ogg: 'audio/ogg' };
+    // Gemini inline_data 認得 audio/mpeg、audio/mp4、audio/webm…；Windows 常把 m4a 標成 audio/x-m4a，送之前統一
+    function mtAudioFile(file) {
+      const ext = (String(file.name || '').split('.').pop() || '').toLowerCase();
+      let type = MT_AUDIO_TYPES[ext] || file.type || 'audio/mpeg';
+      if (/^audio\/(x-)?m4a$/.test(type)) type = 'audio/mp4';
+      return type === file.type ? file : new File([file], file.name, { type });
+    }
+    $('mtGoButton').dataset.label = $('mtGoButton').textContent;
+    attachZone('mtPhotos', { multiple: true });
+    docBindConfirm('mt');
+    $('mtGoButton').addEventListener('click', async () => {
+      const name = $('mtName').value.trim();
+      if (!name) return showToast('請先填會議名稱。', true);
+      const audio = $('mtAudio').files[0] || null;
+      const text = $('mtText').value.trim();
+      const photos = zoneFiles('mtPhotos').filter(f => (f.type || '').startsWith('image/')).slice(0, 10);
+      if (!audio && !text && !photos.length) return showToast('請提供錄音檔、逐字稿／筆記，或白板照片其中一種。', true);
+      if (audio && audio.size > 15 * 1024 * 1024) return showToast(`錄音檔約 ${Math.round(audio.size / 1048576)}MB，超過 15MB 上限；請剪成幾段，或改貼逐字稿。`, true);
+      const sources = [audio ? '錄音檔' : '', text ? '逐字稿／筆記' : '', photos.length ? `白板照片 ${photos.length} 張` : ''].filter(Boolean);
+      const prompt = [
+        '你是臺灣國小的資深行政教師，要把一場校內會議整理成正式的「會議紀錄」。',
+        DOC_AI_RULES,
+        `會議名稱：${name}；時間：${$('mtTime').value.trim() || '（未提供）'}；地點：${$('mtPlace').value.trim() || '（未提供）'}；主席：${$('mtChair').value.trim() || '（未提供）'}`,
+        `這次提供的會議內容：${sources.join('、')}。`,
+        audio ? '附件中的音訊是會議錄音：請完整聽完再整理，不需要逐字稿，只要整理出重點、討論與決議；聽不清楚的地方寫「（錄音不清，請核對）」。' : '',
+        photos.length ? '附件中的圖片是會議白板或便利貼照片，請辨識上面的文字並整理。' : '',
+        text ? `逐字稿／筆記：\n${text}` : '',
+        '整理要求：chairReport 主席報告 1–4 條；discussions 討論事項，每案 topic 案由、summary 討論摘要（2–3 句，用「與會老師建議…」「經討論…」這類寫法，不寫誰說了什麼）、resolution 決議（會議沒做決議就寫「續議」）；motions 臨時動議（沒有就回傳空陣列）；todos 待辦事項，task 事項、owner 負責（職稱或處室；會議沒指定就留空）、due 期限（會議有講才填，沒講留空，不要自己訂日期）；nextMeeting 下次會議時間（沒講留空）。',
+        '回傳格式：{"chairReport":[""],"discussions":[{"topic":"","summary":"","resolution":""}],"motions":[{"topic":"","resolution":""}],"todos":[{"task":"","owner":"","due":""}],"nextMeeting":""}'
+      ].filter(Boolean).join('\n');
+      const data = await docAi($('mtGoButton'), $('mtStatus'), prompt, async () => [...(audio ? await filesToParts([mtAudioFile(audio)], 1) : []), ...await filesToParts(photos, 10)]);
+      if (!data) return;
+      const caseHtml = (list, label) => {
+        const items = docArr(list);
+        if (!items.length) return '<div class="doc-li"><span>無。</span></div>';
+        return items.map((c, i) => `<div class="doc-sub">${label}${docCn(i)}：${docText(c.topic) || '＿＿＿＿'}</div>`
+          + (c.summary ? `<div class="doc-li" style="padding-left:1em"><span class="doc-no">說明：</span><span>${docText(c.summary)}</span></div>` : '')
+          + `<div class="doc-li" style="padding-left:1em"><span class="doc-no"><b>決議：</b></span><span>${docText(c.resolution) || '＿＿＿＿'}</span></div>`).join('');
+      };
+      const todoRows = docArr(data.todos).map(t => [t.task || '', t.owner || '', t.due || '']);
+      const school = docSchool('mtSchool');
+      const html = docHead(/會議$/.test(name) ? `${name}紀錄` : `${name}會議紀錄`, school, [
+          `時間：${escapeHtml($('mtTime').value.trim() || '＿＿＿＿')}`, `地點：${escapeHtml($('mtPlace').value.trim() || '＿＿＿＿')}`,
+          `主席：${escapeHtml($('mtChair').value.trim() || '＿＿＿＿')}`, `紀錄：${escapeHtml($('mtRecorder').value.trim() || '＿＿＿＿')}`])
+        + `<div class="doc-li" style="font-size:14px"><span class="doc-no">出席人員：</span><span>${docText($('mtAttend').value.trim()) || '＿＿＿＿＿＿＿＿＿＿＿＿（詳簽到表）'}</span></div>`
+        + docSection(0, '主席報告', docItems(data.chairReport))
+        + docSection(1, '討論事項', caseHtml(data.discussions, '案由'))
+        + docSection(2, '臨時動議', caseHtml(data.motions, '臨時動議'))
+        + docSection(3, '待辦事項', docTable([{ label: '事項' }, { label: '負責', width: '24%' }, { label: '期限', width: '22%' }], todoRows, 3, 'doc-todo-table'))
+        + docSection(4, '下次會議', `<div class="doc-li"><span>${docText(data.nextMeeting) || '另行通知。'}</span></div>`)
+        + '<div class="doc-h">散會</div>'
+        + '<div class="ws-meta" style="margin-top:26px"><span>主席簽名：＿＿＿＿＿＿＿＿</span><span>紀錄簽名：＿＿＿＿＿＿＿＿</span></div>';
+      docRender('mt', html);
+      $('mtTodoBox').hidden = true;
+      $('mtMeta').textContent = `🟡 AI 草稿（來源：${sources.join('、')}），請核對後再勾「老師已核對」。`;
+      showToast('🗒 會議紀錄草稿完成，請過目。');
+    });
+    // 待辦一鍵複製成條列：讀預覽區目前的表格（老師改過的字也算）
+    $('mtTodoCopy').addEventListener('click', async () => {
+      const rows = [...$('mtPreview').querySelectorAll('.doc-todo-table tr')].slice(1)
+        .map(tr => [...tr.cells].map(td => td.textContent.replace(/\s+/g, ' ').trim()))
+        .filter(cells => cells[0]);
+      if (!rows.length) return showToast('目前沒有待辦事項（先整理會議紀錄，或在待辦表填上事項）。', true);
+      const title = $('mtName').value.trim();
+      const text = [`【${title || '會議'}】會議待辦`, ...rows.map(([task, owner, due]) => `- ${task}${owner || due ? `（${[owner ? '負責：' + owner : '', due ? '期限：' + due : ''].filter(Boolean).join('；')}）` : ''}`)].join('\n');
+      $('mtTodoText').value = text;
+      $('mtTodoBox').hidden = false;
+      let copied = false;
+      try { await navigator.clipboard.writeText(text); copied = true; } catch (e) {
+        try { $('mtTodoText').select(); copied = document.execCommand('copy'); } catch (err) {}
+      }
+      showToast(copied ? `已複製 ${rows.length} 項待辦，到工作台「AI 行政助理」貼上就能變成任務草稿。` : '瀏覽器不允許自動複製，請從左邊的框框手動複製。', !copied);
+    });
+''')
+
+
 STEPS = [
     ('G1 成果報告', 'id="page-report"', g1),
     ('G2 計畫書', 'id="page-plan"', g2),
+    ('G3 會議紀錄', 'id="page-minutes"', g3),
 ]
 
 for label, marker, fn in STEPS:
