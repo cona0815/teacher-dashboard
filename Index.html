@@ -114,19 +114,19 @@
       --ink: #5b4636;
       --muted: #8f7b63;
       --line: #ecdcbc;
-      --primary: #4f9e45;
-      --primary-strong: #3c7f35;
+      --primary: #3c7f35;
+      --primary-strong: #2f6a2a;
       --primary-soft: #eaf5dc;
-      --accent: #3f9bd0;
+      --accent: #2a7fb3;
       --accent-soft: #e3f2fb;
       --gold: #b48a4c;
       --gold-soft: #f6ecd6;
       --danger: #c8574a;
       --warning: #93651c;
-      --success: #4f9e45;
+      --success: #3c7f35;
       --radius: 22px;
       --shadow: 0 4px 0 rgba(201,166,107,.45), 0 12px 22px -14px rgba(91,70,54,.35);
-      --cozy-wood: #e2c999; --cozy-leaf: #6cbf5b; --cozy-leaf-deep: #4f9e45; --cozy-sky: #5ab4e5; --cozy-sky-deep: #3f9bd0; --cozy-paper: #fffdf6;
+      --cozy-wood: #e2c999; --cozy-leaf: #3f8a37; --cozy-leaf-deep: #2f6a2a; --cozy-sky: #2a7fb3; --cozy-sky-deep: #1f6491; --cozy-paper: #fffdf6;
     }
 
     * { box-sizing: border-box; }
@@ -164,6 +164,11 @@
     :root[data-theme="cozy"] .settings-tab { border: 2px solid var(--cozy-wood); border-radius: 999px; background: var(--cozy-paper); }
     :root[data-theme="cozy"] .settings-tab.active { border-color: var(--cozy-leaf-deep); background: var(--cozy-leaf); color: #fff; }
     :root[data-theme="cozy"] .role-person { border-color: var(--cozy-wood); background: var(--cozy-paper); box-shadow: 0 3px 0 var(--cozy-wood); }
+    /* 上面的通用按鈕規則權重較高，選取／危險／建議狀態要再寫一次，不然會被蓋成一般按鈕 */
+    :root[data-theme="cozy"] .note-filter-chip.active { border-color: var(--primary); background: var(--primary); color: #fff; box-shadow: 0 3px 0 var(--primary-strong); }
+    :root[data-theme="cozy"] .role-person[aria-pressed="true"] { border-color: var(--primary); background: var(--primary-soft); color: var(--primary-strong); box-shadow: 0 3px 0 #b9d99a; }
+    :root[data-theme="cozy"] .mini-button-danger, :root[data-theme="cozy"] .progress-course-picker .course-delete-button { border-color: #e8bcb0; background: #fff8f5; color: var(--danger); box-shadow: 0 3px 0 #e8bcb0; }
+    :root[data-theme="cozy"] .mini-button.is-suggested { border-color: #b9852f; box-shadow: 0 0 0 2px #fff3d6 inset, 0 3px 0 #b9852f; font-weight: 900; }
     :root[data-theme="cozy"] .input, :root[data-theme="cozy"] .select, :root[data-theme="cozy"] .textarea { border-color: var(--cozy-wood); border-radius: 16px; background: var(--cozy-paper); }
     body { font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif; }
     button, input, select, textarea { font: inherit; }

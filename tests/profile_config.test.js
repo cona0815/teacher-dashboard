@@ -185,6 +185,9 @@ assert.match(indexHtml, /data-theme-choice="minimal"/, "介面配色應提供低
 assert.match(indexHtml, /INTERFACE_THEMES = \['forest', 'apricot', 'lavender', 'tech', 'minimal', 'cozy'\]/, "主題清單應包含極簡配色與可愛動森風");
 assert.match(indexHtml, /data-theme-choice="cozy"/, "介面配色可選可愛動森風");
 assert.match(indexHtml, /:root\[data-theme="cozy"\] \{/, "可愛動森風有自己的配色");
+// 2026-11-02：動森風通用按鈕規則權重高，選取狀態要另寫，否則記事篩選「全部」會白底白字
+assert.match(indexHtml, /:root\[data-theme="cozy"\] \.note-filter-chip\.active \{/, "動森風保留記事篩選的選取樣式");
+assert.match(indexHtml, /:root\[data-theme="cozy"\] \.role-person\[aria-pressed="true"\] \{/, "動森風保留身分選取樣式");
 assert.match(indexHtml, /id="teachingProgressBody" hidden/, "教學進度首次進入應預設收合");
 assert.match(indexHtml, /id="progressUnitList"/, "教學進度應提供逐單元編輯清單");
 assert.match(indexHtml, /data-unit-step="1"/, "每個單元應可單獨增加教學節數");
@@ -859,6 +862,7 @@ assert.match(studioHtml, /section\('代課教師當日簽認'/, "代課包應有
   assert.match(morningHtml, /const BOARD_STYLES = \['standard', 'cozy'\]/, '大屏風格只接受兩種值');
   assert.match(morningHtml, /state\.settings\.boardStyle === 'cozy' \? PROMPT_ART_STYLES\.cozy : PROMPT_ART_STYLES\.storybook/, '提示插圖跟著大屏風格');
   assert.match(morningHtml, /html\[data-board-style="cozy"\] \{/, '有動森風介面樣式');
+  assert.match(morningHtml, /html\[data-board-style="cozy"\] \.board-card\.board-settled \{/, '動森風保留已完成版面的綠底');
   // 動森風圖示：列在 COZY_ICON_READY 的檔案都要存在
   const iconReady = (morningHtml.match(/const COZY_ICON_READY = new Set\(\[([^\]]*)\]\)/) || [])[1];
   assert.ok(iconReady !== undefined, '找得到 COZY_ICON_READY');

@@ -177,11 +177,11 @@
     /* ===== 大屏風格：可愛動森風（設定 → 大屏風格）。只換外觀，功能顏色（到校綠、病假橘…）保留原意 ===== */
     html[data-board-style="cozy"] {
       --bg: #fbf5e6; --surface: #fffaf0; --ink: #5b4636; --muted: #8f7b63; --line: #ecdcbc;
-      --primary: #4f9e45; --primary-strong: #3c7f35;
-      --ok: #4fae5b; --ok-soft: #eaf5dc;
+      --primary: #3c7f35; --primary-strong: #2f6a2a;
+      --ok: #3d8f47; --ok-soft: #eaf5dc;
       --blank: #c4b394;
-      --cozy-wood: #e2c999; --cozy-wood-deep: #c9a66b; --cozy-leaf: #6cbf5b; --cozy-leaf-deep: #4f9e45;
-      --cozy-sky: #5ab4e5; --cozy-sky-deep: #3f9bd0; --cozy-paper: #fffdf6;
+      --cozy-wood: #e2c999; --cozy-wood-deep: #c9a66b; --cozy-leaf: #3f8a37; --cozy-leaf-deep: #2f6a2a;
+      --cozy-sky: #2a7fb3; --cozy-sky-deep: #1f6491; --cozy-paper: #fffdf6;
     }
     html[data-board-style="cozy"] body {
       background-color: var(--bg);
@@ -212,6 +212,7 @@
     html[data-board-style="cozy"] .seat { border-radius: 22px; box-shadow: inset 0 -6px 0 rgba(0,0,0,.12), 0 3px 0 rgba(91,70,54,.16); }
     html[data-board-style="cozy"] .hw-seat, html[data-board-style="cozy"] .check-seat { border-radius: 14px; box-shadow: inset 0 -4px 0 rgba(0,0,0,.12); }
     html[data-board-style="cozy"] .board-card { background: var(--cozy-paper); border: 3px solid var(--line); border-radius: 22px; }
+    html[data-board-style="cozy"] .board-card.board-settled { background: var(--ok-soft); }   /* 已完成的版面保留綠底 */
     html[data-board-style="cozy"] .field input, html[data-board-style="cozy"] .field select, html[data-board-style="cozy"] .inline-select {
       border: 3px solid var(--cozy-wood); border-radius: 16px; background: var(--cozy-paper); color: var(--ink); }
     html[data-board-style="cozy"] .submit-bar { background: var(--surface); border-top: 0; box-shadow: 0 -4px 0 var(--cozy-wood), 0 -10px 18px -12px rgba(91,70,54,.35); }
