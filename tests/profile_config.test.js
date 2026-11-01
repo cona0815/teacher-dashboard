@@ -837,3 +837,19 @@ assert.match(studioHtml, /section\('代課教師當日簽認'/, "代課包應有
   assert.match(mh, /if \(lotteryBusy\) event\.preventDefault\(\)/, "抽籤進行中不可切班");
   assert.match(mh, /if \(toolsClassSuffix\(\)\) return absent;/, "別班沒有點名資料，抽籤分組不排除第一個班的缺席");
 }
+
+// ── ART-02 大屏提示原創插圖（溫暖繪本 R4）──
+{
+  const fsArt = require('fs');
+  const pathArt = require('path');
+  const artDir = pathArt.join(__dirname, '..', 'assets', 'art', 'cozy', 'prompt');
+  const readyBlock = morningHtml.match(/const PROMPT_ART_READY = new Set\(\[([\s\S]*?)\]\);/);
+  assert.ok(readyBlock, '找得到 PROMPT_ART_READY');
+  const readyIds = [...readyBlock[1].matchAll(/'([a-z_]+)'/g)].map(m => m[1]);
+  assert.strictEqual(readyIds.length, 33, '32 句內建提示＋自訂預設圖都改用原創插圖');
+  readyIds.forEach(id => assert.ok(fsArt.existsSync(pathArt.join(artDir, id + '.webp')), `插圖檔存在：${id}.webp`));
+  const presetIds = [...morningHtml.matchAll(/\{ id: '([a-z_]+)', text: '[^']+', img: '[^']+' \}/g)].map(m => m[1]);
+  presetIds.forEach(id => assert.ok(readyIds.includes(id), `內建提示 ${id} 有原創插圖`));
+  assert.match(morningHtml, /function promptCustomImgSrc\(/, '自訂句有預設插圖');
+}
+// ── end ART-02 ──

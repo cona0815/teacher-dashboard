@@ -4284,12 +4284,51 @@
         { id: 'go_home_line', text: '放學路隊，跟著路隊長走', img: 'line_up.png' }
       ] }
     ];
-    // 新插圖（動森風）交件驗收後，把 id 加進來就會改用新圖；沒列的繼續用舊圖
-    const PROMPT_ART_READY = new Set([]);
+    // 原創插圖「溫暖繪本」（ART-02 R4 驗收通過）；列在這裡的 id 用新圖，沒列的繼續用舊圖
+    const PROMPT_ART_READY = new Set([
+      'back_to_class',
+      'brush_teeth',
+      'circle_question',
+      'cleaning',
+      'correction',
+      'cover_cough',
+      'custom_default',
+      'drink_toilet',
+      'focus_teacher',
+      'go_home',
+      'go_home_line',
+      'hallway',
+      'hand_in',
+      'line_up',
+      'lunch',
+      'lunch_cleanup',
+      'lunch_prep',
+      'nap',
+      'prep_next',
+      'quiet_zero',
+      'raise_hand',
+      'reading',
+      'recycle',
+      'rest_eyes',
+      'self_check',
+      'self_study',
+      'sit_fast',
+      'sit_up',
+      'special_room',
+      'stairs',
+      'tidy_bag',
+      'wash_hands',
+      'whisper',
+    ]);
     const PROMPT_ART_DIR = 'assets/art/cozy/prompt/';
     function promptImgSrc(item) {
       if (item && PROMPT_ART_READY.has(item.id)) return PROMPT_ART_DIR + item.id + '.webp';
       return 'assets/irasutoya/' + ((item && item.img) || 'class_focus.png');
+    }
+    // 自訂句（不在內建清單）的預設插圖
+    function promptCustomImgSrc(legacyImg) {
+      if (PROMPT_ART_READY.has('custom_default')) return PROMPT_ART_DIR + 'custom_default.webp';
+      return 'assets/irasutoya/' + (/^[a-z_]+\.png$/.test(String(legacyImg || '')) ? legacyImg : 'class_focus.png');
     }
     function updatePromptCredit() {
       const usingLegacy = PROMPTS.some(item => !PROMPT_ART_READY.has(item.id));
@@ -4463,8 +4502,9 @@
       pop.style.setProperty('--pp-ink', theme[0]);
       pop.querySelector('.pp-msg').textContent = text;
       const img = pop.querySelector('.pp-img');
-      img.hidden = !item;
-      if (item) img.src = promptImgSrc(item);
+      // 自訂句（例：LINE 傳來的提示）用自訂預設插圖；舊圖時期維持不顯示
+      img.hidden = !item && !PROMPT_ART_READY.has('custom_default');
+      if (!img.hidden) img.src = item ? promptImgSrc(item) : promptCustomImgSrc();
       popTotal = seconds * 1000; popUntil = Date.now() + popTotal;
       pop.hidden = false;
       placePop();
@@ -4529,7 +4569,7 @@
           $('promptCustomText').value = '';
           $('promptMessage').textContent = prompt.text;
           const known = PROMPTS.find(item => item.text === prompt.text);
-          $('promptImg').src = known ? promptImgSrc(known) : 'assets/irasutoya/' + (/^[a-z_]+\.png$/.test(String(prompt.img || '')) ? prompt.img : 'class_focus.png');
+          $('promptImg').src = known ? promptImgSrc(known) : promptCustomImgSrc(prompt.img);
           document.querySelectorAll('[data-prompt-tile]').forEach(tile => tile.classList.toggle('active', tile.textContent === prompt.text));
           swapAnim($('promptMessage')); swapAnim($('promptImg'));
         }
