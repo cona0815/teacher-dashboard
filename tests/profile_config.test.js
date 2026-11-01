@@ -853,8 +853,14 @@ assert.match(studioHtml, /section\('代課教師當日簽認'/, "代課包應有
   presetIds.forEach(id => assert.ok(readyIds.includes(id), `內建提示 ${id} 有原創插圖`));
   assert.match(morningHtml, /function promptCustomImgSrc\(/, '自訂句有預設插圖');
   // 兩套風格可切換：設定頁有選項、存進設定、沒畫好的退回溫暖繪本
-  assert.match(morningHtml, /<select id="setupPromptArt">[\s\S]*?value="storybook"[\s\S]*?value="cozy"/, '設定頁可選插圖風格');
-  assert.match(morningHtml, /const PROMPT_ART_STYLE_KEYS = \['storybook', 'cozy'\]/, '插圖風格只接受兩種值');
+  assert.match(morningHtml, /<select id="setupBoardStyle">[\s\S]*?value="standard"[\s\S]*?value="cozy"/, '設定頁可選大屏風格');
+  assert.match(morningHtml, /const BOARD_STYLES = \['standard', 'cozy'\]/, '大屏風格只接受兩種值');
+  assert.match(morningHtml, /state\.settings\.boardStyle === 'cozy' \? PROMPT_ART_STYLES\.cozy : PROMPT_ART_STYLES\.storybook/, '提示插圖跟著大屏風格');
+  assert.match(morningHtml, /html\[data-board-style="cozy"\] \{/, '有動森風介面樣式');
+  // 動森風圖示：列在 COZY_ICON_READY 的檔案都要存在
+  const iconReady = (morningHtml.match(/const COZY_ICON_READY = new Set\(\[([^\]]*)\]\)/) || [])[1];
+  assert.ok(iconReady !== undefined, '找得到 COZY_ICON_READY');
+  [...iconReady.matchAll(/'([a-z_]+)'/g)].forEach(m => assert.ok(fsArt.existsSync(pathArt.join(__dirname, '..', 'assets', 'art', 'cozy', 'icon', m[1] + '.webp')), `動森風圖示存在：${m[1]}.webp`));
   assert.match(morningHtml, /\[chosen, PROMPT_ART_STYLES\.storybook\]\.find/, '選的風格沒這張時退回溫暖繪本');
   const cozyReady = (morningHtml.match(/cozy: \{ dir: '[^']+', ready: new Set\(\[([^\]]*)\]\) \}/) || [])[1] || '';
   [...cozyReady.matchAll(/'([a-z_]+)'/g)].forEach(m => assert.ok(fsArt.existsSync(pathArt.join(__dirname, '..', 'assets', 'art', 'cozy', 'prompt', m[1] + '.webp')), `動森風插圖檔存在：${m[1]}.webp`));
