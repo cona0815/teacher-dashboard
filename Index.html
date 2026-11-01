@@ -7,6 +7,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' https://generativelanguage.googleapis.com https://api.openai.com https://api.x.ai https://script.google.com https://script.googleusercontent.com http://127.0.0.1:8767; object-src 'none'; base-uri 'self'; form-action 'self'">
   <title>國小教師工作台</title>
   <style>
+    .role-hidden { display: none !important; }
     :root {
       --bg: #f4efe6;
       --surface: #fffdf8;
@@ -1316,6 +1317,7 @@
       <button class="role-person" type="button" data-role="gradeLead" aria-pressed="true"><img src="assets/koboyo/parent-teacher-association.svg" alt=""><span>學年主任</span><span class="role-check">✓</span></button>
       <button class="role-person" type="button" data-role="admin" aria-pressed="false"><img src="assets/koboyo/teacher-checking-list.svg" alt=""><span>行政</span><span class="role-check">✓</span></button>
       <button class="role-person" type="button" data-role="homeroom" aria-pressed="true"><img src="assets/koboyo/teacher-group-students.svg" alt=""><span>導師</span><span class="role-check">✓</span></button>
+      <button class="role-person" type="button" data-role="subject" aria-pressed="false"><img src="assets/koboyo/academic-year-planner.svg" alt=""><span>科任</span><span class="role-check">✓</span></button>
       <button class="role-person" type="button" data-role="teacher" aria-pressed="true"><img src="assets/koboyo/academic-year-planner.svg" alt=""><span>教師</span><span class="role-check">✓</span></button>
       <span class="role-multi-note">可同時選擇多個身分</span>
     </nav>
@@ -1331,7 +1333,7 @@
         </div>
         <div class="teacher-toolbox-actions" aria-label="教師工具">
           <div class="toolbox-group"><span class="toolbox-group-label">溝通</span>
-            <button class="toolbox-button" type="button" data-toolbox-target="contactBookSection" data-line-only aria-expanded="false" hidden>聯絡本</button>
+            <button class="toolbox-button" type="button" data-toolbox-target="contactBookSection" data-line-only data-role-only="homeroom" aria-expanded="false" hidden>聯絡本</button>
             <button class="toolbox-button" type="button" data-toolbox-target="lineInboxSection" data-line-only aria-expanded="false" hidden>LINE 收件匣<span class="toolbox-badge" id="lineInboxBadge" hidden>0</span></button>
             <button class="toolbox-button" type="button" data-toolbox-target="messageHubSection" aria-expanded="false">📮 訊息整合站<span class="toolbox-badge" id="messageHubBadge" hidden>0</span></button>
           </div>
@@ -1340,7 +1342,7 @@
             <button class="toolbox-button" type="button" data-toolbox-target="secretaryNotesSection" aria-expanded="false">小綿助記事</button>
           </div>
           <div class="toolbox-group"><span class="toolbox-group-label">備課</span>
-            <button class="toolbox-button" type="button" data-toolbox-target="teachingProgressPanel" data-role-only="teacher" aria-expanded="false">教學進度</button>
+            <button class="toolbox-button" type="button" data-toolbox-target="teachingProgressPanel" data-role-only="teacher subject" aria-expanded="false">教學進度</button>
             <a class="toolbox-button" href="Studio.html" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center">🎨 教材小工場</a>
           </div>
         </div>
@@ -2405,7 +2407,7 @@
       progressPlans: {},
       activeProgressSubject: ''
     };
-    const ROLE_LABELS = { gradeLead: '學年主任', admin: '行政', homeroom: '導師', teacher: '教師' };
+    const ROLE_LABELS = { gradeLead: '學年主任', admin: '行政', homeroom: '導師', subject: '科任', teacher: '教師' };
     // Source: government open-data office calendar (2018–2027), filtered to weekday closures
     // applicable to schools. Military Day is intentionally excluded because it is military-only.
     const OFFICIAL_SCHOOL_HOLIDAYS = {
@@ -2726,11 +2728,16 @@
       document.querySelectorAll('[data-role]').forEach(button => {
         button.setAttribute('aria-pressed', String(roleWorkspaceState.selectedRoles.has(button.dataset.role)));
       });
-      const hasTeacherRole = roleWorkspaceState.selectedRoles.has('teacher');
+      const roles = roleWorkspaceState.selectedRoles;
+      const hasTeacherRole = roles.has('teacher') || roles.has('subject');   // 教學進度：教師、科任都用得到
       $('teachingProgressPanel').hidden = !hasTeacherRole;
-      const teachingToolButton = document.querySelector('[data-toolbox-target="teachingProgressPanel"]');
-      if (teachingToolButton) teachingToolButton.hidden = !hasTeacherRole;
-      if (!hasTeacherRole && teachingToolButton?.classList.contains('active')) setTeacherToolbox('');
+      // 工具箱依身分顯示（data-role-only 可寫多個身分）；用 class 隱藏，不跟「LINE 才顯示」的 hidden 互相蓋掉
+      document.querySelectorAll('[data-role-only]').forEach(el => {
+        const allowed = el.dataset.roleOnly.split(/\s+/).some(role => roles.has(role));
+        el.classList.toggle('role-hidden', !allowed);
+        if (!allowed && el.classList.contains('active')) setTeacherToolbox('');
+      });
+      $('teachingProgressTitle').textContent = roles.has('subject') && !roles.has('teacher') ? '科任｜各班教學與評量進度' : '教師｜教學與評量進度';
     }
 
     function toggleWorkspaceRole(role) {
@@ -8305,8 +8312,8 @@ ${cleanBase}`;
       if (targetId === 'aiAssistantSection' && assistantSettings.api.enabled !== true) {
         return showToast('請先到「設定 → AI 設定」開啟 AI 功能。', true);
       }
-      if (targetId === 'teachingProgressPanel' && !roleWorkspaceState.selectedRoles.has('teacher')) {
-        return showToast('請先勾選「教師」身分。', true);
+      if (targetId === 'teachingProgressPanel' && !roleWorkspaceState.selectedRoles.has('teacher') && !roleWorkspaceState.selectedRoles.has('subject')) {
+        return showToast('請先勾選「教師」或「科任」身分。', true);
       }
       setTeacherToolbox(targetId);
     });
