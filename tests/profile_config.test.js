@@ -689,6 +689,17 @@ assert.match(studioHtml, /data-page="report">📑 成果報告/, "應有成果�
 for (const title of ["'依據'", "'目的'", "'辦理情形'", "'參與人次'", "'成效與檢討'", "'活動照片'"]) assert.ok(studioHtml.includes(`docSection(`) && studioHtml.includes(title), `成果報告應有 ${title} 段`);
 assert.match(studioHtml, /\[\['學生', ''\], \['教職員', ''\], \['家長及來賓', ''\], \['合計', ''\]\]/, "參與人次欄留空給老師填");
 assert.match(studioHtml, /function docPhotoTable/, "活動照片應以 2×2 表格排版");
+// G2 📋 計畫書
+assert.match(studioHtml, /data-page="plan">📋 計畫書/, "應有計畫書分頁");
+{
+  const page = groupBPage("plan");
+  for (const t of ["校內活動", "社團", "教師研習", "校外教學", "競賽"]) assert.match(page, new RegExp(`<option value="${t}">`), `計畫書應有「${t}」類型`);
+  for (const id of ["plName", "plTarget", "plDate", "plPlace", "plIdea", "plBudget", "plChecked"]) assert.match(page, new RegExp(`id="${id}"`), `計畫書應有 #${id}`);
+}
+for (const title of ["'活動流程表'", "'工作分配表'", "'經費概算表'", "'預期效益'", "'注意事項'"]) assert.ok(studioHtml.includes(title), `計畫書應有 ${title}`);
+assert.match(studioHtml, /\[r\.item \|\| '', r\.unit \|\| '', r\.qty \|\| '', '', '', r\.note \|\| ''\]/, "經費表單價、金額一律留空");
+assert.match(studioHtml, /const PL_TRIP_INSURANCE = /, "校外教學應固定加保險段落");
+assert.match(studioHtml, /const PL_TRIP_CONSENT = /, "校外教學應固定加家長同意書提醒");
 // ===== 組B 行政文書 end =====
 
 // ===== 組A 行政文書 =====

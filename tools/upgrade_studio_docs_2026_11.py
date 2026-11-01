@@ -35,8 +35,12 @@ def add_css(css):
 
 
 def add_html(html):
+    # 早期版本 G1 少了 </section>：遇到就先補上
+    if '      </div>\n  </main>' in s:
+        rep('      </div>\n  </main>', '      </div>\n    </section>\n  </main>')
     rep(HTML_ANCHOR, '''    </section>
-''' + html + '''  </main>''')
+''' + html + '''    </section>
+  </main>''')
 
 
 def add_js(js):
@@ -313,8 +317,149 @@ def g1():
 ''')
 
 
+# =====================================================================
+# G2：📋 計畫書
+# =====================================================================
+def g2():
+    rep('''    <button class="tab-button" type="button" data-page="report">📑 成果報告</button>''',
+        '''    <button class="tab-button" type="button" data-page="report">📑 成果報告</button>
+    <button class="tab-button" type="button" data-page="plan">📋 計畫書</button>''')
+
+    add_html('''
+    <!-- 🗂 行政文書：📋 計畫書（G2） -->
+    <section class="page" id="page-plan">
+      <div class="workbench">
+        <div class="panel">
+          <div class="field"><label>學校名稱</label>
+            <input class="input docSchool" id="plSchool" placeholder="例：○○市○○國民小學"></div>
+          <div class="field"><label>計畫類型</label>
+            <select class="select" id="plType">
+              <option value="校內活動">校內活動</option>
+              <option value="社團">社團</option>
+              <option value="教師研習">教師研習</option>
+              <option value="校外教學">校外教學</option>
+              <option value="競賽">競賽</option>
+            </select></div>
+          <div class="field"><label>計畫名稱</label>
+            <input class="input" id="plName" placeholder="例：115 學年度五年級校外教學"></div>
+          <div class="field"><label>對象</label>
+            <input class="input" id="plTarget" placeholder="例：五年級學生及隨隊教師"></div>
+          <div class="field"><label>日期</label>
+            <input class="input" id="plDate" placeholder="例：115 年 11 月 20 日（星期五）"></div>
+          <div class="field"><label>地點</label>
+            <input class="input" id="plPlace" placeholder="例：國立自然科學博物館"></div>
+          <div class="field"><label>主辦／協辦單位（選填）</label>
+            <input class="input" id="plUnit" placeholder="例：教務處；協辦：學務處、五年級學年"></div>
+          <div class="field"><label>幾句想法</label>
+            <textarea class="textarea" id="plIdea" placeholder="例：想結合自然課的生物單元，上午看展、下午做學習單，搭遊覽車。"></textarea></div>
+          <div class="field"><label>經費</label>
+            <select class="select" id="plBudget"><option value="有">有經費（列概算表，金額留空）</option><option value="無">無經費</option></select></div>
+          <button class="go-button" type="button" id="plGoButton">🤖 產生計畫書</button>
+          <div class="status" id="plStatus"></div>
+          <div class="hint">輸出十段：依據、目的、辦理單位、對象、時間地點、活動流程表、工作分配表、經費概算表、預期效益、注意事項。<strong>經費表 AI 只列項目與單位，單價、金額留空</strong>；校外教學會自動加上安全須知、保險與家長同意書。</div>
+        </div>
+        <div class="panel">
+          <div class="preview-bar">
+            <label class="es-confirm" id="plCheckedLabel"><input type="checkbox" id="plChecked"> 老師已核對</label>
+            <button class="mini" type="button" onclick="window.print()">🖨 列印</button>
+            <button class="mini" type="button" onclick="downloadPreview('plPreview','計畫書','doc')">⬇ Word</button>
+            <button class="mini" type="button" onclick="downloadPdfFromHost('plPreview','計畫書',false)">⬇ PDF</button>
+            <span class="status" id="plMeta">🟡 AI 草稿，請核對後再交出；預覽區可以直接點字修改。</span>
+          </div>
+          <div class="preview-host" id="plPreview"></div>
+        </div>
+      </div>
+''')
+
+    add_js(r'''
+    // ============================================================
+    // 📋 計畫書（G2）
+    // ============================================================
+    const PL_TYPE_HINTS = {
+      '校內活動': '一般校內活動：寫清楚活動方式、場地與宣導方式。',
+      '社團': '社團計畫：寫出社團目標、招生方式（不寫學生名單）、上課時間與次數、課程規劃、成果發表方式。',
+      '教師研習': '教師研習：寫出研習主題、講師（只寫職稱或「外聘講師」，姓名留給老師填）、研習時數登錄與簽到方式。',
+      '校外教學': '校外教學：寫出交通方式、行程路線、分組與隨隊人員配置、雨天備案；safety 再列 2–4 條和這次行程有關的安全提醒。',
+      '競賽': '競賽：寫出參賽資格、報名方式、比賽方式、評分標準、獎勵方式（獎品金額不要寫）。'
+    };
+    // 校外教學固定加上的安全段落（不靠 AI，確保一定有）
+    const PL_TRIP_SAFETY = [
+      '出發前實施行前安全教育，說明集合時間、地點、分組方式與緊急聯絡方式。',
+      '依參加人數安排隨隊教師與志工，採分組管理；上下車及每次集合皆清點人數。',
+      '租用遊覽車應查驗車齡、保險與駕駛資格，並於出發前實施車上逃生演練。',
+      '備妥急救用品與緊急聯絡電話；學生健康狀況由導師事先掌握，不列入本計畫。'
+    ];
+    const PL_TRIP_INSURANCE = '參加學生及隨隊人員一律投保旅行平安保險（含意外醫療），保額與費用依學校規定辦理。';
+    const PL_TRIP_CONSENT = '出發前發放家長同意書，請家長簽名後於期限內繳回；未繳回者不參加，由學校另行安排留校課程。';
+    $('plGoButton').dataset.label = $('plGoButton').textContent;
+    docBindConfirm('pl');
+    $('plGoButton').addEventListener('click', async () => {
+      const type = $('plType').value;
+      const name = $('plName').value.trim();
+      if (!name) return showToast('請先填計畫名稱。', true);
+      const target = $('plTarget').value.trim();
+      const date = $('plDate').value.trim();
+      const place = $('plPlace').value.trim();
+      const unit = $('plUnit').value.trim();
+      const idea = $('plIdea').value.trim();
+      const hasBudget = $('plBudget').value === '有';
+      const isTrip = type === '校外教學';
+      const prompt = [
+        `你是臺灣國小的資深行政教師，要草擬一份「${type}」類型的活動計畫書。`,
+        DOC_AI_RULES,
+        `計畫名稱：${name}`,
+        `對象：${target || '（未提供）'}；日期：${date || '（未提供）'}；地點：${place || '（未提供）'}；主辦／協辦：${unit || '（未提供，請依類型寫常見的處室）'}`,
+        idea ? `承辦老師的想法：${idea}` : '',
+        PL_TYPE_HINTS[type] || '',
+        '各欄要求：basis 依據 1–3 條；purpose 目的 2–4 條；units.host 主辦單位、units.co 協辦單位；flow 活動流程 4–8 列（time 時間、content 內容、owner 負責單位或職稱），時間沒提供可寫「第一節」「上午」這類相對時間；duties 工作分配 3–6 列（task 工作項目、owner 負責人員職稱、detail 工作內容）；benefits 預期效益 2–4 條；notes 注意事項 2–4 條。',
+        hasBudget
+          ? 'budget 經費概算 3–6 列：只寫 item 項目、unit 單位（例：式、人、本、輛）、note 備註；qty 數量只有老師上面明確寫出時才填，否則留空字串；不要寫單價與金額。'
+          : '本計畫無經費，budget 回傳空陣列 []。',
+        isTrip ? 'safety：2–4 條針對這次行程的安全提醒（保險與家長同意書系統會自動加，不用寫）。' : 'safety 回傳空陣列 []。',
+        '回傳格式：{"basis":[""],"purpose":[""],"units":{"host":"","co":""},"flow":[{"time":"","content":"","owner":""}],"duties":[{"task":"","owner":"","detail":""}],"budget":[{"item":"","unit":"","qty":"","note":""}],"benefits":[""],"notes":[""],"safety":[""]}'
+      ].filter(Boolean).join('\n');
+      const data = await docAi($('plGoButton'), $('plStatus'), prompt);
+      if (!data) return;
+      const units = data.units || {};
+      const flowRows = docArr(data.flow).map(r => [r.time || '', r.content || r.item || '', r.owner || '']);
+      const dutyRows = docArr(data.duties).map(r => [r.task || '', r.owner || '', r.detail || '']);
+      const budgetRows = hasBudget ? docArr(data.budget).map(r => [r.item || '', r.unit || '', r.qty || '', '', '', r.note || '']) : [['本計畫無經費需求', '', '', '', '', '']];
+      if (hasBudget) budgetRows.push(['合計', '', '', '', '', '']);
+      const budgetHtml = docTable([{ label: '項目', width: '26%' }, { label: '單位', width: '10%' }, { label: '數量', width: '10%' }, { label: '單價（元）', width: '13%' }, { label: '金額（元）', width: '13%' }, { label: '備註' }], budgetRows, 0, 'doc-budget-table')
+        + (hasBudget ? '<div class="doc-note doc-verify">（數量、單價、金額請依學校經費核算後填寫，AI 不代填）</div>' : '');
+      const notesHtml = isTrip
+        ? `<div class="doc-sub doc-trip-safety">一、安全須知</div>${docItems([...PL_TRIP_SAFETY, ...docArr(data.safety)], 'paren')}`
+          + `<div class="doc-sub">二、保險</div><div class="doc-li"><span>${PL_TRIP_INSURANCE}</span></div>`
+          + `<div class="doc-sub">三、家長同意書</div><div class="doc-li"><span>${PL_TRIP_CONSENT}</span></div>`
+          + `<div class="doc-sub">四、其他注意事項</div>${docItems(data.notes, 'paren')}`
+        : docItems(data.notes);
+      const school = docSchool('plSchool');
+      const html = docHead(`${name}計畫`, school, [`類型：${escapeHtml(type)}`])
+        + docSection(0, '依據', docItems(data.basis))
+        + docSection(1, '目的', docItems(data.purpose))
+        + docSection(2, '辦理單位',
+          `<div class="doc-li"><span class="doc-no">一、</span><span>主辦單位：${docText(units.host) || '＿＿＿＿＿＿'}</span></div>`
+          + `<div class="doc-li"><span class="doc-no">二、</span><span>協辦單位：${docText(units.co) || '＿＿＿＿＿＿'}</span></div>`)
+        + docSection(3, '對象', `<div class="doc-li"><span>${docText(target) || '＿＿＿＿＿＿'}</span></div>`)
+        + docSection(4, '時間地點',
+          `<div class="doc-li"><span class="doc-no">一、</span><span>時間：${docText(date) || '＿＿＿＿＿＿'}</span></div>`
+          + `<div class="doc-li"><span class="doc-no">二、</span><span>地點：${docText(place) || '＿＿＿＿＿＿'}</span></div>`)
+        + docSection(5, '活動流程表', docTable([{ label: '時間', width: '22%' }, { label: '內容' }, { label: '負責', width: '22%' }], flowRows, 3, 'doc-flow-table'))
+        + docSection(6, '工作分配表', docTable([{ label: '工作項目', width: '24%' }, { label: '負責人員', width: '22%' }, { label: '工作內容' }], dutyRows, 3, 'doc-duty-table'))
+        + docSection(7, '經費概算表', budgetHtml)
+        + docSection(8, '預期效益', docItems(data.benefits))
+        + docSection(9, '注意事項', notesHtml)
+        + docSection(10, '本計畫經校長核可後實施，修正時亦同。', '');
+      docRender('pl', html);
+      $('plMeta').textContent = `🟡 AI 草稿（${type}${isTrip ? '，已加安全須知、保險、家長同意書' : ''}），請核對後再勾「老師已核對」。`;
+      showToast('📋 計畫書草稿完成，請過目。');
+    });
+''')
+
+
 STEPS = [
     ('G1 成果報告', 'id="page-report"', g1),
+    ('G2 計畫書', 'id="page-plan"', g2),
 ]
 
 for label, marker, fn in STEPS:
