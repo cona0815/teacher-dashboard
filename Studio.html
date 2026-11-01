@@ -469,6 +469,14 @@
               <button class="mini" type="button" id="rdNewsButton">🔍 找 5 則最新</button>
             </div>
             <div id="rdNewsList" style="margin-top:6px"></div></div>
+          <div class="field"><label>原文來源（決定 AI 可以怎麼處理）</label>
+            <select class="select" id="rdSource">
+              <option value="facts" selected>有著作權的文章（新聞、課文、雜誌、書…）→ 只取事實重點，用原創文字重寫</option>
+              <option value="own">我自己寫的，或已取得作者授權 → 可以直接分級改寫</option>
+              <option value="public">公有領域（作者過世超過 50 年）→ 可以直接分級改寫</option>
+              <option value="cc">CC 授權（例如維基百科）→ 可以改寫，要標示出處</option>
+            </select>
+            <input class="input" id="rdCredit" placeholder="出處（網址或書名・作者），會印在每一版最下面" style="margin-top:6px"></div>
           <div class="field"><label>貼上原文（課文、新聞、故事…）</label>
             <textarea class="textarea" id="rdText" style="min-height:140px" placeholder="貼上要改寫的文章；也可以拍照，或用上面的「找最新時事」。"></textarea></div>
           <div class="field"><label>或拍照上傳原文</label>
@@ -486,7 +494,7 @@
           </div></div>
           <button class="go-button" type="button" id="rdGoButton">📚 生成分級文本</button>
           <div class="status" id="rdStatus"></div>
-          <div class="hint">同一篇文章改寫成不同閱讀程度（事實與結論不變，只調整句長、詞彙與背景說明），每版各一頁，方便同班差異化。時事由 Google 搜尋即時取得並經兒童安全過濾，仍請老師過目再發。</div>
+          <div class="hint">同一篇文章改寫成不同閱讀程度（事實與結論不變，只調整句長、詞彙與背景說明），每版各一頁，方便同班差異化。時事由 Google 搜尋即時取得並經兒童安全過濾，只取事實重點、用原創文字重寫並附出處，仍請老師過目再發。</div>
         </div>
         <div class="panel">
           <div class="preview-bar">
@@ -1500,8 +1508,8 @@
       const prompt = [
         `今天是 ${today}。請用搜尋工具找出「最近 14 天內」的國際新聞，主題：${topic}。`,
         '對象是臺灣國小學生，因此**絕對排除**：政治、選舉、政府人事、戰爭與軍事、犯罪、暴力、意外死亡、災難傷亡描述、性與色情、毒品、恐怖攻擊、任何爭議與仇恨內容。只選正向、有知識性、適合 6–12 歲孩子的新聞。',
-        '找 5 則不同的新聞，每則：title（繁體中文標題，20 字內）、date（YYYY-MM-DD）、source（媒體名稱）、summary（用繁體中文、臺灣用語寫 250–350 字的兒童可讀摘要：發生了什麼、在哪裡、為什麼有趣或重要、和小朋友生活的連結；不要用成人新聞腔）、kidSafe（true/false，你再自我檢查一次是否完全符合排除規則）。',
-        '只回傳 JSON：{"items":[{"title":"","date":"","source":"","summary":"","kidSafe":true}]}'
+        '找 5 則不同的新聞，每則：title（你自己下的繁體中文標題，20 字內，不要照抄媒體標題）、date（YYYY-MM-DD）、source（媒體名稱）、url（新聞網址，沒有就留空）、facts（6–10 條「事實重點」：誰、在哪裡、做了什麼、數字、結果，每條一句、用你自己的話，不要抄新聞原句）、kidSafe（true/false，你再自我檢查一次是否完全符合排除規則）。',
+        '只回傳 JSON：{"items":[{"title":"","date":"","source":"","url":"","facts":[""],"kidSafe":true}]}'
       ].join('\n');
       $('rdNewsButton').disabled = true;
       $('rdNewsList').innerHTML = '<div class="status">🔍 正在搜尋最新國際時事並做兒童安全過濾（約 15–30 秒）…</div>';
@@ -1519,7 +1527,8 @@
           try { data = extractJson(text); } catch (e) { if (useTools) continue; throw e; }
           break;
         }
-        const items = ((data && data.items) || []).filter(item => item && item.kidSafe !== false && item.summary && !NEWS_BLOCKLIST.test(item.title + item.summary)).slice(0, 5);
+        const items = ((data && data.items) || []).map(item => Object.assign(item, { summary: (item.facts || []).map(f => '・' + f).join('\n') }))
+          .filter(item => item && item.kidSafe !== false && item.summary && !NEWS_BLOCKLIST.test(item.title + item.summary)).slice(0, 5);
         rdNewsItems = items;
         if (!items.length) { $('rdNewsList').innerHTML = '<div class="status">這次沒有找到通過安全過濾的新聞，換個主題再找一次。</div>'; }
         else {
@@ -1537,7 +1546,9 @@
       const use = e.target.closest('[data-news-use]'), fill = e.target.closest('[data-news-fill]');
       const item = rdNewsItems[Number((use || fill || {}).dataset?.newsUse ?? (fill || {}).dataset?.newsFill)];
       if (!item) return;
-      $('rdText').value = `${item.title}\n\n${item.summary}${item.source ? `\n\n（資料來源：${item.source}，${item.date || ''}）` : ''}`;
+      $('rdText').value = `${item.title}\n\n${item.summary}`;
+      $('rdSource').value = 'facts';
+      $('rdCredit').value = [item.source, item.date, item.url].filter(Boolean).join('，');
       showToast('已放入原文框。');
       if (use) $('rdGoButton').click();
     });
@@ -1555,6 +1566,9 @@
       const grade = $('rdGrade').value;
       const prompt = [
         `你是臺灣國小閱讀教學專家。班級為${grade}年級。請把下面的文章改寫成 ${levels.join('、')} 版本，做差異化閱讀。`,
+        $('rdSource').value === 'facts'
+          ? '【著作權規定】原文是別人的著作。請先抓出事實與重點，再用你自己的文字「重新寫」成新文章：不得沿用原文的句子、段落安排或特殊說法，不要逐句改寫；可以引用的只有事實、數字、人名地名。'
+          : '原文的作者已同意或屬公有領域／CC 授權，可以直接改寫。',
         files.length ? '附件是原文的照片，請先辨識全文。' : `原文：\n${text}`,
         '規則：事實、人物、結論完全不變；「基礎」＝比班級低 2 個年級可讀（短句、常用詞、必要時加一句背景說明，長度約原文 60–70%）；「標準」＝同年級（潤飾通順、長度相近）；「進階」＝高 1–2 個年級（保留原文深度並加 1–2 段延伸資訊或觀點，長度約 120%）。',
         $('rdVocab').checked ? '每版附 vocab：4–6 個該版本讀者可能不熟的詞（word、meaning 白話解釋）。' : '',
@@ -1578,11 +1592,16 @@
         $('rdStatus').textContent = '';
         const LEVEL_ICON = { '基礎': '🟢', '標準': '🟡', '進階': '🔴' };
         const versions = (data.levels || []).filter(v => levels.includes(v.level));
+        const credit = $('rdCredit').value.trim();
+        const creditNote = $('rdSource').value === 'facts'
+          ? `本文依${credit ? `「${credit}」` : '原文'}的事實重點重新撰寫，非原文。`
+          : $('rdSource').value === 'cc' ? `改寫自：${credit || '（請填出處）'}（CC 授權）` : (credit ? `出處：${credit}` : '');
         const pages = versions.map((v, i) => `<div class="sheet sw-sheet${i ? ' ws-answerpage' : ''}">
           <div class="ws2-head"><div><div class="ws2-chips"><span class="ws2-chip ws2-chip-dark">${LEVEL_ICON[v.level] || ''} ${escapeHtml(v.level)}版</span><span class="ws2-chip">${escapeHtml(v.readingAge || '')}</span><span class="ws2-chip">${escapeHtml(grade)}年級班</span></div>
             <div class="sw-title" style="text-align:left">${escapeHtml(data.title || '閱讀文本')}</div>
             <div class="ws2-name"><span>座號 <i></i></span><span>姓名 <i style="min-width:110px"></i></span></div></div></div>
           <div class="rd-text">${String(v.text || '').split(/\n+/).map(par => `<p>${escapeHtml(par)}</p>`).join('')}</div>
+          ${creditNote ? `<p style="font-size:11.5px;color:#666;margin:4px 0 0">${escapeHtml(creditNote)}</p>` : ''}
           ${$('rdVocab').checked && (v.vocab || []).length ? `<div class="sw-section"><div class="sw-section-head"><span class="sw-pill">📒 詞彙小幫手</span></div><div class="ws2-box rd-vocab">${v.vocab.map(w => `<div><b>${escapeHtml(w.word)}</b>：${escapeHtml(w.meaning)}</div>`).join('')}</div></div>` : ''}
           ${$('rdQuiz').checked && (v.questions || []).length ? `<div class="sw-section"><div class="sw-section-head"><span class="sw-pill">❓ 讀懂了嗎</span></div><div class="ws2-box">${v.questions.map((q, k) => `<div class="ws2-q"><span class="ws2-no">${k + 1}</span>${q.options ? '<span class="ws2-ans">（　）</span>' : ''}<span>${escapeHtml(q.q)}</span></div>${q.options ? `<div class="ws2-options">${q.options.map((o, j) => `<span class="ws2-opt">(${'ABCD'[j]}) ${escapeHtml(o)}</span>`).join('')}</div>` : '<div class="ws-lines"></div><div class="ws-lines"></div>'}`).join('')}</div></div>` : ''}
         </div>`);
