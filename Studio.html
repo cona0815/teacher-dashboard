@@ -266,6 +266,7 @@
     .doc-verify { color:#b25b00; font-size:12px; font-weight:700; }
     .doc-note { font-size:12.5px; color:#555; }
     .doc-ai-sign { margin-top:22px; padding-top:4px; border-top:1px solid #999; text-align:right; font-size:12px; color:#444; }
+    .doc-blank-line { border-bottom:1px solid #555; height:30px; }
     @media print {
       body { background:#fff; }
       header.app, .tabs, .workbench > .panel:first-child, .preview-bar, .toast, .hint, .warn, .status { display:none !important; }
@@ -311,6 +312,7 @@
     <button class="tab-button" type="button" data-page="report">📑 成果報告</button>
     <button class="tab-button" type="button" data-page="plan">📋 計畫書</button>
     <button class="tab-button" type="button" data-page="minutes">🗒 會議紀錄</button>
+    <button class="tab-button" type="button" data-page="lesson">📘 教案與觀議課</button>
   </div>
 
   <main>
@@ -1146,6 +1148,54 @@
             <span class="status" id="mtMeta">🟡 AI 草稿，請核對後再交出；預覽區可以直接點字修改。</span>
           </div>
           <div class="preview-host" id="mtPreview"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 🗂 行政文書：📘 教案與公開授課觀議課紀錄（G4） -->
+    <section class="page" id="page-lesson">
+      <div class="workbench">
+        <div class="panel">
+          <div class="field"><label>要做什麼</label>
+            <select class="select" id="lpMode"><option value="lesson">📘 教案（108 課綱格式）</option><option value="observe">👀 公開授課觀課＋議課紀錄</option></select></div>
+          <div class="field"><label>學校名稱</label>
+            <input class="input docSchool" id="lpSchool" placeholder="例：○○市○○國民小學"></div>
+          <div class="field"><label>年級／領域</label>
+            <div style="display:flex;gap:6px">
+              <select class="select" id="lpGrade"><option value="一">一年級</option><option value="二">二年級</option><option value="三">三年級</option><option value="四">四年級</option><option value="五" selected>五年級</option><option value="六">六年級</option></select>
+              <select class="select" id="lpSubject"><option>國語文</option><option>數學</option><option>英語文</option><option>自然科學</option><option>社會</option><option>生活課程</option><option>健康與體育</option><option>綜合活動</option><option>藝術</option><option>科技</option><option>本土語文</option></select></div></div>
+          <div class="field"><label>單元名稱</label>
+            <input class="input" id="lpUnit" placeholder="例：分數的加減"></div>
+          <div id="lpLessonFields">
+            <div class="field"><label>節數（每節 40 分鐘）</label>
+              <input class="input" id="lpPeriods" type="number" min="1" max="8" value="2"></div>
+            <div class="field"><label>教學重點或想法（選填）</label>
+              <textarea class="textarea" id="lpIdea" placeholder="例：想用分組操作分數條，最後讓學生上台解題。"></textarea></div>
+            <div class="field"><label>課本頁面照片（選填，可多張）</label>
+              <input class="input" type="file" id="lpImages" accept="image/*,.pdf,application/pdf" multiple></div>
+            <div class="field"><label>學校教案格式（選填：貼上學校教案的欄位名稱，一行一個，AI 照這些欄位填）</label>
+              <textarea class="textarea" id="lpFormat" placeholder="例：&#10;單元名稱&#10;教材來源&#10;學生學習經驗分析&#10;教學目標&#10;教學資源"></textarea></div>
+          </div>
+          <div id="lpObserveFields" hidden>
+            <div class="field"><label>教學者／觀課者／日期（可留白，印出後手寫）</label>
+              <div style="display:flex;gap:6px"><input class="input" id="lpTeacher" placeholder="教學者"><input class="input" id="lpObserver" placeholder="觀課者"><input class="input" id="lpObsDate" placeholder="日期"></div></div>
+            <div class="field"><label>觀課筆記（一行一條：教學者做了什麼、學生的反應）</label>
+              <textarea class="textarea" id="lpBullets" style="min-height:140px" placeholder="例：&#10;用生活情境（分披薩）引起動機&#10;學生分組操作分數條，多數能說出等值分數&#10;有兩組在通分步驟卡住，老師巡視時個別提示&#10;請學生上台說明解法&#10;最後用出口卡檢核"></textarea></div>
+          </div>
+          <button class="go-button" type="button" id="lpGoButton">🤖 產生教案</button>
+          <div class="status" id="lpStatus"></div>
+          <div class="hint" id="lpHint">教案含：單元目標、學習表現、學習內容、核心素養、每節教學活動流程表（時間、教師活動、學生活動、評量、資源）、差異化教學、評量方式。</div>
+        </div>
+        <div class="panel">
+          <div class="preview-bar">
+            <label class="es-confirm" id="lpCheckedLabel"><input type="checkbox" id="lpChecked"> 老師已核對</label>
+            <button class="mini" type="button" onclick="window.print()">🖨 列印</button>
+            <button class="mini" type="button" onclick="downloadPreview('lpPreview',lpFileName(),'doc')">⬇ Word</button>
+            <button class="mini" type="button" onclick="downloadPdfFromHost('lpPreview',lpFileName(),false)">⬇ PDF</button>
+            <span class="es-confirm" id="lpCodeHint">⚠ 學習表現、學習內容、核心素養的代碼是 AI 寫的，請對照課綱核對</span>
+            <span class="status" id="lpMeta">🟡 AI 草稿，請核對後再交出；預覽區可以直接點字修改。</span>
+          </div>
+          <div class="preview-host" id="lpPreview"></div>
         </div>
       </div>
     </section>
@@ -3921,6 +3971,104 @@
         try { $('mtTodoText').select(); copied = document.execCommand('copy'); } catch (err) {}
       }
       showToast(copied ? `已複製 ${rows.length} 項待辦，到工作台「AI 行政助理」貼上就能變成任務草稿。` : '瀏覽器不允許自動複製，請從左邊的框框手動複製。', !copied);
+    });
+
+    // ============================================================
+    // 📘 教案（108 課綱格式）＋公開授課觀議課紀錄（G4）
+    // ============================================================
+    const LP_LABELS = { lesson: '🤖 產生教案', observe: '🤖 擴寫觀議課紀錄' };
+    function lpFileName() { return $('lpMode').value === 'observe' ? '觀議課紀錄' : '教案'; }
+    function lpSyncMode() {
+      const observe = $('lpMode').value === 'observe';
+      $('lpLessonFields').hidden = observe;
+      $('lpObserveFields').hidden = !observe;
+      $('lpCodeHint').style.display = observe ? 'none' : '';  // .es-confirm 有 display，不能只靠 hidden
+      $('lpGoButton').textContent = $('lpGoButton').dataset.label = LP_LABELS[observe ? 'observe' : 'lesson'];
+      $('lpHint').textContent = observe
+        ? '把觀課筆記擴寫成觀課紀錄表（觀察面向、教學者的教學行為、學生的學習反應、回饋），再整理議課紀錄：優點 3 項、建議 2 項，教學者回應留白給教學者自己寫。'
+        : '教案含：單元目標、學習表現、學習內容、核心素養、每節教學活動流程表（時間、教師活動、學生活動、評量、資源）、差異化教學、評量方式。';
+    }
+    $('lpMode').addEventListener('change', lpSyncMode);
+    lpSyncMode();
+    attachZone('lpImages', { multiple: true });
+    docBindConfirm('lp');
+    function lpCodeTable(list) {
+      const rows = docArr(list).map(r => typeof r === 'object' ? [r.code || '', r.text || r.content || ''] : ['', r]);
+      return docTable([{ label: '代碼', width: '20%' }, { label: '內容' }], rows, 1) + '<div class="doc-note doc-verify">（代碼請對照課綱核對）</div>';
+    }
+    function lpActivityTables(lessons) {
+      const list = docArr(lessons);
+      if (!list.length) return docTable([{ label: '時間', width: '10%' }, { label: '教師活動' }, { label: '學生活動' }, { label: '評量', width: '16%' }, { label: '資源', width: '14%' }], [], 4, 'doc-activity-table');
+      return list.map((lesson, i) => `<div class="doc-sub">第${docCn(i)}節${lesson.title ? '：' + docText(lesson.title) : ''}</div>`
+        + docTable([{ label: '時間', width: '10%' }, { label: '教師活動' }, { label: '學生活動' }, { label: '評量', width: '16%' }, { label: '資源', width: '14%' }],
+          docArr(lesson.activities).map(a => [a.time || '', a.teacher || '', a.student || '', a.assess || '', a.resource || '']), 2, 'doc-activity-table')).join('');
+    }
+    $('lpGoButton').addEventListener('click', async () => {
+      const observe = $('lpMode').value === 'observe';
+      const grade = $('lpGrade').value, subject = $('lpSubject').value, unit = $('lpUnit').value.trim();
+      const school = docSchool('lpSchool');
+      if (observe) {
+        const bullets = $('lpBullets').value.split('\n').map(t => t.replace(/^[\s\-•・*‧●○◦]+/, '').trim()).filter(Boolean);
+        if (bullets.length < 2) return showToast('請至少寫兩條觀課筆記（一行一條）。', true);
+        const prompt = [
+          '你是臺灣國小的資深教師，要把同事的公開授課觀課筆記整理成正式的「觀課紀錄表」與「議課紀錄」。',
+          DOC_AI_RULES,
+          `授課年級：${grade}年級；領域：${subject}；單元：${unit || '（未提供）'}`,
+          `觀課筆記（共 ${bullets.length} 條）：`, ...bullets.map((t, i) => `${i + 1}. ${t}`),
+          `observations：每一條筆記擴寫成一列（共 ${bullets.length} 列，順序不變）：aspect 觀察面向（例：課程設計與教學、學生學習與反應、班級經營與學習氛圍、評量與回饋）、teacher 教學者的教學行為（具體、客觀描述事實，1–2 句）、student 學生的學習反應（描述看到的事實，用「多數學生」「部分學生」「某組學生」，不寫姓名）、note 觀察者回饋（一句，正向具體）。不要加入筆記裡沒有的事實。`,
+          'strengths 議課的優點恰好 3 項；suggestions 具體可行的建議恰好 2 項。教學者回應不要寫，留給教學者。',
+          '回傳格式：{"observations":[{"aspect":"","teacher":"","student":"","note":""}],"strengths":["","",""],"suggestions":["",""]}'
+        ].join('\n');
+        const data = await docAi($('lpGoButton'), $('lpStatus'), prompt);
+        if (!data) return;
+        const rows = docArr(data.observations).map(o => [o.aspect || '', o.teacher || '', o.student || '', o.note || '']);
+        const html = docHead('公開授課觀課與議課紀錄', school, [
+            `教學者：${escapeHtml($('lpTeacher').value.trim() || '＿＿＿＿')}`, `觀課者：${escapeHtml($('lpObserver').value.trim() || '＿＿＿＿')}`,
+            `日期：${escapeHtml($('lpObsDate').value.trim() || '＿＿＿＿')}`, `${escapeHtml(grade)}年級　${escapeHtml(subject)}　單元：${escapeHtml(unit || '＿＿＿＿')}`])
+          + docSection(0, '觀課紀錄', docTable([{ label: '觀察面向', width: '16%' }, { label: '教學者的教學行為' }, { label: '學生的學習反應' }, { label: '觀察者回饋', width: '22%' }], rows, bullets.length, 'doc-observe-table'))
+          + docSection(1, '議課紀錄',
+            `<div class="doc-sub">一、優點</div>${docItems(docArr(data.strengths).slice(0, 3), 'paren')}`
+            + `<div class="doc-sub">二、建議</div>${docItems(docArr(data.suggestions).slice(0, 2), 'paren')}`
+            + '<div class="doc-sub">三、教學者回應</div><div class="doc-blank-line"></div><div class="doc-blank-line"></div><div class="doc-blank-line"></div>')
+          + '<div class="ws-meta" style="margin-top:26px"><span>教學者簽名：＿＿＿＿＿＿＿＿</span><span>觀課者簽名：＿＿＿＿＿＿＿＿</span></div>';
+        docRender('lp', html);
+        $('lpMeta').textContent = `🟡 AI 草稿（${bullets.length} 條筆記擴寫），請核對後再勾「老師已核對」。`;
+        return showToast('👀 觀議課紀錄草稿完成，請過目。');
+      }
+      if (!unit) return showToast('請先填單元名稱。', true);
+      const periods = Math.max(1, Math.min(8, parseInt($('lpPeriods').value, 10) || 1));
+      const files = zoneFiles('lpImages');
+      const fields = $('lpFormat').value.split('\n').map(t => t.trim()).filter(Boolean).slice(0, 30);
+      const prompt = [
+        `你是臺灣國小${grade}年級${subject}領域的資深教師，要依 108 課綱（十二年國民基本教育課程綱要）格式寫一份「${unit}」教案，共 ${periods} 節、每節 40 分鐘。`,
+        DOC_AI_RULES,
+        $('lpIdea').value.trim() ? `老師的教學重點：${$('lpIdea').value.trim()}` : '',
+        files.length ? `附件是課本頁面（共 ${files.length} 份），教學內容以附件為準。` : '',
+        '各欄要求：goals 單元目標 2–4 條；performances 學習表現、contents 學習內容、competencies 核心素養，各 1–3 筆，code 寫課綱代碼（例：數-E-A2、n-III-6、N-5-4），不確定的代碼寧可留空字串，text 寫內容；lessons 每節一筆，title 該節主題，activities 依「引起動機、發展活動、綜合活動」排 3–6 列，每列 time（例：5 分）、teacher 教師活動、student 學生活動、assess 評量方式、resource 教學資源，每節時間加總 40 分；differentiation 差異化教學 2–3 條（針對學習較快與需要協助的學生，不寫姓名）；assessment 評量方式 2–4 條。',
+        fields.length ? `老師學校的教案有這些欄位，請在 customFields 依序對每個欄位寫內容（name 照抄欄位名稱）：${fields.join('、')}。教學活動流程仍放在 lessons。` : 'customFields 回傳空陣列 []。',
+        '回傳格式：{"goals":[""],"performances":[{"code":"","text":""}],"contents":[{"code":"","text":""}],"competencies":[{"code":"","text":""}],"lessons":[{"title":"","activities":[{"time":"","teacher":"","student":"","assess":"","resource":""}]}],"differentiation":[""],"assessment":[""],"customFields":[{"name":"","content":""}]}'
+      ].filter(Boolean).join('\n');
+      const data = await docAi($('lpGoButton'), $('lpStatus'), prompt, async () => filesToParts(files, 8));
+      if (!data) return;
+      const custom = docArr(data.customFields).filter(f => f && (f.name || f.content));
+      const meta = [`年級：${escapeHtml(grade)}年級`, `領域：${escapeHtml(subject)}`, `單元：${escapeHtml(unit)}`, `節數：${periods} 節（${periods * 40} 分鐘）`, '設計者：＿＿＿＿'];
+      let html = docHead(`${subject}領域教學活動設計`, school, meta);
+      if (fields.length) {
+        html += docSection(0, '教案基本資料（依學校格式）', docTable([{ label: '欄位', width: '24%' }, { label: '內容' }], (custom.length ? custom : fields.map(name => ({ name }))).map(f => [f.name || '', f.content || '']), 0, 'doc-custom-table'))
+          + docSection(1, '學習表現與學習內容', lpCodeTable([...docArr(data.performances), ...docArr(data.contents)]))
+          + docSection(2, '教學活動', lpActivityTables(data.lessons));
+      } else {
+        html += docSection(0, '單元目標', docItems(data.goals))
+          + docSection(1, '學習表現', lpCodeTable(data.performances))
+          + docSection(2, '學習內容', lpCodeTable(data.contents))
+          + docSection(3, '核心素養', lpCodeTable(data.competencies))
+          + docSection(4, '教學活動', lpActivityTables(data.lessons))
+          + docSection(5, '差異化教學', docItems(data.differentiation))
+          + docSection(6, '評量方式', docItems(data.assessment));
+      }
+      docRender('lp', html);
+      $('lpMeta').textContent = `🟡 AI 草稿（${periods} 節${fields.length ? '，已套學校格式' : ''}），代碼請對照課綱核對後再勾「老師已核對」。`;
+      showToast('📘 教案草稿完成，請過目。');
     });
   </script>
   <script src="assets/version.js"></script>
