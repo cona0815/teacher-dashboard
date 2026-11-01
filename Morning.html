@@ -174,6 +174,28 @@
     .toast.show { opacity: 1; }
     .toast.error { background: var(--missing); }
     @media (max-width: 860px) { .clock { font-size: 26px; } .board-wall { grid-template-columns: 1fr; } }
+    /* ===== 倒數大時鐘（右上角按 5分／10分／開始 跳出） ===== */
+    .countdown-display { cursor: pointer; }
+    .cd-pop { position: fixed; inset: 0; z-index: 99990; display: flex; align-items: center; justify-content: center; background: rgba(20, 36, 32, .42); }
+    .cd-pop[hidden] { display: none !important; }
+    .cd-card { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2.4vh; padding: 4vh 5vw 3.4vh; border-radius: 36px; background: var(--surface); border: 3px solid var(--line); box-shadow: 0 30px 60px -20px rgba(0,0,0,.45); }
+    .cd-ring { position: relative; width: min(60vh, 70vw); height: min(60vh, 70vw); }
+    .cd-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .cd-track { fill: none; stroke: var(--line); stroke-width: 9; }
+    .cd-arc { fill: none; stroke: var(--primary); stroke-width: 9; stroke-linecap: round; stroke-dasharray: 100; transition: stroke-dashoffset 1s linear, stroke .3s; }
+    .cd-time { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: min(17vh, 19vw); font-weight: 900; font-variant-numeric: tabular-nums; color: var(--ink); letter-spacing: .02em; }
+    .cd-pop.warning .cd-arc { stroke: var(--missing); }
+    .cd-pop.warning .cd-time { color: var(--missing); animation: cdPulse 1s ease-in-out infinite; }
+    .cd-pop.paused .cd-time { opacity: .55; }
+    .cd-pop.done .cd-time { font-size: min(9vh, 9vw); white-space: nowrap; color: var(--missing); animation: cdPulse .8s ease-in-out infinite; }
+    .cd-pop.done .cd-arc { stroke: var(--missing); stroke-dashoffset: 0 !important; }
+    @keyframes cdPulse { 50% { transform: scale(1.06); } }
+    .cd-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+    .cd-actions button { font-size: 20px; padding: 12px 24px; }
+    @media (prefers-reduced-motion: reduce) { .cd-pop .cd-time { animation: none !important; } }
+    html[data-board-style="cozy"] .cd-card { border: 4px solid var(--cozy-wood); border-radius: 44px; box-shadow: 0 8px 0 var(--cozy-wood), 0 30px 60px -20px rgba(91,70,54,.45); }
+    html[data-board-style="cozy"] .cd-pop { background: rgba(91, 70, 54, .38); }
+
     /* ===== 大屏風格：可愛動森風（設定 → 大屏風格）。只換外觀，功能顏色（到校綠、病假橘…）保留原意 ===== */
     html[data-board-style="cozy"] {
       --bg: #fbf5e6; --surface: #fffaf0; --ink: #5b4636; --muted: #8f7b63; --line: #ecdcbc;
@@ -234,6 +256,21 @@
       <button class="ghost-button" type="button" id="countdownReset">歸零</button>
     </div>
   </header>
+  <div class="cd-pop" id="cdPop" role="dialog" aria-label="倒數計時" hidden>
+    <div class="cd-card">
+      <div class="cd-ring">
+        <svg viewBox="0 0 120 120" aria-hidden="true"><circle class="cd-track" cx="60" cy="60" r="52"/><circle class="cd-arc" id="cdArc" cx="60" cy="60" r="52" pathLength="100"/></svg>
+        <div class="cd-time" id="cdTime">00:00</div>
+      </div>
+      <div class="cd-actions">
+        <button class="ghost-button" type="button" id="cdMinus">−1分</button>
+        <button class="primary-button" type="button" id="cdToggle">暫停</button>
+        <button class="ghost-button" type="button" id="cdPlus">＋1分</button>
+        <button class="ghost-button" type="button" id="cdMinimize">縮小（Esc）</button>
+        <button class="ghost-button" type="button" id="cdStop">結束</button>
+      </div>
+    </div>
+  </div>
 
   <div class="tabs">
     <button class="tab-button active" type="button" data-page="rollcall"><img class="tab-icon" src="data:image/webp;base64,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" alt="">點名</button>
@@ -1121,7 +1158,7 @@
       // 欄位刻意與 makeup 一致（mode/focus/selectedDay），兩個分頁操作方式相同
       // 預設「依座號」：訂正的人少，老師最常問的是「誰還沒訂正完」
       correct: { items: [], loaded: false, mode: 'seat', focus: '', focusSubject: '', selectedDay: '', doneCount: 0, showSettled: false, sticky: [] },
-      countdown: { remaining: 0, running: false },
+      countdown: { remaining: 0, running: false, total: 0 },   // total：這一輪的總秒數（大時鐘進度圈用）
       submitting: false,
       dirty: false,          // 有未存到雲端的異動；每 5 分鐘與離開頁面時自動存檔
       dirtyFirst: false,     // 多班模式：在別班畫面改到第一個班的點名，也要存回第一個班
@@ -1325,6 +1362,39 @@
       $('countdownBox').classList.toggle('running', state.countdown.running);
       $('countdownBox').classList.toggle('warning', state.countdown.running && remaining <= 10);
       $('countdownToggle').textContent = state.countdown.running ? '暫停' : '開始';
+      // 大時鐘
+      const pop = $('cdPop');
+      if (!pop.classList.contains('done')) $('cdTime').textContent = $('countdownDisplay').textContent;
+      const total = Math.max(state.countdown.total, remaining, 1);
+      $('cdArc').style.strokeDashoffset = String(100 - remaining / total * 100);
+      pop.classList.toggle('warning', state.countdown.running && remaining <= 10);
+      pop.classList.toggle('paused', !state.countdown.running && remaining > 0);
+      $('cdToggle').textContent = state.countdown.running ? '⏸ 暫停' : '▶ 繼續';
+      $('cdToggle').hidden = $('cdMinus').hidden = pop.classList.contains('done');
+    }
+    let cdAutoClose = 0;
+    function openCountdownPop() {
+      const pop = $('cdPop');
+      clearTimeout(cdAutoClose);
+      // 工具在全螢幕時，要放進全螢幕的元素裡才看得到
+      const host = document.fullscreenElement || document.body;
+      if (pop.parentNode !== host) host.appendChild(pop);
+      pop.hidden = false;
+      renderCountdown();
+    }
+    function closeCountdownPop() {
+      clearTimeout(cdAutoClose);
+      const pop = $('cdPop');
+      pop.hidden = true;
+      pop.classList.remove('done');
+      renderCountdown();
+    }
+    function startCountdown(seconds) {
+      state.countdown.remaining = seconds;
+      state.countdown.total = seconds;
+      state.countdown.running = true;
+      $('cdPop').classList.remove('done');
+      openCountdownPop();
     }
     function countdownTick() {
       if (!state.countdown.running) return;
@@ -1334,6 +1404,11 @@
         state.countdown.running = false;
         beep();
         showToast('⏰ 時間到！');
+        // 時間到：大時鐘跳出來顯示，20 秒後自動收起
+        openCountdownPop();
+        $('cdPop').classList.add('done');
+        $('cdTime').textContent = '⏰ 時間到！';
+        cdAutoClose = setTimeout(closeCountdownPop, 20000);
       }
       renderCountdown();
     }
@@ -2591,21 +2666,37 @@
       const pill = event.target.closest('[data-class-pill]');
       if (pill) switchClass(pill.dataset.classPill);
     });
-    document.querySelectorAll('[data-countdown]').forEach(button => button.addEventListener('click', () => {
-      state.countdown.remaining = Number(button.dataset.countdown);
-      state.countdown.running = false;
-      renderCountdown();
-    }));
+    // 5分／10分：直接開始倒數並跳出大時鐘
+    document.querySelectorAll('[data-countdown]').forEach(button => button.addEventListener('click', () => startCountdown(Number(button.dataset.countdown))));
     $('countdownToggle').addEventListener('click', () => {
       if (!state.countdown.remaining && !state.countdown.running) {
         const minutes = Number(window.prompt('倒數幾分鐘？', '10'));
         if (!minutes || minutes <= 0) return;
-        state.countdown.remaining = Math.round(minutes * 60);
+        startCountdown(Math.round(minutes * 60));
+        return;
       }
       state.countdown.running = !state.countdown.running;
+      if (state.countdown.running) openCountdownPop();
       renderCountdown();
     });
-    $('countdownReset').addEventListener('click', () => { state.countdown.remaining = 0; state.countdown.running = false; renderCountdown(); });
+    $('countdownReset').addEventListener('click', () => { state.countdown.remaining = 0; state.countdown.running = false; closeCountdownPop(); });
+    // 大時鐘：點右上角的時間再打開；縮小（Esc、點背景）後在右上角繼續倒數
+    $('countdownDisplay').addEventListener('click', () => { if (state.countdown.remaining > 0) openCountdownPop(); });
+    $('cdToggle').addEventListener('click', () => { if (state.countdown.remaining > 0) { state.countdown.running = !state.countdown.running; renderCountdown(); } });
+    $('cdPlus').addEventListener('click', () => {
+      if ($('cdPop').classList.contains('done')) { startCountdown(60); return; }
+      state.countdown.remaining += 60; state.countdown.total = Math.max(state.countdown.total, state.countdown.remaining); renderCountdown();
+    });
+    $('cdMinus').addEventListener('click', () => {
+      if ($('cdPop').classList.contains('done')) return;
+      state.countdown.remaining = Math.max(1, state.countdown.remaining - 60); renderCountdown();
+    });
+    $('cdMinimize').addEventListener('click', closeCountdownPop);
+    $('cdStop').addEventListener('click', () => { state.countdown.remaining = 0; state.countdown.running = false; closeCountdownPop(); });
+    $('cdPop').addEventListener('click', event => { if (event.target === $('cdPop')) closeCountdownPop(); });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape' && !$('cdPop').hidden) closeCountdownPop(); });
+    // 進出全螢幕時把打開中的大時鐘搬到看得到的地方
+    document.addEventListener('fullscreenchange', () => { if (!$('cdPop').hidden) openCountdownPop(); });
     document.querySelectorAll('[data-range]').forEach(button => button.addEventListener('click', () => {
       const now = new Date();
       if (button.dataset.range === 'week') {

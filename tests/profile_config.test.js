@@ -873,6 +873,8 @@ assert.match(studioHtml, /section\('代課教師當日簽認'/, "代課包應有
   assert.match(morningHtml, /html\[data-board-style="cozy"\] \{/, '有動森風介面樣式');
   assert.match(morningHtml, /html\[data-board-style="cozy"\] \.board-card\.board-settled \{/, '動森風保留已完成版面的綠底');
   assert.match(morningHtml, /html\[data-board-style="cozy"\] \.mascot \{ display: none !important; \}/, '動森風不放小綿羊吉祥物');
+  assert.match(morningHtml, /<div class="cd-pop" id="cdPop"/, '倒數有畫面中間的大時鐘');
+  assert.match(morningHtml, /querySelectorAll\('\[data-countdown\]'\)\.forEach\(button => button\.addEventListener\('click', \(\) => startCountdown\(/, '按 5分／10分 直接開始倒數');
   // 動森風圖示：列在 COZY_ICON_READY 的檔案都要存在
   const iconReady = (morningHtml.match(/const COZY_ICON_READY = new Set\(\[([^\]]*)\]\)/) || [])[1];
   assert.ok(iconReady !== undefined, '找得到 COZY_ICON_READY');
