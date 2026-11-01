@@ -359,8 +359,195 @@ def step_g7(text):
     return text
 
 
+# ---------------------------------------------------------------- G9 ----
+G9_MARKER = 'id="aiDocSpeechFields"'
+
+G9_REPLACEMENTS = [
+    # CSS
+    (
+        "    .ai-docs-output:focus { border-color: var(--primary); }\n",
+        r"""    .ai-docs-output:focus { border-color: var(--primary); }
+    .ai-docs-speech { margin-bottom: 4px; }
+    .ai-docs-push { margin-top: 10px; padding: 10px 12px; border: 2px solid #b9cbbf; border-radius: 14px; background: #f2f7f2; }
+    .ai-docs-push-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+    .ai-docs-push-row .input { flex: 1; padding: 6px 8px; }
+""",
+        "replace",
+    ),
+    # 摘要文字
+    (
+        "致家長信（LINE 純文字）｜AI 只出草稿，不會建立任務</span></summary>",
+        "致家長信（LINE 純文字）、晨會／升旗宣導稿｜AI 只出草稿，不會建立任務</span></summary>",
+        "replace",
+    ),
+    # 情境選項
+    (
+        '                <option value="parentLetter">致家長信（活動通知・LINE 純文字版）</option>\n',
+        '                <option value="speech">晨會／升旗宣導稿</option>\n',
+        "after",
+    ),
+    # 宣導稿欄位：主題、年級、時長
+    (
+        '            <textarea class="textarea" id="aiDocInput" rows="5"',
+        r"""            <div class="ai-docs-speech" id="aiDocSpeechFields" hidden>
+              <div class="ai-docs-row">
+                <label for="aiDocSpeechTopic">宣導主題</label>
+                <input class="input" id="aiDocSpeechTopic" list="aiDocSpeechTopicList" maxlength="40" placeholder="例如：交通安全（可自己打）">
+                <datalist id="aiDocSpeechTopicList"><option value="防災演練"><option value="衛生保健（洗手、防流感）"><option value="交通安全"><option value="品德教育"><option value="節慶由來"><option value="反霸凌"><option value="校園安全"><option value="環境保護"><option value="網路安全"><option value="性別平等"></datalist>
+              </div>
+              <div class="ai-docs-row">
+                <label for="aiDocSpeechGrade">對象</label>
+                <select class="select" id="aiDocSpeechGrade"><option value="全校">全校（一到六年級）</option><option value="低年級">低年級</option><option value="中年級">中年級</option><option value="高年級">高年級</option><option value="一年級">一年級</option><option value="二年級">二年級</option><option value="三年級">三年級</option><option value="四年級">四年級</option><option value="五年級">五年級</option><option value="六年級">六年級</option></select>
+                <label for="aiDocSpeechMinutes">時長</label>
+                <select class="select" id="aiDocSpeechMinutes"><option value="1">1 分鐘（約 250 字）</option><option value="2" selected>2 分鐘（約 500 字）</option><option value="3">3 分鐘（約 750 字）</option></select>
+              </div>
+            </div>
+""",
+        "before",
+    ),
+    # 推到大屏提示
+    (
+        '            <div class="ai-output ai-docs-output" id="aiDocOutput" contenteditable="true" spellcheck="false" aria-label="行政文書草稿（可編輯）"></div>\n',
+        r"""            <div class="ai-docs-push" id="aiDocPushWrap" hidden>
+              <div class="ai-section-head"><h4>📣 推到大屏提示</h4><span class="ai-hint">選一句重點（可先改字），確認後才送出</span></div>
+              <div id="aiDocPushList"></div>
+              <div class="ai-actions">
+                <button class="button button-light" type="button" id="aiDocPushButton">📣 推到大屏提示</button>
+                <span class="ai-hint" id="aiDocPushHint"></span>
+              </div>
+            </div>
+""",
+        "after",
+    ),
+    # 每分鐘字數
+    (
+        "    const CHINESE_ORDINALS = ['一', '二', '三', '四', '五', '六', '七', '八'];\n",
+        "    const ADMIN_SPEECH_CHARS_PER_MINUTE = 250;  // 晨會講稿：1 分鐘約 250 字\n",
+        "after",
+    ),
+    # 情境定義
+    (
+        "          docText(d.closing) || '〔請填〕'\n        ]\n      }\n    };\n    const adminDocState = { files: [], busy: false };\n",
+        r"""          docText(d.closing) || '〔請填〕'
+        ]
+      },
+      speech: {
+        label: '晨會／升旗宣導稿',
+        placeholder: '選填：可補充想強調的事，例如：最近下課在走廊奔跑的情況變多',
+        task: extra => `撰寫一篇在晨會或升旗時對國小${extra.gradeLabel}學生說的宣導稿，主題是「${extra.topic}」，時長約 ${extra.minutes} 分鐘。講稿正文約 ${extra.targetChars} 字（以每分鐘約 ${ADMIN_SPEECH_CHARS_PER_MINUTE} 字計，誤差不超過 15%），口語、親切、句子短、適合朗讀：開頭向師生問好，中間舉一個貼近校園生活的例子，結尾給一個今天就做得到的行動。另外給三句重點，每句 18 字以內，要能直接貼在教室大屏上提醒學生。`,
+        schema: '{"title":"講稿標題","script":"講稿正文（可含換行）","keyPoints":["重點一","重點二","重點三"]}',
+        render: (d, extra) => [
+          `${docLine(d.title)}（${extra.gradeLabel || '〔對象〕'}・約 ${extra.minutes || 1} 分鐘）`, '',
+          docText(d.script) || '〔請填〕', '',
+          '三句重點：',
+          ...docList(d.keyPoints, 3, docNumber, true)
+        ]
+      }
+    };
+    const adminDocState = { files: [], busy: false };
+""",
+        "replace",
+    ),
+    # 宣導稿參數
+    (
+        "    function adminDocExtra() {\n      return {};\n    }\n",
+        r"""    function adminDocExtra(type) {
+      if (type !== 'speech') return {};
+      const topic = $('aiDocSpeechTopic').value.trim();
+      if (!topic) return { error: '請先填宣導主題（例如：交通安全）。' };
+      const minutes = Math.min(3, Math.max(1, Number($('aiDocSpeechMinutes').value) || 1));
+      const grade = $('aiDocSpeechGrade').value || '全校';
+      return { topic, minutes, targetChars: minutes * ADMIN_SPEECH_CHARS_PER_MINUTE, gradeLabel: grade === '全校' ? '全校（一到六年級）' : grade, allowEmpty: true };
+    }
+""",
+        "replace",
+    ),
+    # 渲染後更新推送區
+    (
+        "      $('aiDocOutput').dataset.docType = type;\n      $('aiDocResultWrap').hidden = false;\n    }\n",
+        r"""      $('aiDocOutput').dataset.docType = type;
+      $('aiDocResultWrap').hidden = false;
+      renderAdminDocPush(type, data || {});
+    }
+
+    function renderAdminDocPush(type, data) {
+      const wrap = $('aiDocPushWrap');
+      if (type !== 'speech') { wrap.hidden = true; return; }
+      const points = docList(data.keyPoints, 3, () => '', true).map(point => point === '〔請填〕' ? '' : point);
+      $('aiDocPushList').innerHTML = points.map((point, index) => `<div class="ai-docs-push-row"><input type="radio" name="aiDocPushPick" id="aiDocPushPick${index}" value="${index}"${index === 0 ? ' checked' : ''} aria-label="選第 ${index + 1} 句"><input class="input" id="aiDocPushText${index}" data-push-index="${index}" maxlength="40" value="${escapeHtml(point)}" placeholder="重點 ${index + 1}"></div>`).join('');
+      const ready = lineBridgeReady();
+      $('aiDocPushButton').hidden = !ready;
+      $('aiDocPushHint').textContent = ready
+        ? '會先跳出確認視窗，按「確定」才送到大屏。'
+        : '要推到大屏，請先到「⚙ 設定 → ① 雲端／LINE 小幫手」填好 GAS 網址與 🔑C 並啟用。';
+      wrap.hidden = false;
+    }
+
+    async function pushAdminDocPoint() {
+      const picked = document.querySelector('input[name="aiDocPushPick"]:checked');
+      const text = String((picked && $(`aiDocPushText${picked.value}`)?.value) || '').trim().slice(0, 40);
+      if (!text) return showToast('請先選一句重點（空白的那句請先填字）。', true);
+      if (!lineBridgeReady()) return showToast('要推到大屏，請先到「⚙ 設定 → ① 雲端／LINE 小幫手」填好 GAS 網址與 🔑C 並啟用。', true);
+      if (!window.confirm(`確定要把這句送到教室大屏提示嗎？\n\n「${text}」\n\n送出後大屏約 20 秒內切換。`)) {
+        showToast('已取消，沒有送到大屏。');
+        return;
+      }
+      const button = $('aiDocPushButton');
+      button.disabled = true;
+      try {
+        await callLineBridge('prompt_set', { text, img: 'class_focus.png' });
+        showToast(`📣 已送出：「${text}」，大屏約 20 秒內切換。`);
+      } catch (error) {
+        showToast(error.message || '送出失敗。', true);
+      } finally {
+        button.disabled = false;
+      }
+    }
+""",
+        "replace",
+    ),
+    # 宣導稿字數提示
+    (
+        "    function adminDocCountNote(type, data) {\n",
+        r"""    function adminDocCountNote(type, data, extra) {
+      if (type === 'speech') {
+        const length = docText(data.script).replace(/\s/g, '').length;
+        const ratio = length / extra.targetChars;
+        const hint = ratio < 0.8 ? '偏短，可再按一次「✍️ 產生草稿」或自行補充。' : ratio > 1.2 ? '偏長，可再按一次「✍️ 產生草稿」或自行刪減。' : '長度合適。';
+        return `講稿 ${length} 字（${extra.minutes} 分鐘約 ${extra.targetChars} 字）：${hint}`;
+      }
+""",
+        "replace",
+    ),
+    # 切換情境時顯示宣導稿欄位
+    (
+        "      if (def) $('aiDocInput').placeholder = `${def.placeholder}（請勿輸入學生姓名）`;\n",
+        "      $('aiDocSpeechFields').hidden = $('aiDocType').value !== 'speech';\n",
+        "after",
+    ),
+    # 事件
+    (
+        "    syncAdminDocType();\n    // ===== 📝 行政文書 END =====\n",
+        r"""    $('aiDocPushButton').addEventListener('click', pushAdminDocPoint);
+    $('aiDocPushList').addEventListener('focusin', event => {
+      const input = event.target.closest('[data-push-index]');
+      if (input) $(`aiDocPushPick${input.dataset.pushIndex}`).checked = true;
+    });
+""",
+        "before",
+    ),
+]
+
+
+def step_g9(text):
+    for anchor, addition, where in G9_REPLACEMENTS:
+        text = insert(text, anchor, addition, where)
+    return text
+
+
 STEPS = [
     ("g7", G7_MARKER, step_g7),
+    ("g9", G9_MARKER, step_g9),
 ]
 
 

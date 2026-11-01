@@ -730,3 +730,17 @@ assert.match(studioHtml, /const PL_TRIP_CONSENT = /, "校外教學應固定加�
   assert.match(indexHtml, /id="aiDocRetryButton" hidden>🔁 重試 AI</, "AI 失敗應可重試");
   assert.doesNotMatch(docsJs, /serverCall\(|saveTask|applyTaskResult|taskDraft|renderTaskSuggestion/, "行政文書不得自動建任務");
 }
+// G9 晨會／升旗宣導稿：主題＋年級＋時長 → 講稿＋三句重點；推到大屏提示要確認、走既有 prompt_set
+{
+  const docsJs = indexHtml.slice(indexHtml.indexOf("// ===== 📝 行政文書（G7/G9）"), indexHtml.indexOf("// ===== 📝 行政文書 END ====="));
+  assert.ok(indexHtml.includes('<option value="speech">晨會／升旗宣導稿</option>'), "行政文書應有晨會／升旗宣導稿");
+  for (const id of ["aiDocSpeechTopic", "aiDocSpeechGrade", "aiDocSpeechMinutes", "aiDocPushButton", "aiDocPushHint"]) assert.match(indexHtml, new RegExp(`id="${id}"`), `宣導稿應有 #${id}`);
+  for (const topic of ["防災演練", "交通安全", "品德教育", "節慶由來", "反霸凌"]) assert.ok(indexHtml.includes(`<option value="${topic}">`), `宣導主題建議應有 ${topic}`);
+  for (const minutes of ["1", "2", "3"]) assert.match(indexHtml, new RegExp(`<option value="${minutes}"[^>]*>${minutes} 分鐘（約 ${Number(minutes) * 250} 字）`), `時長應有 ${minutes} 分鐘`);
+  assert.match(docsJs, /const ADMIN_SPEECH_CHARS_PER_MINUTE = 250;/, "講稿字數以每分鐘 250 字計");
+  assert.match(docsJs, /targetChars: minutes \* ADMIN_SPEECH_CHARS_PER_MINUTE/, "講稿目標字數 = 分鐘 × 250");
+  assert.match(docsJs, /"keyPoints":\["重點一","重點二","重點三"\]/, "宣導稿應回三句重點");
+  assert.match(docsJs, /'三句重點：',\s*\.\.\.docList\(d\.keyPoints, 3, docNumber, true\)/, "講稿下方固定列三句重點");
+  assert.match(docsJs, /async function pushAdminDocPoint\(\)[\s\S]*?if \(!window\.confirm\(`確定要把這句送到教室大屏提示嗎？[\s\S]*?「\$\{text\}」[\s\S]*?return;[\s\S]*?await callLineBridge\('prompt_set', \{ text, img: 'class_focus\.png' \}\)/, "推到大屏要先確認並顯示句子，確認後才走 prompt_set");
+  assert.match(docsJs, /\$\('aiDocPushButton'\)\.hidden = !ready;/, "沒有 LINE／GAS 設定時隱藏推送按鈕");
+}
