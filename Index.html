@@ -503,6 +503,15 @@
     .secretary-note-date-label { font-size: 12px; color: var(--muted); font-weight: 700; }
     .note-filter-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
     .today-notes-strip { border: 1.5px solid #e3c988; background: #fffdf4; border-radius: 12px; padding: 8px 12px; margin-bottom: 10px; }
+    .filing-banner { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; width: 100%; margin-bottom: 10px; padding: 9px 12px; border: 1.5px solid #9fc0d8; border-radius: 12px; background: #f1f7fc; color: #1f4d6b; font: inherit; text-align: left; cursor: pointer; }
+    .filing-banner[hidden] { display: none; }
+    .filing-banner:hover { border-color: #5f93b8; }
+    .filing-banner.is-overdue { border-color: #d9826f; background: #fff3f0; color: #a33a2b; }
+    .filing-banner-title { font-size: 13px; font-weight: 900; }
+    .filing-chip { display: inline-flex; padding: 3px 8px; border: 1px solid #c8dcea; border-radius: 999px; background: #fff; color: #1f4d6b; font-size: 12px; font-weight: 800; }
+    .filing-chip.is-overdue { border-color: #a33a2b; background: #a33a2b; color: #fff; }
+    .filing-banner-hint { margin-left: auto; font-size: 12px; font-weight: 700; opacity: .8; }
+    .filing-badge { display: inline-flex; margin-right: 4px; padding: 1px 6px; border-radius: 999px; background: #e6f0f8; color: #1f4d6b; font-size: 11px; font-weight: 900; }
     .today-notes-strip summary { cursor: pointer; font-size: 12px; font-weight: 800; color: #7a5b16; }
     .today-note-row { display: flex; align-items: center; gap: 7px; padding: 5px 0 0 4px; font-size: 12px; }
     .today-note-row.is-overdue span { color: #a33a2b; }
@@ -1854,6 +1863,7 @@
               <option value="overdue">已逾期</option>
               <option value="week">七日內</option>
               <option value="none">未設定期限</option>
+              <option value="filing">📋 本週要交的填報</option>
             </select>
           </div>
           <div class="field">
@@ -1884,6 +1894,7 @@
             <button class="button button-light" type="button" id="refreshButton">重新整理</button>
           </div>
         </div>
+        <button class="filing-banner" type="button" id="filingBanner" hidden></button>
         <details class="today-notes-strip" id="todayNotesStrip" hidden>
           <summary>📌 今日記事提醒（<span id="todayNotesStripCount">0</span>）｜勾選即完成，管理請到「小綿助記事」</summary>
           <div id="todayNotesStripList"></div>
@@ -1955,6 +1966,9 @@
           <div class="field field-wide">
             <label for="nextAction">下一步行動</label>
             <textarea class="textarea" id="nextAction" name="nextAction" maxlength="1000" placeholder="現在具體應該做什麼？"></textarea>
+          </div>
+          <div class="field field-wide">
+            <label class="check-row" for="taskFilingFlag"><input type="checkbox" id="taskFilingFlag">📋 填報／繳交（線上填報、繳交計畫或成果等；到期前 3 天會出現在任務清單上方「本週要交的填報」）</label>
           </div>
           <div class="field">
             <label for="waitingFor">等待夥伴／行政窗口</label>
@@ -4932,6 +4946,50 @@
       return date >= today && date <= end;
     }
 
+    // 📋 填報／繳交（G8）：標記存在「下一步行動」開頭的 [填報]，不改試算表欄位與類型驗證
+    const FILING_MARK = '[填報]';
+    const FILING_WINDOW_DAYS = 3;
+    function isFilingTask(task) {
+      return String(task?.nextAction || '').trimStart().startsWith(FILING_MARK);
+    }
+    function stripFilingMark(text) {
+      const value = String(text || '');
+      return value.trimStart().startsWith(FILING_MARK) ? value.trimStart().slice(FILING_MARK.length).replace(/^[ 　]+/, '') : value;
+    }
+    function applyFilingMark(text, flagged) {
+      const clean = stripFilingMark(text);
+      return flagged ? `${FILING_MARK} ${clean}`.trimEnd().slice(0, 1000) : clean;
+    }
+    function filingDaysLeft(task) {
+      const date = parseDateOnly(task.dueDate);
+      return date ? Math.floor((date - startOfToday()) / 86400000) : null;
+    }
+    function isFilingDueSoon(task) {
+      if (!isFilingTask(task) || ['已完成', '取消', '封存'].includes(task.status) || task.archived === '是') return false;
+      const days = filingDaysLeft(task);
+      return days !== null && days <= FILING_WINDOW_DAYS;
+    }
+    function renderFilingBanner() {
+      const banner = $('filingBanner');
+      if (!banner) return;
+      const items = state.tasks.filter(isFilingDueSoon).sort((a, b) => String(a.dueDate).localeCompare(String(b.dueDate)));
+      if (!items.length) {
+        banner.hidden = true;
+        banner.innerHTML = '';
+        return;
+      }
+      const overdue = items.filter(task => filingDaysLeft(task) < 0).length;
+      const chips = items.slice(0, 6).map(task => {
+        const days = filingDaysLeft(task);
+        const when = days < 0 ? `逾期 ${-days} 天` : days === 0 ? '今天截止' : `剩 ${days} 天`;
+        return `<span class="filing-chip${days < 0 ? ' is-overdue' : ''}">${escapeHtml(task.name)}｜${escapeHtml(formatDue(task))}（${when}）</span>`;
+      }).join('');
+      const more = items.length > 6 ? `<span class="filing-chip">…還有 ${items.length - 6} 件</span>` : '';
+      banner.innerHTML = `<span class="filing-banner-title">📋 本週要交的填報（${items.length} 件${overdue ? `，逾期 ${overdue} 件` : ''}）</span>${chips}${more}<span class="filing-banner-hint">點一下只看這些</span>`;
+      banner.classList.toggle('is-overdue', overdue > 0);
+      banner.hidden = false;
+    }
+
     function formatDue(task) {
       if (!task.dueDate) return '未設定';
       const parts = task.dueDate.split('-');
@@ -4947,6 +5005,7 @@
 
     function renderTasks() {
       const tasks = state.filteredTasks;
+      renderFilingBanner();
       $('taskMeta').textContent = `顯示 ${tasks.length} 件｜資料共 ${state.tasks.length} 件`;
       renderCalendar();
 
@@ -4974,7 +5033,7 @@
         const dueClass = isOverdue(task) ? 'badge-overdue' : '';
         const priorityClass = task.priority === '高' ? 'badge-high' : '';
         const statusClass = statusBadgeClass(task);
-        const nextAction = task.nextAction || task.progress || '尚未填寫下一步行動';
+        const nextAction = stripFilingMark(task.nextAction) || task.progress || '尚未填寫下一步行動';
         const nextLines = String(nextAction).split('\n').map(line => line.trim()).filter(Boolean);
         const nextFirst = nextLines[0] || nextAction;
         const nextMore = nextLines.length > 1;
@@ -5009,7 +5068,7 @@
             </td>
             <td><span class="badge ${statusClass}">${escapeHtml(task.status)}</span></td>
             <td><span class="badge ${dueClass}">${escapeHtml(formatDue(task))}</span></td>
-            <td><div class="task-next" data-task-detail="${escapeHtml(task.taskId)}" title="點一下看完整說明">${escapeHtml(nextFirst)}${nextMore ? ' <span class="task-next-more">＋說明</span>' : ''}</div></td>
+            <td><div class="task-next" data-task-detail="${escapeHtml(task.taskId)}" title="點一下看完整說明">${isFilingTask(task) ? '<span class="filing-badge">📋 填報</span>' : ''}${escapeHtml(nextFirst)}${nextMore ? ' <span class="task-next-more">＋說明</span>' : ''}</div></td>
             <td>${escapeHtml(task.owner || '—')}</td>
             <td>
               <div class="row-actions">
@@ -5353,6 +5412,7 @@
         if (due === 'overdue' && !isOverdue(task)) return false;
         if (due === 'week' && !isWithinWeek(task.dueDate)) return false;
         if (due === 'none' && task.dueDate) return false;
+        if (due === 'filing' && !isFilingDueSoon(task)) return false;
         return true;
       });
       renderTasks();
@@ -5460,6 +5520,8 @@
       const values = Object.assign(defaults, task || {});
       values.workAxis = task ? taskWorkAxis(task) : '';
       Object.keys(defaults).forEach(key => setFormValue(key, values[key]));
+      $('taskFilingFlag').checked = isFilingTask(values);
+      $('nextAction').value = stripFilingMark(values.nextAction);
       updateTaskCategoryOptions(values.category);
       if (EMERGENCY_CATEGORIES.includes(values.category)) $('priority').value = '高';
       state.removedSubtaskIds = [];
@@ -5490,6 +5552,7 @@
     function formToPayload() {
       const formData = new FormData($('taskForm'));
       const payload = Object.fromEntries(formData.entries());
+      payload.nextAction = applyFilingMark(payload.nextAction, $('taskFilingFlag').checked);
       payload.csrfToken = state.csrfToken;
       payload.priority = priorityForCategory(payload.category, payload.priority);
       payload.sortOrder = Number(payload.sortOrder) || 100;
@@ -8715,6 +8778,12 @@ ${cleanBase}`;
       if (EMERGENCY_CATEGORIES.includes(event.target.value)) $('priority').value = '高';
     });
     $('taskForm').addEventListener('submit', saveCurrentTask);
+    $('filingBanner').addEventListener('click', () => {
+      $('dueFilter').value = 'filing';
+      applyFilters();
+      $('taskTableWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      showToast('📋 已篩選「本週要交的填報」；到篩選區按「清除」可看全部任務。');
+    });
     $('addSubtaskButton').addEventListener('click', addSubtaskDraft);
     $('subtaskList').addEventListener('input', event => {
       const field = event.target.dataset.subtaskField;

@@ -545,9 +545,160 @@ def step_g9(text):
     return text
 
 
+# ---------------------------------------------------------------- G8 ----
+# 標記存放位置：任務「下一步行動」（下一步行動欄）開頭加 [填報]。
+# 不用 category 的原因：GAS validateTaskPayload_ 會用目前 profile 的「類型」清單驗證 category，
+# 新增「填報」類型要改 OFFICE_PROFILES 與 Code.gs，也會和使用者原本選的細項分類互相覆蓋；
+# 下一步行動是自由文字（cleanText_ 只整理空白、上限 1000 字），加前綴不改任何欄位與驗證。
+G8_MARKER = 'id="filingBanner"'
+
+G8_REPLACEMENTS = [
+    # CSS
+    (
+        "    .today-notes-strip { border: 1.5px solid #e3c988; background: #fffdf4; border-radius: 12px; padding: 8px 12px; margin-bottom: 10px; }\n",
+        r"""    .filing-banner { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; width: 100%; margin-bottom: 10px; padding: 9px 12px; border: 1.5px solid #9fc0d8; border-radius: 12px; background: #f1f7fc; color: #1f4d6b; font: inherit; text-align: left; cursor: pointer; }
+    .filing-banner[hidden] { display: none; }
+    .filing-banner:hover { border-color: #5f93b8; }
+    .filing-banner.is-overdue { border-color: #d9826f; background: #fff3f0; color: #a33a2b; }
+    .filing-banner-title { font-size: 13px; font-weight: 900; }
+    .filing-chip { display: inline-flex; padding: 3px 8px; border: 1px solid #c8dcea; border-radius: 999px; background: #fff; color: #1f4d6b; font-size: 12px; font-weight: 800; }
+    .filing-chip.is-overdue { border-color: #a33a2b; background: #a33a2b; color: #fff; }
+    .filing-banner-hint { margin-left: auto; font-size: 12px; font-weight: 700; opacity: .8; }
+    .filing-badge { display: inline-flex; margin-right: 4px; padding: 1px 6px; border-radius: 999px; background: #e6f0f8; color: #1f4d6b; font-size: 11px; font-weight: 900; }
+""",
+        "after",
+    ),
+    # 橫幅
+    (
+        '        <details class="today-notes-strip" id="todayNotesStrip" hidden>\n',
+        '        <button class="filing-banner" type="button" id="filingBanner" hidden></button>\n',
+        "before",
+    ),
+    # 期限篩選
+    (
+        '              <option value="none">未設定期限</option>\n',
+        '              <option value="filing">📋 本週要交的填報</option>\n',
+        "after",
+    ),
+    # 任務表單勾選（沒有 name，不進 FormData；由 formToPayload 轉成前綴）
+    (
+        '            <textarea class="textarea" id="nextAction" name="nextAction" maxlength="1000" placeholder="現在具體應該做什麼？"></textarea>\n          </div>\n',
+        r"""          <div class="field field-wide">
+            <label class="check-row" for="taskFilingFlag"><input type="checkbox" id="taskFilingFlag">📋 填報／繳交（線上填報、繳交計畫或成果等；到期前 3 天會出現在任務清單上方「本週要交的填報」）</label>
+          </div>
+""",
+        "after",
+    ),
+    # 輔助函式
+    (
+        "      return date >= today && date <= end;\n    }\n",
+        r"""
+    // 📋 填報／繳交（G8）：標記存在「下一步行動」開頭的 [填報]，不改試算表欄位與類型驗證
+    const FILING_MARK = '[填報]';
+    const FILING_WINDOW_DAYS = 3;
+    function isFilingTask(task) {
+      return String(task?.nextAction || '').trimStart().startsWith(FILING_MARK);
+    }
+    function stripFilingMark(text) {
+      const value = String(text || '');
+      return value.trimStart().startsWith(FILING_MARK) ? value.trimStart().slice(FILING_MARK.length).replace(/^[ 　]+/, '') : value;
+    }
+    function applyFilingMark(text, flagged) {
+      const clean = stripFilingMark(text);
+      return flagged ? `${FILING_MARK} ${clean}`.trimEnd().slice(0, 1000) : clean;
+    }
+    function filingDaysLeft(task) {
+      const date = parseDateOnly(task.dueDate);
+      return date ? Math.floor((date - startOfToday()) / 86400000) : null;
+    }
+    function isFilingDueSoon(task) {
+      if (!isFilingTask(task) || ['已完成', '取消', '封存'].includes(task.status) || task.archived === '是') return false;
+      const days = filingDaysLeft(task);
+      return days !== null && days <= FILING_WINDOW_DAYS;
+    }
+    function renderFilingBanner() {
+      const banner = $('filingBanner');
+      if (!banner) return;
+      const items = state.tasks.filter(isFilingDueSoon).sort((a, b) => String(a.dueDate).localeCompare(String(b.dueDate)));
+      if (!items.length) {
+        banner.hidden = true;
+        banner.innerHTML = '';
+        return;
+      }
+      const overdue = items.filter(task => filingDaysLeft(task) < 0).length;
+      const chips = items.slice(0, 6).map(task => {
+        const days = filingDaysLeft(task);
+        const when = days < 0 ? `逾期 ${-days} 天` : days === 0 ? '今天截止' : `剩 ${days} 天`;
+        return `<span class="filing-chip${days < 0 ? ' is-overdue' : ''}">${escapeHtml(task.name)}｜${escapeHtml(formatDue(task))}（${when}）</span>`;
+      }).join('');
+      const more = items.length > 6 ? `<span class="filing-chip">…還有 ${items.length - 6} 件</span>` : '';
+      banner.innerHTML = `<span class="filing-banner-title">📋 本週要交的填報（${items.length} 件${overdue ? `，逾期 ${overdue} 件` : ''}）</span>${chips}${more}<span class="filing-banner-hint">點一下只看這些</span>`;
+      banner.classList.toggle('is-overdue', overdue > 0);
+      banner.hidden = false;
+    }
+""",
+        "after",
+    ),
+    # 每次重畫清單時更新橫幅
+    (
+        "      const tasks = state.filteredTasks;\n      $('taskMeta').textContent",
+        "      const tasks = state.filteredTasks;\n      renderFilingBanner();\n      $('taskMeta').textContent",
+        "replace",
+    ),
+    # 清單「下一步」顯示徽章、隱藏原始標記
+    (
+        "        const nextAction = task.nextAction || task.progress || '尚未填寫下一步行動';\n",
+        "        const nextAction = stripFilingMark(task.nextAction) || task.progress || '尚未填寫下一步行動';\n",
+        "replace",
+    ),
+    (
+        'title="點一下看完整說明">${escapeHtml(nextFirst)}',
+        'title="點一下看完整說明">${isFilingTask(task) ? \'<span class="filing-badge">📋 填報</span>\' : \'\'}${escapeHtml(nextFirst)}',
+        "replace",
+    ),
+    # 篩選
+    (
+        "        if (due === 'none' && task.dueDate) return false;\n",
+        "        if (due === 'filing' && !isFilingDueSoon(task)) return false;\n",
+        "after",
+    ),
+    # 開表單：勾選框依標記、文字框不顯示標記
+    (
+        "      Object.keys(defaults).forEach(key => setFormValue(key, values[key]));\n",
+        "      $('taskFilingFlag').checked = isFilingTask(values);\n      $('nextAction').value = stripFilingMark(values.nextAction);\n",
+        "after",
+    ),
+    # 存檔：勾選 → 下一步行動加前綴
+    (
+        "      const payload = Object.fromEntries(formData.entries());\n",
+        "      payload.nextAction = applyFilingMark(payload.nextAction, $('taskFilingFlag').checked);\n",
+        "after",
+    ),
+    # 點橫幅套用篩選
+    (
+        "    $('taskForm').addEventListener('submit', saveCurrentTask);\n",
+        r"""    $('filingBanner').addEventListener('click', () => {
+      $('dueFilter').value = 'filing';
+      applyFilters();
+      $('taskTableWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      showToast('📋 已篩選「本週要交的填報」；到篩選區按「清除」可看全部任務。');
+    });
+""",
+        "after",
+    ),
+]
+
+
+def step_g8(text):
+    for anchor, addition, where in G8_REPLACEMENTS:
+        text = insert(text, anchor, addition, where)
+    return text
+
+
 STEPS = [
     ("g7", G7_MARKER, step_g7),
     ("g9", G9_MARKER, step_g9),
+    ("g8", G8_MARKER, step_g8),
 ]
 
 

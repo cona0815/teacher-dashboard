@@ -711,6 +711,17 @@ assert.match(studioHtml, /m4a: 'audio\/mp4'/, "m4a 應以 audio/mp4 送 Gemini")
 assert.match(studioHtml, /audio\.size > 15 \* 1024 \* 1024/, "錄音檔應有 15MB 上限提示");
 assert.match(studioHtml, /\[\{ label: '事項' \}, \{ label: '負責', width: '24%' \}, \{ label: '期限', width: '22%' \}\]/, "待辦表應有事項、負責、期限欄");
 for (const title of ["'主席報告'", "'討論事項'", "'臨時動議'", "'待辦事項'", "'下次會議'"]) assert.ok(studioHtml.includes(title), `會議紀錄應有 ${title}`);
+// G4 📘 教案與觀議課
+assert.match(studioHtml, /data-page="lesson">📘 教案與觀議課/, "應有教案與觀議課分頁");
+{
+  const page = groupBPage("lesson");
+  for (const id of ["lpMode", "lpGrade", "lpSubject", "lpUnit", "lpPeriods", "lpImages", "lpFormat", "lpBullets", "lpChecked", "lpCodeHint"]) assert.match(page, new RegExp(`id="${id}"`), `教案頁應有 #${id}`);
+  assert.match(page, /代碼是 AI 寫的，請對照課綱核對/, "教案畫面應固定提示代碼請核對");
+}
+assert.match(studioHtml, /\[\{ label: '時間', width: '10%' \}, \{ label: '教師活動' \}, \{ label: '學生活動' \}, \{ label: '評量', width: '16%' \}, \{ label: '資源', width: '14%' \}\]/, "教案應有每節教學活動流程表");
+for (const title of ["'單元目標'", "'學習表現'", "'學習內容'", "'核心素養'", "'差異化教學'", "'評量方式'", "'觀課紀錄'", "'議課紀錄'"]) assert.ok(studioHtml.includes(title), `教案／觀議課應有 ${title}`);
+assert.match(studioHtml, /strengths 議課的優點恰好 3 項；suggestions 具體可行的建議恰好 2 項。教學者回應不要寫/, "議課紀錄：優點 3、建議 2、教學者回應留白");
+assert.match(studioHtml, /customFields 依序對每個欄位寫內容/, "教案可套學校欄位");
 // ===== 組B 行政文書 end =====
 
 // ===== 組A 行政文書 =====
@@ -783,4 +794,21 @@ for (const title of ["'主席報告'", "'討論事項'", "'臨時動議'", "'待
   assert.match(mh, /new CustomEvent\('morning:classchange'/, "切班要通知班級工具重新載入");
   assert.match(mh, /if \(lotteryBusy\) event\.preventDefault\(\)/, "抽籤進行中不可切班");
   assert.match(mh, /if \(toolsClassSuffix\(\)\) return absent;/, "別班沒有點名資料，抽籤分組不排除第一個班的缺席");
+}
+// G8 填報截止橫幅：任務可標「📋 填報／繳交」（存在下一步行動開頭的 [填報]，不改試算表契約）；到期前 3 天出現、逾期變紅、點了套用篩選
+{
+  assert.match(indexHtml, /<input type="checkbox" id="taskFilingFlag">📋 填報／繳交/, "任務表單應可勾「📋 填報／繳交」");
+  assert.doesNotMatch(indexHtml, /id="taskFilingFlag"[^>]*name=/, "填報勾選框不可帶 name，避免變成新欄位送進試算表");
+  assert.match(indexHtml, /const FILING_MARK = '\[填報\]';/, "填報標記為下一步行動開頭的 [填報]");
+  assert.match(indexHtml, /const FILING_WINDOW_DAYS = 3;/, "到期前 3 天出現在橫幅");
+  assert.match(indexHtml, /payload\.nextAction = applyFilingMark\(payload\.nextAction, \$\('taskFilingFlag'\)\.checked\);/, "存檔時把勾選轉成下一步行動前綴");
+  assert.match(indexHtml, /\$\('taskFilingFlag'\)\.checked = isFilingTask\(values\);\s*\$\('nextAction'\)\.value = stripFilingMark\(values\.nextAction\);/, "編輯時帶出勾選、文字框不顯示標記");
+  assert.match(indexHtml, /<button class="filing-banner" type="button" id="filingBanner" hidden><\/button>/, "任務清單上方應有填報橫幅");
+  assert.match(indexHtml, /\.filing-banner\[hidden\] \{ display: none; \}/, "橫幅隱藏時不可被 display:flex 蓋掉");
+  assert.match(indexHtml, /本週要交的填報/, "橫幅標題為「本週要交的填報」");
+  assert.match(indexHtml, /banner\.classList\.toggle\('is-overdue', overdue > 0\)/, "有逾期時橫幅變紅");
+  assert.match(indexHtml, /<option value="filing">📋 本週要交的填報<\/option>/, "期限篩選應有「本週要交的填報」");
+  assert.match(indexHtml, /if \(due === 'filing' && !isFilingDueSoon\(task\)\) return false;/, "篩選只留本週要交的填報");
+  assert.match(indexHtml, /\$\('filingBanner'\)\.addEventListener\('click', \(\) => \{\s*\$\('dueFilter'\)\.value = 'filing';\s*applyFilters\(\);/, "點橫幅套用篩選");
+  assert.ok(Array.from(TASK_HEADERS).includes("下一步行動"), "填報標記沿用既有「下一步行動」欄位，不新增試算表欄位");
 }
