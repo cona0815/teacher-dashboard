@@ -182,7 +182,9 @@ assert.match(indexHtml, /project-child \.task-name\.is-completed/, "完成的子
 assert.match(indexHtml, /子任務.*已完成；主任務狀態維持不變/, "完成子任務時應保留主任務狀態");
 assert.match(indexHtml, /主任務與下面的 .*項子任務/, "封存主任務前應明確提示會連同子任務處理");
 assert.match(indexHtml, /data-theme-choice="minimal"/, "介面配色應提供低彩度極簡選項");
-assert.match(indexHtml, /INTERFACE_THEMES = \['forest', 'apricot', 'lavender', 'tech', 'minimal'\]/, "主題清單應包含極簡配色");
+assert.match(indexHtml, /INTERFACE_THEMES = \['forest', 'apricot', 'lavender', 'tech', 'minimal', 'cozy'\]/, "主題清單應包含極簡配色與可愛動森風");
+assert.match(indexHtml, /data-theme-choice="cozy"/, "介面配色可選可愛動森風");
+assert.match(indexHtml, /:root\[data-theme="cozy"\] \{/, "可愛動森風有自己的配色");
 assert.match(indexHtml, /id="teachingProgressBody" hidden/, "教學進度首次進入應預設收合");
 assert.match(indexHtml, /id="progressUnitList"/, "教學進度應提供逐單元編輯清單");
 assert.match(indexHtml, /data-unit-step="1"/, "每個單元應可單獨增加教學節數");
