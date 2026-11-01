@@ -995,12 +995,151 @@ def g5():
 ''')
 
 
+# =====================================================================
+# G6：🧳 代課包（不用 AI；不設任何個別學生欄位）
+# =====================================================================
+def g6():
+    rep('''    <button class="tab-button" type="button" data-page="schedule">📅 教學進度表</button>''',
+        '''    <button class="tab-button" type="button" data-page="schedule">📅 教學進度表</button>
+    <button class="tab-button" type="button" data-page="substitute">🧳 代課包</button>''')
+
+    add_css('''    .sb-row { display:grid; grid-template-columns:70px 1fr 24px; gap:4px; margin-bottom:6px; padding-bottom:6px; border-bottom:1px dashed var(--line); }
+    .sb-row.with-class { grid-template-columns:70px 84px 1fr 24px; }
+    .sb-row .input { padding:4px 7px; font-size:13px; }
+    .sb-row .sb-wide { grid-column:1 / -2; }
+    .sb-row .mini { padding:0 4px; }
+    .sb-seat .st-stage { font-size:13px; padding:3px; margin-bottom:8px; letter-spacing:.3em; }
+    .sb-seat .st-grid, .sb-seat .st-islands { gap:6px; }
+    .sb-seat .st-desk { min-height:34px; font-size:15px; border-width:1.5px; border-radius:6px; cursor:default; }
+    .sb-seat .st-island .st-desk { min-width:56px; min-height:30px; font-size:14px; }
+''')
+
+    add_html('''
+    <!-- 🗂 行政文書：🧳 代課包（G6，不用 AI；依個資保護不設個別學生欄位） -->
+    <section class="page" id="page-substitute">
+      <div class="workbench">
+        <div class="panel">
+          <div class="field"><label>版本</label>
+            <select class="select" id="sbMode"><option value="homeroom">導師版（一個班、全天課表）</option><option value="subject">科任版（可列多個班）</option></select></div>
+          <div class="field"><label>學校名稱</label>
+            <input class="input docSchool" id="sbSchool" placeholder="例：○○市○○國民小學"></div>
+          <div class="field"><label>代課日期／原任教師</label>
+            <div style="display:flex;gap:6px"><input class="input" id="sbDate" placeholder="例：11 月 20 日（五）"><input class="input" id="sbTeacher" placeholder="原任教師"></div></div>
+          <div class="field" id="sbClassField"><label>班級</label>
+            <input class="input" id="sbClass" placeholder="例：五年一班"></div>
+          <div class="field"><label>節次與進度（每節：科目、進度、作業與批改規則）</label>
+            <div id="sbRows"></div>
+            <button class="mini" type="button" id="sbAddRow">＋ 加一節</button></div>
+          <div class="field"><label>班級常規三條</label>
+            <input class="input" id="sbRule1" value="上課鐘響回座位，先把課本和鉛筆盒放桌上。" style="margin-bottom:4px">
+            <input class="input" id="sbRule2" value="要發言先舉手，等老師點到再說。" style="margin-bottom:4px">
+            <input class="input" id="sbRule3" value="下課前整理座位周圍，椅子靠好再離開。"></div>
+          <div class="field"><label><input type="checkbox" id="sbSeat" checked> 附上座位表（讀「🪑 座位表」分頁目前排好的座位；沒排就印空白格）</label></div>
+          <div class="field"><label>聯絡窗口（職稱＋分機）</label>
+            <input class="input" id="sbContact1" placeholder="學年主任／隔壁班導師：分機" style="margin-bottom:4px">
+            <input class="input" id="sbContact2" placeholder="教務處（代課登記）：分機" style="margin-bottom:4px">
+            <input class="input" id="sbContact3" placeholder="學務處／健康中心（緊急）：分機"></div>
+          <div class="field"><label>其他交代（全班性的事，例：午餐打菜、放學路隊）</label>
+            <textarea class="textarea" id="sbOther" placeholder="例：午餐由值日生打菜；放學路隊在川堂集合。"></textarea></div>
+          <button class="go-button" type="button" id="sbGoButton">🧳 產生代課包</button>
+          <div class="status" id="sbStatus"></div>
+          <div class="hint">完全不用 AI，直接排成 A4 交接單，含代課老師當日簽認欄。依個資保護，本表<strong>刻意不設個別學生的欄位</strong>；需要交代的個別狀況，請口頭說明或請學務處轉知。</div>
+        </div>
+        <div class="panel">
+          <div class="preview-bar">
+            <button class="mini" type="button" onclick="window.print()">🖨 列印</button>
+            <button class="mini" type="button" onclick="downloadPreview('sbPreview','代課交接單','doc')">⬇ Word</button>
+            <button class="mini" type="button" onclick="downloadPdfFromHost('sbPreview','代課交接單',false)">⬇ PDF</button>
+            <span class="status" id="sbMeta">填好後按「產生代課包」；預覽區可以直接點字修改。</span>
+          </div>
+          <div class="preview-host" id="sbPreview"></div>
+        </div>
+      </div>
+''')
+
+    add_js(r'''
+    // ============================================================
+    // 🧳 代課包（G6）：導師版／科任版；純本機、不用 AI、不設個別學生欄位
+    // ============================================================
+    const SB_PERIODS = ['第一節', '第二節', '第三節', '第四節', '第五節', '第六節', '第七節', '第八節'];
+    function sbRowHtml(withClass, period) {
+      return `<div class="sb-row${withClass ? ' with-class' : ''}">
+        <input class="input sb-period" value="${escapeHtml(period || '')}" placeholder="節次">
+        ${withClass ? '<input class="input sb-class" placeholder="班級">' : ''}
+        <input class="input sb-subject" placeholder="科目">
+        <button class="mini sb-del" type="button" title="刪除這一節">✕</button>
+        <input class="input sb-progress sb-wide" placeholder="進度（例：課本 p.42–45，第 3 課第二段）">
+        <input class="input sb-homework sb-wide" placeholder="作業與批改規則（例：習作 p.20，寫完收齊放講桌，不用批改）"></div>`;
+    }
+    function sbResetRows() {
+      const subject = $('sbMode').value === 'subject';
+      $('sbClassField').hidden = subject;
+      $('sbRows').innerHTML = (subject ? SB_PERIODS.slice(0, 6) : SB_PERIODS.slice(0, 7)).map(p => sbRowHtml(subject, p)).join('');
+      $('sbSeat').checked = !subject;
+    }
+    $('sbMode').addEventListener('change', sbResetRows);
+    sbResetRows();
+    $('sbAddRow').addEventListener('click', () => {
+      const rows = $('sbRows').querySelectorAll('.sb-row').length;
+      if (rows >= 12) return showToast('最多 12 列。', true);
+      $('sbRows').insertAdjacentHTML('beforeend', sbRowHtml($('sbMode').value === 'subject', SB_PERIODS[rows] || ''));
+    });
+    $('sbRows').addEventListener('click', e => { const del = e.target.closest('.sb-del'); if (del) del.closest('.sb-row').remove(); });
+    // 座位表：複製「🪑 座位表」分頁目前的排法（只在這台電腦的畫面之間複製，不存、不送出）；沒有就印 6×5 空白格
+    function sbSeatHtml() {
+      const src = $('stPreview') && $('stPreview').querySelector('.sheet');
+      if (src && src.querySelector('.st-desk')) {
+        const box = document.createElement('div');
+        [...src.children].filter(el => !el.classList.contains('ws-head') && el.tagName !== 'P').forEach(el => box.appendChild(el.cloneNode(true)));
+        box.querySelectorAll('[draggable]').forEach(el => el.removeAttribute('draggable'));
+        box.querySelectorAll('.picked').forEach(el => el.classList.remove('picked'));
+        return `<div class="sb-seat">${box.innerHTML}</div>`;
+      }
+      const desks = Array.from({ length: 30 }, () => '<div class="st-desk">&nbsp;</div>').join('');
+      return `<div class="sb-seat"><div class="st-stage">講　台</div><div class="st-grid" style="grid-template-columns:repeat(6,1fr)">${desks}</div>
+        <div class="doc-note">（座位表分頁還沒排座位，請手寫座號）</div></div>`;
+    }
+    $('sbGoButton').dataset.label = $('sbGoButton').textContent;
+    $('sbGoButton').addEventListener('click', () => {
+      const subject = $('sbMode').value === 'subject';
+      const rows = [...$('sbRows').querySelectorAll('.sb-row')].map(row => ({
+        period: row.querySelector('.sb-period').value.trim(), klass: row.querySelector('.sb-class') ? row.querySelector('.sb-class').value.trim() : '',
+        subject: row.querySelector('.sb-subject').value.trim(), progress: row.querySelector('.sb-progress').value.trim(), homework: row.querySelector('.sb-homework').value.trim()
+      })).filter(r => r.period || r.klass || r.subject || r.progress || r.homework);
+      const headers = subject
+        ? [{ label: '節次', width: '10%' }, { label: '班級', width: '12%' }, { label: '科目', width: '11%' }, { label: '進度' }, { label: '作業與批改規則', width: '30%' }]
+        : [{ label: '節次', width: '10%' }, { label: '科目', width: '12%' }, { label: '進度' }, { label: '作業與批改規則', width: '34%' }];
+      const tableRows = rows.map(r => subject ? [r.period, r.klass, r.subject, r.progress, r.homework] : [r.period, r.subject, r.progress, r.homework]);
+      const rules = ['sbRule1', 'sbRule2', 'sbRule3'].map(id => $(id).value.trim()).filter(Boolean);
+      const contacts = [['學年主任／隔壁班', 'sbContact1'], ['教務處（代課登記）', 'sbContact2'], ['學務處／健康中心（緊急）', 'sbContact3']].map(([label, id]) => [label, $(id).value.trim()]);
+      const other = $('sbOther').value.trim();
+      const meta = [`代課日期：${escapeHtml($('sbDate').value.trim() || '＿＿＿＿')}`, `原任教師：${escapeHtml($('sbTeacher').value.trim() || '＿＿＿＿')}`];
+      if (!subject) meta.push(`班級：${escapeHtml($('sbClass').value.trim() || '＿＿＿＿')}`);
+      let no = 0;
+      const section = (title, body) => docSection(no++, title, body);
+      const html = docHead(`代課交接單（${subject ? '科任版' : '導師版'}）`, docSchool('sbSchool'), meta)
+        + section('課務與進度', docTable(headers, tableRows, subject ? 6 : 7, 'doc-sub-table'))
+        + section('班級常規', docItems(rules))
+        + ($('sbSeat').checked ? section('座位表', sbSeatHtml()) : '')
+        + section('聯絡窗口', docTable([{ label: '窗口', width: '34%' }, { label: '聯絡方式（職稱、分機）' }], contacts, 0))
+        + (other ? section('其他交代', `<div class="doc-li"><span>${docText(other)}</span></div>`) : '')
+        + section('代課教師當日簽認',
+          docTable([{ label: '代課教師簽名', width: '34%' }, { label: '日期', width: '22%' }, { label: '交接確認' }], [['', '', '□ 已了解上列課務、作業與常規']], 0, 'doc-sign-table')
+          + '<div class="doc-sub">今日上課情形回報（全班性的事項）：</div><div class="doc-blank-line"></div><div class="doc-blank-line"></div><div class="doc-blank-line"></div>');
+      docRender('sb', html, false);
+      $('sbMeta').textContent = `已排好 ${subject ? '科任版' : '導師版'}（${rows.length} 節）；預覽區可直接改字，再列印或下載。`;
+      showToast('🧳 代課包完成。');
+    });
+''')
+
+
 STEPS = [
     ('G1 成果報告', 'id="page-report"', g1),
     ('G2 計畫書', 'id="page-plan"', g2),
     ('G3 會議紀錄', 'id="page-minutes"', g3),
     ('G4 教案與觀議課', 'id="page-lesson"', g4),
     ('G5 教學進度表', 'id="page-schedule"', lambda: g5()),
+    ('G6 代課包', 'id="page-substitute"', lambda: g6()),
 ]
 
 for label, marker, fn in STEPS:

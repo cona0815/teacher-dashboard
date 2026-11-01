@@ -733,6 +733,18 @@ assert.match(studioHtml, /function scAllocate\(units, perWeek\)/, "進度表應�
 assert.match(studioHtml, /const valid = SC\.weeks\.filter\(w => !w\.off\)/, "放假週不排進度");
 assert.match(studioHtml, /class="sc-chip" draggable="true"/, "進度表單元可拖調");
 assert.match(studioHtml, /<th>週次<\/th><th>日期區間<\/th><th>單元<\/th><th>節數<\/th><th>評量／備註<\/th>/, "進度表欄位：週次、日期區間、單元、節數、評量／備註");
+// G6 🧳 代課包
+assert.match(studioHtml, /data-page="substitute">🧳 代課包/, "應有代課包分頁");
+{
+  const page = groupBPage("substitute");
+  for (const id of ["sbMode", "sbDate", "sbRows", "sbAddRow", "sbRule1", "sbRule2", "sbRule3", "sbSeat", "sbContact1", "sbGoButton"]) assert.match(page, new RegExp(`id="${id}"`), `代課包應有 #${id}`);
+  assert.match(page, /<option value="homeroom">導師版/, "代課包應有導師版");
+  assert.match(page, /<option value="subject">科任版/, "代課包應有科任版");
+  assert.doesNotMatch(page, /特定學生|學生注意事項/, "代課包不得設特定學生欄位（個資）");
+}
+assert.match(studioHtml, /SB_PERIODS\.slice\(0, 6\)/, "科任版預設可列 6 班");
+assert.match(studioHtml, /function sbSeatHtml\(\)/, "代課包應讀座位表分頁、沒有就留空白格");
+assert.match(studioHtml, /section\('代課教師當日簽認'/, "代課包應有代課教師當日簽認欄");
 // ===== 組B 行政文書 end =====
 
 // ===== 組A 行政文書 =====
