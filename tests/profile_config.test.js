@@ -663,3 +663,30 @@ assert.match(installHtml, /data-kiosk="edge"/, "應可直接下載開機啟動 .
 assert.match(installHtml, /其他資訊<\/strong>」→「<strong>仍要執行/, "小綿助應說明 SmartScreen");
 assert.match(installHtml, /id="keyNotes"/, "應提供金鑰記錄表範本");
 assert.doesNotMatch(installHtml, /📤 送出/, "大屏按鈕是「💾 存到雲端」，不是「📤 送出」");
+
+// ===== 組B 行政文書 =====
+// 2026-11-01 升級規格書組 B：教材小工場「🗂 行政文書」分頁群
+const groupBPage = id => {
+  const start = studioHtml.indexOf(`id="page-${id}"`);
+  assert.ok(start > 0, `Studio 應有 page-${id}`);
+  return studioHtml.slice(start, studioHtml.indexOf("</section>", start));
+};
+assert.match(studioHtml, /<span class="tab-group">🗂 行政文書<\/span>/, "應有行政文書分頁群");
+assert.match(studioHtml, /不得出現任何學生姓名/, "行政文書 AI 規範應禁止學生姓名");
+assert.match(studioHtml, /不要猜任何數字：人次、人數、金額/, "行政文書 AI 不得猜數字");
+assert.match(studioHtml, /AI 協助草擬，內容已由老師核對/, "勾核對後才出現的署名");
+assert.match(studioHtml, /function docApplyConfirm\(prefix\)/, "應有核對切換");
+assert.match(studioHtml, /clone\.querySelectorAll\('\[data-export-hide="1"\]'\)/, "Word／Excel 匯出應拿掉畫面專用標記");
+assert.match(studioHtml, /if \(Array\.isArray\(imagePart\)\) parts\.push\(\.\.\.imagePart\)/, "callGemini 應支援多個附件");
+// G1 📑 成果報告
+assert.match(studioHtml, /data-page="report">📑 成果報告/, "應有成果報告分頁");
+{
+  const page = groupBPage("report");
+  for (const id of ["rpName", "rpDate", "rpTarget", "rpUnit", "rpPlan", "rpPlanFiles", "rpExec", "rpPhotos", "rpChecked"]) assert.match(page, new RegExp(`id="${id}"`), `成果報告應有 #${id}`);
+  assert.match(page, /downloadPreview\('rpPreview','成果報告','doc'\)/, "成果報告應可下載 Word");
+  assert.match(page, /downloadPdfFromHost\('rpPreview','成果報告',false\)/, "成果報告應可下載 PDF");
+}
+for (const title of ["'依據'", "'目的'", "'辦理情形'", "'參與人次'", "'成效與檢討'", "'活動照片'"]) assert.ok(studioHtml.includes(`docSection(`) && studioHtml.includes(title), `成果報告應有 ${title} 段`);
+assert.match(studioHtml, /\[\['學生', ''\], \['教職員', ''\], \['家長及來賓', ''\], \['合計', ''\]\]/, "參與人次欄留空給老師填");
+assert.match(studioHtml, /function docPhotoTable/, "活動照片應以 2×2 表格排版");
+// ===== 組B 行政文書 end =====
