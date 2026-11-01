@@ -402,6 +402,9 @@ assert.ok((lineBotSource.match(/key: '/g) || []).length >= 20, "大屏提示內�
 assert.match(morningHtml, /data-tool="prompt"/, "班級工具應含大屏提示分頁");
 assert.match(morningHtml, /prompt_get/, "大屏提示應輪詢 GAS 取得遠端指令");
 assert.match(morningHtml, /assets\/irasutoya\//, "大屏應使用本機 irasutoya 插圖（CSP 不允許外連圖）");
+assert.match(morningHtml, /function rollcallTaken\(\)/, "抽籤／分組排除缺席前要先判斷今天有沒有真的點名");
+assert.match(morningHtml, /status === '未到' && countMissing/, "沒點名時自動轉「未到」不可把全班排出抽籤池（2026-11-01 回報）");
+assert.match(morningHtml, /function seatPoolNote/, "抽籤狀態列應寫出座號範圍與排除名單");
 assert.match(morningHtml, /config\.promptSchedules/, "大屏提示應可設定定時自動跳出");
 assert.match(morningHtml, /mode: 'breaks'/, "定時提示應支援「每節下課」");
 assert.match(morningHtml, /day\.promptFired/, "同一天同一時間只跳一次（重新整理不重跳）");
