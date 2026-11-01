@@ -767,6 +767,25 @@ assert.match(studioHtml, /customFields 依序對每個欄位寫內容/, "教案�
   assert.match(docsJs, /\$\('aiDocPushButton'\)\.hidden = !ready;/, "沒有 LINE／GAS 設定時隱藏推送按鈕");
 }
 
+// G8 填報截止橫幅：任務可標「📋 填報／繳交」（存在下一步行動開頭的 [填報]，不改試算表契約）；到期前 3 天出現、逾期變紅、點了套用篩選
+{
+  assert.match(indexHtml, /<input type="checkbox" id="taskFilingFlag">📋 填報／繳交/, "任務表單應可勾「📋 填報／繳交」");
+  assert.doesNotMatch(indexHtml, /id="taskFilingFlag"[^>]*name=/, "填報勾選框不可帶 name，避免變成新欄位送進試算表");
+  assert.match(indexHtml, /const FILING_MARK = '\[填報\]';/, "填報標記為下一步行動開頭的 [填報]");
+  assert.match(indexHtml, /const FILING_WINDOW_DAYS = 3;/, "到期前 3 天出現在橫幅");
+  assert.match(indexHtml, /payload\.nextAction = applyFilingMark\(payload\.nextAction, \$\('taskFilingFlag'\)\.checked\);/, "存檔時把勾選轉成下一步行動前綴");
+  assert.match(indexHtml, /\$\('taskFilingFlag'\)\.checked = isFilingTask\(values\);\s*\$\('nextAction'\)\.value = stripFilingMark\(values\.nextAction\);/, "編輯時帶出勾選、文字框不顯示標記");
+  assert.match(indexHtml, /<button class="filing-banner" type="button" id="filingBanner" hidden><\/button>/, "任務清單上方應有填報橫幅");
+  assert.match(indexHtml, /\.filing-banner\[hidden\] \{ display: none; \}/, "橫幅隱藏時不可被 display:flex 蓋掉");
+  assert.match(indexHtml, /本週要交的填報/, "橫幅標題為「本週要交的填報」");
+  assert.match(indexHtml, /banner\.classList\.toggle\('is-overdue', overdue > 0\)/, "有逾期時橫幅變紅");
+  assert.match(indexHtml, /<option value="filing">📋 本週要交的填報<\/option>/, "期限篩選應有「本週要交的填報」");
+  assert.match(indexHtml, /if \(due === 'filing' && !isFilingDueSoon\(task\)\) return false;/, "篩選只留本週要交的填報");
+  assert.match(indexHtml, /\$\('filingBanner'\)\.addEventListener\('click', \(\) => \{\s*\$\('dueFilter'\)\.value = 'filing';\s*applyFilters\(\);/, "點橫幅套用篩選");
+  assert.ok(Array.from(TASK_HEADERS).includes("下一步行動"), "填報標記沿用既有「下一步行動」欄位，不新增試算表欄位");
+}
+// ===== 組A 行政文書 end =====
+
 // ===== 組C 多班模式 =====
 // G10 大屏多班模式（科任）：第一個班沿用舊 key，其他班 key 後加「:班級」；點名、聯絡本仍屬第一個班
 {
@@ -794,21 +813,4 @@ assert.match(studioHtml, /customFields 依序對每個欄位寫內容/, "教案�
   assert.match(mh, /new CustomEvent\('morning:classchange'/, "切班要通知班級工具重新載入");
   assert.match(mh, /if \(lotteryBusy\) event\.preventDefault\(\)/, "抽籤進行中不可切班");
   assert.match(mh, /if \(toolsClassSuffix\(\)\) return absent;/, "別班沒有點名資料，抽籤分組不排除第一個班的缺席");
-}
-// G8 填報截止橫幅：任務可標「📋 填報／繳交」（存在下一步行動開頭的 [填報]，不改試算表契約）；到期前 3 天出現、逾期變紅、點了套用篩選
-{
-  assert.match(indexHtml, /<input type="checkbox" id="taskFilingFlag">📋 填報／繳交/, "任務表單應可勾「📋 填報／繳交」");
-  assert.doesNotMatch(indexHtml, /id="taskFilingFlag"[^>]*name=/, "填報勾選框不可帶 name，避免變成新欄位送進試算表");
-  assert.match(indexHtml, /const FILING_MARK = '\[填報\]';/, "填報標記為下一步行動開頭的 [填報]");
-  assert.match(indexHtml, /const FILING_WINDOW_DAYS = 3;/, "到期前 3 天出現在橫幅");
-  assert.match(indexHtml, /payload\.nextAction = applyFilingMark\(payload\.nextAction, \$\('taskFilingFlag'\)\.checked\);/, "存檔時把勾選轉成下一步行動前綴");
-  assert.match(indexHtml, /\$\('taskFilingFlag'\)\.checked = isFilingTask\(values\);\s*\$\('nextAction'\)\.value = stripFilingMark\(values\.nextAction\);/, "編輯時帶出勾選、文字框不顯示標記");
-  assert.match(indexHtml, /<button class="filing-banner" type="button" id="filingBanner" hidden><\/button>/, "任務清單上方應有填報橫幅");
-  assert.match(indexHtml, /\.filing-banner\[hidden\] \{ display: none; \}/, "橫幅隱藏時不可被 display:flex 蓋掉");
-  assert.match(indexHtml, /本週要交的填報/, "橫幅標題為「本週要交的填報」");
-  assert.match(indexHtml, /banner\.classList\.toggle\('is-overdue', overdue > 0\)/, "有逾期時橫幅變紅");
-  assert.match(indexHtml, /<option value="filing">📋 本週要交的填報<\/option>/, "期限篩選應有「本週要交的填報」");
-  assert.match(indexHtml, /if \(due === 'filing' && !isFilingDueSoon\(task\)\) return false;/, "篩選只留本週要交的填報");
-  assert.match(indexHtml, /\$\('filingBanner'\)\.addEventListener\('click', \(\) => \{\s*\$\('dueFilter'\)\.value = 'filing';\s*applyFilters\(\);/, "點橫幅套用篩選");
-  assert.ok(Array.from(TASK_HEADERS).includes("下一步行動"), "填報標記沿用既有「下一步行動」欄位，不新增試算表欄位");
 }
