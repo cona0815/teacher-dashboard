@@ -188,6 +188,15 @@ assert.match(indexHtml, /:root\[data-theme="cozy"\] \{/, "可愛動森風有自�
 // 2026-11-02：動森風通用按鈕規則權重高，選取狀態要另寫，否則記事篩選「全部」會白底白字
 assert.match(indexHtml, /:root\[data-theme="cozy"\] \.note-filter-chip\.active \{/, "動森風保留記事篩選的選取樣式");
 assert.match(indexHtml, /:root\[data-theme="cozy"\] \.role-person\[aria-pressed="true"\] \{/, "動森風保留身分選取樣式");
+// ART-01 R4：工作台動森風圖示（assets/art/cozy/icon/），每個 data-cozy-icon 都要有檔案
+{
+  const cozyIds = [...indexHtml.matchAll(/data-cozy-icon="([a-z_]+)"/g)].map(m => m[1]);
+  assert.ok(cozyIds.length >= 18, "工作台摘要卡、面板、身分都有動森風圖示");
+  cozyIds.forEach(id => assert.ok(fs.existsSync(path.join(projectRoot, "assets", "art", "cozy", "icon", id + ".webp")), `工作台動森風圖示存在：${id}.webp`));
+  ["role_grade_lead", "role_admin", "role_homeroom", "role_subject", "role_teacher"].forEach(id => assert.ok(cozyIds.includes(id), `身分 ${id} 有動森風圖示`));
+  assert.match(indexHtml, /safeTheme === 'cozy' \? 'assets\/art\/cozy\/icon\/'/, "選動森風才換圖示");
+  ["quiet_super", "quiet_good", "quiet_warn", "quiet_loud"].forEach(id => assert.ok(fs.existsSync(path.join(projectRoot, "assets", "art", "cozy", "quiet", id + ".webp")), `安靜偵測動森風插圖存在：${id}.webp`));
+}
 assert.match(indexHtml, /id="teachingProgressBody" hidden/, "教學進度首次進入應預設收合");
 assert.match(indexHtml, /id="progressUnitList"/, "教學進度應提供逐單元編輯清單");
 assert.match(indexHtml, /data-unit-step="1"/, "每個單元應可單獨增加教學節數");
