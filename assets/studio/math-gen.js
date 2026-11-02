@@ -235,9 +235,83 @@
     return two(mul(q, b), '÷', b, 'dec', q);
   });
 
+  // ---------- 方程式（未知數） ----------
+  // 低年級用 □ 填空，六年級用 x 表示未知數；題目是一條等式、答案是未知數的值（測試會把答案代回去，兩邊要相等）
+  const eqItem = (lhs, rhs, answer, sym, mode) => ({ special: 'eq', lhs, rhs, answer, sym, mode: mode || 'int' });
+  function boxAddSub(a, b, sym) {   // a + b = c 的四種藏法
+    const c = a + b;
+    return [eqItem(`${a} + ${sym}`, `${c}`, I(b), sym), eqItem(`${sym} + ${b}`, `${c}`, I(a), sym),
+      eqItem(`${c} - ${sym}`, `${a}`, I(b), sym), eqItem(`${sym} - ${b}`, `${a}`, I(c), sym)];
+  }
+  function boxMulDiv(a, b, sym) {   // a × b = c 的四種藏法
+    const c = a * b;
+    return [eqItem(`${a} × ${sym}`, `${c}`, I(b), sym), eqItem(`${sym} × ${b}`, `${c}`, I(a), sym),
+      eqItem(`${c} ÷ ${sym}`, `${a}`, I(b), sym), eqItem(`${sym} ÷ ${a}`, `${b}`, I(c), sym)];
+  }
+  kind('eqBox1', 1, '□ 填空（10 以內加減）', r => { const a = r.int(1, 8), b = r.int(1, 10 - a); return r.pick(boxAddSub(a, b, '□')); });
+  kind('eqBox2', 2, '□ 填空（二位數加減）', r => { const a = r.int(10, 80), b = r.int(5, 99 - a); return r.pick(boxAddSub(a, b, '□')); });
+  kind('eqBox3', 3, '□ 填空（乘除）', r => { const a = r.int(2, 9), b = r.int(2, 9); return r.pick(boxMulDiv(a, b, '□')); });
+  kind('eqX', 6, '解方程式（整數、小數）', r => {
+    if (r.next() < 0.3) {   // 小數版：x 比 a 大，x - a 才是正的
+      let x, a;
+      do { x = realDec(r, 11, 999, 1); a = realDec(r, 11, 999, r.int(1, 2)); } while (x.n * a.d <= a.n * x.d);
+      return r.pick([
+        eqItem(`x + ${decText(a)}`, decText(add(x, a)), x, 'x', 'dec'),
+        eqItem(`x - ${decText(a)}`, decText(sub(x, a)), x, 'x', 'dec'),
+        eqItem(`${decText(add(x, a))} - x`, decText(a), x, 'x', 'dec')
+      ]);
+    }
+    if (r.next() < 0.5) return r.pick(boxAddSub(r.int(2, 99), r.int(2, 99), 'x'));
+    return r.pick(boxMulDiv(r.int(2, 12), r.int(2, 30), 'x'));
+  }, { wide: true });
+  kind('eqXfrac', 6, '解方程式（分數）', r => {
+    const t = v => fracText(v, 'improper');
+    // 數字控制在國小好算的範圍：分母不超過 24、分子不超過 50，x 不是 1，也不是一眼看出來的題目
+    const small = v => v.d <= 24 && Math.abs(v.n) <= 50;
+    let item;
+    do {
+      const d1 = r.int(2, 9), d2 = r.int(2, 9);
+      const x = Q(r.int(1, 2 * d1), d1), a = Q(r.int(1, d2 - 1), d2), k = I(r.int(2, 6));
+      item = r.pick([
+        eqItem(`x + ${t(a)}`, t(add(x, a)), x, 'x', 'frac'),
+        eqItem(`${t(a)} × x`, t(mul(a, x)), x, 'x', 'frac'),
+        eqItem(`x ÷ ${t(k)}`, t(div(x, k)), x, 'x', 'frac'),
+        eqItem(`${t(k)} × x`, t(mul(k, x)), x, 'x', 'frac')
+      ]);
+    } while (eq(item.answer, I(1)) || !small(evaluate(item.rhs)) || item.lhs.includes(item.rhs));
+    return item;
+  }, { wide: true });
+  // 算式排版：分數上下疊、帶分數、□ 方格、x 斜體、全形運算符號（題目、答案、AI 應用題的算式都用這個）
+  const BOX_HTML = '<span class="mq-box" data-word-text="□"></span>';
+  function exprHtml(s) {
+    return String(s == null ? '' : s).replace(/(\d+)又(\d+)\/(\d+)|(\d+)\/(\d+)|□|x|[+\-*()]|[^\d□x+\-*()]+|\d+(?:\.\d+)?/g, (tok, w, n, d, n2, d2) => {
+      if (w) return fracHtml({ n: Number(w) * Number(d) + Number(n), d: Number(d) }, 'mixed');
+      if (n2) return fracHtml({ n: Number(n2), d: Number(d2) }, 'improper');
+      if (tok === '□') return BOX_HTML;
+      if (tok === 'x') return '<i class="mq-x">x</i>';
+      const op = { '+': '＋', '-': '－', '*': '×', '(': '（', ')': '）' }[tok];
+      return op || esc(tok);
+    });
+  }
+  // 一般文字（AI 應用題的題目）：只把分數、帶分數排成上下疊，其他照原樣
+  function textHtml(s) {
+    return esc(String(s == null ? '' : s))
+      .replace(/(^|[^A-Za-z])x(?![A-Za-z])/g, '$1<i class="mq-x">x</i>')   // 題目裡單獨的 x 是未知數，用斜體
+      .replace(/(\d+)又(\d+)\/(\d+)|(\d+)\/(\d+)/g, (tok, w, n, d, n2, d2) =>
+        (w ? fracHtml({ n: Number(w) * Number(d) + Number(n), d: Number(d) }, 'mixed') : fracHtml({ n: Number(n2), d: Number(d2) }, 'improper')));
+  }
+
   const OP_SHOW = { '+': '＋', '-': '－', '×': '×', '÷': '÷' };
   // 把一題整理成 { text, html, answerText, answerHtml, vertical }
   function build(item, style) {
+    if (item.special === 'eq') {
+      const symHtml = item.sym === 'x' ? '<i class="mq-x">x</i>' : '□';
+      return {
+        text: `${item.lhs} = ${item.rhs}`, html: `${exprHtml(item.lhs)} ＝ ${exprHtml(item.rhs)}`,
+        answerText: `${item.sym} = ${numText(item.answer, item.mode, style)}`,
+        answerHtml: `${symHtml} ＝ ${numHtml(item.answer, item.mode, style)}`, value: item.answer, equation: item
+      };
+    }
     if (item.special === 'rem') {
       return {
         text: `${item.dividend} ÷ ${item.divisor} =`, html: `${item.dividend} ÷ ${item.divisor} ＝`, remainder: true,
@@ -253,8 +327,7 @@
     }
     if (item.expr) {
       const value = evaluate(item.expr);
-      const show = item.expr.replace(/-/g, '－').replace(/\+/g, '＋').replace(/\(/g, '（').replace(/\)/g, '）');
-      return { text: `${item.expr} =`, html: `${show} ＝`, answerText: String(value.n), answerHtml: String(value.n), value };
+      return { text: `${item.expr} =`, html: `${exprHtml(item.expr)} ＝`, answerText: String(value.n), answerHtml: String(value.n), value };
     }
     const mode = item.mode;
     // 題目裡的分數照「未約分」的原樣出（例如 2/4 不先約成 1/2），答案才約到最簡
@@ -302,5 +375,5 @@
     return `<table class="mv"><tr>${cells(a)}</tr><tr class="mv-line">${cells(b, OP_SHOW[v.op])}</tr>${work}${work ? `<tr class="mv-line">${blank}</tr>` : ''}<tr class="mv-gap">${blank}</tr></table>`;
   }
 
-  return { KINDS, generate, evaluate, parseAnswer, makeRng, Q, add, sub, mul, div, eq, gcd, lcm, fracText, fracHtml, decText, numText, verticalHtml };
+  return { KINDS, generate, evaluate, parseAnswer, makeRng, Q, add, sub, mul, div, eq, gcd, lcm, fracText, fracHtml, decText, numText, verticalHtml, exprHtml, textHtml };
 });

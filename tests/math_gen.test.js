@@ -48,6 +48,17 @@ for (const kind of M.KINDS) {
         assert.equal(Number(q.answerText), want, where);
         continue;
       }
+      if (q.equation) {
+        // 方程式：把答案代回未知數，等號兩邊要相等
+        const e = q.equation;
+        const put = side => evaluate(side.replace(e.sym, `(${M.fracText(q.value, "improper")})`));
+        assert.ok(eq(put(e.lhs), evaluate(e.rhs)), `${where} 代回去兩邊不相等`);
+        assert.ok(q.value.n > 0, `${where} 未知數要是正的`);
+        assert.ok(evaluate(e.rhs).n >= 0, `${where} 右邊不能是負的`);
+        assert.equal(e.lhs.split(e.sym).length + e.rhs.split(e.sym).length - 2, 1, `${where} 未知數只出現一次`);
+        assert.match(q.html, e.sym === "x" ? /mq-x/ : /mq-box/, where);
+        continue;
+      }
       const recomputed = evaluate(q.text);
       assert.ok(eq(recomputed, q.value), `${where} 重新驗算不一致`);
       assert.ok(recomputed.n >= 0, `${where} 答案不能是負的`);
@@ -59,6 +70,14 @@ for (const kind of M.KINDS) {
   }
 }
 assert.ok(total > 10000, "應驗算超過一萬題");
+
+// 算式排版
+assert.match(M.exprHtml("3/4 - 1/3"), /mf-f[\s\S]*－[\s\S]*mf-f/, "算式裡的分數要上下疊、減號用全形");
+assert.match(M.exprHtml("2又1/3 × x"), /mf-w">2<[\s\S]*mq-x/, "帶分數與 x");
+assert.match(M.exprHtml("5 + □"), /mq-box/, "□ 要畫成方格");
+assert.equal(M.textHtml("喝了 <b>1/3</b> 公升").includes("&lt;b&gt;"), true, "題目文字要先跳脫 HTML");
+assert.match(M.textHtml("一本書 x 元，Excel 不變"), /<i class="mq-x">x<\/i> 元，Excel/, "題目裡的 x 用斜體，英文單字不動");
+assert.ok(M.KINDS.some(k => k.id === "eqX") && M.KINDS.some(k => k.id === "eqBox1"), "要有方程式題型");
 
 // 直式
 const v = M.verticalHtml({ a: 345, b: 78, op: "+" });

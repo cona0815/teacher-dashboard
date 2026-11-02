@@ -41,6 +41,9 @@ rep("""    @media print {
     .mq-blank { display:inline-block; min-width:60px; flex:0 1 70px; border-bottom:1.5px solid #333; height:1.3em; }
     .mq-blank.mq-short { min-width:40px; flex-basis:44px; margin:0 3px; }
     .mq-q { white-space:nowrap; }
+    .mq-box { display:inline-block; width:1.7em; height:1.45em; border:1.5px solid #333; border-radius:3px; vertical-align:middle; margin:0 3px; }
+    .mq-x { font-family:"Times New Roman", serif; font-style:italic; font-size:1.12em; padding:0 1px; }
+    .mq-x-ans { margin-left:14px; white-space:nowrap; }
     .mf { display:inline-flex; align-items:center; gap:2px; vertical-align:middle; margin:0 1px; }
     .mf-f { display:inline-flex; flex-direction:column; align-items:center; line-height:1.15; font-size:.88em; }
     .mf-f > span:first-child { border-bottom:1.5px solid currentColor; padding:0 3px; }
@@ -171,7 +174,10 @@ rep("""    // ============================================================
           const items = list.map(q => {
             no += 1;
             const useVertical = vertical && q.vertical;
-            const blank = q.remainder ? '商<span class="mq-blank mq-short"></span>，餘<span class="mq-blank mq-short"></span>' : '<span class="mq-blank"></span>';
+            // 作答格：有餘數寫「商、餘」；□ 填空直接寫在方格裡；x 方程式在後面寫「x ＝ ＿＿」
+            const blank = q.remainder ? '商<span class="mq-blank mq-short"></span>，餘<span class="mq-blank mq-short"></span>'
+              : q.equation && q.equation.sym === '□' ? ''
+              : q.equation ? '<span class="mq-x-ans"><i class="mq-x">x</i> ＝</span><span class="mq-blank"></span>' : '<span class="mq-blank"></span>';
             const body = useVertical ? MathGen.verticalHtml(q.vertical) : `<span class="mq-q">${q.html}</span>${blank}`;
             return `<div class="mq-item${useVertical ? ' is-vertical' : ''}"><span class="mq-no">${no}.</span>${body}</div>`;
           }).join('');
@@ -184,7 +190,7 @@ rep("""    // ============================================================
             no += 1;
             const check = mqCheck(p);
             return `<div class="mq-word"><span class="mq-no">${no}.</span><div style="flex:1">
-              <div class="mq-word-q">${escapeHtml(p.q)}</div>
+              <div class="mq-word-q">${MathGen.textHtml(p.q)}</div>
               <div class="mq-work">算式：</div><div>答：<span class="mq-blank" style="min-width:140px"></span></div>
               <span class="doc-verify mq-check ${check.ok ? 'ok' : 'bad'}">${escapeHtml(check.msg)}</span></div></div>`;
           }).join('');
@@ -192,7 +198,7 @@ rep("""    // ============================================================
           key.word = MQ.word.map((p, i) => {
             const check = mqCheck(p);
             const shown = check.value ? mqFmt(check.value, p.expr) : String(p.answer || '');
-            return `${startNo + i + 1}. ${escapeHtml(String(p.expr || ''))} ＝ ${escapeHtml(shown)} ${escapeHtml(String(p.unit || ''))}${check.ok ? '' : '<span class="doc-verify">（⚠ 請核對）</span>'}`;
+            return `${startNo + i + 1}. ${MathGen.exprHtml(String(p.expr || ''))} ＝ ${MathGen.textHtml(shown)} ${escapeHtml(String(p.unit || ''))}${check.ok ? '' : '<span class="doc-verify">（⚠ 請核對）</span>'}`;
           });
         }
         keys.push(key);
@@ -236,6 +242,7 @@ rep("""    // ============================================================
         '- 不要出需要看圖、量角器或作圖才能回答的題目。',
         '- 每題一定要附「算式」：只能用數字、+ - × ÷ 和括號；分數寫成 a/b，帶分數寫成「2又1/3」。系統會用算式自動驗算。',
         '- answer 只寫數字（分數、帶分數或小數都可以），單位另外寫在 unit。',
+        '- 如果題目要學生「用 x 列式」，題目裡可以寫出 x，但 expr 仍然要寫可以直接算出答案的算式。',
         '只回 JSON，不要其他文字：{"problems":[{"q":"題目","expr":"算式","answer":"答案","unit":"單位"}]}'
       ].join('\\n');
       busy($('mqWordButton'), true);
