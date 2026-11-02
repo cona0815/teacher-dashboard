@@ -780,7 +780,16 @@ assert.match(fs.readFileSync(path.join(projectRoot, "THIRD_PARTY_NOTICES.md"), "
 for (const out of ["score", "strengths", "markup", "list", "paraNotes", "structure", "comment", "rubric", "typoSheet"]) assert.match(studioHtml, new RegExp(`class="esOut" value="${out}"`), `作文批改輸出可勾 ${out}`);
 assert.match(studioHtml, /id="esPresetTypo">🔤 只改錯字/, "作文批改要有「只改錯字」");
 assert.match(studioHtml, /category 只能是 \$\{cats\.join\('／'\)\} 之一/, "批改重點要限制 AI 找的類別");
-assert.match(studioHtml, /function esTypoSheetHtml\(data\)[\s\S]*?vbReadingOk\(ch, zys\[i\]\)/, "錯字訂正單的注音要對照全字庫");
+assert.match(studioHtml, /function esTypoSheetHtml\(data, seat\)[\s\S]*?vbReadingOk\(ch, zys\[i\]\)/, "錯字訂正單的注音要對照全字庫");
+
+// 作文整班批次：一次丟全班照片／掃描 PDF，排隊批改；座號先讀紙上、讀不到照順序；每份老師確認
+assert.match(studioHtml, /async function esGradeOne\(text, esFiles, seat, opts\)/, "單份與批次共用 esGradeOne");
+assert.match(studioHtml, /id="esBatchFiles"[^>]*multiple/, "整班批次可一次選多個檔");
+assert.match(studioHtml, /PDFLib\.PDFDocument\.load[\s\S]{0,400}copyPages/, "掃描 PDF 要拆成單頁");
+assert.match(studioHtml, /<option value="paper" selected>先讀紙上寫的座號/, "預設讀紙上座號");
+assert.match(studioHtml, /seatOnPaper（只填數字[\s\S]{0,40}不要抄寫或回傳學生姓名/, "只讀座號、不回傳姓名");
+assert.match(studioHtml, /e\.status === 429 && attempt < 3/, "AI 太忙要自動重試");
+assert.match(studioHtml, /ES_BATCH\.items\.filter\(x => x\.status === 'ok'\)/, "合併列印只收老師已確認的");
 
 // G6 🧳 代課包
 assert.match(studioHtml, /data-page="substitute">🧳 代課包/, "應有代課包分頁");
