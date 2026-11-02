@@ -4,7 +4,7 @@
   "private": true,
   "description": "本機優先的國小教師任務、教學進度與桌面秘書工作台",
   "scripts": {
-    "test": "node tests/profile_config.test.js && python -m unittest tests.local_bridge_test"
+    "test": "node tests/profile_config.test.js && node tests/math_gen.test.js && python -m unittest tests.local_bridge_test"
   },
   "license": "MIT",
   "engines": {

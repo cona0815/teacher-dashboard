@@ -748,6 +748,14 @@ assert.match(studioHtml, /function scAllocate\(units, perWeek\)/, "進度表應�
 assert.match(studioHtml, /const valid = SC\.weeks\.filter\(w => !w\.off\)/, "放假週不排進度");
 assert.match(studioHtml, /class="sc-chip" draggable="true"/, "進度表單元可拖調");
 assert.match(studioHtml, /<th>週次<\/th><th>日期區間<\/th><th>單元<\/th><th>節數<\/th><th>評量／備註<\/th>/, "進度表欄位：週次、日期區間、單元、節數、評量／備註");
+// 🔢 數學出題小幫手：計算題由 assets/studio/math-gen.js 出題算答案（驗算在 tests/math_gen.test.js）
+assert.match(studioHtml, /data-page="math">🔢 數學出題/, "應有數學出題分頁");
+assert.match(studioHtml, /<script src="assets\/studio\/math-gen\.js"><\/script>/, "數學出題要載入出題引擎");
+assert.ok(fs.existsSync(path.join(projectRoot, "assets", "studio", "math-gen.js")), "出題引擎檔要存在");
+assert.match(studioHtml, /function mqCheck\(p\)[\s\S]*?MathGen\.evaluate\(p\.expr\)/, "AI 應用題要用算式驗算");
+assert.match(studioHtml, /docBindConfirm\('mq'\)/, "AI 應用題要有「老師已核對」");
+assert.match(studioHtml, /\[data-word-text\][\s\S]{0,80}createTextNode/, "存 Word 時分數換成文字");
+
 // G6 🧳 代課包
 assert.match(studioHtml, /data-page="substitute">🧳 代課包/, "應有代課包分頁");
 {
