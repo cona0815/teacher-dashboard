@@ -776,6 +776,12 @@ assert.match(studioHtml, /注音、部首、筆畫：\$\{escapeHtml\(window\.HAN
 assert.match(studioHtml, /docBindConfirm\('vb'\)/, "生詞本 AI 內容要有「老師已核對」");
 assert.match(fs.readFileSync(path.join(projectRoot, "THIRD_PARTY_NOTICES.md"), "utf8"), /全字庫[\s\S]*政府資料開放授權條款/, "授權說明要列全字庫");
 
+// 作文批改：輸出內容可勾選；批改重點真的限制 AI 找的類別；「只改錯字」產生錯字訂正單
+for (const out of ["score", "strengths", "markup", "list", "paraNotes", "structure", "comment", "rubric", "typoSheet"]) assert.match(studioHtml, new RegExp(`class="esOut" value="${out}"`), `作文批改輸出可勾 ${out}`);
+assert.match(studioHtml, /id="esPresetTypo">🔤 只改錯字/, "作文批改要有「只改錯字」");
+assert.match(studioHtml, /category 只能是 \$\{cats\.join\('／'\)\} 之一/, "批改重點要限制 AI 找的類別");
+assert.match(studioHtml, /function esTypoSheetHtml\(data\)[\s\S]*?vbReadingOk\(ch, zys\[i\]\)/, "錯字訂正單的注音要對照全字庫");
+
 // G6 🧳 代課包
 assert.match(studioHtml, /data-page="substitute">🧳 代課包/, "應有代課包分頁");
 {
