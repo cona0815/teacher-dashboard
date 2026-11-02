@@ -52,6 +52,7 @@ rep("""    /* 🔢 數學出題 */""", """    /* 📒 生詞本 */
                  linear-gradient(to bottom, transparent calc(50% - .5px), #bbb calc(50% - .5px), #bbb calc(50% + .5px), transparent calc(50% + .5px)); }
     .vb-cell:first-child { margin-left:0; }
     .vb-cell.trace { color:#c9c9c9; }
+    .vb-blank { display:inline-block; width:calc(100% - 3.5em); min-width:200px; border-bottom:1px solid #777; height:1.5em; vertical-align:bottom; }
     .vb-source { font-size:11.5px; color:#555; margin-top:10px; border-top:1px solid #999; padding-top:4px; }
     .vb-edit:focus { outline:2px dashed #e0a21a; outline-offset:2px; }
     /* 🔢 數學出題 */""")
@@ -169,7 +170,7 @@ rep("""    // ============================================================
         const multi = info && info.readings.length > 1;
         const alt = (it.altWords || []).length ? `<div class="vb-alt">另讀：${it.altWords.map(a => `${escapeHtml(a.zy)}（${escapeHtml(a.word)}）`).join('、')}</div>` : '';
         const readingWarn = it.readingWarn ? `<div class="doc-verify">⚠ ${escapeHtml(it.readingWarn)}</div>` : '';
-        const offlineMulti = multi && !it.aiReading ? `<div class="doc-verify">⚠ 破音字（${escapeHtml(info.readings.join('、'))}）：點生字旁的注音可以換讀音</div>` : '';
+        const offlineMulti = multi && !it.aiReading ? `<div class="doc-verify">⚠ 破音字：點注音可換讀音（${escapeHtml(info.readings.join('、'))}）</div>` : '';
         const infoHtml = info
           ? `<div><b>部首</b> ${escapeHtml(info.radical)}</div><div><b>筆畫</b> ${info.strokes} 畫</div>${alt}${readingWarn}${offlineMulti}`
           : '<div class="doc-verify">⚠ 字表沒有這個字，注音、部首、筆畫請自己填</div>';
@@ -177,9 +178,9 @@ rep("""    // ============================================================
         const row2 = [];
         if (showWords) {
           row2.push(`<div class="vb-line vb-words"><span class="vb-label">造詞</span><span class="vb-edit" contenteditable="true">${words || '＿＿＿＿　＿＿＿＿　＿＿＿＿'}</span></div>`);
-          row2.push(`<div class="vb-line"><span class="vb-label">造句</span><span class="vb-edit" contenteditable="true">${escapeHtml(it.sentence || '')}</span>${it.sentenceWarn ? `<span class="doc-verify">⚠ ${escapeHtml(it.sentenceWarn)}</span>` : ''}</div>`);
+          row2.push(`<div class="vb-line"><span class="vb-label">造句</span><span class="vb-edit" contenteditable="true">${it.sentence ? escapeHtml(it.sentence) : '<span class="vb-blank"></span>'}</span>${it.sentenceWarn ? `<span class="doc-verify">⚠ ${escapeHtml(it.sentenceWarn)}</span>` : ''}</div>`);
         }
-        if (showMeaning) row2.push(`<div class="vb-line"><span class="vb-label">解釋</span><span class="vb-edit" contenteditable="true">${escapeHtml(it.meaning || '')}</span></div>`);
+        if (showMeaning) row2.push(`<div class="vb-line"><span class="vb-label">解釋</span><span class="vb-edit" contenteditable="true">${it.meaning ? escapeHtml(it.meaning) : '<span class="vb-blank"></span>'}</span></div>`);
         const grid = showGrid ? `<tr><td colspan="${showInfo ? 3 : 2}"><div class="vb-grid" style="--vb-cell:${cellSize}px">${Array.from({ length: cells }, (_, k) =>
           `<div class="vb-cell${k === 1 || k === 2 ? ' trace' : ''}">${k <= 2 ? escapeHtml(it.ch) : ''}</div>`).join('')}</div></td></tr>` : '';
 
@@ -198,9 +199,10 @@ rep("""    // ============================================================
         <div class="vb-source">注音、部首、筆畫：${escapeHtml(window.HANZI_SOURCE || '數位發展部 全字庫開放資料')}，依政府資料開放授權條款第1版使用。${usedAi ? '造詞、造句、解釋：AI 協助草擬。' : ''}</div>
         ${usedAi ? '<div class="doc-ai-sign" style="display:none" data-export-hide="1">AI 協助草擬，內容已由老師核對</div>' : ''}
       </div>`;
-      $('vbCheckedLabel').style.display = usedAi ? '' : 'none';
-      if (usedAi) docApplyConfirm('vb');
       const warn = $('vbPreview').querySelectorAll('.doc-verify').length;
+      // 有 AI 內容或 ⚠ 提醒就要老師核對；勾了「老師已核對」，⚠ 才不會印出來
+      $('vbCheckedLabel').style.display = usedAi || warn ? '' : 'none';
+      if (usedAi || warn) docApplyConfirm('vb');
       $('vbMeta').textContent = `${items.length} 個生字${usedAi ? '（🟡 造詞、造句、解釋是 AI 草稿' : '（未用 AI'}${warn ? `，⚠ ${warn} 處要核對` : ''}）；內容可以直接點進去修改。`;
     }
     $('vbGoButton').dataset.label = $('vbGoButton').textContent;

@@ -316,6 +316,7 @@
                  linear-gradient(to bottom, transparent calc(50% - .5px), #bbb calc(50% - .5px), #bbb calc(50% + .5px), transparent calc(50% + .5px)); }
     .vb-cell:first-child { margin-left:0; }
     .vb-cell.trace { color:#c9c9c9; }
+    .vb-blank { display:inline-block; width:calc(100% - 3.5em); min-width:200px; border-bottom:1px solid #777; height:1.5em; vertical-align:bottom; }
     .vb-source { font-size:11.5px; color:#555; margin-top:10px; border-top:1px solid #999; padding-top:4px; }
     .vb-edit:focus { outline:2px dashed #e0a21a; outline-offset:2px; }
     /* 🔢 數學出題 */
@@ -538,6 +539,8 @@
             <div class="check-row" style="margin-top:6px"><label><input type="checkbox" id="mqAllGrades"> 也顯示其他年級的題型</label></div></div>
           <div class="field"><label>計算題（勾題型，右邊填題數）</label>
             <div class="mq-kinds" id="mqKinds"></div></div>
+          <div class="field"><label>應用題（不用 AI：生活情境，答案由程式算）</label>
+            <div class="mq-kinds" id="mqWordKinds"></div></div>
           <div class="field"><label>版面</label>
             <div class="check-row"><label>每列 <select class="select" id="mqCols" style="width:auto;margin:0"><option>2</option><option selected>3</option><option>4</option></select> 題</label>
               <label><input type="checkbox" id="mqVertical"> 加、減、乘用直式</label></div>
@@ -545,7 +548,7 @@
             <div class="check-row" style="margin-top:6px"><label><input type="checkbox" id="mqAnswer" checked> 附答案卷</label>
               <label><input type="checkbox" id="mqAB"> 出 A、B 兩卷（題型一樣、數字不同）</label></div></div>
           <button class="go-button" type="button" id="mqGoButton">🎲 產生題目（每按一次換一組數字）</button>
-          <div class="field" style="margin-top:14px"><label>應用題（選用：AI 出題，系統自動驗算）</label>
+          <div class="field" style="margin-top:14px"><label>更多應用題（選用：AI 依你的單元出題，系統自動驗算）</label>
             <textarea class="textarea" id="mqWordTopic" placeholder="例：分數乘法，用買東西、做點心的生活情境"></textarea>
             <div class="check-row" style="margin-top:6px;align-items:center"><label>題數 <select class="select" id="mqWordCount" style="width:auto;margin:0"><option>3</option><option selected>5</option><option>8</option></select></label>
               <button class="mini" type="button" id="mqWordButton">✨ AI 出應用題</button>
@@ -1772,14 +1775,32 @@
     // ============================================================
     // 🔢 數學出題小幫手：計算題 MathGen 出題算答案（不用 AI）；應用題 AI 出、MathGen.evaluate 驗算
     // ============================================================
-    const MQ = { seed: Date.now() % 1000000007, picked: new Set(), counts: {}, word: [] };
+    const MQ = { seed: Date.now() % 1000000007, picked: new Set(), counts: {}, word: [], wordPicked: new Set(), wordCounts: {} };
     const MQ_CN = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
     function mqPreset() {
       // 換年級時先勾這個年級的前兩種題型
       MQ.picked.clear();
+      MQ.wordPicked.clear();
       MathGen.KINDS.filter(k => k.grade === Number($('mqGrade').value)).slice(0, 2).forEach(k => MQ.picked.add(k.id));
+      MathGen.WORDS.filter(k => k.grade === Number($('mqGrade').value)).slice(0, 1).forEach(k => MQ.wordPicked.add(k.id));
     }
+    function mqRenderWordKinds() {
+      const grade = Number($('mqGrade').value), all = $('mqAllGrades').checked;
+      const list = MathGen.WORDS.filter(k => all || k.grade === grade).sort((a, b) => a.grade - b.grade);
+      $('mqWordKinds').innerHTML = list.map(k => `<label class="mq-kind"><input type="checkbox" data-word-kind="${k.id}"${MQ.wordPicked.has(k.id) ? ' checked' : ''}>
+        <span>${escapeHtml(k.label)}${all ? `<small>${k.grade} 年級</small>` : ''}</span>
+        <input class="input mq-count" type="number" min="1" max="10" data-word-count="${k.id}" value="${MQ.wordCounts[k.id] || 2}" title="題數"></label>`).join('');
+    }
+    $('mqWordKinds').addEventListener('change', e => {
+      const box = e.target.closest('[data-word-kind]');
+      if (box) { if (box.checked) MQ.wordPicked.add(box.dataset.wordKind); else MQ.wordPicked.delete(box.dataset.wordKind); }
+    });
+    $('mqWordKinds').addEventListener('input', e => {
+      const n = e.target.closest('[data-word-count]');
+      if (n) MQ.wordCounts[n.dataset.wordCount] = Math.max(1, Math.min(10, Number(n.value) || 1));
+    });
     function mqRenderKinds() {
+      mqRenderWordKinds();
       const grade = Number($('mqGrade').value), all = $('mqAllGrades').checked;
       const list = MathGen.KINDS.filter(k => all || k.grade === grade).sort((a, b) => a.grade - b.grade);
       $('mqKinds').innerHTML = list.map(k => `<label class="mq-kind"><input type="checkbox" data-kind="${k.id}"${MQ.picked.has(k.id) ? ' checked' : ''}>
@@ -1812,7 +1833,8 @@
     }
     function mqRender() {
       const kinds = MathGen.KINDS.filter(k => MQ.picked.has(k.id));
-      if (!kinds.length && !MQ.word.length) { $('mqPreview').innerHTML = ''; $('mqMeta').textContent = '請先勾至少一種題型。'; return false; }
+      const wordKinds = MathGen.WORDS.filter(k => MQ.wordPicked.has(k.id));
+      if (!kinds.length && !wordKinds.length && !MQ.word.length) { $('mqPreview').innerHTML = ''; $('mqMeta').textContent = '請先勾至少一種題型。'; return false; }
       const style = $('mqFracStyle').value, vertical = $('mqVertical').checked, cols = Number($('mqCols').value);
       const grade = $('mqGrade').options[$('mqGrade').selectedIndex].text;
       const title = $('mqTitle').value.trim() || '數學練習';
@@ -1836,6 +1858,18 @@
           key.groups.push({ title: k.label, list: list.map((q, i) => `${no - list.length + i + 1}. ${q.answerHtml}`) });
           sections.push(`<div class="mq-section"><div class="mq-section-head">${MQ_CN[ki] || ki + 1}、${escapeHtml(k.label)}</div><div class="mq-grid" style="--mq-cols:${k.wide ? Math.min(cols, 2) : cols}">${items}</div></div>`);
         });
+        if (wordKinds.length) {
+          const startNo = no, problems = [];
+          wordKinds.forEach((k, ki) => problems.push(...MathGen.generateWords(k.id, MQ.wordCounts[k.id] || 2, MQ.seed + vi * 1000003 + 50021 + ki * 7919)));
+          const items = problems.map(p => {
+            no += 1;
+            return `<div class="mq-word"><span class="mq-no">${no}.</span><div style="flex:1">
+              <div class="mq-word-q">${MathGen.textHtml(p.q)}</div>
+              <div class="mq-work">${p.eq ? '等式：' : '算式：'}</div><div>答：<span class="mq-blank" style="min-width:140px"></span></div></div></div>`;
+          }).join('');
+          sections.push(`<div class="mq-section"><div class="mq-section-head">${MQ_CN[sections.length] || sections.length + 1}、應用題</div>${items}</div>`);
+          key.progWord = problems.map((p, i) => `${startNo + i + 1}. ${p.eq ? `${MathGen.exprHtml(p.eq)}，` : ''}${MathGen.exprHtml(p.expr)} ＝ ${MathGen.textHtml(p.answerText)}`);
+        }
         if (MQ.word.length) {
           const startNo = no;
           const items = MQ.word.map(p => {
@@ -1846,7 +1880,7 @@
               <div class="mq-work">算式：</div><div>答：<span class="mq-blank" style="min-width:140px"></span></div>
               <span class="doc-verify mq-check ${check.ok ? 'ok' : 'bad'}">${escapeHtml(check.msg)}</span></div></div>`;
           }).join('');
-          sections.push(`<div class="mq-section"><div class="mq-section-head">${MQ_CN[kinds.length] || kinds.length + 1}、應用題</div>${items}</div>`);
+          sections.push(`<div class="mq-section"><div class="mq-section-head">${MQ_CN[sections.length] || sections.length + 1}、${wordKinds.length ? '應用題（二）' : '應用題'}</div>${items}</div>`);
           key.word = MQ.word.map((p, i) => {
             const check = mqCheck(p);
             const shown = check.value ? mqFmt(check.value, p.expr) : String(p.answer || '');
@@ -1864,13 +1898,14 @@
         pages.push(`<div class="sheet mq-sheet ws-answerpage"><div class="ws-head"><div class="ws-title">${escapeHtml(title)}｜答案卷</div></div>
           ${keys.map(key => `${key.ver ? `<div class="mq-section-head" style="margin-top:14px">${key.ver} 卷</div>` : ''}
             ${key.groups.map((g, gi) => `<div class="mq-section"><div style="font-weight:800">${MQ_CN[gi] || gi + 1}、${escapeHtml(g.title)}</div><div class="mq-key">${g.list.map(a => `<div>${a}</div>`).join('')}</div></div>`).join('')}
-            ${key.word ? `<div class="mq-section"><div style="font-weight:800">${MQ_CN[key.groups.length] || key.groups.length + 1}、應用題</div><div class="mq-key-word">${key.word.map(a => `<div>${a}</div>`).join('')}</div></div>` : ''}`).join('')}
+            ${key.progWord ? `<div class="mq-section"><div style="font-weight:800">${MQ_CN[key.groups.length] || key.groups.length + 1}、應用題</div><div class="mq-key-word">${key.progWord.map(a => `<div>${a}</div>`).join('')}</div></div>` : ''}
+            ${key.word ? `<div class="mq-section"><div style="font-weight:800">${MQ_CN[key.groups.length + (key.progWord ? 1 : 0)] || ''}、${key.progWord ? '應用題（二）' : '應用題'}</div><div class="mq-key-word">${key.word.map(a => `<div>${a}</div>`).join('')}</div></div>` : ''}`).join('')}
         </div>`);
       }
       $('mqPreview').innerHTML = pages.join('');
-      const total = kinds.reduce((sum, k) => sum + (MQ.counts[k.id] || 6), 0);
+      const total = kinds.reduce((sum, k) => sum + (MQ.counts[k.id] || 6), 0) + wordKinds.reduce((sum, k) => sum + (MQ.wordCounts[k.id] || 2), 0);
       const bad = MQ.word.filter(p => !mqCheck(p).ok).length;
-      $('mqMeta').textContent = `計算題 ${total} 題（程式驗算，答案正確）${MQ.word.length ? `＋應用題 ${MQ.word.length} 題（🟡 AI 草稿${bad ? `，⚠ ${bad} 題對不上` : '，已驗算'}，請核對後勾「老師已核對」）` : ''}`;
+      $('mqMeta').textContent = `程式出題 ${total} 題（答案由程式算，一定正確）${MQ.word.length ? `＋應用題 ${MQ.word.length} 題（🟡 AI 草稿${bad ? `，⚠ ${bad} 題對不上` : '，已驗算'}，請核對後勾「老師已核對」）` : ''}`;
       $('mqCheckedLabel').style.display = MQ.word.length ? '' : 'none';
       if (MQ.word.length) docApplyConfirm('mq');
       return true;
@@ -1994,7 +2029,7 @@
         const multi = info && info.readings.length > 1;
         const alt = (it.altWords || []).length ? `<div class="vb-alt">另讀：${it.altWords.map(a => `${escapeHtml(a.zy)}（${escapeHtml(a.word)}）`).join('、')}</div>` : '';
         const readingWarn = it.readingWarn ? `<div class="doc-verify">⚠ ${escapeHtml(it.readingWarn)}</div>` : '';
-        const offlineMulti = multi && !it.aiReading ? `<div class="doc-verify">⚠ 破音字（${escapeHtml(info.readings.join('、'))}）：點生字旁的注音可以換讀音</div>` : '';
+        const offlineMulti = multi && !it.aiReading ? `<div class="doc-verify">⚠ 破音字：點注音可換讀音（${escapeHtml(info.readings.join('、'))}）</div>` : '';
         const infoHtml = info
           ? `<div><b>部首</b> ${escapeHtml(info.radical)}</div><div><b>筆畫</b> ${info.strokes} 畫</div>${alt}${readingWarn}${offlineMulti}`
           : '<div class="doc-verify">⚠ 字表沒有這個字，注音、部首、筆畫請自己填</div>';
@@ -2002,9 +2037,9 @@
         const row2 = [];
         if (showWords) {
           row2.push(`<div class="vb-line vb-words"><span class="vb-label">造詞</span><span class="vb-edit" contenteditable="true">${words || '＿＿＿＿　＿＿＿＿　＿＿＿＿'}</span></div>`);
-          row2.push(`<div class="vb-line"><span class="vb-label">造句</span><span class="vb-edit" contenteditable="true">${escapeHtml(it.sentence || '')}</span>${it.sentenceWarn ? `<span class="doc-verify">⚠ ${escapeHtml(it.sentenceWarn)}</span>` : ''}</div>`);
+          row2.push(`<div class="vb-line"><span class="vb-label">造句</span><span class="vb-edit" contenteditable="true">${it.sentence ? escapeHtml(it.sentence) : '<span class="vb-blank"></span>'}</span>${it.sentenceWarn ? `<span class="doc-verify">⚠ ${escapeHtml(it.sentenceWarn)}</span>` : ''}</div>`);
         }
-        if (showMeaning) row2.push(`<div class="vb-line"><span class="vb-label">解釋</span><span class="vb-edit" contenteditable="true">${escapeHtml(it.meaning || '')}</span></div>`);
+        if (showMeaning) row2.push(`<div class="vb-line"><span class="vb-label">解釋</span><span class="vb-edit" contenteditable="true">${it.meaning ? escapeHtml(it.meaning) : '<span class="vb-blank"></span>'}</span></div>`);
         const grid = showGrid ? `<tr><td colspan="${showInfo ? 3 : 2}"><div class="vb-grid" style="--vb-cell:${cellSize}px">${Array.from({ length: cells }, (_, k) =>
           `<div class="vb-cell${k === 1 || k === 2 ? ' trace' : ''}">${k <= 2 ? escapeHtml(it.ch) : ''}</div>`).join('')}</div></td></tr>` : '';
 
@@ -2023,9 +2058,10 @@
         <div class="vb-source">注音、部首、筆畫：${escapeHtml(window.HANZI_SOURCE || '數位發展部 全字庫開放資料')}，依政府資料開放授權條款第1版使用。${usedAi ? '造詞、造句、解釋：AI 協助草擬。' : ''}</div>
         ${usedAi ? '<div class="doc-ai-sign" style="display:none" data-export-hide="1">AI 協助草擬，內容已由老師核對</div>' : ''}
       </div>`;
-      $('vbCheckedLabel').style.display = usedAi ? '' : 'none';
-      if (usedAi) docApplyConfirm('vb');
       const warn = $('vbPreview').querySelectorAll('.doc-verify').length;
+      // 有 AI 內容或 ⚠ 提醒就要老師核對；勾了「老師已核對」，⚠ 才不會印出來
+      $('vbCheckedLabel').style.display = usedAi || warn ? '' : 'none';
+      if (usedAi || warn) docApplyConfirm('vb');
       $('vbMeta').textContent = `${items.length} 個生字${usedAi ? '（🟡 造詞、造句、解釋是 AI 草稿' : '（未用 AI'}${warn ? `，⚠ ${warn} 處要核對` : ''}）；內容可以直接點進去修改。`;
     }
     $('vbGoButton').dataset.label = $('vbGoButton').textContent;

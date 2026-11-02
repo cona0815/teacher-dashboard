@@ -281,6 +281,103 @@
     } while (eq(item.answer, I(1)) || !small(evaluate(item.rhs)) || item.lhs.includes(item.rhs));
     return item;
   }, { wide: true });
+  // ---------- 應用題（不用 AI）：生活情境模板，數字隨機、答案由算式算 ----------
+  // gen(r) 回傳 { q:題目, expr:算式, unit:單位 } 或有餘數的 { q, special:'rem', dividend, divisor, unitQ, unitR }
+  const NAMES = ['小明', '小美', '小華', '阿傑', '小芳', '小安', '小宇', '小晴'];
+  const WORDS = [];
+  const word = (id, grade, label, gen, extra) => WORDS.push(Object.assign({ id, grade, label, gen }, extra || {}));
+  const ft = q => fracText(q, 'mixed');
+  word('wAdd20', 1, '加法（20 以內）', r => { const n = r.pick(NAMES), a = r.int(2, 9), b = r.int(2, 9);
+    return r.pick([
+      { q: `${n}有 ${a} 顆彈珠，哥哥又給他 ${b} 顆，現在${n}有幾顆彈珠？`, expr: `${a} + ${b}`, unit: '顆' },
+      { q: `花園裡有 ${a} 朵紅花和 ${b} 朵黃花，一共有幾朵花？`, expr: `${a} + ${b}`, unit: '朵' }]); }, { int: true });
+  word('wSub20', 1, '減法（20 以內）', r => { const b = r.int(2, 9), a = r.int(b + 1, 18);
+    return r.pick([
+      { q: `樹上有 ${a} 隻小鳥，飛走了 ${b} 隻，樹上還有幾隻小鳥？`, expr: `${a} - ${b}`, unit: '隻' },
+      { q: `盒子裡有 ${a} 塊餅乾，吃掉 ${b} 塊，還剩幾塊？`, expr: `${a} - ${b}`, unit: '塊' }]); }, { int: true });
+  word('wAddSub100', 2, '二位數加減', r => { const n = r.pick(NAMES), a = r.int(25, 80), b = r.int(11, 99 - a), c = r.int(11, a - 5);
+    return r.pick([
+      { q: `${n}有 ${a} 張貼紙，生日又收到 ${b} 張，${n}現在有幾張貼紙？`, expr: `${a} + ${b}`, unit: '張' },
+      { q: `圖書室有 ${a} 本故事書，借出 ${c} 本，還剩幾本？`, expr: `${a} - ${c}`, unit: '本' },
+      { q: `一條繩子長 ${a} 公分，剪掉 ${c} 公分，還剩幾公分？`, expr: `${a} - ${c}`, unit: '公分' }]); }, { int: true });
+  word('wMul99', 2, '乘法（九九乘法）', r => { const a = r.int(2, 9), b = r.int(2, 9);
+    return r.pick([
+      { q: `每盒有 ${a} 枝鉛筆，${b} 盒一共有幾枝鉛筆？`, expr: `${a} × ${b}`, unit: '枝' },
+      { q: `一張桌子有 ${a} 個人坐，${b} 張桌子可以坐幾個人？`, expr: `${a} × ${b}`, unit: '人' }]); }, { int: true });
+  word('wMul', 3, '乘法（多位數 × 一位數）', r => { const p = r.int(12, 250), k = r.int(2, 9);
+    return r.pick([
+      { q: `一張電影票 ${p} 元，買 ${k} 張要多少元？`, expr: `${p} × ${k}`, unit: '元' },
+      { q: `一箱蘋果有 ${p} 顆，${k} 箱共有幾顆？`, expr: `${p} × ${k}`, unit: '顆' }]); }, { int: true });
+  word('wDiv', 3, '除法（平分，整除）', r => { const b = r.int(2, 9), q = r.int(3, 40);
+    return r.pick([
+      { q: `${b * q} 顆糖果平分給 ${b} 個小朋友，每人分到幾顆？`, expr: `${b * q} ÷ ${b}`, unit: '顆' },
+      { q: `${b * q} 個學生，每 ${b} 人一組，可以分成幾組？`, expr: `${b * q} ÷ ${b}`, unit: '組' }]); }, { int: true });
+  word('wDivR', 3, '除法（有餘數）', r => { const b = r.int(3, 9), q = r.int(3, 30), rem = r.int(1, b - 1);
+    return { q: `${b * q + rem} 枝鉛筆，每 ${b} 枝裝一盒，可以裝滿幾盒？還剩幾枝？`, special: 'rem', dividend: b * q + rem, divisor: b, unitQ: '盒', unitR: '枝' }; }, { int: true });
+  word('wFracSame', 3, '同分母分數', r => { const d = r.int(4, 12), a = r.int(1, d - 2), b = r.int(1, d - 1 - a);
+    return r.pick([
+      { q: `一個披薩平分成 ${d} 片，哥哥吃了 ${a} 片，弟弟吃了 ${b} 片，兩人一共吃了這個披薩的幾分之幾？`, expr: `${a}/${d} + ${b}/${d}`, unit: '' },
+      { q: `一條緞帶，用掉 ${a}/${d} 條，又用掉 ${b}/${d} 條，一共用掉幾條？`, expr: `${a}/${d} + ${b}/${d}`, unit: '條' }]); });
+  word('wMul2', 4, '乘法（× 二位數）', r => { const p = r.int(15, 95), k = r.int(12, 45);
+    return { q: `學校買了 ${k} 顆籃球，每顆 ${p * 5} 元，一共要付多少元？`, expr: `${p * 5} × ${k}`, unit: '元' }; }, { int: true });
+  word('wDiv2', 4, '除法（÷ 二位數）', r => { const b = r.int(12, 48), q = r.int(3, 40);
+    return { q: `工廠做了 ${b * q} 瓶果汁，每 ${b} 瓶裝一箱，可以裝成幾箱？`, expr: `${b * q} ÷ ${b}`, unit: '箱' }; }, { int: true });
+  word('wMixed', 4, '兩步驟（四則混合）', r => { const n = r.pick(NAMES), a = r.int(2, 6), p = r.int(3, 30) * 5, c = r.int(2, 20) * 5, pay = (a * p + c) + r.int(1, 10) * 10;
+    return r.pick([
+      { q: `${n}買 ${a} 枝 ${p} 元的筆和 1 本 ${c} 元的筆記本，一共要付多少元？`, expr: `${a} × ${p} + ${c}`, unit: '元' },
+      { q: `${n}帶 ${pay} 元，買了 ${a} 個 ${p} 元的便當，還剩多少元？`, expr: `${pay} - ${a} × ${p}`, unit: '元' }]); }, { int: true });
+  word('wDecAdd', 4, '小數加減', r => { const a = realDec(r, 30, 99, 1), b = realDec(r, 11, 29, 1);
+    return r.pick([
+      { q: `一條繩子長 ${decText(a)} 公尺，剪掉 ${decText(b)} 公尺，還剩幾公尺？`, expr: `${decText(a)} - ${decText(b)}`, unit: '公尺' },
+      { q: `${r.pick(NAMES)}昨天跑了 ${decText(a)} 公里，今天跑了 ${decText(b)} 公里，兩天一共跑了幾公里？`, expr: `${decText(a)} + ${decText(b)}`, unit: '公里' }]); });
+  word('wFracDiff', 5, '異分母分數加減', r => { let a, b; do { a = Q(r.int(1, 5), r.int(2, 8)); b = Q(r.int(1, 5), r.int(2, 8)); } while (a.d === b.d || a.n >= a.d || b.n >= b.d || a.n * b.d <= b.n * a.d);
+    return r.pick([
+      { q: `一瓶果汁有 ${ft(a)} 公升，喝掉 ${ft(b)} 公升，還剩多少公升？`, expr: `${ft(a)} - ${ft(b)}`, unit: '公升' },
+      { q: `${r.pick(NAMES)}上午看了一本書的 ${ft(b)}，下午又看了 ${ft(sub(a, b))}，一共看了這本書的幾分之幾？`, expr: `${ft(b)} + ${ft(sub(a, b))}`, unit: '' }]); });
+  word('wFracMul', 5, '分數 × 整數', r => { const d = r.int(3, 9), f = Q(r.int(1, d - 1), d), k = r.int(2, 9);
+    return { q: `每個小朋友吃 ${ft(f)} 個蛋糕，${k} 個小朋友一共吃了幾個蛋糕？`, expr: `${ft(f)} × ${k}`, unit: '個' }; });
+  word('wDecMul', 5, '小數 × 整數', r => { const p = r.int(2, 9) * 10, w = realDec(r, 11, 59, 1);
+    return { q: `一公尺緞帶 ${p} 元，買 ${decText(w)} 公尺要多少元？`, expr: `${p} × ${decText(w)}`, unit: '元' }; });
+  word('wGcd', 5, '最大公因數（平分）', r => { const g = r.int(2, 9); let m, n; do { m = r.int(2, 7); n = r.int(2, 7); } while (m === n || gcd(m, n) !== 1);
+    return { q: `有 ${g * m} 顆紅球和 ${g * n} 顆藍球，要平分裝成一樣的禮物袋，每袋紅球一樣多、藍球也一樣多，而且都沒有剩，最多可以裝成幾袋？`, special: 'gcd', a: g * m, b: g * n, unit: '袋' }; }, { int: true });
+  word('wLcm', 5, '最小公倍數（同時）', r => { let a, b; do { a = r.int(4, 20); b = r.int(4, 20); } while (a === b || lcm(a, b) > 120 || lcm(a, b) === Math.max(a, b));
+    return { q: `甲公車每 ${a} 分鐘發一班，乙公車每 ${b} 分鐘發一班。兩班車早上 7 點同時發車後，至少再過幾分鐘會再同時發車？`, special: 'lcm', a, b, unit: '分鐘' }; }, { int: true });
+  word('wPercent', 5, '百分率', r => { const p = r.pick([10, 20, 25, 30, 40, 50, 60, 75]), n = r.int(2, 8) * (p === 25 || p === 75 ? 4 : 10);
+    return { q: `全校有 ${n * 10} 位學生，其中 ${p}% 的學生參加社團，參加社團的有幾位？`, expr: `${n * 10} × ${p} ÷ 100`, unit: '位' }; }, { int: true });
+  word('wFracDiv', 6, '分數 ÷ 分數', r => { const d = r.int(2, 8), b = Q(1, d), k = r.int(2, 9), a = mul(b, I(k));
+    return { q: `有 ${ft(a)} 公升的牛奶，每杯裝 ${ft(b)} 公升，可以裝滿幾杯？`, expr: `${ft(a)} ÷ ${ft(b)}`, unit: '杯' }; }, { int: true });
+  word('wSpeed', 6, '速率', r => { const v = r.int(4, 12) * 10, t = r.int(2, 5);
+    return r.pick([
+      { q: `一輛汽車每小時行駛 ${v} 公里，${t} 小時可以行駛幾公里？`, expr: `${v} × ${t}`, unit: '公里' },
+      { q: `一輛汽車 ${t} 小時行駛了 ${v * t} 公里，平均每小時行駛幾公里？`, expr: `${v * t} ÷ ${t}`, unit: '公里' }]); }, { int: true });
+  word('wEqX', 6, '用 x 列式求解', r => { const n = r.int(2, 9), x = r.int(3, 30) * 5, extra = r.int(2, 9) * 10;
+    return r.pick([
+      { q: `一本書 x 元，買 ${n} 本一共付了 ${n * x} 元。用 x 列出等式，並求出一本書多少元。`, expr: `${n * x} ÷ ${n}`, unit: '元', eq: `${n} × x = ${n * x}` },
+      { q: `${r.pick(NAMES)}原本有 x 元，存了 ${extra} 元以後，變成 ${x + extra} 元。用 x 列出等式，並求出原本有多少元。`, expr: `${x + extra} - ${extra}`, unit: '元', eq: `x + ${extra} = ${x + extra}` }]); }, { int: true });
+
+  // 出 count 題應用題：{ q, expr, unit, value, answerText, check? }
+  function generateWords(id, count, seed) {
+    const k = WORDS.find(x => x.id === id);
+    if (!k) throw new Error('沒有這個應用題：' + id);
+    const r = makeRng(seed), seen = new Set(), list = [];
+    for (let tries = 0; list.length < count && tries < count * 60; tries += 1) {
+      const p = k.gen(r);
+      if (seen.has(p.q)) continue;
+      seen.add(p.q);
+      if (p.special === 'rem') {
+        const quot = Math.floor(p.dividend / p.divisor), rem = p.dividend % p.divisor;
+        list.push(Object.assign(p, { expr: `${p.dividend} ÷ ${p.divisor}`, answerText: `${quot} ${p.unitQ}，剩 ${rem} ${p.unitR}`, check: { quot, rem } }));
+      } else if (p.special === 'gcd' || p.special === 'lcm') {
+        const v = p.special === 'gcd' ? gcd(p.a, p.b) : lcm(p.a, p.b);
+        list.push(Object.assign(p, { expr: `${p.a} 和 ${p.b} 的${p.special === 'gcd' ? '最大公因數' : '最小公倍數'}`, value: I(v), answerText: `${v} ${p.unit}` }));
+      } else {
+        const value = evaluate(p.expr);
+        list.push(Object.assign(p, { value, answerText: `${/\./.test(p.expr) ? decText(value) : ft(value)}${p.unit ? ' ' + p.unit : ''}` }));
+      }
+    }
+    return list;
+  }
+
   // 算式排版：分數上下疊、帶分數、□ 方格、x 斜體、全形運算符號（題目、答案、AI 應用題的算式都用這個）
   const BOX_HTML = '<span class="mq-box" data-word-text="□"></span>';
   function exprHtml(s) {
@@ -375,5 +472,5 @@
     return `<table class="mv"><tr>${cells(a)}</tr><tr class="mv-line">${cells(b, OP_SHOW[v.op])}</tr>${work}${work ? `<tr class="mv-line">${blank}</tr>` : ''}<tr class="mv-gap">${blank}</tr></table>`;
   }
 
-  return { KINDS, generate, evaluate, parseAnswer, makeRng, Q, add, sub, mul, div, eq, gcd, lcm, fracText, fracHtml, decText, numText, verticalHtml, exprHtml, textHtml };
+  return { KINDS, generate, evaluate, parseAnswer, makeRng, Q, add, sub, mul, div, eq, gcd, lcm, fracText, fracHtml, decText, numText, verticalHtml, exprHtml, textHtml, WORDS, generateWords };
 });

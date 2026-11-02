@@ -79,9 +79,34 @@ assert.equal(M.textHtml("喝了 <b>1/3</b> 公升").includes("&lt;b&gt;"), true,
 assert.match(M.textHtml("一本書 x 元，Excel 不變"), /<i class="mq-x">x<\/i> 元，Excel/, "題目裡的 x 用斜體，英文單字不動");
 assert.ok(M.KINDS.some(k => k.id === "eqX") && M.KINDS.some(k => k.id === "eqBox1"), "要有方程式題型");
 
+// 應用題（不用 AI）：每個模板出很多題，答案重新驗算，數字都要出現在題目裡
+let wordTotal = 0;
+for (const w of M.WORDS) {
+  for (let seed = 1; seed <= 40; seed += 1) {
+    for (const p of M.generateWords(w.id, 3, seed * 104729)) {
+      wordTotal += 1;
+      const where = `${w.id}：${p.q}`;
+      assert.doesNotMatch(p.q, /undefined|NaN/, where);
+      if (p.check) { assert.equal(p.check.quot * p.divisor + p.check.rem, p.dividend, where); assert.ok(p.check.rem > 0 && p.check.rem < p.divisor, where); continue; }
+      if (p.special) { assert.equal(p.value.n, p.special === "gcd" ? gcd(p.a, p.b) : lcm(p.a, p.b), where); continue; }
+      assert.ok(eq(evaluate(p.expr), p.value) && p.value.n > 0, `${where} 答案要是正的`);
+      if (w.int) assert.equal(p.value.d, 1, `${where} 這類題答案要是整數`);
+      for (const num of p.expr.match(/\d+(?:\.\d+)?/g) || []) {   // 分數拆成分子、分母各自檢查（「5 片吃 2 片」→ 2/5）
+        if (num === "100" && /%/.test(p.q)) continue;
+        assert.ok(p.q.includes(num), `${where} 算式的 ${num} 要出現在題目裡`);
+      }
+      if (p.eq) {
+        const [l, r] = p.eq.split("=");
+        assert.ok(eq(evaluate(l.replace("x", `(${M.fracText(p.value, "improper")})`)), evaluate(r)), `${where} 等式代回去要成立`);
+      }
+    }
+  }
+}
+assert.ok(wordTotal > 2000, "應用題要驗算超過 2000 題");
+
 // 直式
 const v = M.verticalHtml({ a: 345, b: 78, op: "+" });
 assert.match(v, /<table class="mv">/);
 assert.match(v, /mv-op">＋/);
 
-console.log(`math_gen.test.js: all checks passed（驗算 ${total} 題）`);
+console.log(`math_gen.test.js: all checks passed（驗算計算題 ${total} 題、應用題 ${wordTotal} 題）`);
