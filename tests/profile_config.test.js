@@ -756,6 +756,26 @@ assert.match(studioHtml, /function mqCheck\(p\)[\s\S]*?MathGen\.evaluate\(p\.exp
 assert.match(studioHtml, /docBindConfirm\('mq'\)/, "AI 應用題要有「老師已核對」");
 assert.match(studioHtml, /\[data-word-text\][\s\S]{0,80}createTextNode/, "存 Word 時分數換成文字");
 
+// 📒 生詞本：注音、部首、筆畫用全字庫開放資料（不靠 AI），AI 只做造詞造句解釋且讀音要在官方讀音內
+assert.match(studioHtml, /data-page="vocab">📒 生詞本/, "應有生詞本分頁");
+assert.match(studioHtml, /tag\.src = 'assets\/studio\/hanzi-data\.js'/, "生詞本要載入全字庫字表");
+{
+  const hanziFile = path.join(projectRoot, "assets", "studio", "hanzi-data.js");
+  assert.ok(fs.existsSync(hanziFile), "全字庫字表檔要存在");
+  const sandbox = { window: {} };
+  new Function("window", fs.readFileSync(hanziFile, "utf8"))(sandbox.window);
+  const D = sandbox.window.HANZI_DATA, R = sandbox.window.HANZI_RADICALS;
+  assert.ok(Object.keys(D).length > 12000, "字表至少收常用與次常用字");
+  assert.deepEqual([D["晨"][0], R[D["晨"][1]]], [11, "日"], "晨：11 畫、日部");
+  assert.deepEqual([D["學"][0], R[D["學"][1]]], [16, "子"], "學：16 畫、子部");
+  assert.ok(D["樂"][2].split(" ").includes("ㄌㄜˋ") && D["樂"][2].split(" ").includes("ㄩㄝˋ"), "樂是破音字");
+  assert.match(sandbox.window.HANZI_SOURCE, /數位發展部 全字庫/, "字表要標示資料來源");
+}
+assert.match(studioHtml, /function vbReadingOk\(ch, zy\)/, "AI 的注音要對照全字庫讀音");
+assert.match(studioHtml, /注音、部首、筆畫：\$\{escapeHtml\(window\.HANZI_SOURCE/, "生詞本頁面要標示全字庫出處");
+assert.match(studioHtml, /docBindConfirm\('vb'\)/, "生詞本 AI 內容要有「老師已核對」");
+assert.match(fs.readFileSync(path.join(projectRoot, "THIRD_PARTY_NOTICES.md"), "utf8"), /全字庫[\s\S]*政府資料開放授權條款/, "授權說明要列全字庫");
+
 // G6 🧳 代課包
 assert.match(studioHtml, /data-page="substitute">🧳 代課包/, "應有代課包分頁");
 {
