@@ -182,20 +182,20 @@ assert.match(indexHtml, /project-child \.task-name\.is-completed/, "完成的子
 assert.match(indexHtml, /子任務.*已完成；主任務狀態維持不變/, "完成子任務時應保留主任務狀態");
 assert.match(indexHtml, /主任務與下面的 .*項子任務/, "封存主任務前應明確提示會連同子任務處理");
 assert.match(indexHtml, /data-theme-choice="minimal"/, "介面配色應提供低彩度極簡選項");
-assert.match(indexHtml, /INTERFACE_THEMES = \['forest', 'apricot', 'lavender', 'tech', 'minimal', 'cozy'\]/, "主題清單應包含極簡配色與可愛動森風");
-assert.match(indexHtml, /data-theme-choice="cozy"/, "介面配色可選可愛動森風");
-assert.match(indexHtml, /:root\[data-theme="cozy"\] \{/, "可愛動森風有自己的配色");
-// 2026-11-02：動森風通用按鈕規則權重高，選取狀態要另寫，否則記事篩選「全部」會白底白字
-assert.match(indexHtml, /:root\[data-theme="cozy"\] \.note-filter-chip\.active \{/, "動森風保留記事篩選的選取樣式");
-assert.match(indexHtml, /:root\[data-theme="cozy"\] \.role-person\[aria-pressed="true"\] \{/, "動森風保留身分選取樣式");
-// ART-01 R4：工作台動森風圖示（assets/art/cozy/icon/），每個 data-cozy-icon 都要有檔案
+assert.match(indexHtml, /INTERFACE_THEMES = \['forest', 'apricot', 'lavender', 'tech', 'minimal', 'cozy'\]/, "主題清單應包含極簡配色與可愛溫暖風");
+assert.match(indexHtml, /data-theme-choice="cozy"/, "介面配色可選可愛溫暖風");
+assert.match(indexHtml, /:root\[data-theme="cozy"\] \{/, "可愛溫暖風有自己的配色");
+// 2026-11-02：溫暖風通用按鈕規則權重高，選取狀態要另寫，否則記事篩選「全部」會白底白字
+assert.match(indexHtml, /:root\[data-theme="cozy"\] \.note-filter-chip\.active \{/, "溫暖風保留記事篩選的選取樣式");
+assert.match(indexHtml, /:root\[data-theme="cozy"\] \.role-person\[aria-pressed="true"\] \{/, "溫暖風保留身分選取樣式");
+// ART-01 R4：工作台溫暖風圖示（assets/art/cozy/icon/），每個 data-cozy-icon 都要有檔案
 {
   const cozyIds = [...indexHtml.matchAll(/data-cozy-icon="([a-z_]+)"/g)].map(m => m[1]);
-  assert.ok(cozyIds.length >= 18, "工作台摘要卡、面板、身分都有動森風圖示");
-  cozyIds.forEach(id => assert.ok(fs.existsSync(path.join(projectRoot, "assets", "art", "cozy", "icon", id + ".webp")), `工作台動森風圖示存在：${id}.webp`));
-  ["role_grade_lead", "role_admin", "role_homeroom", "role_subject", "role_teacher"].forEach(id => assert.ok(cozyIds.includes(id), `身分 ${id} 有動森風圖示`));
-  assert.match(indexHtml, /safeTheme === 'cozy' \? 'assets\/art\/cozy\/icon\/'/, "選動森風才換圖示");
-  ["quiet_super", "quiet_good", "quiet_warn", "quiet_loud"].forEach(id => assert.ok(fs.existsSync(path.join(projectRoot, "assets", "art", "cozy", "quiet", id + ".webp")), `安靜偵測動森風插圖存在：${id}.webp`));
+  assert.ok(cozyIds.length >= 18, "工作台摘要卡、面板、身分都有溫暖風圖示");
+  cozyIds.forEach(id => assert.ok(fs.existsSync(path.join(projectRoot, "assets", "art", "cozy", "icon", id + ".webp")), `工作台溫暖風圖示存在：${id}.webp`));
+  ["role_grade_lead", "role_admin", "role_homeroom", "role_subject", "role_teacher"].forEach(id => assert.ok(cozyIds.includes(id), `身分 ${id} 有溫暖風圖示`));
+  assert.match(indexHtml, /safeTheme === 'cozy' \? 'assets\/art\/cozy\/icon\/'/, "選溫暖風才換圖示");
+  ["quiet_super", "quiet_good", "quiet_warn", "quiet_loud"].forEach(id => assert.ok(fs.existsSync(path.join(projectRoot, "assets", "art", "cozy", "quiet", id + ".webp")), `安靜偵測溫暖風插圖存在：${id}.webp`));
 }
 assert.match(indexHtml, /id="teachingProgressBody" hidden/, "教學進度首次進入應預設收合");
 assert.match(indexHtml, /id="progressUnitList"/, "教學進度應提供逐單元編輯清單");
@@ -425,7 +425,7 @@ assert.match(morningHtml, /day\.promptFired/, "同一天同一時間只跳一次
 assert.match(morningHtml, /飯後潔牙/, "大屏提示應含飯後潔牙");
 assert.match(morningHtml, /\.prompt-img \{ width: auto; height: auto; align-self: center; object-fit: contain; \}/, "全螢幕時提示插圖不可被拉變形");
 assert.match(morningHtml, /storybook: \{ dir: 'assets\/art\/storybook\/prompt\/'/, "溫暖繪本插圖放在 assets/art/storybook/prompt/");
-assert.match(morningHtml, /cozy: \{ dir: 'assets\/art\/cozy\/prompt\/'/, "可愛動森風插圖放在 assets/art/cozy/prompt/");
+assert.match(morningHtml, /cozy: \{ dir: 'assets\/art\/cozy\/prompt\/'/, "可愛溫暖風插圖放在 assets/art/cozy/prompt/");
 assert.match(morningHtml, /tomatoBreathe/, "番茄鐘跑動時應有呼吸動畫");
 assert.match(morningHtml, /youtube-nocookie\.com/, "番茄鐘音樂角應支援 YouTube 內嵌");
 assert.match(morningHtml, /config\.scores/, "計分板分數應永久保存（只有手動歸零）");
@@ -798,6 +798,12 @@ assert.match(morningHtml, /function fsEnter\(el\)[\s\S]{0,300}fsSetFake\(el\)/, 
 assert.doesNotMatch(morningHtml.replace(/\.requestFullscreen\)|el\.requestFullscreen\(\)/g, ""), /\.requestFullscreen\(/, "全螢幕一律走 fsEnter");
 assert.doesNotMatch(morningHtml, /[^(,\s]:fullscreen(?!, \.fake-fs)/, "CSS 的全螢幕規則都要同時套用 .fake-fs");
 
+// 老師 2026-11-04：風格名稱改成「可愛溫暖風」，畫面不再出現舊名
+assert.doesNotMatch(morningHtml, /動森/, "大屏不可再出現舊的風格名稱");
+assert.doesNotMatch(indexHtml, /動森/, "工作台不可再出現舊的風格名稱");
+assert.match(morningHtml, /<option value="cozy">可愛溫暖風/, "大屏風格選單改名");
+assert.match(indexHtml, /<strong>可愛溫暖風<\/strong>/, "工作台配色改名");
+
 // G6 🧳 代課包
 assert.match(studioHtml, /data-page="substitute">🧳 代課包/, "應有代課包分頁");
 {
@@ -920,17 +926,17 @@ assert.match(studioHtml, /section\('代課教師當日簽認'/, "代課包應有
   assert.match(morningHtml, /<select id="setupBoardStyle">[\s\S]*?value="standard"[\s\S]*?value="cozy"/, '設定頁可選大屏風格');
   assert.match(morningHtml, /const BOARD_STYLES = \['standard', 'cozy'\]/, '大屏風格只接受兩種值');
   assert.match(morningHtml, /state\.settings\.boardStyle === 'cozy' \? PROMPT_ART_STYLES\.cozy : PROMPT_ART_STYLES\.storybook/, '提示插圖跟著大屏風格');
-  assert.match(morningHtml, /html\[data-board-style="cozy"\] \{/, '有動森風介面樣式');
-  assert.match(morningHtml, /html\[data-board-style="cozy"\] \.board-card\.board-settled \{/, '動森風保留已完成版面的綠底');
-  assert.match(morningHtml, /html\[data-board-style="cozy"\] \.mascot \{ display: none !important; \}/, '動森風不放小綿羊吉祥物');
+  assert.match(morningHtml, /html\[data-board-style="cozy"\] \{/, '有溫暖風介面樣式');
+  assert.match(morningHtml, /html\[data-board-style="cozy"\] \.board-card\.board-settled \{/, '溫暖風保留已完成版面的綠底');
+  assert.match(morningHtml, /html\[data-board-style="cozy"\] \.mascot \{ display: none !important; \}/, '溫暖風不放小綿羊吉祥物');
   assert.match(morningHtml, /<div class="cd-pop" id="cdPop"/, '倒數有畫面中間的大時鐘');
   assert.match(morningHtml, /querySelectorAll\('\[data-countdown\]'\)\.forEach\(button => button\.addEventListener\('click', \(\) => startCountdown\(/, '按 5分／10分 直接開始倒數');
-  // 動森風圖示：列在 COZY_ICON_READY 的檔案都要存在
+  // 溫暖風圖示：列在 COZY_ICON_READY 的檔案都要存在
   const iconReady = (morningHtml.match(/const COZY_ICON_READY = new Set\(\[([^\]]*)\]\)/) || [])[1];
   assert.ok(iconReady !== undefined, '找得到 COZY_ICON_READY');
-  [...iconReady.matchAll(/'([a-z_]+)'/g)].forEach(m => assert.ok(fsArt.existsSync(pathArt.join(__dirname, '..', 'assets', 'art', 'cozy', 'icon', m[1] + '.webp')), `動森風圖示存在：${m[1]}.webp`));
+  [...iconReady.matchAll(/'([a-z_]+)'/g)].forEach(m => assert.ok(fsArt.existsSync(pathArt.join(__dirname, '..', 'assets', 'art', 'cozy', 'icon', m[1] + '.webp')), `溫暖風圖示存在：${m[1]}.webp`));
   assert.match(morningHtml, /\[chosen, PROMPT_ART_STYLES\.storybook\]\.find/, '選的風格沒這張時退回溫暖繪本');
   const cozyReady = (morningHtml.match(/cozy: \{ dir: '[^']+', ready: new Set\(\[([^\]]*)\]\) \}/) || [])[1] || '';
-  [...cozyReady.matchAll(/'([a-z_]+)'/g)].forEach(m => assert.ok(fsArt.existsSync(pathArt.join(__dirname, '..', 'assets', 'art', 'cozy', 'prompt', m[1] + '.webp')), `動森風插圖檔存在：${m[1]}.webp`));
+  [...cozyReady.matchAll(/'([a-z_]+)'/g)].forEach(m => assert.ok(fsArt.existsSync(pathArt.join(__dirname, '..', 'assets', 'art', 'cozy', 'prompt', m[1] + '.webp')), `溫暖風插圖檔存在：${m[1]}.webp`));
 }
 // ── end ART-02 ──

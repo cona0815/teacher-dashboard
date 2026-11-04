@@ -107,7 +107,7 @@
       --shadow: 0 5px 16px rgba(42, 57, 63, .07);
     }
 
-    /* 可愛動森風：跟晨間大屏的動森風同一套（奶油底、木頭邊、圓潤玩具感按鈕、粉圓字型） */
+    /* 可愛溫暖風：跟晨間大屏的溫暖風同一套（奶油底、木頭邊、圓潤玩具感按鈕、粉圓字型） */
     :root[data-theme="cozy"] {
       --bg: #fbf5e6;
       --surface: #fffaf0;
@@ -169,7 +169,7 @@
     :root[data-theme="cozy"] .role-person[aria-pressed="true"] { border-color: var(--primary); background: var(--primary-soft); color: var(--primary-strong); box-shadow: 0 3px 0 #b9d99a; }
     :root[data-theme="cozy"] .mini-button-danger, :root[data-theme="cozy"] .progress-course-picker .course-delete-button { border-color: #e8bcb0; background: #fff8f5; color: var(--danger); box-shadow: 0 3px 0 #e8bcb0; }
     :root[data-theme="cozy"] .mini-button.is-suggested { border-color: #b9852f; box-shadow: 0 0 0 2px #fff3d6 inset, 0 3px 0 #b9852f; font-weight: 900; }
-    /* 動森風圖示本身就有白貼紙邊與顏色：不再套灰階與底色；身分沒選的維持淡灰 */
+    /* 溫暖風圖示本身就有白貼紙邊與顏色：不再套灰階與底色；身分沒選的維持淡灰 */
     :root[data-theme="cozy"] .summary-icon { width: 40px; height: 40px; padding: 0; background: transparent; filter: none; opacity: 1; }
     :root[data-theme="cozy"] .title-icon { padding: 2px; background: var(--cozy-paper); border-color: var(--cozy-wood); }
     :root[data-theme="cozy"] .role-person img { width: 32px; height: 32px; padding: 0; background: transparent; filter: grayscale(.85); opacity: .7; }
@@ -2124,7 +2124,7 @@
               <button class="theme-choice" type="button" data-theme-choice="lavender" aria-pressed="false"><span class="theme-swatches" aria-hidden="true"><span></span><span></span><span></span></span><strong>粉霧紫</strong><small>柔和舒適・長時間閱讀</small></button>
               <button class="theme-choice" type="button" data-theme-choice="tech" aria-pressed="false"><span class="theme-swatches" aria-hidden="true"><span></span><span></span><span></span></span><strong>科技深藍</strong><small>網格背景・青藍光感</small></button>
               <button class="theme-choice" type="button" data-theme-choice="minimal" aria-pressed="false"><span class="theme-swatches" aria-hidden="true"><span></span><span></span><span></span></span><strong>極簡霧灰</strong><small>低彩度・專注閱讀</small></button>
-              <button class="theme-choice" type="button" data-theme-choice="cozy" aria-pressed="false"><span class="theme-swatches" aria-hidden="true"><span></span><span></span><span></span></span><strong>可愛動森風</strong><small>奶油草綠・圓潤玩具感</small></button>
+              <button class="theme-choice" type="button" data-theme-choice="cozy" aria-pressed="false"><span class="theme-swatches" aria-hidden="true"><span></span><span></span><span></span></span><strong>可愛溫暖風</strong><small>奶油草綠・圓潤玩具感</small></button>
             </div>
           </div>
           <div class="field"><label for="teacherName">姓名</label><input class="input" id="teacherName" placeholder="例如：王老師"></div>
@@ -7843,7 +7843,7 @@ ${cleanBase}`;
       document.querySelectorAll('[data-theme-choice]').forEach(button => {
         button.setAttribute('aria-pressed', String(button.dataset.themeChoice === safeTheme));
       });
-      // 可愛動森風換成原創圖示（assets/art/cozy/icon/），其他配色用原圖
+      // 可愛溫暖風換成原創圖示（assets/art/cozy/icon/），其他配色用原圖
       document.querySelectorAll('img[data-cozy-icon]').forEach(img => {
         if (!img.dataset.origSrc) img.dataset.origSrc = img.getAttribute('src');
         const want = safeTheme === 'cozy' ? 'assets/art/cozy/icon/' + img.dataset.cozyIcon + '.webp' : img.dataset.origSrc;

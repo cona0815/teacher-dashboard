@@ -209,7 +209,7 @@
     html[data-board-style="cozy"] .cd-card { border: 4px solid var(--cozy-wood); border-radius: 44px; box-shadow: 0 8px 0 var(--cozy-wood), 0 30px 60px -20px rgba(91,70,54,.45); }
     html[data-board-style="cozy"] .cd-pop { background: rgba(91, 70, 54, .38); }
 
-    /* ===== 大屏風格：可愛動森風（設定 → 大屏風格）。只換外觀，功能顏色（到校綠、病假橘…）保留原意 ===== */
+    /* ===== 大屏風格：可愛溫暖風（設定 → 大屏風格）。只換外觀，功能顏色（到校綠、病假橘…）保留原意 ===== */
     html[data-board-style="cozy"] {
       --bg: #fbf5e6; --surface: #fffaf0; --ink: #5b4636; --muted: #8f7b63; --line: #ecdcbc;
       --primary: #3c7f35; --primary-strong: #2f6a2a;
@@ -232,7 +232,7 @@
     html[data-board-style="cozy"] .tabs { gap: 10px; padding-top: 12px; }
     html[data-board-style="cozy"] .tab-button { border: 3px solid var(--cozy-wood); border-bottom: 0; border-radius: 22px 22px 0 0; background: var(--cozy-paper); color: #7a5c3e; box-shadow: inset 0 -4px 0 rgba(201,166,107,.22); }
     html[data-board-style="cozy"] .tab-button.active { background: var(--cozy-leaf); border-color: var(--cozy-leaf-deep); color: #fff; text-shadow: 0 1px 0 rgba(47,107,44,.45); box-shadow: inset 0 -5px 0 var(--cozy-leaf-deep); }
-    html[data-board-style="cozy"] .tab-icon { width: 28px; height: 28px; vertical-align: -8px; border-radius: 0; object-fit: contain; }   /* 動森風圖示自帶白貼紙邊 */
+    html[data-board-style="cozy"] .tab-icon { width: 28px; height: 28px; vertical-align: -8px; border-radius: 0; object-fit: contain; }   /* 溫暖風圖示自帶白貼紙邊 */
     html[data-board-style="cozy"] .panel { border: 3px solid var(--cozy-wood); border-radius: 0 28px 28px 28px; box-shadow: 0 5px 0 var(--cozy-wood), 0 16px 26px -16px rgba(91,70,54,.4); }
     html[data-board-style="cozy"] .ghost-button, html[data-board-style="cozy"] .mode-button, html[data-board-style="cozy"] .class-pill {
       border: 3px solid var(--cozy-wood); border-radius: 999px; background: var(--cozy-paper); color: #6b4f37; box-shadow: 0 4px 0 var(--cozy-wood); }
@@ -242,7 +242,7 @@
     html[data-board-style="cozy"] .tool-tab { border-width: 3px; border-radius: 24px; box-shadow: 0 5px 0 var(--cozy-wood); }   /* 底色沿用各工具的分類色 */
     html[data-board-style="cozy"] .tool-tab.active { box-shadow: 0 5px 0 rgba(91,70,54,.28), 0 12px 20px -10px var(--tc); }
     html[data-board-style="cozy"] .tt-img { width: 40px; height: 40px; display: block; }
-    html[data-board-style="cozy"] .mascot { display: none !important; }   /* 老師 2026-11-02：動森風不放小綿羊（抽籤、安靜偵測、番茄鐘） */
+    html[data-board-style="cozy"] .mascot { display: none !important; }   /* 老師 2026-11-02：溫暖風不放小綿羊（抽籤、安靜偵測、番茄鐘） */
     html[data-board-style="cozy"] .ghost-button:active, html[data-board-style="cozy"] .mode-button:active,
     html[data-board-style="cozy"] .primary-button:active, html[data-board-style="cozy"] .tool-tab:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--cozy-wood); }
     html[data-board-style="cozy"] .seat { border-radius: 22px; box-shadow: inset 0 -6px 0 rgba(0,0,0,.12), 0 3px 0 rgba(91,70,54,.16); }
@@ -1094,8 +1094,8 @@
           </select><div class="status-text" style="margin-top:4px">全部為開源可商用字型（SIL OFL 1.1）。第一次切換要等字型下載（約 4–9 MB），之後瀏覽器會快取。<br>教室電腦要常用的話，建議直接把字型<strong>安裝到 Windows</strong>——裝好之後完全不用下載，開啟也快很多：<a href="https://github.com/ButTaiwan/bpmfvs/releases" target="_blank" rel="noopener">注音字型</a>、<a href="https://github.com/justfont/Huninn/releases" target="_blank" rel="noopener">粉圓 Huninn</a>、<a href="https://github.com/ButTaiwan/iansui/releases" target="_blank" rel="noopener">芫荽 Iansui</a>（下載後點兩下字型檔 → 按「安裝」）。</div></div>
           <div class="field"><label>大屏風格</label><select id="setupBoardStyle">
             <option value="standard">標準（現在的樣子，提示插圖用溫暖繪本）</option>
-            <option value="cozy">可愛動森風（介面與提示插圖一起換）</option>
-          </select><div class="status-text" style="margin-top:4px">存好馬上換，都是原創美術。動森風的圖示與插圖還在畫，沒畫好的先用標準版的圖。</div></div>
+            <option value="cozy">可愛溫暖風（介面與提示插圖一起換）</option>
+          </select><div class="status-text" style="margin-top:4px">存好馬上換，都是原創美術。圖示已換好；溫暖風的提示插圖還在畫，沒畫好的先用標準版的圖。</div></div>
           <div class="field"><label>「待訂正」的顏色</label><select id="setupCorrectColor">
             <option value="brown">米褐（沙褐）— 與介面最和諧</option>
             <option value="indigo">深靛藍 — 冷色穩重</option>
@@ -1155,7 +1155,7 @@
     const DEFAULT_ENABLED = ['國語', '數學', '英語', '自然', '社會', '聯絡簿', '通知單'];
     // 聯絡本可選的字體（全部開源可商用）：前三個一般、後三個國字旁自動標注音
     const CONTACT_FONTS = ['default', 'huninn', 'iansui', 'bpmf', 'bpmfhuninn'];
-    const BOARD_STYLES = ['standard', 'cozy'];   // 大屏風格：標準（提示插圖＝溫暖繪本）／可愛動森風（介面＋插圖）
+    const BOARD_STYLES = ['standard', 'cozy'];   // 大屏風格：標準（提示插圖＝溫暖繪本）／可愛溫暖風（介面＋插圖）
     const state = {
       settings: {
         className: '', classes: [], boardTitle: '晨間大屏', contactFont: 'default', boardStyle: 'standard', correctColor: 'brown', seatCount: 26, emptySeats: [],
@@ -1282,7 +1282,7 @@
         }
       });
     }
-    // 動森風圖示（ART-01 cozy）：驗收後把 id 加進來就會換成 assets/art/cozy/icon/<id>.webp；沒列的維持原圖示
+    // 溫暖風圖示（ART-01 cozy）：驗收後把 id 加進來就會換成 assets/art/cozy/icon/<id>.webp；沒列的維持原圖示
     const COZY_ICON_READY = new Set(['tab_rollcall', 'tab_homework', 'tab_makeup', 'tab_correct', 'tab_query', 'tab_tools', 'tab_setup', 'contact_book', 'tool_lottery', 'tool_check', 'tool_score', 'tool_group', 'tool_quiet', 'tool_exam', 'tool_tomato', 'tool_prompt']);
     const TAB_ICON_IDS = { rollcall: 'tab_rollcall', homework: 'tab_homework', makeup: 'tab_makeup', correct: 'tab_correct', query: 'tab_query', tools: 'tab_tools', setup: 'tab_setup' };
     function applyBoardStyle() {
@@ -3209,7 +3209,7 @@
   const setupTab = document.querySelector('.tab-button[data-page="setup"]');
   const toolsTab = document.createElement('button');
   toolsTab.className = 'tab-button'; toolsTab.type = 'button'; toolsTab.dataset.page = 'tools';
-  // 動森風換成原創圖示，標準維持 emoji（applyBoardStyle 跑在這顆按鈕產生之前，所以另外接 boardstylechange）
+  // 溫暖風換成原創圖示，標準維持 emoji（applyBoardStyle 跑在這顆按鈕產生之前，所以另外接 boardstylechange）
   function applyToolsTabIcon() {
     const cozy = state.settings.boardStyle === 'cozy' && COZY_ICON_READY.has('tab_tools');
     toolsTab.innerHTML = cozy ? '<img class="tab-icon" src="assets/art/cozy/icon/tab_tools.webp" alt="">班級工具' : '🧰 班級工具';
@@ -4207,7 +4207,7 @@
       const face = $('quietFace');
       const img = $('quietImg');
       img.hidden = false;
-      // 動森風改用原創學生插圖（assets/art/cozy/quiet/）；標準維持いらすとや動物
+      // 溫暖風改用原創學生插圖（assets/art/cozy/quiet/）；標準維持いらすとや動物
       const cozy = state.settings.boardStyle === 'cozy';
       const setCharacter = (src, cozyId, cls) => {
         const want = cozy ? 'assets/art/cozy/quiet/' + cozyId + '.webp' : 'assets/irasutoya/' + src;
@@ -4275,7 +4275,7 @@
     if ($('quietArc')) resetQuietFx();
   }
   $('quietStartButton').addEventListener('click', () => { quietStream ? stopQuiet() : startQuiet(); });
-  // 動森風的安靜偵測是原創插圖，說明與出處跟著換
+  // 溫暖風的安靜偵測是原創插圖，說明與出處跟著換
   const quietCreditHtml = $('quietCredit').innerHTML;
   function updateQuietCredit() {
     $('quietCredit').innerHTML = state.settings.boardStyle === 'cozy'
@@ -4582,7 +4582,7 @@
         'wash_hands',
         'whisper',
       ]) },
-      cozy: { dir: 'assets/art/cozy/prompt/', ready: new Set([]) }   // 可愛動森風（ART-03 製作中）
+      cozy: { dir: 'assets/art/cozy/prompt/', ready: new Set([]) }   // 可愛溫暖風（ART-03 製作中）
     };
     function promptArtFile(id) {
       const chosen = state.settings.boardStyle === 'cozy' ? PROMPT_ART_STYLES.cozy : PROMPT_ART_STYLES.storybook;
