@@ -111,6 +111,12 @@
     .subject-manager { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
     .subject-toggle { display: inline-flex; align-items: center; gap: 5px; border: 2px solid var(--line); border-radius: 999px; padding: 7px 14px; font-size: 15px; font-weight: 800; cursor: pointer; background: var(--surface); color: var(--muted); user-select: none; }
     .subject-toggle.on { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .hw-row { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid var(--line); }
+    .hw-row-name { flex: 0 0 88px; font-weight: 900; padding-top: 6px; }
+    .hw-row .subject-manager { margin-top: 0; flex: 1; gap: 6px; }
+    .hw-row .subject-toggle { font-size: 14px; padding: 4px 11px; user-select: none; }
+    .hw-row .hw-add { border-style: dashed; color: var(--muted); }
+    .hw-row .hw-del { margin-left: 2px; font-weight: 900; opacity: .75; }
     .query-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; margin-bottom: 14px; }
     .stat-block { margin-top: 18px; overflow-x: auto; }
     .stat-block h3 { font-size: 19px; color: var(--primary-strong); margin-bottom: 6px; }
@@ -1179,8 +1185,8 @@
           </select></div>
           <div class="field"><label>班級最大座號（1～N）</label><input id="setupSeatCount" type="number" min="1" max="60" value="26"></div>
           <div class="field"><label>空號（沒有人的座號，以、或逗號分隔）</label><input id="setupEmptySeats" placeholder="例：4、13"></div>
-          <div class="field"><label>自己加的作業項目（以、分隔，可留空）</label><input id="setupAssignmentTypes" placeholder="例：小日記、晨讀單">
-            <div class="status-text" style="margin-top:4px">各科項目已經內建（國語的甲乙本、圈詞，數學的數習、數練⋯），選了科目就會出現；內建沒有的才加在這裡，會排在選單最上面。</div></div>
+          <div class="field"><label>每一科都要出現的作業（以、分隔，可留空）</label><input id="setupAssignmentTypes" placeholder="例：小日記、晨讀單">
+            <div class="status-text" style="margin-top:4px">只放每一科都用得到的。各科各自的項目，在下面的「作業項目」選。</div></div>
           <div class="field" style="grid-column:1/-1">
             <label>科目管理（點亮＝出現在作業繳交；可新增自訂科目）</label>
             <div class="subject-manager" id="subjectManager"></div>
@@ -1188,6 +1194,11 @@
               <input id="newSubjectInput" maxlength="10" placeholder="自訂科目名稱" style="max-width:200px;border:2px solid var(--line);border-radius:10px;padding:8px 10px;font-size:15px;font-family:inherit">
               <button class="ghost-button" type="button" id="addSubjectButton">＋ 新增科目</button>
             </div>
+          </div>
+          <div class="field" style="grid-column:1/-1">
+            <label>作業項目（點亮＝出現在作業繳交的選單；預設只亮常用的，要用的再點亮）</label>
+            <div id="homeworkManager"></div>
+            <button class="ghost-button" type="button" id="homeworkResetButton" style="margin-top:8px">↺ 恢復常用</button>
           </div>
           <div class="field"><label>遲到界線（此時間後點到校＝記遲到）</label><input id="setupLateTime" type="time" value="08:00"></div>
           <div class="field"><label>自動缺席（未填自動轉未到）</label><input id="setupAutoAbsentTime" type="time" value="08:05"></div>
@@ -1244,6 +1255,24 @@
       '通知單': ['回條', '家長同意書', '調查表', '報名表', '繳費單', '健康資料表']
     };
     const HOMEWORK_COMMON = ['學習單', '考卷', '作業訂正', '考卷訂正', '考卷家長簽名', '小考訂正', '預習', '複習', '閱讀紀錄', '親子共讀', '線上學習作業', '小組作業', '假期作業', '補寫作業', '其他'];
+    // 預設只亮常用的，其他到設定頁點亮
+    const HOMEWORK_COMMON_GROUP = '通用';
+    const HOMEWORK_DEFAULT_ON = {
+      '國語': ['習作（國習）', '作業簿（國作）', '生字簿（甲本）', '語詞簿（乙本）', '圈詞', '造句', '朗讀課文', '閱讀心得', '作文', '日記'],
+      '數學': ['習作（數習）', '課本（數課）', '練習本（數練）', '計算練習', '應用題'],
+      '英語': ['習作', '作業本', '單字抄寫', '背單字', '課文朗讀'],
+      '自然': ['習作', '觀察紀錄', '實驗紀錄', '查資料'],
+      '社會': ['習作', '重點整理', '查資料'],
+      '生活': ['習作', '觀察紀錄', '美勞作品'],
+      '健康與體育': ['健康習作', '運動紀錄'],
+      '音樂': ['直笛練習', '歌曲練習'],
+      '視覺藝術': ['美勞作品', '帶美術用具'],
+      '綜合': ['家事紀錄', '活動省思單'],
+      '本土語': ['課文朗讀', '語詞練習'],
+      '聯絡簿': ['聯絡簿抄寫', '家長簽名'],
+      '通知單': ['回條', '家長同意書'],
+      [HOMEWORK_COMMON_GROUP]: ['學習單', '考卷', '作業訂正', '考卷訂正', '其他']
+    };
     const HOMEWORK_NO_COMMON = ['聯絡簿', '通知單'];   // 這兩個不是作業，不列通用項目
     const HOMEWORK_OLD_DEFAULTS = ['習作', '試卷', '作業本', '學習單', '其他'];   // 舊版的預設清單，已併進各科與通用
     // 聯絡本可選的字體（全部開源可商用）：前三個一般、後三個國字旁自動標注音
@@ -1253,7 +1282,7 @@
       settings: {
         className: '', classes: [], boardTitle: '晨間大屏', contactFont: 'default', boardStyle: 'standard', correctColor: 'brown', seatCount: 26, emptySeats: [],
         setupPin: '1234',
-        subjects: [], assignmentTypes: [],
+        subjects: [], assignmentTypes: [], homeworkPicks: {}, homeworkExtra: {},
         gasUrl: '', classroomToken: '', teacherToken: '',
         lateTime: '08:00', autoAbsentTime: '08:05', autoNotifyTime: '08:08', autoHomeworkNotifyTime: '08:40', lookbackDays: 30
       },
@@ -1355,6 +1384,11 @@
               : { name: String(item.name || ''), enabled: item.enabled !== false }).filter(item => item.name);
           }
           if (Array.isArray(saved.assignmentTypes)) s.assignmentTypes = saved.assignmentTypes.map(String).filter(name => !HOMEWORK_OLD_DEFAULTS.includes(name));
+          // homeworkPicks：這一科點亮了哪些（沒動過的科目不存，用預設）；homeworkExtra：老師自己加的項目
+          const nameLists = value => Object.fromEntries(Object.entries(value && typeof value === 'object' ? value : {})
+            .filter(([, list]) => Array.isArray(list)).map(([key, list]) => [key, list.map(String)]));
+          s.homeworkPicks = nameLists(saved.homeworkPicks);
+          s.homeworkExtra = nameLists(saved.homeworkExtra);
           s.gasUrl = String(saved.gasUrl || '');
           s.classroomToken = String(saved.classroomToken || '');
           s.teacherToken = String(saved.teacherToken || '');
@@ -1879,9 +1913,9 @@
         return list.length ? `<optgroup label="${escapeHtml(label)}">${list.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('')}</optgroup>` : '';
       };
       select.innerHTML = [
-        group('我加的', state.settings.assignmentTypes),
-        group(subject || '這一科', HOMEWORK_ITEMS[subject] || []),
-        group('通用', HOMEWORK_NO_COMMON.includes(subject) ? [] : HOMEWORK_COMMON),
+        group('每科都有', state.settings.assignmentTypes),
+        group(subject || '這一科', subject ? homeworkOn(subject) : []),
+        group(HOMEWORK_COMMON_GROUP, HOMEWORK_NO_COMMON.includes(subject) ? [] : homeworkOn(HOMEWORK_COMMON_GROUP)),
         '<option value="__custom__">✏️ 自行輸入…</option>'
       ].join('');
       if (before && [...select.options].some(option => option.value === before)) select.value = before;
@@ -2696,6 +2730,31 @@
     function renderSubjectManager() {
       $('subjectManager').innerHTML = state.settings.subjects.map((item, index) =>
         `<span class="subject-toggle${item.enabled ? ' on' : ''}" data-subject-index="${index}">${escapeHtml(item.name)}${item.enabled ? ' ✓' : ''}</span>`).join('');
+      renderHomeworkManager();
+    }
+    // 作業項目：一科一列，點亮＝出現在作業繳交的選單
+    const homeworkExtra = group => state.settings.homeworkExtra[group] || [];
+    const homeworkAll = group => [...new Set([...(group === HOMEWORK_COMMON_GROUP ? HOMEWORK_COMMON : HOMEWORK_ITEMS[group] || []), ...homeworkExtra(group)])];
+    function homeworkOn(group) {
+      const picks = state.settings.homeworkPicks[group];
+      const on = picks || [...(HOMEWORK_DEFAULT_ON[group] || []), ...homeworkExtra(group)];
+      return homeworkAll(group).filter(name => on.includes(name));
+    }
+    function renderHomeworkManager() {
+      const groups = [...enabledSubjects(), HOMEWORK_COMMON_GROUP];
+      $('homeworkManager').innerHTML = groups.map(group => {
+        const on = homeworkOn(group), extra = homeworkExtra(group);
+        const chips = homeworkAll(group).map(name => {
+          const lit = on.includes(name);
+          return `<span class="subject-toggle${lit ? ' on' : ''}" data-hw-group="${escapeHtml(group)}" data-hw-name="${escapeHtml(name)}">${escapeHtml(name)}${lit ? ' ✓' : ''}${extra.includes(name) ? '<span class="hw-del" data-hw-del title="刪除這個項目"> ✕</span>' : ''}</span>`;
+        }).join('');
+        return `<div class="hw-row"><div class="hw-row-name">${escapeHtml(group)}</div><div class="subject-manager">${chips}<span class="subject-toggle hw-add" data-hw-add="${escapeHtml(group)}">＋ 新增</span></div></div>`;
+      }).join('');
+    }
+    function homeworkChanged() {
+      saveSettings();
+      renderHomeworkManager();
+      renderAssignmentOptions();
     }
     function renderClassSwitch() {
       const s = state.settings;
@@ -3047,6 +3106,42 @@
       if (!toggle) return;
       const item = state.settings.subjects[Number(toggle.dataset.subjectIndex)];
       if (item) { item.enabled = !item.enabled; saveSettings(); renderSubjectManager(); renderBoardPickers(); }
+    });
+    $('homeworkManager').addEventListener('click', async event => {
+      const s = state.settings;
+      const addButton = event.target.closest('[data-hw-add]');
+      if (addButton) {
+        const group = addButton.dataset.hwAdd;
+        const typed = await askDialog({ message: `「${group}」要新增什麼作業項目？`, input: true });
+        const name = String(typed || '').trim().slice(0, 10);
+        if (!name) return;
+        if (homeworkAll(group).includes(name)) {
+          if (!homeworkOn(group).includes(name)) s.homeworkPicks[group] = [...homeworkOn(group), name];
+        } else {
+          const on = homeworkOn(group);
+          s.homeworkExtra[group] = [...homeworkExtra(group), name];
+          s.homeworkPicks[group] = [...on, name];
+        }
+        homeworkChanged();
+        return;
+      }
+      const chip = event.target.closest('[data-hw-name]');
+      if (!chip) return;
+      const group = chip.dataset.hwGroup, name = chip.dataset.hwName;
+      if (event.target.closest('[data-hw-del]')) {
+        const on = homeworkOn(group);
+        s.homeworkExtra[group] = homeworkExtra(group).filter(item => item !== name);
+        s.homeworkPicks[group] = on.filter(item => item !== name);
+      } else {
+        const on = homeworkOn(group);
+        s.homeworkPicks[group] = on.includes(name) ? on.filter(item => item !== name) : [...on, name];
+      }
+      homeworkChanged();
+    });
+    $('homeworkResetButton').addEventListener('click', async () => {
+      if (!(await askDialog({ message: '把各科的作業項目恢復成預設的常用項目？\n自己新增的項目會保留。' }))) return;
+      state.settings.homeworkPicks = {};
+      homeworkChanged();
     });
     $('addSubjectButton').addEventListener('click', () => {
       const name = $('newSubjectInput').value.trim().slice(0, 10);

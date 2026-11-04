@@ -861,6 +861,21 @@ assert.match(lineBotSource, /classroomActions = \[[^\]]*'contactbook_month'/, "�
 
 assert.match(morningHtml, /id="makeupGoHomework">⚠️ 今天的缺交請到「作業繳交」直接改/, "補交頁要強調今天的缺交到作業繳交改");
 
+// 作業項目可在設定點亮：預設只亮常用，且預設項目都要在該科清單裡
+{
+  const grab = (re, prefix = "") => new Function(`${prefix}return ${morningHtml.match(re)[1]}`)();
+  const items = grab(/const HOMEWORK_ITEMS = (\{[\s\S]*?\});/);
+  const common = grab(/const HOMEWORK_COMMON = (\[[^\]]*\]);/);
+  const defaults = grab(/const HOMEWORK_DEFAULT_ON = (\{[\s\S]*?\});/, 'const HOMEWORK_COMMON_GROUP = "通用";');
+  for (const [group, list] of Object.entries(defaults)) {
+    const all = group === "通用" ? common : items[group];
+    for (const name of list) assert.ok(all.includes(name), `${group} 的預設項目 ${name} 要在清單裡`);
+    assert.ok(list.length < all.length || group === "聯絡簿", `${group} 預設只亮常用的`);
+  }
+  assert.match(morningHtml, /id="homeworkManager"/, "設定頁要能選作業項目");
+  assert.match(morningHtml, /s\.homeworkPicks = nameLists\(saved\.homeworkPicks\)/, "作業項目的選擇要存下來");
+}
+
 // G6 🧳 代課包
 assert.match(studioHtml, /data-page="substitute">🧳 代課包/, "應有代課包分頁");
 {
