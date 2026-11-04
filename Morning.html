@@ -174,6 +174,19 @@
     .toast.show { opacity: 1; }
     .toast.error { background: var(--missing); }
     @media (max-width: 860px) { .clock { font-size: 26px; } .board-wall { grid-template-columns: 1fr; } }
+    /* ===== 頁面內的輸入／確認視窗（取代瀏覽器的 prompt、confirm） ===== */
+    .ask-pop { position: fixed; inset: 0; z-index: 100000; display: flex; align-items: center; justify-content: center; background: rgba(20, 36, 32, .45); }
+    .ask-card { width: min(460px, 90vw); display: flex; flex-direction: column; gap: 14px; padding: 24px; border-radius: 20px; background: var(--surface); color: var(--ink); border: 3px solid var(--line); box-shadow: 0 24px 48px -16px rgba(0,0,0,.45); font-size: 18px; }
+    .ask-msg { font-weight: 800; line-height: 1.5; white-space: pre-line; }
+    .ask-input { width: 100%; box-sizing: border-box; border: 2px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 20px; font-family: inherit; }
+    .ask-actions { display: flex; justify-content: flex-end; gap: 10px; }
+    html[data-board-style="cozy"] .ask-card { border-color: var(--cozy-wood); border-radius: 28px; box-shadow: 0 6px 0 var(--cozy-wood), 0 24px 48px -16px rgba(91,70,54,.45); }
+    /* ===== 全螢幕備援：瀏覽器不給真全螢幕時，鋪滿整個分頁 ===== */
+    .fake-fs { position: fixed !important; inset: 0; z-index: 9000; margin: 0 !important; width: auto !important; max-width: none !important; border-radius: 0 !important; overflow: auto; background-color: var(--bg); transition: none !important; }
+    html.fake-fs-on body { overflow: hidden; }
+    html.fake-fs-on header, html.fake-fs-on .submit-bar { visibility: hidden; }
+    html.fake-fs-on .tool-panel { animation: none; }
+    .fake-fs-exit { position: fixed; top: 14px; right: 18px; z-index: 9100; border: 2px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); padding: 8px 16px; font-size: 16px; font-weight: 900; font-family: inherit; cursor: pointer; }
     /* ===== 倒數大時鐘（右上角按 5分／10分／開始 跳出） ===== */
     .countdown-display { cursor: pointer; }
     .cd-pop { position: fixed; inset: 0; z-index: 99990; display: flex; align-items: center; justify-content: center; background: rgba(20, 36, 32, .42); }
@@ -502,12 +515,12 @@
         .exam-absent-card { max-width: 560px; flex-wrap: wrap; }
         .exam-absent { font-size: 30px; font-weight: 900; color: var(--missing, #cf4433); display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
         .exam-absent .ok-all { color: var(--ok, #1d9e5f); }
-        .exam-board:fullscreen { background: var(--bg); display: flex; flex-direction: column; justify-content: center; padding: 4vh 4vw; overflow: auto; }
-        .exam-board:fullscreen .exam-clock { font-size: clamp(120px, 24vw, 340px); }
-        .exam-board:fullscreen .exam-date { font-size: 34px; }
-        .exam-board:fullscreen .exam-label { font-size: 32px; }
-        .exam-board:fullscreen .exam-num { font-size: 60px; width: 140px; }
-        .exam-board:fullscreen .exam-absent { font-size: 42px; }
+        .exam-board:is(:fullscreen, .fake-fs) { background: var(--bg); display: flex; flex-direction: column; justify-content: center; padding: 4vh 4vw; overflow: auto; }
+        .exam-board:is(:fullscreen, .fake-fs) .exam-clock { font-size: clamp(120px, 24vw, 340px); }
+        .exam-board:is(:fullscreen, .fake-fs) .exam-date { font-size: 34px; }
+        .exam-board:is(:fullscreen, .fake-fs) .exam-label { font-size: 32px; }
+        .exam-board:is(:fullscreen, .fake-fs) .exam-num { font-size: 60px; width: 140px; }
+        .exam-board:is(:fullscreen, .fake-fs) .exam-absent { font-size: 42px; }
         /* 🍅 番茄鐘 */
         .tomato-wrap { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(260px, 380px); gap: 18px; align-items: start; }
         @media (max-width: 900px) { .tomato-wrap { grid-template-columns: 1fr; } }
@@ -526,9 +539,9 @@
         .tomato-edit-row { display: flex; align-items: center; gap: 6px; }
         .tomato-edit input { width: 84px; font-size: 38px; font-weight: 900; text-align: center; border: 0; border-bottom: 3px solid #1d9e5f; background: transparent; font-family: inherit; color: var(--ink); }
         .tomato-edit span { font-size: 34px; font-weight: 900; }
-        .tomato-board:fullscreen { background: var(--bg); display: flex; flex-direction: column; justify-content: center; overflow: auto; }
-        .tomato-board:fullscreen .tomato-face { width: min(56vh, 80vw); }
-        .tomato-board:fullscreen .tomato-time { font-size: clamp(80px, 16vh, 180px); }
+        .tomato-board:is(:fullscreen, .fake-fs) { background: var(--bg); display: flex; flex-direction: column; justify-content: center; overflow: auto; }
+        .tomato-board:is(:fullscreen, .fake-fs) .tomato-face { width: min(56vh, 80vw); }
+        .tomato-board:is(:fullscreen, .fake-fs) .tomato-time { font-size: clamp(80px, 16vh, 180px); }
         /* 音樂角（奶油色，介面參考使用者的讀書進度檢核） */
         .tomato-music { background: #f6f1e3; border: 2px solid #e5dcc3; border-radius: 16px; padding: 14px; }
         .tomato-music-title { font-size: 16px; font-weight: 900; color: #796e5b; letter-spacing: .1em; margin-bottom: 10px; }
@@ -553,14 +566,14 @@
           background: linear-gradient(90deg, #1d9e5f, #2457e6); -webkit-background-clip: text; background-clip: text; color: transparent; }
         .prompt-message { font-size: clamp(40px, 7vw, 92px); font-weight: 900; color: var(--primary-strong); line-height: 1.4; margin: 8px 0; letter-spacing: .05em; }
         .prompt-img { max-height: 32vh; max-width: 88%; margin-top: 6px; animation: quietFloat 3.4s ease-in-out infinite; }
-        .prompt-board:fullscreen { background: var(--bg); display: flex; flex-direction: column; justify-content: center; overflow: auto; padding: 3vh 4vw; }
-        .prompt-board:fullscreen .prompt-clock { font-size: clamp(90px, 18vh, 240px); }
-        .prompt-board:fullscreen .prompt-message { font-size: clamp(56px, 12vh, 160px); }
-        .prompt-board:fullscreen .prompt-img { max-height: 38vh; }
+        .prompt-board:is(:fullscreen, .fake-fs) { background: var(--bg); display: flex; flex-direction: column; justify-content: center; overflow: auto; padding: 3vh 4vw; }
+        .prompt-board:is(:fullscreen, .fake-fs) .prompt-clock { font-size: clamp(90px, 18vh, 240px); }
+        .prompt-board:is(:fullscreen, .fake-fs) .prompt-message { font-size: clamp(56px, 12vh, 160px); }
+        .prompt-board:is(:fullscreen, .fake-fs) .prompt-img { max-height: 38vh; }
         /* 圖片維持原比例：全螢幕時 prompt-board 是直向 flex，預設會把圖拉寬變形 */
         .prompt-img { width: auto; height: auto; align-self: center; object-fit: contain; }
         .prompt-board { padding-bottom: 26px !important; }
-        .prompt-board:fullscreen .prompt-img { max-width: 80vw; }
+        .prompt-board:is(:fullscreen, .fake-fs) .prompt-img { max-width: 80vw; }
         /* ⏰ 定時自動跳出 */
         .prompt-sched { margin-top: 14px; border-radius: 18px; background: #fff; box-shadow: inset 0 0 0 2px var(--line, #dfe8e3); padding: 12px 16px; }
         .prompt-sched > summary { cursor: pointer; font-weight: 900; font-size: 17px; color: var(--primary-strong); list-style: none; }
@@ -617,7 +630,7 @@
         @keyframes ttBounce { 0% { transform: scale(.6); } 60% { transform: scale(1.22); } 100% { transform: scale(1); } }
         .tool-panel:not([hidden]) { animation: panelIn .35s ease both; }
         @keyframes panelIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-        .tool-panel:fullscreen { background: var(--bg); padding: 3vh 3vw; overflow: auto; }
+        .tool-panel:is(:fullscreen, .fake-fs) { background: var(--bg); padding: 3vh 3vw; overflow: auto; }
         .mascot { width: 150px; height: 150px; object-fit: contain; pointer-events: none; filter: drop-shadow(0 8px 10px rgba(30,50,40,.18)); }
         .mascot.pop { animation: mascotPop .6s cubic-bezier(.3,1.6,.5,1); }
         @keyframes mascotPop { 0% { transform: scale(.5) translateY(24px); opacity: 0; } 100% { transform: none; opacity: 1; } }
@@ -643,11 +656,11 @@
         .lot-chip { display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 2px solid #f3c9b8; border-radius: 999px; padding: 3px 13px 3px 4px; font-weight: 900; color: #7a2e1c; font-size: 16px; }
         .lot-chip i { font-style: normal; width: 24px; height: 24px; border-radius: 50%; background: #d9573f; color: #fff; display: grid; place-items: center; font-size: 12px; }
         .lot-chip.new { animation: chipIn .5s cubic-bezier(.3,1.6,.5,1) both; border-color: #d9573f; }
-        .tool-panel:fullscreen .lottery-stage { min-height: 80vh; }
-        .tool-panel:fullscreen #lotWheel { width: auto !important; height: auto !important; }
-        .tool-panel:fullscreen .lot-wheel-wrap { width: min(66vh, 56vw); height: min(66vh, 56vw); }
-        .tool-panel:fullscreen .lot-result { font-size: clamp(130px, 20vh, 240px); }
-        .tool-panel:fullscreen .lot-mascot { width: 220px; height: 220px; }
+        .tool-panel:is(:fullscreen, .fake-fs) .lottery-stage { min-height: 80vh; }
+        .tool-panel:is(:fullscreen, .fake-fs) #lotWheel { width: auto !important; height: auto !important; }
+        .tool-panel:is(:fullscreen, .fake-fs) .lot-wheel-wrap { width: min(66vh, 56vw); height: min(66vh, 56vw); }
+        .tool-panel:is(:fullscreen, .fake-fs) .lot-result { font-size: clamp(130px, 20vh, 240px); }
+        .tool-panel:is(:fullscreen, .fake-fs) .lot-mascot { width: 220px; height: 220px; }
 
         /* ✅ 檢核板：進度環、打勾彈跳、完成慶祝、反查閃爍 */
         .check-wall { gap: 16px; }
@@ -670,7 +683,7 @@
         .check-seat.miss { animation: missPulse 1.3s ease-in-out infinite both; animation-delay: calc(var(--i, 0) * 70ms); }
         @keyframes missPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(207,68,51,0); transform: scale(1); } 50% { box-shadow: 0 0 0 6px rgba(207,68,51,.25); transform: scale(1.06); } }
         .check-complete { font-weight: 900; color: #1d9e5f; animation: chipIn .5s cubic-bezier(.3,1.6,.5,1) both; }
-        .tool-panel:fullscreen .check-seat { font-size: 24px; padding: 14px 2px; }
+        .tool-panel:is(:fullscreen, .fake-fs) .check-seat { font-size: 24px; padding: 14px 2px; }
 
         /* 🏆 計分板：隊伍色、名次、皇冠、長條、飄字 */
         .score-wall { gap: 22px; padding-top: 24px; }
@@ -691,7 +704,7 @@
         .score-minus { background: #9aa7a2; }
         .score-float { position: absolute; left: 50%; top: 34%; font-size: 36px; font-weight: 900; color: var(--team); pointer-events: none; text-shadow: 0 2px 0 #fff; animation: floatUp .95s ease-out forwards; }
         @keyframes floatUp { from { transform: translate(-50%, 0) scale(.8); opacity: 1; } to { transform: translate(-50%, -78px) scale(1.35); opacity: 0; } }
-        .tool-panel:fullscreen .score-value { font-size: clamp(96px, 15vh, 190px); }
+        .tool-panel:is(:fullscreen, .fake-fs) .score-value { font-size: clamp(96px, 15vh, 190px); }
 
         /* 👥 分組：洗牌池、飛入、組別色 */
         .group-pool { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; padding: 18px; border-radius: 20px; background: radial-gradient(circle, #f6f0fd, #e9defa); margin-top: 12px; }
@@ -700,7 +713,7 @@
         .group-card { border: 0; border-radius: 20px; background: linear-gradient(180deg, var(--g-soft), #fff 80%); box-shadow: inset 0 0 0 2px var(--g-line), 0 12px 24px -18px var(--g); }
         .group-card h4 { color: var(--g); }
         .group-card .members span { background: #fff; color: var(--g); box-shadow: inset 0 0 0 2px var(--g-line); }
-        .tool-panel:fullscreen .group-card .members span { font-size: 26px; padding: 8px 16px; }
+        .tool-panel:is(:fullscreen, .fake-fs) .group-card .members span { font-size: 26px; padding: 8px 16px; }
 
         /* 🔇 安靜：半圓儀表、波紋、星星飛入 */
         .quiet-meter { display: none; }
@@ -740,7 +753,7 @@
         .tomato-face.running .tomato-time { color: var(--mc); }
         .tomato-mascot { position: absolute; right: -118px; bottom: -6px; }
         @media (max-width: 700px) { .tomato-mascot { display: none; } }
-        .tool-panel:fullscreen .tomato-mascot, .tomato-board:fullscreen .tomato-mascot { width: 220px; height: 220px; right: -200px; }
+        .tool-panel:is(:fullscreen, .fake-fs) .tomato-mascot, .tomato-board:is(:fullscreen, .fake-fs) .tomato-mascot { width: 220px; height: 220px; right: -200px; }
 
         /* 📣 大屏提示：圖磚、分類色、換句轉場 */
         .prompt-tiles { display: grid; gap: 10px; margin: 4px 0 14px; }
@@ -791,9 +804,9 @@
         .lottery-stage #lotGacha { width: 340px; height: 430px; }
         #lotGachaCanvas { width: 340px; height: 430px; display: block; }
         .lottery-stage .lot-claw-frame { box-shadow: 0 0 0 3px rgba(255,255,255,.25), 0 18px 30px rgba(0,0,0,.5); }
-        .tool-panel:fullscreen .lottery-stage .lot-wheel-wrap, .tool-panel:fullscreen .lottery-stage #lotWheel { width: min(72vh, 58vw) !important; height: min(72vh, 58vw) !important; }
-        .tool-panel:fullscreen .lottery-stage.arcade { min-height: 82vh; }
-        .tool-panel:fullscreen .lottery-stage .lot-result { font-size: clamp(150px, 22vh, 260px); }
+        .tool-panel:is(:fullscreen, .fake-fs) .lottery-stage .lot-wheel-wrap, .tool-panel:is(:fullscreen, .fake-fs) .lottery-stage #lotWheel { width: min(72vh, 58vw) !important; height: min(72vh, 58vw) !important; }
+        .tool-panel:is(:fullscreen, .fake-fs) .lottery-stage.arcade { min-height: 82vh; }
+        .tool-panel:is(:fullscreen, .fake-fs) .lottery-stage .lot-result { font-size: clamp(150px, 22vh, 260px); }
       </style>
       <div class="panel">
         <div class="tool-tabs" id="toolTabs">
@@ -1352,6 +1365,72 @@
       localStorage.setItem(STATE_PREFIX + todayKey() + suffix, JSON.stringify({ boards: state.boards }));
     }
 
+    // ---------- 頁面內的輸入／確認視窗 ----------
+    // 有些環境不支援 window.prompt／confirm（按了沒反應），一律用這個。回傳：輸入框的文字或 true；取消是 null
+    let askClose = null;
+    function askDialog({ message, input = false, value = '', password = false, numeric = false }) {
+      if (askClose) askClose(null);
+      return new Promise(resolve => {
+        const box = document.createElement('div');
+        box.className = 'ask-pop';
+        box.innerHTML = `<form class="ask-card"><div class="ask-msg"></div>${input ? '<input class="ask-input">' : ''}<div class="ask-actions"><button class="ghost-button ask-cancel" type="button">取消</button><button class="primary-button" type="submit">確定</button></div></form>`;
+        box.querySelector('.ask-msg').textContent = message;
+        const field = box.querySelector('.ask-input');
+        if (field) {
+          field.type = password ? 'password' : 'text';
+          field.value = value;
+          field.autocomplete = 'off';
+          if (numeric) field.inputMode = 'decimal';
+        }
+        const done = result => { askClose = null; box.remove(); resolve(result); };
+        askClose = done;
+        box.querySelector('form').addEventListener('submit', event => { event.preventDefault(); done(field ? field.value : true); });
+        box.querySelector('.ask-cancel').addEventListener('click', () => done(null));
+        box.addEventListener('mousedown', event => { if (event.target === box) done(null); });
+        box.addEventListener('keydown', event => { event.stopPropagation(); if (event.key === 'Escape') done(null); });
+        (fsCurrent() || document.body).appendChild(box);
+        (field || box.querySelector('[type="submit"]')).focus();
+        if (field) field.select();
+      });
+    }
+    // ---------- 全螢幕：瀏覽器不給（報錯、沒回應或沒有這個功能）就鋪滿整個分頁 ----------
+    let fakeFsEl = null;
+    function fsCurrent() { return document.fullscreenElement || fakeFsEl; }
+    function fsSetFake(el) {
+      if (fakeFsEl) {
+        fakeFsEl.classList.remove('fake-fs');
+        const old = fakeFsEl.querySelector(':scope > .fake-fs-exit');
+        if (old) old.remove();
+      }
+      fakeFsEl = el;
+      document.documentElement.classList.toggle('fake-fs-on', !!el);
+      if (el) {
+        el.classList.add('fake-fs');
+        const exit = document.createElement('button');
+        exit.type = 'button';
+        exit.className = 'fake-fs-exit';
+        exit.textContent = '✕ 離開全螢幕';
+        exit.addEventListener('click', () => fsSetFake(null));
+        el.appendChild(exit);
+      }
+      document.dispatchEvent(new Event('fullscreenchange'));
+    }
+    function fsEnter(el) {
+      if (!el) return;
+      if (!el.requestFullscreen) return fsSetFake(el);
+      let answered = false;
+      el.requestFullscreen().then(() => { answered = true; }).catch(() => { answered = true; fsSetFake(el); });
+      setTimeout(() => { if (!answered && !document.fullscreenElement) fsSetFake(el); }, 700);
+    }
+    function fsToggle(el) {
+      if (document.fullscreenElement) document.exitFullscreen();
+      else if (fakeFsEl) fsSetFake(null);
+      else fsEnter(el);
+    }
+    // 真全螢幕晚一點才成功時，收掉備援
+    document.addEventListener('fullscreenchange', () => { if (document.fullscreenElement && fakeFsEl) fsSetFake(null); });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape' && fakeFsEl) fsSetFake(null); });
+
     // ---------- 時鐘、倒數與自動化 ----------
     function tickClock() {
       $('bigClock').textContent = new Date().toLocaleTimeString('zh-TW', { hour12: false });
@@ -1377,7 +1456,7 @@
       const pop = $('cdPop');
       clearTimeout(cdAutoClose);
       // 工具在全螢幕時，要放進全螢幕的元素裡才看得到
-      const host = document.fullscreenElement || document.body;
+      const host = fsCurrent() || document.body;
       if (pop.parentNode !== host) host.appendChild(pop);
       pop.hidden = false;
       renderCountdown();
@@ -2088,7 +2167,7 @@
       const target = cls || (push !== 'none' ? firstClass() : currentClass());
       const classTag = isMultiClass() ? `【${target}】` : '';
       const blanks = target === firstClass() ? activeSeats().filter(seat => !state.attendance[seat]).length : 0;
-      if (!auto && !silent && blanks > 0 && !window.confirm(`還有 ${blanks} 個座號未填（不會列入缺席）。確定存到雲端？`)) return;
+      if (!auto && !silent && blanks > 0 && !(await askDialog({ message: `還有 ${blanks} 個座號未填（不會列入缺席）。確定存到雲端？` }))) return;
       state.submitting = true;
       $('submitButton').disabled = true;
       if (!silent) $('submitStatus').textContent = auto ? '自動回報中……' : '存到雲端中……';
@@ -2523,12 +2602,11 @@
     // ---------- 事件 ----------
     // 設定頁只在本次開啟期間解鎖一次；重新整理或隔天開機又要再輸入。
     let setupUnlocked = false;
-    function setupUnlockOk() {
-      const pin = String(state.settings.setupPin || '');
-      if (!pin || setupUnlocked) return true;
-      const typed = window.prompt('請輸入設定頁密碼（預設 1234）');
+    const setupNeedsPin = () => !!String(state.settings.setupPin || '') && !setupUnlocked;
+    async function askSetupPin() {
+      const typed = await askDialog({ message: '請輸入設定頁密碼（預設 1234）', input: true, password: true });
       if (typed === null) return false;
-      if (typed.trim() !== pin) {
+      if (typed.trim() !== String(state.settings.setupPin || '')) {
         showToast('密碼不正確。', true);
         return false;
       }
@@ -2536,7 +2614,10 @@
       return true;
     }
     document.querySelectorAll('.tab-button').forEach(button => button.addEventListener('click', () => {
-      if (button.dataset.page === 'setup' && !setupUnlockOk()) return;
+      if (button.dataset.page === 'setup' && setupNeedsPin()) {
+        askSetupPin().then(ok => { if (ok) button.click(); });
+        return;
+      }
       document.querySelectorAll('.tab-button').forEach(item => item.classList.toggle('active', item === button));
       document.querySelectorAll('.page').forEach(page => page.classList.toggle('active', page.id === `page-${button.dataset.page}`));
       if (button.dataset.page === 'makeup' && !state.makeup.loaded) loadMakeup();
@@ -2557,11 +2638,12 @@
       const removeButton = event.target.closest('[data-remove-board]');
       if (removeButton) {
         const board = state.boards.find(item => item.id === removeButton.dataset.removeBoard);
-        if (board && window.confirm(`移除「${boardLabel(board)}」版面？已登記的資料會清除。`)) {
+        if (board) askDialog({ message: `移除「${boardLabel(board)}」版面？已登記的資料會清除。` }).then(ok => {
+          if (!ok) return;
           state.boards = state.boards.filter(item => item.id !== board.id);
           saveTodayState();
           renderBoards();
-        }
+        });
         return;
       }
       const allButton = event.target.closest('[data-board-all]');
@@ -2668,9 +2750,9 @@
     });
     // 5分／10分：直接開始倒數並跳出大時鐘
     document.querySelectorAll('[data-countdown]').forEach(button => button.addEventListener('click', () => startCountdown(Number(button.dataset.countdown))));
-    $('countdownToggle').addEventListener('click', () => {
+    $('countdownToggle').addEventListener('click', async () => {
       if (!state.countdown.remaining && !state.countdown.running) {
-        const minutes = Number(window.prompt('倒數幾分鐘？', '10'));
+        const minutes = Number(await askDialog({ message: '倒數幾分鐘？', input: true, value: '10', numeric: true }));
         if (!minutes || minutes <= 0) return;
         startCountdown(Math.round(minutes * 60));
         return;
@@ -2754,7 +2836,7 @@
     window.setInterval(automationTick, 15000);
     automationTick();
     const BOOT_DAY = todayKey();
-    window.setInterval(() => { if (todayKey() !== BOOT_DAY && !document.fullscreenElement) location.reload(); }, 60000);
+    window.setInterval(() => { if (todayKey() !== BOOT_DAY && !fsCurrent()) location.reload(); }, 60000);
     renderCountdown();
     renderContactBook();
     loadContactBook();
@@ -2883,7 +2965,7 @@
   let fxParts = [], fxRaf = 0, fxCanvas = null;
   function screenConfetti(target, count) {
     if (REDUCED_MOTION_ALL) return;
-    const host = document.fullscreenElement || document.body;
+    const host = fsCurrent() || document.body;
     if (!fxCanvas || fxCanvas.parentNode !== host) {
       if (fxCanvas) fxCanvas.remove();
       fxCanvas = document.createElement('canvas'); fxCanvas.className = 'fx-canvas'; host.appendChild(fxCanvas);
@@ -3149,12 +3231,11 @@
   // 投影模式：把整個工具面板放到全螢幕（抽籤、檢核、計分、分組、安靜）
   document.querySelectorAll('[data-fs-panel]').forEach(btn => btn.addEventListener('click', () => {
     const panel = document.querySelector(`[data-tool-panel="${btn.dataset.fsPanel}"]`);
-    if (document.fullscreenElement) document.exitFullscreen();
-    else if (panel && panel.requestFullscreen) panel.requestFullscreen().catch(() => showToast('這個瀏覽器不支援全螢幕。', true));
+    fsToggle(panel);
   }));
   document.addEventListener('fullscreenchange', () => {
     document.querySelectorAll('[data-fs-panel]').forEach(btn => {
-      const on = document.fullscreenElement && document.fullscreenElement.dataset && document.fullscreenElement.dataset.toolPanel === btn.dataset.fsPanel;
+      const on = fsCurrent() && fsCurrent().dataset && fsCurrent().dataset.toolPanel === btn.dataset.fsPanel;
       btn.textContent = on ? '⛶ 離開投影' : '⛶ 投影模式';
     });
     if (typeof layoutBulbs === 'function') { layoutBulbs(); drawWheel(wheelRotation); }
@@ -3762,9 +3843,9 @@
     else if (lotteryMode === 'gacha') runGacha(picked, () => revealLottery(picked));
     else runClaw(picked, () => revealLottery(picked));
   });
-  $('lotResetButton').addEventListener('click', () => {
+  $('lotResetButton').addEventListener('click', async () => {
     if (lotteryBusy) return;
-    if (day.drawn.length && !window.confirm('清空已抽名單、重新開始？')) return;
+    if (day.drawn.length && !(await askDialog({ message: '清空已抽名單、重新開始？' }))) return;
     day.drawn = []; saveDay();
     $('lotResult').textContent = '？';
     $('lotResult').classList.remove('reveal');
@@ -3867,12 +3948,12 @@
       saveDay(); renderCheckWall();
     }
   });
-  $('checkWall').addEventListener('change', event => {
+  $('checkWall').addEventListener('change', async event => {
     const select = event.target.closest('[data-check-name]');
     if (!select) return;
     const board = day.boards[Number(select.dataset.checkName)];
     if (select.value === '__custom__') {
-      const name = window.prompt('檢核板名稱：', board.name);
+      const name = await askDialog({ message: '檢核板名稱：', input: true, value: board.name });
       if (name && name.trim()) {
         board.name = name.trim().slice(0, 12);
         if (!config.checkNames.includes(board.name)) { config.checkNames.push(board.name); saveConfig(); }
@@ -3940,8 +4021,8 @@
   $('scoreTeamCount').addEventListener('change', () => {
     config.teamCount = Number($('scoreTeamCount').value); saveConfig(); renderScoreWall();
   });
-  $('scoreResetButton').addEventListener('click', () => {
-    if (!window.confirm('全部分數歸零？')) return;
+  $('scoreResetButton').addEventListener('click', async () => {
+    if (!(await askDialog({ message: '全部分數歸零？' }))) return;
     config.scores = config.scores.map(() => 0); saveConfig(); renderScoreWall();
   });
   $('scoreWall').addEventListener('click', event => {
@@ -4089,7 +4170,7 @@
     const from = $('quietImg').getBoundingClientRect(), to = $('quietStars').getBoundingClientRect();
     const star = document.createElement('span');
     star.className = 'quiet-star-fly'; star.textContent = '⭐';
-    (document.fullscreenElement || document.body).appendChild(star);
+    (fsCurrent() || document.body).appendChild(star);
     const sx = from.left + from.width / 2 - 23, sy = from.top + from.height / 3;
     const ex = to.left + to.width / 2 - 23, ey = to.top;
     star.style.left = '0px'; star.style.top = '0px';
@@ -4246,11 +4327,10 @@
     document.querySelector('.tab-button[data-page="tools"]').addEventListener('click', () => setTimeout(syncExam, 0));
     const examBoard = document.querySelector('.exam-board');
     $('examFullscreenButton').addEventListener('click', () => {
-      if (document.fullscreenElement) document.exitFullscreen();
-      else if (examBoard.requestFullscreen) examBoard.requestFullscreen().catch(() => showToast('這個瀏覽器不支援全螢幕。', true));
+      fsToggle(examBoard);
     });
     document.addEventListener('fullscreenchange', () => {
-      $('examFullscreenButton').textContent = document.fullscreenElement ? '⛶ 離開全螢幕' : '⛶ 全螢幕播放';
+      $('examFullscreenButton').textContent = fsCurrent() ? '⛶ 離開全螢幕' : '⛶ 全螢幕播放';
     });
   })();
 
@@ -4407,11 +4487,10 @@
     });
     const board = $('tomatoBoard');
     $('tomatoFullscreenButton').addEventListener('click', () => {
-      if (document.fullscreenElement) document.exitFullscreen();
-      else if (board.requestFullscreen) board.requestFullscreen().catch(() => showToast('這個瀏覽器不支援全螢幕。', true));
+      fsToggle(board);
     });
     document.addEventListener('fullscreenchange', () => {
-      $('tomatoFullscreenButton').textContent = document.fullscreenElement === board ? '⛶ 離開全螢幕' : '⛶ 全螢幕播放';
+      $('tomatoFullscreenButton').textContent = fsCurrent() === board ? '⛶ 離開全螢幕' : '⛶ 全螢幕播放';
     });
     paint();
   })();
@@ -4669,7 +4748,7 @@
     pop.innerHTML = '<button class="pp-close" type="button">✕ 關閉（Esc）</button><div class="pp-clock"></div><div class="pp-msg"></div><img class="pp-img" alt=""><div class="pp-bar"></div>';
     document.body.appendChild(pop);
     let popTimer = 0, popUntil = 0, popTotal = 0;
-    function popHost() { return document.fullscreenElement || document.body; }
+    function popHost() { return fsCurrent() || document.body; }
     function placePop() { if (!pop.hidden && pop.parentNode !== popHost()) popHost().appendChild(pop); }
     document.addEventListener('fullscreenchange', placePop);
     function closePop() { pop.hidden = true; clearInterval(popTimer); popTimer = 0; }
@@ -4737,11 +4816,10 @@
     setInterval(checkSchedules, 10000);
     setTimeout(checkSchedules, 1500);
     $('promptFullscreenButton').addEventListener('click', () => {
-      if (document.fullscreenElement) document.exitFullscreen();
-      else if (promptBoard.requestFullscreen) promptBoard.requestFullscreen().catch(() => showToast('這個瀏覽器不支援全螢幕。', true));
+      fsToggle(promptBoard);
     });
     document.addEventListener('fullscreenchange', () => {
-      $('promptFullscreenButton').textContent = document.fullscreenElement === promptBoard ? '⛶ 離開全螢幕' : '⛶ 全螢幕播放';
+      $('promptFullscreenButton').textContent = fsCurrent() === promptBoard ? '⛶ 離開全螢幕' : '⛶ 全螢幕播放';
     });
     applyPrompt();
 
@@ -4754,7 +4832,7 @@
         const settings = state.settings || {};
         if (!settings.gasUrl || !settings.classroomToken) return;
         const panelOpen = !document.querySelector('[data-tool-panel="prompt"]').hidden
-          || document.fullscreenElement === promptBoard;
+          || fsCurrent() === promptBoard;
         if (!panelOpen) return;
         const result = await callGas({ action: 'prompt_get', token: settings.classroomToken });
         const prompt = result && result.prompt;

@@ -791,6 +791,13 @@ assert.match(studioHtml, /seatOnPaper（只填數字[\s\S]{0,40}不要抄寫或�
 assert.match(studioHtml, /e\.status === 429 && attempt < 3/, "AI 太忙要自動重試");
 assert.match(studioHtml, /ES_BATCH\.items\.filter\(x => x\.status === 'ok'\)/, "合併列印只收老師已確認的");
 
+// 大屏不用瀏覽器原生 prompt／confirm（有些環境不支援，按了沒反應）；全螢幕不給時要有備援
+assert.doesNotMatch(morningHtml, /window\.(prompt|confirm)\(/, "大屏不可呼叫 window.prompt／confirm");
+assert.match(morningHtml, /function askDialog\(/, "大屏要有頁面內的輸入確認視窗");
+assert.match(morningHtml, /function fsEnter\(el\)[\s\S]{0,300}fsSetFake\(el\)/, "全螢幕要有鋪滿分頁的備援");
+assert.doesNotMatch(morningHtml.replace(/\.requestFullscreen\)|el\.requestFullscreen\(\)/g, ""), /\.requestFullscreen\(/, "全螢幕一律走 fsEnter");
+assert.doesNotMatch(morningHtml, /[^(,\s]:fullscreen(?!, \.fake-fs)/, "CSS 的全螢幕規則都要同時套用 .fake-fs");
+
 // G6 🧳 代課包
 assert.match(studioHtml, /data-page="substitute">🧳 代課包/, "應有代課包分頁");
 {
