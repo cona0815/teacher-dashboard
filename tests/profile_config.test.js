@@ -843,6 +843,22 @@ assert.match(lineBotSource, /classroomActions = \[[^\]]*'contactbook_month'/, "�
   assert.match(fs.readFileSync(path.join(projectRoot, "THIRD_PARTY_NOTICES.md"), "utf8"), /classboard/, "授權說明要列 classboard");
 }
 
+// 大屏各科作業項目：每個內建科目都有清單，項目夠短（版面名稱上限 20 字，要留給頁數）
+{
+  const block = morningHtml.match(/const HOMEWORK_ITEMS = (\{[\s\S]*?\});/);
+  const common = morningHtml.match(/const HOMEWORK_COMMON = (\[[^\]]*\]);/);
+  assert.ok(block && common, "要有各科作業項目");
+  const items = new Function(`return ${block[1]}`)();
+  const builtin = new Function(`return ${morningHtml.match(/const BUILTIN_SUBJECTS = (\[[^\]]*\]);/)[1]}`)();
+  for (const subject of builtin) assert.ok((items[subject] || []).length >= 3, `${subject} 要有作業項目`);
+  for (const list of [...Object.values(items), new Function(`return ${common[1]}`)()]) {
+    assert.equal(new Set(list).size, list.length, "同一科不可重複");
+    for (const name of list) assert.ok(name.length <= 8, `作業項目太長：${name}`);
+  }
+  assert.ok(items["國語"].includes("生字簿（甲本）") && items["數學"].includes("習作（數習）"), "常見項目要在");
+  assert.match(morningHtml, /boardSubjectSelect'\)\.addEventListener\('change', renderAssignmentOptions\)/, "換科目時選單要跟著換");
+}
+
 // G6 🧳 代課包
 assert.match(studioHtml, /data-page="substitute">🧳 代課包/, "應有代課包分頁");
 {
