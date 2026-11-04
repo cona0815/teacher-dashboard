@@ -476,7 +476,7 @@ function doGet() {
 }
 
 // 程式版本（每次發布都要更新；試算表選單「ℹ️ 程式版本」、LINE 傳「版本」、工作台連線檢查都會顯示）
-var BOT_VERSION = '2026-11-01 14:30';
+var BOT_VERSION = '2026-11-04 23:30';
 
 function lineBotJson_(payload) {
   return ContentService.createTextOutput(JSON.stringify(payload)).setMimeType(ContentService.MimeType.JSON);
@@ -493,8 +493,8 @@ function handleLineSyncApi_(body) {
   var classroomToken = lineBotProperty_('CLASSROOM_TOKEN');
   var isTeacher = Boolean(teacherToken) && provided === teacherToken;
   var isClassroom = Boolean(classroomToken) && provided === classroomToken;
-  // 教室金鑰權限受限：只能回報與讀取「當日」的點名與作業；歷史查詢需要老師金鑰。
-  var classroomActions = ['ping', 'rollcall_submit', 'classroom_today', 'classroom_missing', 'homework_resubmit', 'contactbook_get', 'contactbook_save', 'prompt_get'];
+  // 教室金鑰權限受限：只能回報與讀取「當日」的點名與作業；歷史查詢需要老師金鑰。聯絡本例外：可以看今天以前（contactbook_month，唯讀），看不到未來。
+  var classroomActions = ['ping', 'rollcall_submit', 'classroom_today', 'classroom_missing', 'homework_resubmit', 'contactbook_get', 'contactbook_save', 'contactbook_month', 'prompt_get'];
   if (!isTeacher && !(isClassroom && classroomActions.indexOf(action) !== -1)) {
     return lineBotJson_({ ok: false, error: '金鑰不正確或權限不足' });
   }
@@ -515,6 +515,7 @@ function handleLineSyncApi_(body) {
     if (action === 'rollcall_query') return lineBotJson_(readRollcallRange_(String(body.from || ''), String(body.to || ''), String(body.className || '')));
     if (action === 'contactbook_get') return lineBotJson_(getContactBook_(body, isTeacher));
     if (action === 'contactbook_save') return lineBotJson_(saveContactBook_(body, isTeacher));
+    if (action === 'contactbook_month') return lineBotJson_(monthContactBook_(body, isTeacher));
     if (action === 'contactbook_list') {
       if (!isTeacher) return lineBotJson_({ ok: false, error: '歷史清單需要老師金鑰' });
       return lineBotJson_(listContactBook_(body));
@@ -2668,6 +2669,28 @@ function getWorkspaceBackup_(body) {
     summary: String(parts[0][5] || ''),
     payload: parts.map(function (row) { return String(row[6] || ''); }).join('')
   };
+}
+
+/** 聯絡本月曆：某個月有內容的每一天（全文）。大屏金鑰只看得到今天以前，老師預先寫好的未來內容只有老師金鑰看得到。 */
+function monthContactBook_(body, isTeacher) {
+  var month = String(body.month || '');
+  if (!/^\d{4}-\d{2}$/.test(month)) throw new Error('月份格式不正確');
+  var today = lineBotToday_();
+  var sheets = ensureLineBotSheets_(SpreadsheetApp.getActiveSpreadsheet());
+  var lastRow = sheets.contactbook.getLastRow();
+  if (lastRow <= 1) return { ok: true, month: month, entries: [] };
+  var values = sheets.contactbook.getRange(2, 1, lastRow - 1, 5).getValues();
+  var entries = values.map(function (row) {
+    return {
+      date: row[0] instanceof Date ? Utilities.formatDate(row[0], Session.getScriptTimeZone(), 'yyyy-MM-dd') : String(row[0]),
+      text: String(row[2] || '').slice(0, 5000),
+      updatedAt: row[3] instanceof Date ? row[3].toISOString() : String(row[3] || ''),
+      source: String(row[4] || '')
+    };
+  }).filter(function (entry) {
+    return entry.date.indexOf(month + '-') === 0 && entry.text.trim() && (isTeacher || entry.date <= today);
+  }).sort(function (a, b) { return a.date.localeCompare(b.date); });
+  return { ok: true, month: month, entries: entries };
 }
 
 /** 老師金鑰限定：聯絡本歷史清單（近 limit 筆，新到舊，含內容預覽）。 */

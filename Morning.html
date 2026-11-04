@@ -181,6 +181,41 @@
     .ask-input { width: 100%; box-sizing: border-box; border: 2px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 20px; font-family: inherit; }
     .ask-actions { display: flex; justify-content: flex-end; gap: 10px; }
     html[data-board-style="cozy"] .ask-card { border-color: var(--cozy-wood); border-radius: 28px; box-shadow: 0 6px 0 var(--cozy-wood), 0 24px 48px -16px rgba(91,70,54,.45); }
+    /* ===== 聯絡本日曆 ===== */
+    .contact-title { border: 0; background: none; font: inherit; font-size: 18px; font-weight: 900; color: var(--primary-strong); display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px 3px 2px; border-radius: 10px; cursor: pointer; }
+    .contact-title:hover { background: var(--ok-soft); }
+    .contact-title small { font-size: 13px; font-weight: 800; color: var(--muted); border: 1.5px solid var(--line); border-radius: 999px; padding: 1px 8px; background: var(--surface); }
+    .ccal-pop { position: fixed; inset: 0; z-index: 99980; display: flex; align-items: center; justify-content: center; background: rgba(20, 36, 32, .45); }
+    .ccal-pop[hidden] { display: none !important; }
+    .ccal-card { width: min(1240px, 95vw); height: min(90vh, 860px); display: flex; flex-direction: column; gap: 10px; padding: 16px 20px; border-radius: 24px; background: var(--surface); border: 3px solid var(--line); box-shadow: 0 30px 60px -20px rgba(0,0,0,.45); }
+    .ccal-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .ccal-head h2 { margin: 0 8px 0 0; font-size: 22px; color: var(--primary-strong); }
+    .ccal-month { min-width: 150px; text-align: center; font-size: 22px; font-weight: 900; }
+    .ccal-close { margin-left: auto; }
+    .ccal-note { font-size: 14px; font-weight: 700; color: var(--muted); }
+    .ccal-note.bad { color: var(--missing); }
+    .ccal-body { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 16px; }
+    .ccal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); grid-template-rows: auto; grid-auto-rows: 1fr; gap: 5px; min-height: 0; }
+    .ccal-week { font-size: 14px; font-weight: 900; color: var(--muted); text-align: center; align-self: center; }
+    .ccal-day { min-width: 0; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 2px; text-align: left; border: 2px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); padding: 4px 6px; font-family: inherit; cursor: pointer; }
+    .ccal-day b { font-size: 16px; font-weight: 900; }
+    .ccal-day span { font-size: 12px; font-weight: 700; line-height: 1.25; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .ccal-day.has { background: var(--ok-soft); border-color: var(--ok); }
+    .ccal-day.today b { color: var(--primary-strong); text-decoration: underline; text-underline-offset: 3px; }
+    .ccal-day.sel { background: var(--primary-strong); border-color: var(--primary-strong); color: #fff; }
+    .ccal-day.sel b { color: #fff; }
+    .ccal-day:disabled { opacity: .4; cursor: default; }
+    .ccal-blank { min-height: 0; }
+    .ccal-detail { min-height: 0; display: flex; flex-direction: column; gap: 8px; }
+    .ccal-detail-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .ccal-detail-head strong { font-size: 20px; }
+    .ccal-detail-head .ghost-button { margin-left: auto; padding: 6px 14px; }
+    .ccal-board { flex: 1; min-height: 0; overflow: auto; background: #2e4a3d; color: #f4f1e6; border: 8px solid #8a5f38; border-radius: 12px; padding: 12px 16px; }
+    .ccal-board .chalk-content { font-size: 22px !important; }
+    .ccal-meta { font-size: 13px; font-weight: 700; color: var(--muted); min-height: 1.3em; }
+    @media (max-width: 820px) { .ccal-body { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1.1fr) minmax(0, 1fr); } .ccal-day span { display: none; } }
+    html[data-board-style="cozy"] .ccal-card { border-color: var(--cozy-wood); border-radius: 32px; box-shadow: 0 8px 0 var(--cozy-wood), 0 30px 60px -20px rgba(91,70,54,.45); }
+    html[data-board-style="cozy"] .ccal-day { border-radius: 14px; }
     /* ===== 全螢幕備援：瀏覽器不給真全螢幕時，鋪滿整個分頁 ===== */
     .fake-fs { position: fixed !important; inset: 0; z-index: 9000; margin: 0 !important; width: auto !important; max-width: none !important; border-radius: 0 !important; overflow: auto; background-color: var(--bg); transition: none !important; }
     html.fake-fs-on body { overflow: hidden; }
@@ -270,6 +305,27 @@
       <button class="ghost-button" type="button" id="countdownReset">歸零</button>
     </div>
   </header>
+  <div class="ccal-pop" id="ccalPop" role="dialog" aria-label="聯絡本日曆" hidden>
+    <div class="ccal-card">
+      <div class="ccal-head">
+        <h2>📅 聯絡本日曆</h2>
+        <button class="ghost-button" type="button" id="ccalPrev">‹ 上個月</button>
+        <span class="ccal-month" id="ccalMonth"></span>
+        <button class="ghost-button" type="button" id="ccalNext">下個月 ›</button>
+        <button class="ghost-button" type="button" id="ccalToday">回今天</button>
+        <button class="ghost-button ccal-close" type="button" id="ccalClose">✕ 關閉（Esc）</button>
+      </div>
+      <div class="ccal-note" id="ccalNote"></div>
+      <div class="ccal-body">
+        <div class="ccal-grid" id="ccalGrid"></div>
+        <div class="ccal-detail">
+          <div class="ccal-detail-head"><strong id="ccalDate"></strong><button class="ghost-button" type="button" id="ccalCopy">📋 複製這天</button></div>
+          <div class="ccal-board" id="ccalBoard"></div>
+          <div class="ccal-meta" id="ccalMeta"></div>
+        </div>
+      </div>
+    </div>
+  </div>
   <div class="cd-pop" id="cdPop" role="dialog" aria-label="倒數計時" hidden>
     <div class="cd-card">
       <div class="cd-ring">
@@ -314,7 +370,7 @@
           </div>
           <div>
             <div class="chalk-toolbar">
-              <strong style="font-size:18px;color:var(--primary-strong);display:inline-flex;align-items:center;gap:6px"><img class="tab-icon" data-icon="contact_book" src="data:image/webp;base64,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" alt="">今日聯絡本</strong>
+              <button class="contact-title" type="button" id="contactCalButton" title="打開聯絡本日曆"><img class="tab-icon" data-icon="contact_book" src="data:image/webp;base64,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" alt="">今日聯絡本 <small>📅 日曆</small></button>
               <span class="status-text" id="contactMeta"></span>
               <button class="ghost-button" type="button" id="contactRefreshButton" style="margin-left:auto">🔄 重新整理</button>
               <button class="ghost-button" type="button" id="contactCopyButton">📋 複製</button>
@@ -1619,6 +1675,10 @@
       const now = new Date();
       const header = `【${state.settings.className ? state.settings.className + ' ' : ''}今日聯絡本】${now.getMonth() + 1}/${now.getDate()}（週${weekdays[now.getDay()]}）`;
       const full = `${header}\n${text}`;
+      const copied = await copyText(full);
+      showToast(copied ? '已複製！可直接貼到家長群組。' : '複製失敗，請手動選取內容複製。', !copied);
+    }
+    async function copyText(full) {
       let copied = false;
       try {
         await navigator.clipboard.writeText(full);
@@ -1632,7 +1692,95 @@
         try { copied = document.execCommand('copy'); } catch (error2) { copied = false; }
         helper.remove();
       }
-      showToast(copied ? '已複製！可直接貼到家長群組。' : '複製失敗，請手動選取內容複製。', !copied);
+      return copied;
+    }
+
+    // ---------- 聯絡本日曆：點「今日聯絡本」打開，點某一天看全文（唯讀，今天的編輯在黑板上） ----------
+    const ccal = { month: '', sel: '', cache: {}, loading: false, error: '' };
+    const ccalPad = n => String(n).padStart(2, '0');
+    const ccalWeek = ['日', '一', '二', '三', '四', '五', '六'];
+    const CCAL_SOURCE = { teacher: '工作台輸入', classroom: '教室輸入', line: 'LINE 輸入' };
+    async function ccalFetch(month) {
+      if (!state.settings.gasUrl || !state.settings.classroomToken) throw new Error('要先在「設定」填雲端網址和教室大屏金鑰，才看得到以前的聯絡本。');
+      const result = await callGas({ action: 'contactbook_month', token: state.settings.classroomToken, className: state.settings.className, month });
+      return result.entries || [];
+    }
+    // 今天的內容以黑板上最新的為準
+    function ccalEntry(date) {
+      if (date === todayKey() && state.contact.text.trim()) return { date, text: state.contact.text, updatedAt: state.contact.updatedAt, source: state.contact.source };
+      return (ccal.cache[date.slice(0, 7)] || {})[date] || null;
+    }
+    function ccalRender() {
+      const today = todayKey(), thisMonth = today.slice(0, 7);
+      const [y, m] = ccal.month.split('-').map(Number);
+      $('ccalMonth').textContent = `${y} 年 ${m} 月`;
+      $('ccalNext').disabled = ccal.month >= thisMonth;
+      $('ccalNote').className = ccal.error ? 'ccal-note bad' : 'ccal-note';
+      $('ccalNote').textContent = ccal.loading ? '讀取中…' : ccal.error || '綠色的日子有寫聯絡本，點一下看內容。這裡只能看，不能改。';
+      const first = new Date(y, m - 1, 1).getDay(), days = new Date(y, m, 0).getDate();
+      const cells = ccalWeek.map(w => `<div class="ccal-week">${w}</div>`);
+      for (let i = 0; i < first; i += 1) cells.push('<div class="ccal-blank"></div>');
+      for (let d = 1; d <= days; d += 1) {
+        const date = `${ccal.month}-${ccalPad(d)}`;
+        const entry = ccalEntry(date);
+        const cls = [entry ? 'has' : '', date === today ? 'today' : '', date === ccal.sel ? 'sel' : ''].filter(Boolean).join(' ');
+        const snippet = entry ? entry.text.trim().split('\n')[0].slice(0, 16) : '';
+        cells.push(`<button class="ccal-day ${cls}" type="button" data-ccal-day="${date}"${date > today ? ' disabled' : ''}><b>${d}</b>${snippet ? `<span>${escapeHtml(snippet)}</span>` : ''}</button>`);
+      }
+      $('ccalGrid').innerHTML = cells.join('');
+      ccalRenderDetail();
+    }
+    function ccalRenderDetail() {
+      const [y, m, d] = ccal.sel.split('-').map(Number);
+      const entry = ccalEntry(ccal.sel);
+      $('ccalDate').textContent = `${y} 年 ${m} 月 ${d} 日（週${ccalWeek[new Date(y, m - 1, d).getDay()]}）`;
+      $('ccalCopy').hidden = !entry;
+      // 字體跟黑板一樣（低年級可能選注音字型）
+      const font = CONTACT_FONTS.includes(state.settings.contactFont) ? state.settings.contactFont : 'default';
+      $('ccalBoard').className = `ccal-board chalk-${font}`;
+      $('ccalBoard').innerHTML = entry
+        ? `<div class="chalk-content">${escapeHtml(entry.text)}</div>`
+        : `<span class="chalk-empty">${ccal.loading ? '讀取中…' : '這一天沒有聯絡本內容。'}</span>`;
+      const time = entry && entry.updatedAt ? new Date(entry.updatedAt) : null;
+      const validTime = time && !Number.isNaN(time.getTime());
+      const source = entry ? CCAL_SOURCE[entry.source] : '';
+      $('ccalMeta').textContent = entry && (validTime || source)
+        ? [validTime ? `最後更新 ${time.getMonth() + 1}/${time.getDate()} ${ccalPad(time.getHours())}:${ccalPad(time.getMinutes())}` : '', source ? `（${source}）` : ''].join('')
+        : '';
+    }
+    async function ccalLoad(month, force) {
+      ccal.month = month;
+      ccal.error = '';
+      if (ccal.cache[month] && !force) { ccal.loading = false; ccalRender(); return; }
+      ccal.loading = true;
+      ccalRender();
+      try {
+        const entries = await ccalFetch(month);
+        ccal.cache[month] = Object.fromEntries(entries.map(entry => [entry.date, entry]));
+      } catch (error) {
+        const message = String((error && error.message) || '');
+        if (ccal.month === month) ccal.error = error.name === 'AbortError' ? '雲端太久沒回應，請再試一次。' : /權限不足/.test(message) ? '雲端的 LINE 小幫手要更新成新版（或教室大屏金鑰不對），才看得到以前的聯絡本。' : message || '讀取失敗，請再試一次。';
+      }
+      if (ccal.month === month) { ccal.loading = false; ccalRender(); }
+    }
+    function ccalShift(delta) {
+      const [y, m] = ccal.month.split('-').map(Number);
+      const when = new Date(y, m - 1 + delta, 1);
+      const month = `${when.getFullYear()}-${ccalPad(when.getMonth() + 1)}`;
+      const today = todayKey();
+      const last = new Date(when.getFullYear(), when.getMonth() + 1, 0).getDate();
+      ccal.sel = month === today.slice(0, 7) ? today : `${month}-${ccalPad(last)}`;
+      ccalLoad(month).then(() => {
+        // 以前的月份：選那個月最後一天有寫的
+        const dates = Object.keys(ccal.cache[month] || {}).sort();
+        if (ccal.month === month && month !== today.slice(0, 7) && dates.length) { ccal.sel = dates[dates.length - 1]; ccalRender(); }
+      });
+    }
+    function ccalOpen() {
+      const today = todayKey();
+      ccal.sel = today;
+      $('ccalPop').hidden = false;
+      ccalLoad(today.slice(0, 7), true);
     }
 
     async function toggleContactEdit() {
@@ -2810,6 +2958,27 @@
     $('exportQueryButton').addEventListener('click', exportQueryCsv);
     $('contactRefreshButton').addEventListener('click', () => loadContactBook({ silent: false }));
     $('contactCopyButton').addEventListener('click', copyContactBookText);
+    $('contactCalButton').addEventListener('click', ccalOpen);
+    $('ccalClose').addEventListener('click', () => { $('ccalPop').hidden = true; });
+    $('ccalPop').addEventListener('click', event => { if (event.target === $('ccalPop')) $('ccalPop').hidden = true; });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape' && !$('ccalPop').hidden) $('ccalPop').hidden = true; });
+    $('ccalPrev').addEventListener('click', () => ccalShift(-1));
+    $('ccalNext').addEventListener('click', () => ccalShift(1));
+    $('ccalToday').addEventListener('click', () => { ccal.sel = todayKey(); ccalLoad(ccal.sel.slice(0, 7)); });
+    $('ccalGrid').addEventListener('click', event => {
+      const day = event.target.closest('[data-ccal-day]');
+      if (!day || day.disabled) return;
+      ccal.sel = day.dataset.ccalDay;
+      ccalRender();
+    });
+    $('ccalCopy').addEventListener('click', async () => {
+      const entry = ccalEntry(ccal.sel);
+      if (!entry) return;
+      const [, m, d] = ccal.sel.split('-').map(Number);
+      const weekday = ccalWeek[new Date(ccal.sel + 'T00:00:00').getDay()];
+      const copied = await copyText(`【${state.settings.className ? state.settings.className + ' ' : ''}聯絡本】${m}/${d}（週${weekday}）\n${entry.text.trim()}`);
+      showToast(copied ? '已複製這一天的聯絡本。' : '複製失敗，請手動選取內容複製。', !copied);
+    });
     $('contactEditButton').addEventListener('click', toggleContactEdit);
     function toggleProjection(force) {
       const on = force !== undefined ? force : !document.body.classList.contains('projection');

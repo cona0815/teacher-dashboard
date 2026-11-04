@@ -808,6 +808,30 @@ assert.match(indexHtml, /<strong>可愛溫暖風<\/strong>/, "工作台配色改
 assert.match(morningHtml, /id="countdownCustom">自訂<\/button>/, "倒數要有自訂鈕");
 assert.match(morningHtml, /function parseCountdownSeconds\(text\)/, "自訂時間要能解析分鐘與分:秒");
 
+// 大屏聯絡本日曆：教室金鑰只讀得到今天以前，老師預先寫好的未來內容看不到
+assert.match(morningHtml, /id="contactCalButton"/, "點今日聯絡本要能打開日曆");
+assert.match(morningHtml, /action: 'contactbook_month', token: state\.settings\.classroomToken/, "日曆用教室金鑰讀月份");
+assert.match(lineBotSource, /classroomActions = \[[^\]]*'contactbook_month'/, "教室金鑰可讀聯絡本月曆");
+{
+  const vm = require("node:vm");
+  const rows = [
+    ["2026-10-30", "601", "十月底的聯絡本", "2026-10-30T08:00:00Z", "teacher"],
+    ["2026-11-03", "601", "昨天的聯絡本", "2026-11-03T08:00:00Z", "line"],
+    ["2026-11-04", "601", "今天的聯絡本", "2026-11-04T08:00:00Z", "classroom"],
+    ["2026-11-05", "601", "老師預先寫的明天", "2026-11-04T09:00:00Z", "teacher"],
+    ["2026-11-06", "601", "   ", "2026-11-04T09:00:00Z", "teacher"]
+  ];
+  const context = { Utilities: {}, Session: {}, SpreadsheetApp: { getActiveSpreadsheet: () => ({}) }, PropertiesService: {}, console };
+  vm.createContext(context);
+  vm.runInContext(lineBotSource, context);
+  context.lineBotToday_ = () => "2026-11-04";
+  context.ensureLineBotSheets_ = () => ({ contactbook: { getLastRow: () => rows.length + 1, getRange: () => ({ getValues: () => rows }) } });
+  const dates = isTeacher => [...context.monthContactBook_({ month: "2026-11" }, isTeacher).entries].map(entry => entry.date).join();
+  assert.equal(dates(false), "2026-11-03,2026-11-04", "教室金鑰看不到未來，空白的日子不列");
+  assert.equal(dates(true), "2026-11-03,2026-11-04,2026-11-05", "老師金鑰看得到預先寫好的");
+  assert.throws(() => context.monthContactBook_({ month: "2026-1" }, false), /月份格式/, "月份格式要檢查");
+}
+
 // G6 🧳 代課包
 assert.match(studioHtml, /data-page="substitute">🧳 代課包/, "應有代課包分頁");
 {
