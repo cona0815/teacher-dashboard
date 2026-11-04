@@ -465,7 +465,7 @@ function readPreset(){let o=null;try{o=JSON.parse(localStorage.getItem(PRESETKEY
 let fresh=false;
 if(!S||S.v!==2||!Array.isArray(S.screens)||!S.screens.length){fresh=true;const pr=readPreset();S=pr?JSON.parse(JSON.stringify(pr.S)):defaults();if(pr)IMG=pr.IMG||{}}
 if(!fresh){try{IMG=JSON.parse(localStorage.getItem(IMGKEY)||'{}')||{}}catch(e){IMG={}}}
-const KEEP=['text','schedule','clock','timer','countdown','stopwatch','alarm','interval','image','draw','qr'];
+const KEEP=['text','schedule','clock','timer','stopwatch','alarm','interval','image','draw','qr'];
 S.screens.forEach(sc=>{sc.id=sc.id||uid();sc.widgets=sc.widgets.filter(w=>KEEP.includes(w.type))});
 if(!S.bg)S.bg=S.photo?'photo':'default';S.font=S.font||'auto';S.dfont=S.dfont||'auto';
 S.rotate=S.rotate||{on:false,sec:30};S.jobs=S.jobs||[];

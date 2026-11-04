@@ -245,7 +245,7 @@ rep(""".swatches{display:flex;""", """#ink{position:absolute;inset:0;width:100%;
 rep("""<script type="application/json" id="presetData"></script>""", """<script type="application/json" id="presetData"></script>
 <script src="assets/studio/qr-encode.js"></script>""")
 rep("""const KEEP=['text','schedule','clock','timer','countdown','stopwatch','alarm','interval','image','draw'];""",
-    """const KEEP=['text','schedule','clock','timer','countdown','stopwatch','alarm','interval','image','draw','qr'];""")
+    """const KEEP=['text','schedule','clock','timer','stopwatch','alarm','interval','image','draw','qr'];""")   # 老師 2026-11-04：倒數用不到，拿掉（要限時用計時器）
 rep("""qr:['QR碼','qr-code',.2,.38]""", """qr:['QR Code','qr-code',.26,.5]""")
 rep("""image:'🖼️',draw:'✏️'};""", """image:'🖼️',draw:'✏️',qr:'🔳'};""")
 rep("""  if(b.dataset.add)addW(b.dataset.add);""", """  if(b.dataset.add){const added=addW(b.dataset.add);if(added.type==='qr')ELS[added.id].b.querySelector('.qrin').focus()}""")

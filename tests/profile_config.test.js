@@ -876,12 +876,11 @@ assert.match(morningHtml, /id="makeupGoHomework">⚠️ 今天的缺交請到「
   assert.match(morningHtml, /s\.homeworkPicks = nameLists\(saved\.homeworkPicks\)/, "作業項目的選擇要存下來");
 }
 
-// 螢幕公告：文字顏色、倒數不會一放上去就結束、畫筆、QR Code（本站內建，不靠外部）
+// 螢幕公告：文字顏色、畫筆、QR Code（本站內建，不靠外部）；倒數工具老師說用不到，已從工具列拿掉
 {
   const screenHtml = fs.readFileSync(path.join(projectRoot, "Screen.html"), "utf8");
   assert.match(screenHtml, /\.colors\('顏色'/, "文字可以換顏色");
-  assert.match(screenHtml, /function cdTarget\(d,now\)[\s\S]{0,240}setDate\(tg\.getDate\(\)\+1\)/, "倒數時間已過要算到明天");
-  assert.match(screenHtml, /countdown:\(\)=>\(\{time:cdSoon\(10\)/, "新放的倒數預設 10 分鐘後");
+  assert.doesNotMatch(screenHtml.match(/const KEEP=\[[^\]]*\]/)[0], /countdown/, "老師不要倒數工具");
   assert.match(screenHtml, /id="inkTb"/, "要有畫筆");
   assert.match(screenHtml, /<script src="assets\/studio\/qr-encode\.js"><\/script>/, "QR Code 要用本站的編碼器");
   assert.match(screenHtml, /const KEEP=\[[^\]]*'qr'\]/, "QR Code 要在工具列");
