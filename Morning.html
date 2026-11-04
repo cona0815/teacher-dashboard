@@ -265,6 +265,7 @@
       <span class="countdown-display" id="countdownDisplay">00:00</span>
       <button class="ghost-button" type="button" data-countdown="300">5分</button>
       <button class="ghost-button" type="button" data-countdown="600">10分</button>
+      <button class="ghost-button" type="button" id="countdownCustom">自訂</button>
       <button class="ghost-button" type="button" id="countdownToggle">開始</button>
       <button class="ghost-button" type="button" id="countdownReset">歸零</button>
     </div>
@@ -2750,11 +2751,27 @@
     });
     // 5分／10分：直接開始倒數並跳出大時鐘
     document.querySelectorAll('[data-countdown]').forEach(button => button.addEventListener('click', () => startCountdown(Number(button.dataset.countdown))));
+    // 自訂時間：打分鐘（8、1.5）或分:秒（2:30）；打不懂就再問一次
+    function parseCountdownSeconds(text) {
+      const value = String(text || '').trim().replace(/：/g, ':');
+      const clock = /^(\d{1,3}):([0-5]?\d)$/.exec(value);
+      const seconds = clock ? Number(clock[1]) * 60 + Number(clock[2]) : /^\d+(\.\d+)?$/.test(value) ? Math.round(Number(value) * 60) : 0;
+      return seconds >= 1 && seconds <= 3 * 60 * 60 ? seconds : 0;
+    }
+    async function askCountdownTime() {
+      let message = '倒數多久？\n打分鐘（例如 8、1.5），或分:秒（例如 2:30）';
+      for (;;) {
+        const typed = await askDialog({ message, input: true, value: '10' });
+        if (typed === null) return;
+        const seconds = parseCountdownSeconds(typed);
+        if (seconds) return startCountdown(seconds);
+        message = '看不懂這個時間，請再打一次：\n分鐘（例如 8、1.5）或分:秒（例如 2:30），最長 3 小時';
+      }
+    }
+    $('countdownCustom').addEventListener('click', askCountdownTime);
     $('countdownToggle').addEventListener('click', async () => {
       if (!state.countdown.remaining && !state.countdown.running) {
-        const minutes = Number(await askDialog({ message: '倒數幾分鐘？', input: true, value: '10', numeric: true }));
-        if (!minutes || minutes <= 0) return;
-        startCountdown(Math.round(minutes * 60));
+        await askCountdownTime();
         return;
       }
       state.countdown.running = !state.countdown.running;

@@ -804,6 +804,10 @@ assert.doesNotMatch(indexHtml, /動森/, "工作台不可再出現舊的風格�
 assert.match(morningHtml, /<option value="cozy">可愛溫暖風/, "大屏風格選單改名");
 assert.match(indexHtml, /<strong>可愛溫暖風<\/strong>/, "工作台配色改名");
 
+// 大屏倒數可自訂時間（分鐘或分:秒）
+assert.match(morningHtml, /id="countdownCustom">自訂<\/button>/, "倒數要有自訂鈕");
+assert.match(morningHtml, /function parseCountdownSeconds\(text\)/, "自訂時間要能解析分鐘與分:秒");
+
 // G6 🧳 代課包
 assert.match(studioHtml, /data-page="substitute">🧳 代課包/, "應有代課包分頁");
 {
