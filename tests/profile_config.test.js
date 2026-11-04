@@ -832,6 +832,17 @@ assert.match(lineBotSource, /classroomActions = \[[^\]]*'contactbook_month'/, "�
   assert.throws(() => context.monthContactBook_({ month: "2026-1" }, false), /月份格式/, "月份格式要檢查");
 }
 
+// 📺 螢幕公告：內嵌 Screen.html（來源 classboard，MIT）；不靠外部資源、沒有預設內容
+{
+  const screenHtml = fs.readFileSync(path.join(projectRoot, "Screen.html"), "utf8");
+  assert.match(morningHtml, /data-tool="screen"><span class="tt-ico">📺<\/span><span>螢幕公告/, "班級工具要有螢幕公告");
+  assert.match(morningHtml, /frame-src 'self'/, "大屏的安全設定要允許內嵌自家頁面");
+  assert.doesNotMatch(screenHtml, /<(?:script|link)[^>]+(?:src|href)="https?:/, "螢幕公告不可載入外部資源（本站安全設定會擋）");
+  assert.doesNotMatch(screenHtml, /比賽|Scratch/, "不可留比賽範本（定時每天重複，會每天響鈴）");
+  assert.match(screenHtml, /jobs:\[\],\s*screens:\[\{id:uid\(\),name:'畫面 1',widgets:\[\]\}\]/, "預設是一個空白畫面、沒有定時");
+  assert.match(fs.readFileSync(path.join(projectRoot, "THIRD_PARTY_NOTICES.md"), "utf8"), /classboard/, "授權說明要列 classboard");
+}
+
 // G6 🧳 代課包
 assert.match(studioHtml, /data-page="substitute">🧳 代課包/, "應有代課包分頁");
 {

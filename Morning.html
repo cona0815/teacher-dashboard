@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' https://script.google.com https://script.googleusercontent.com; frame-src https://www.youtube-nocookie.com https://www.youtube.com; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' https://script.google.com https://script.googleusercontent.com; frame-src 'self' https://www.youtube-nocookie.com https://www.youtube.com; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
   <title>晨間大屏｜點名與作業繳交</title>
   <style>
     :root {
@@ -678,6 +678,11 @@
         .tool-tab[data-tool="exam"] { --tc: #2457e6; --tc-soft: #e7edfc; }
         .tool-tab[data-tool="tomato"] { --tc: #e0523f; --tc-soft: #fdebe6; }
         .tool-tab[data-tool="prompt"] { --tc: #1f514a; --tc-soft: #e8f2ee; }
+        .tool-tab[data-tool="screen"] { --tc: #0f7d8c; --tc-soft: #e2f3f5; }
+        .screen-board { height: max(420px, calc(100vh - 430px)); margin-top: 8px; }   /* 要留給上方工具列與底部「存到雲端」，內嵌的工具列才不會被蓋住 */
+        .screen-board iframe { display: block; width: 100%; height: 100%; border: 2px solid var(--line); border-radius: 14px; background: var(--bg); }
+        .screen-board:is(:fullscreen, .fake-fs) { height: 100vh; margin-top: 0 !important; }
+        .screen-board:is(:fullscreen, .fake-fs) iframe { border: 0; border-radius: 0; }
         .tool-tab { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-width: 108px; padding: 10px 14px 9px; border: 2px solid transparent; border-radius: 18px; background: var(--tc-soft); color: var(--tc); font-size: 15.5px; line-height: 1.2; box-shadow: 0 2px 0 rgba(0,0,0,.05); transition: transform .18s cubic-bezier(.3,1.6,.5,1), box-shadow .18s, background .18s, color .18s; }
         .tool-tab .tt-ico { font-size: 30px; line-height: 1; transition: transform .25s cubic-bezier(.3,1.6,.5,1); }
         .tool-tab:hover { transform: translateY(-2px); }
@@ -875,6 +880,7 @@
           <button class="tool-tab" type="button" data-tool="exam"><span class="tt-ico">📝</span><span>定評小幫手</span></button>
           <button class="tool-tab" type="button" data-tool="tomato"><span class="tt-ico">🍅</span><span>番茄鐘</span></button>
           <button class="tool-tab" type="button" data-tool="prompt"><span class="tt-ico">📣</span><span>大屏提示</span></button>
+          <button class="tool-tab" type="button" data-tool="screen"><span class="tt-ico">📺</span><span>螢幕公告</span></button>
           <span class="status-text">全部只存這台電腦、不進雲端統計；抽籤與分組的座號池自動沿用「設定」（略過空號）。</span>
         </div>
 
@@ -1105,6 +1111,14 @@
               <button class="ghost-button" type="button" id="promptSchedPreview">▶ 預覽跳出畫面（10 秒）</button>
             </div>
           </details>
+        </div>
+        <div class="tool-panel" data-tool-panel="screen" hidden>
+          <div class="tool-opts">
+            <button class="ghost-button" type="button" id="screenFullscreenButton">⛶ 全螢幕播放</button>
+            <a class="ghost-button" href="Screen.html" target="_blank" rel="noopener" style="text-decoration:none">↗ 開新分頁</a>
+            <span class="status-text">自由擺放文字、時程表、時鐘、計時器、圖片、畫板，也能設定時跳提醒。設定只存在這台電腦；定時提醒要網頁開著才會跳。</span>
+          </div>
+          <div class="screen-board" id="screenBoard"><iframe id="screenFrame" title="螢幕公告" allow="fullscreen; autoplay; screen-wake-lock"></iframe></div>
         </div>
       </div>
     </section>
@@ -3414,6 +3428,18 @@
     if (tab.dataset.tool !== 'quiet') stopQuiet();
   }));
   document.querySelectorAll('.tab-button').forEach(btn => btn.addEventListener('click', () => { if (btn.dataset.page !== 'tools') stopQuiet(); }));
+  // 📺 螢幕公告：第一次點才載入（裡面有定時，載入後切到別的分頁也繼續跑）
+  const screenTile = document.querySelector('.tool-tab[data-tool="screen"]');
+  screenTile.addEventListener('click', () => { if (!$('screenFrame').getAttribute('src')) $('screenFrame').src = 'Screen.html'; });
+  $('screenFullscreenButton').addEventListener('click', () => fsToggle($('screenBoard')));
+  document.addEventListener('fullscreenchange', () => {
+    $('screenFullscreenButton').textContent = fsCurrent() === $('screenBoard') ? '⛶ 離開全螢幕' : '⛶ 全螢幕播放';
+  });
+  // 螢幕公告定時跳提醒時叫這個，不然提醒藏在別的分頁後面
+  window.screenBoardShow = () => {
+    if (!document.querySelector('.tab-button[data-page="tools"]').classList.contains('active')) toolsTab.click();
+    if (!screenTile.classList.contains('active')) screenTile.click();
+  };
   // 投影模式：把整個工具面板放到全螢幕（抽籤、檢核、計分、分組、安靜）
   document.querySelectorAll('[data-fs-panel]').forEach(btn => btn.addEventListener('click', () => {
     const panel = document.querySelector(`[data-tool-panel="${btn.dataset.fsPanel}"]`);

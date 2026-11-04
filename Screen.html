@@ -1,0 +1,998 @@
+<!doctype html>
+<!-- 螢幕公告｜班級工具。源自 cona0815/classboard v3.5（MIT，原創程式與美術，與 Classroomscreen 無關）。由 tools/build_screen_board.py 產生，要改請改那支或上游。 -->
+<html lang="zh-Hant">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<title>螢幕公告</title>
+<style>
+/* 字型都在本站（只有選到才會下載） */
+@font-face{font-family:"Huninn";font-display:swap;src:local("Huninn"),local("Huninn Regular"),url("assets/fonts/Huninn-Regular.ttf") format("truetype")}
+@font-face{font-family:"Iansui";font-display:swap;src:local("Iansui"),local("Iansui Regular"),url("assets/fonts/Iansui-Regular.ttf") format("truetype")}
+@font-face{font-family:"Bpmf Huninn";font-display:swap;src:local("Bpmf Huninn"),local("Bpmf Huninn Regular"),url("assets/fonts/BpmfHuninn-Regular.ttf") format("truetype")}
+@font-face{font-family:"Bpmf Iansui";font-display:swap;src:local("Bpmf Iansui"),local("Bpmf Iansui Regular"),url("assets/fonts/BpmfIansui-Regular.ttf") format("truetype")}
+/* 版面：全螢幕畫布＋自由擺放的小工具視窗＋底部工具列；位置以畫布百分比儲存，換投影機解析度也不跑版。
+   三種風格各是完整的單一外觀，由 body[data-style] 切換。 */
+:root{
+  color-scheme:dark;
+  --bg:#24392f; --bg-img:radial-gradient(ellipse at 25% 15%,rgba(255,255,255,.07),transparent 55%),radial-gradient(ellipse at 85% 95%,rgba(0,0,0,.3),transparent 55%);
+  --card:rgba(12,26,19,.5); --card-solid:#1c2f25; --card-border:2px dashed rgba(240,236,224,.34); --radius:12px; --shadow:none;
+  --chrome:rgba(240,236,224,.16); --chrome-ink:#f1eee4;
+  --bar:rgba(18,32,25,.9); --bar-edge:rgba(240,236,224,.25);
+  --ink:#f1eee4; --muted:#b4c0af; --accent:#f7d86a; --on-accent:#1f2e26; --hot:#ff9a86; --on-hot:#24392f;
+  --digit:#f7d86a; --glow:0 0 1px rgba(255,255,255,.5);
+  --rule:1px dashed rgba(240,236,224,.2);
+  --btn-bg:rgba(255,255,255,.07); --btn-ink:#f1eee4; --btn-edge:rgba(240,236,224,.35); --btn-radius:6px;
+  --field:rgba(0,0,0,.25); --track:rgba(255,255,255,.13); --stage:rgba(0,0,0,.2);
+  --title-font:"DFKai-SB","Kaiti TC","DFKai-SB",serif;
+  --body-font:"DFKai-SB","Kaiti TC","DFKai-SB",serif;
+  --digit-font:"Segoe Print","DFKai-SB",cursive;
+}
+body[data-style="cork"]{
+  color-scheme:light;
+  --bg:#c39a6b; --bg-img:radial-gradient(circle at 20% 30%,rgba(110,70,30,.35) 1.2px,transparent 2.2px),radial-gradient(circle at 70% 60%,rgba(255,235,200,.25) 1px,transparent 2px),radial-gradient(circle at 40% 80%,rgba(90,55,20,.3) 1.5px,transparent 2.5px);
+  --card:#fffcf4; --card-solid:#fffcf4; --card-border:none; --radius:6px; --shadow:0 8px 18px rgba(70,40,10,.35);
+  --chrome:#efe4cf; --chrome-ink:#2c2118;
+  --bar:rgba(255,252,244,.94); --bar-edge:#d9c8ad;
+  --ink:#2c2118; --muted:#7a6650; --accent:#c8402c; --on-accent:#fff; --hot:#c8402c; --on-hot:#fff;
+  --digit:#2c2118; --glow:none;
+  --rule:1px solid #eee3cf;
+  --btn-bg:#fffcf4; --btn-ink:#2c2118; --btn-edge:#d9c8ad; --btn-radius:999px;
+  --field:#fff; --track:#eadfcb; --stage:#f3ecdf;
+  --title-font:"Microsoft JhengHei","PingFang TC","Microsoft JhengHei",sans-serif;
+  --body-font:"Microsoft JhengHei","PingFang TC","Microsoft JhengHei",sans-serif;
+  --digit-font:"Segoe UI","Microsoft JhengHei",sans-serif;
+}
+body[data-style="led"]{
+  color-scheme:dark;
+  --bg:#0a0c0f; --bg-img:linear-gradient(rgba(255,255,255,.028) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.028) 1px,transparent 1px);
+  --card:#11151a; --card-solid:#11151a; --card-border:1px solid #232b34; --radius:10px; --shadow:0 10px 30px rgba(0,0,0,.45);
+  --chrome:#1b222a; --chrome-ink:#e9eef3;
+  --bar:rgba(14,17,21,.94); --bar-edge:#2c3640;
+  --ink:#e9eef3; --muted:#7f8c99; --accent:#ffb000; --on-accent:#120d00; --hot:#ff4040; --on-hot:#fff;
+  --digit:#ffb000; --glow:0 0 18px rgba(255,176,0,.5),0 0 2px rgba(255,200,80,.9);
+  --rule:1px solid #1e252d;
+  --btn-bg:#161c22; --btn-ink:#e9eef3; --btn-edge:#2c3640; --btn-radius:6px;
+  --field:#0c1014; --track:#1d242c; --stage:#080a0d;
+  --title-font:"Microsoft JhengHei","PingFang TC","Microsoft JhengHei",sans-serif;
+  --body-font:"Microsoft JhengHei","PingFang TC","Microsoft JhengHei",sans-serif;
+  --digit-font:"Consolas","Microsoft JhengHei",monospace;
+}
+/* 小島：草地圓點、奶油色對話框卡片、圓體字，溫暖的悠閒島嶼生活感（原創設計） */
+body[data-style="isle"]{
+  color-scheme:light;
+  --bg:#8fd16a; --bg-img:radial-gradient(circle at 25% 25%,rgba(255,255,255,.22) 0 9px,transparent 10px),radial-gradient(circle at 75% 75%,rgba(255,255,255,.22) 0 9px,transparent 10px);
+  --card:#fffbe8; --card-solid:#fffbe8; --card-border:4px solid #fff3c4; --radius:30px; --shadow:0 7px 0 rgba(84,120,50,.35),0 12px 24px rgba(40,70,20,.18);
+  --chrome:#f6e7b4; --chrome-ink:#6b4e2e;
+  --bar:rgba(255,251,232,.96); --bar-edge:#ecdba4;
+  --ink:#6b4e2e; --muted:#a58b68; --accent:#18b48a; --on-accent:#fff; --hot:#f2665a; --on-hot:#fff;
+  --digit:#6b4e2e; --glow:none;
+  --rule:2px dotted #eadcae;
+  --btn-bg:#fff6d6; --btn-ink:#6b4e2e; --btn-edge:#e9d596; --btn-radius:999px;
+  --field:#fff; --track:#f1e6c2; --stage:#f7efd2;
+  --title-font:"Huninn","Segoe UI","Microsoft JhengHei",sans-serif;
+  --body-font:"Huninn","Microsoft JhengHei",sans-serif;
+  --digit-font:"Segoe UI","Huninn",sans-serif;
+}
+body[data-style="isle"] #stage{background-size:56px 56px}
+body[data-style="isle"] .wh{border-radius:14px 14px 0 0}
+body[data-style="isle"] .sch .tm{color:var(--accent)}
+body[data-style="isle"] .sch li.now{background:#fff1b0;border-radius:14px}
+body[data-style="isle"] .ttl{color:var(--accent)}
+body[data-style="isle"] .btn.primary,body[data-style="isle"] .btn[aria-pressed="true"]{box-shadow:0 3px 0 #0f8a69}
+body[data-style="isle"] #bar{border-radius:26px;border-width:3px}
+html,body{height:100%}
+[hidden]{display:none!important}
+body{margin:0;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--body-font);font-size:16px}
+*{box-sizing:border-box}
+button,input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+#stage{position:fixed;inset:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);background:var(--bg);background-image:var(--bg-img);overflow:hidden}
+body[data-style="cork"] #stage{background-size:22px 22px,31px 31px,17px 17px}
+body[data-style="led"] #stage{background-size:28px 28px}
+#stage.photo{background-size:cover!important;background-position:center!important}
+body[data-style="chalk"] #stage::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;box-shadow:inset 0 0 0 12px #6a4a2c,inset 0 0 0 14px #3c2816,inset 0 0 40px rgba(0,0,0,.45)}
+.hint{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--muted);font-size:1.3rem;line-height:1.8;pointer-events:none;z-index:2}
+
+/* 小工具視窗 */
+.w{position:absolute;background:var(--card);border:var(--card-border);border-radius:var(--radius);box-shadow:var(--shadow);color:var(--ink)}
+body[data-style="chalk"] .w{backdrop-filter:blur(2px)}
+body[data-style="cork"] .w::before{content:"";position:absolute;top:-7px;left:50%;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ff8a7a,#b8281a 60%,#7a140a);box-shadow:0 3px 4px rgba(0,0,0,.35);z-index:4}
+.w.sel{outline:2px solid var(--accent);outline-offset:2px}
+.wh{position:absolute;left:0;right:0;bottom:100%;height:32px;pointer-events:none;display:flex;align-items:center;justify-content:space-between;gap:6px;padding:0 4px 0 10px;background:var(--chrome);color:var(--chrome-ink);border-radius:10px 10px 0 0;opacity:0;transition:opacity .15s;cursor:grab;z-index:6;box-shadow:0 -2px 8px rgba(0,0,0,.2);font-size:.82rem;touch-action:none;user-select:none}
+.wh:active{cursor:grabbing}
+.w:hover .wh,.w.sel .wh,.w.setting .wh{opacity:1;pointer-events:auto}
+.w.toped .wh{bottom:auto;top:100%;border-radius:0 0 10px 10px}
+.w::after{content:"";position:absolute;left:0;right:0;bottom:100%;height:34px}
+.w.toped::after{bottom:auto;top:100%}
+.w:not(:hover):not(.sel)::after{pointer-events:none}
+.wh .wt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700}
+.wh .wbs{display:flex;gap:2px;flex:none}
+.wh button{border:0;background:transparent;color:inherit;cursor:pointer;padding:3px 7px;border-radius:5px;font-size:.82rem;line-height:1}
+.wh button:hover{background:rgba(127,127,127,.25)}
+.wh button.on{background:var(--accent);color:var(--on-accent)}
+.wb{position:absolute;inset:0;padding:clamp(8px,4cqmin,22px);container-type:size;overflow:hidden;display:flex;flex-direction:column;--fs:1}
+.wr{position:absolute;right:0;bottom:0;width:24px;height:24px;cursor:nwse-resize;opacity:0;touch-action:none;z-index:5;background:linear-gradient(135deg,transparent 55%,var(--accent) 55%);border-radius:0 0 var(--radius) 0}
+.w:hover .wr,.w.sel .wr{opacity:.85}
+.wset{position:absolute;inset:0;background:var(--card-solid);z-index:4;overflow:auto;padding:12px 14px 16px;display:flex;flex-direction:column;gap:10px;font-size:.92rem;border-radius:var(--radius)}
+.frow{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center}
+.frow>span:first-child{color:var(--muted);min-width:4.5em}
+.frow input[type="text"],.frow input[type="number"],.frow input[type="time"],.frow input[type="url"],.frow textarea{flex:1;min-width:6em;padding:6px 8px;border-radius:6px;border:1px solid var(--btn-edge);background:var(--field)}
+.frow input[type="number"]{max-width:6em}
+.frow textarea{width:100%;resize:vertical;line-height:1.5}
+.frow.col{flex-direction:column;align-items:stretch}
+.erow{display:grid;grid-template-columns:auto 1fr auto;gap:6px;align-items:center}
+.erow input[type="time"]{padding:4px 6px;border-radius:6px;border:1px solid var(--btn-edge);background:var(--field)}
+.erow input[type="text"]{min-width:0;padding:5px 8px;border-radius:6px;border:1px solid var(--btn-edge);background:var(--field)}
+.erow .x{display:flex;gap:3px}
+.erow .btn{padding:3px 7px;font-size:.78rem}
+
+.btn{font-size:.9rem;padding:6px 12px;border-radius:var(--btn-radius);border:1px solid var(--btn-edge);background:var(--btn-bg);color:var(--btn-ink);cursor:pointer;white-space:nowrap}
+.btn:hover{filter:brightness(1.15)}
+.btn.primary,.btn[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent);font-weight:700}
+.btn.danger{color:var(--hot);border-color:var(--hot)}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--btn-edge);border-radius:var(--btn-radius);overflow:hidden;background:var(--btn-bg)}
+.seg button{border:0;background:transparent;padding:5px 11px;cursor:pointer;color:var(--btn-ink);font-size:.88rem}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);font-weight:700}
+
+/* 小工具內容共用 */
+.ctr{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2.5cqh;text-align:center}
+.big{font-family:var(--digit-font);font-weight:700;color:var(--digit);text-shadow:var(--glow);font-variant-numeric:tabular-nums;line-height:1;white-space:nowrap}
+.lbl{color:var(--muted);font-size:calc(var(--fs)*clamp(12px,min(8cqh,6cqw),40px));line-height:1.3}
+.ttl{font-family:var(--title-font);font-weight:700;color:var(--accent);font-size:calc(var(--fs)*clamp(14px,min(9cqh,6cqw),44px));line-height:1.2}
+.ctl{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.ctl .btn{font-size:calc(clamp(12px,min(6cqh,4.2cqw),20px))}
+.bar{width:min(90%,700px);height:clamp(5px,2.6cqh,12px);border-radius:99px;background:var(--track);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .2s linear}
+.urgent{color:var(--hot)!important;text-shadow:none!important;animation:pulse 1s ease-in-out infinite}
+.bar.urg i{background:var(--hot)}
+@keyframes pulse{50%{opacity:.45}}
+@container (max-height:200px){.opt-tall{display:none!important}}
+@container (max-height:120px){.opt-mid{display:none!important}}
+
+/* 文字 */
+.tx{scrollbar-width:none;flex:1;min-height:0;outline:none;font-family:var(--title-font);font-weight:700;font-size:calc(var(--fs)*clamp(16px,min(40cqh,7cqw),220px));line-height:1.25;white-space:pre-wrap;overflow-wrap:anywhere;overflow:auto;display:grid;align-content:center;cursor:text}
+/* 時鐘 */
+.clk{font-size:calc(var(--fs)*min(42cqh,21cqw))}
+.clk.s{font-size:calc(var(--fs)*min(40cqh,15cqw))}
+.clk .sec{font-size:.42em;color:var(--muted);text-shadow:none;margin-left:.12em}
+.anal{flex:1;min-height:0;width:100%}
+/* 計時 */
+.tdg{font-size:calc(var(--fs)*min(40cqh,22cqw))}
+.laps{list-style:none;margin:0;padding:0;width:min(100%,22em);overflow:auto;max-height:30cqh;font-variant-numeric:tabular-nums;font-size:clamp(12px,5cqh,18px)}
+.laps li{display:flex;justify-content:space-between;padding:2px 6px;border-bottom:var(--rule)}
+/* 時程表 */
+.sch{list-style:none;margin:0;padding:0;flex:1;min-height:0;overflow:auto;font-size:calc(var(--fs)*clamp(14px,4.3cqw,46px))}
+.sch li{display:grid;grid-template-columns:auto 1fr auto;gap:.6em;align-items:baseline;padding:.28em .1em;border-bottom:var(--rule)}
+.sch .tm{font-family:var(--digit-font);font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;min-width:3.2em}
+body[data-style="cork"] .sch .tm{color:var(--ink)}
+.sch .st{font-size:.5em;color:var(--muted);white-space:nowrap}
+.sch .tx2{overflow-wrap:anywhere;min-width:0}
+.sch li.hot .tx2{color:var(--hot);font-weight:700}
+.sch .tag{background:var(--hot);color:var(--on-hot);font-size:.55em;font-weight:700;padding:.1em .55em;border-radius:99px;margin-right:.4em;vertical-align:.2em}
+.sch li.past{opacity:.4}
+.sch li.now{background:rgba(127,127,127,.12)}
+.sch li.now .st{color:var(--accent);font-weight:700}
+body[data-style="cork"] .sch li.now{background:#fff2a1}
+/* 鬧鐘 */
+.al-list{list-style:none;margin:0;padding:0;font-size:clamp(12px,5cqh,18px);color:var(--muted)}
+.al-list li.off{opacity:.45;text-decoration:line-through}
+/* 圖片 */
+.imgw{flex:1;min-height:0;display:grid;place-items:center;margin:calc(-1*clamp(8px,4cqmin,22px));border-radius:var(--radius);overflow:hidden;background:var(--stage)}
+.imgw img{width:100%;height:100%;object-fit:contain;cursor:zoom-in;display:block}
+.imgw img.cover{object-fit:cover}
+.empty{color:var(--muted);text-align:center;line-height:1.7;padding:10px;font-size:clamp(12px,5cqmin,18px)}
+.empty kbd{font-family:inherit;border:1px solid var(--btn-edge);border-radius:4px;padding:0 5px;color:var(--ink)}
+/* 抽籤 */
+.rres{font-family:var(--title-font);font-weight:700;color:var(--digit);text-shadow:var(--glow);font-size:calc(var(--fs)*min(36cqh,17cqw));line-height:1.1;overflow-wrap:anywhere;max-width:100%}
+.rres.roll{opacity:.6}
+.rres.got{animation:pop .45s ease-out}
+@keyframes pop{0%{transform:scale(.6)}70%{transform:scale(1.1)}100%{transform:scale(1)}}
+/* 分組 */
+.groups{flex:1;min-height:0;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(110px,22cqw,220px),1fr));gap:8px;align-content:start;margin-top:8px;font-size:calc(var(--fs)*clamp(13px,3cqw,26px))}
+.groups .empty{grid-column:1/-1}
+.gc{border:1px solid var(--btn-edge);border-radius:8px;padding:6px 10px;background:var(--btn-bg)}
+.gc b{display:block;color:var(--accent);margin-bottom:2px}
+body[data-style="cork"] .gc{background:#fff2a1;border:none;box-shadow:0 2px 5px rgba(70,40,10,.18)}
+/* 計分 */
+.teams{flex:1;min-height:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(clamp(110px,22cqw,240px),1fr));gap:8px;align-content:center}
+.team{border:1px solid var(--btn-edge);border-radius:10px;padding:8px;text-align:center;background:var(--btn-bg);display:flex;flex-direction:column;align-items:center;gap:4px}
+.team.lead{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+.team .tn{font-weight:700;font-size:calc(var(--fs)*clamp(13px,3.4cqw,30px));overflow-wrap:anywhere}
+.team .sc{font-size:calc(var(--fs)*clamp(26px,min(22cqh,9cqw),110px))}
+.team .ld{font-size:.75rem;color:var(--accent);font-weight:700;min-height:1em}
+.team .ctl .btn{padding:3px 9px}
+body[data-style="cork"] .team{background:#fff;box-shadow:0 2px 6px rgba(70,40,10,.15)}
+/* 投票 */
+.poll{flex:1;min-height:0;width:100%;display:flex;flex-direction:column;gap:1.6cqh;justify-content:center;font-size:calc(var(--fs)*clamp(13px,min(7cqh,4cqw),30px))}
+.po{position:relative;display:flex;justify-content:space-between;gap:10px;padding:.35em .6em;border:1px solid var(--btn-edge);border-radius:8px;cursor:pointer;overflow:hidden;background:transparent;color:inherit;text-align:left;width:100%}
+.po i{position:absolute;inset:0 auto 0 0;background:var(--accent);opacity:.28;transition:width .3s}
+.po span,.po b{position:relative}
+.po b{font-family:var(--digit-font);font-variant-numeric:tabular-nums}
+/* 紅綠燈 */
+.lightw{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;gap:5cqw;flex-wrap:wrap}
+.lampbox{background:#1b1d20;border-radius:20px;padding:min(3cqh,14px);display:flex;flex-direction:column;gap:min(3cqh,12px);box-shadow:0 8px 20px rgba(0,0,0,.35)}
+.lamp{width:min(22cqh,24cqw);aspect-ratio:1;border-radius:50%;border:0;cursor:pointer;opacity:.18;transition:opacity .2s}
+.lamp.r{background:#ff3b30;color:#ff3b30}.lamp.y{background:#ffcc00;color:#ffcc00}.lamp.g{background:#34c759;color:#34c759}
+.lamp.on{opacity:1;box-shadow:0 0 28px currentColor}
+.lmsg{font-family:var(--title-font);font-weight:900;font-size:calc(var(--fs)*min(14cqh,9cqw));line-height:1.15;max-width:60cqw;text-align:center}
+/* 工作符號 */
+.sym svg{width:min(55cqh,50cqw);height:min(55cqh,50cqw);stroke:var(--accent);stroke-width:1.6}
+.symt{font-family:var(--title-font);font-weight:900;font-size:calc(var(--fs)*min(17cqh,12cqw));line-height:1.1}
+.symgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(7em,1fr));gap:6px}
+.symgrid .btn{display:flex;align-items:center;gap:6px;justify-content:center}
+.symgrid svg{width:18px;height:18px}
+/* 骰子 */
+.dice{display:flex;flex-wrap:wrap;gap:3cqw;justify-content:center;align-content:center;cursor:pointer}
+.die{width:min(48cqh,calc(78cqw / var(--n)));aspect-ratio:1;background:#fdfdfb;border-radius:18%;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:12%;box-shadow:0 6px 14px rgba(0,0,0,.35),inset 0 -4px 0 #ddd}
+.die i{border-radius:50%;margin:14%;background:#222}
+.die i.n{visibility:hidden}
+.die.one i{background:#d62d20}
+.die.shake{animation:shake .5s}
+@keyframes shake{25%{transform:rotate(14deg)}50%{transform:rotate(-12deg)}75%{transform:rotate(8deg)}}
+/* 音量 */
+.nmsg{font-family:var(--title-font);font-weight:900;font-size:calc(var(--fs)*min(18cqh,10cqw))}
+.nmeter{position:relative;width:min(92%,800px);height:clamp(12px,9cqh,44px);border-radius:99px;background:var(--track);overflow:hidden}
+.nmeter i{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,#34c759,#ffcc00 60%,#ff3b30);transition:width .1s}
+.nmeter b{position:absolute;top:0;bottom:0;width:3px;background:var(--ink)}
+/* 畫板 */
+.padw{flex:1;min-height:0;position:relative;border-radius:8px;overflow:hidden;background:var(--stage)}
+.padw canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
+.ptools{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.sw{width:1.4em;height:1.4em;border-radius:50%;display:inline-block;vertical-align:middle;border:2px solid rgba(127,127,127,.5)}
+/* QR */
+.qrbox{flex:1;min-height:0;width:100%;display:grid;place-items:center}
+.qrbox>div{background:#fff;padding:3%;border-radius:8px;max-width:100%;max-height:100%;aspect-ratio:1;height:100%;display:grid;place-items:center}
+.qrbox img,.qrbox canvas{width:100%!important;height:100%!important;image-rendering:pixelated;object-fit:contain}
+
+/* 工具列 */
+#bar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:9000;display:flex;align-items:stretch;gap:2px;max-width:calc(100% - 24px);overflow-x:auto;background:var(--bar);border:1px solid var(--bar-edge);border-radius:16px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.35);backdrop-filter:blur(10px);scrollbar-width:thin}
+#bar.hide{display:none}
+.tb{flex:none;display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:transparent;color:var(--ink);cursor:pointer;padding:6px 7px;border-radius:10px;font-size:.72rem;min-width:52px}
+.tb:hover{background:var(--btn-bg)}
+.tb svg{width:22px;height:22px;stroke:var(--accent)}
+.tb .ic{height:22px;display:grid;place-items:center;font-weight:700;font-size:19px;line-height:1;color:var(--accent)}
+.sep{width:1px;background:var(--bar-edge);margin:4px 4px;flex:none}
+.scr{display:flex;align-items:center;gap:4px;padding:0 4px;flex:none}
+.scr .nm{font-size:.82rem;max-width:10em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;background:transparent;border:1px dashed transparent;color:var(--ink);border-radius:8px;padding:2px 8px;cursor:pointer}
+.scr .nm:hover{border-color:var(--btn-edge);background:var(--btn-bg)}
+.scr .nm small{display:block;color:var(--muted);font-size:.7rem}
+.scr .ar{border:1px solid var(--btn-edge);background:var(--btn-bg);color:var(--ink);border-radius:8px;width:30px;height:30px;cursor:pointer}
+.tb.warn .ic,.tb.warn{color:var(--hot)}
+#barShow{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:9000;opacity:.35;border-radius:99px}
+#barShow:hover{opacity:1}
+.pop{position:fixed;right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(96px + env(safe-area-inset-bottom,0px));z-index:9100;width:min(420px,calc(100% - 28px));max-height:70vh;overflow:auto;background:var(--card-solid);border:1px solid var(--bar-edge);border-radius:14px;padding:14px;box-shadow:0 16px 40px rgba(0,0,0,.45);display:flex;flex-direction:column;gap:12px}
+.pop h3{margin:0;font-size:1rem;color:var(--accent)}
+.pop .frow>span:first-child{min-width:5em}
+.ver{font-size:.72rem;color:var(--muted)}
+
+/* 外觀與定時面板 */
+body.shot .wh,body.shot .wr{display:none!important}
+body.shot .w.sel{outline:none}
+body.cbg .w{background:var(--card-solid);backdrop-filter:none}
+.bgs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;width:100%}
+.bgs button{aspect-ratio:16/10;border-radius:8px;border:2px solid var(--btn-edge);cursor:pointer;font-size:.72rem;color:#fff;text-shadow:0 1px 3px #000;display:flex;align-items:flex-end;justify-content:center;padding:2px;background-size:cover;background-position:center}
+.bgs button[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.pop .seg button{font-size:.92rem}
+.pnote{color:var(--muted);font-size:.82rem;line-height:1.5}
+.job{display:grid;grid-template-columns:auto auto 1fr auto;gap:6px;align-items:center;padding:8px;border:1px solid var(--btn-edge);border-radius:8px}
+.job.off{opacity:.5}
+.job .pm{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.job input[type="time"],.job select,.job input[type="text"]{padding:5px 7px;border-radius:6px;border:1px solid var(--btn-edge);background:var(--field);min-width:0}
+.job input[type="text"]{flex:1}
+.job .btn{padding:4px 9px;font-size:.8rem}
+.srow{display:grid;grid-template-columns:auto 1fr auto;gap:6px;align-items:center;padding:8px;border:1px solid var(--btn-edge);border-radius:8px}
+.srow.cur{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.srow input{min-width:0;padding:6px 8px;border-radius:6px;border:1px solid var(--btn-edge);background:var(--field)}
+.srow .cnt{color:var(--muted);font-size:.78rem;white-space:nowrap}
+.srow .x{grid-column:1/-1;display:flex;gap:4px;flex-wrap:wrap}
+.srow .btn{padding:4px 9px;font-size:.8rem}
+.srow .go{min-width:2.2em}
+.btn:disabled{opacity:.35;cursor:default;filter:none}
+.ring.calm{animation:none;background:var(--card-solid);color:var(--ink)}
+.ring.calm .rbig{color:var(--accent);max-width:90vw;overflow-wrap:anywhere;white-space:pre-line;font-size:clamp(2.6rem,7.5vw,8rem);line-height:1.2}
+
+/* 響鈴、放大、提示 */
+.ring{position:fixed;inset:0;z-index:9500;display:grid;place-items:center;text-align:center;background:var(--hot);color:var(--on-hot);padding:24px;animation:flash .9s steps(2,jump-none) infinite}
+@keyframes flash{to{background:#111;color:#fff}}
+.ring .rbig{font-family:var(--title-font);font-weight:900;font-size:clamp(3.5rem,11vw,11rem);line-height:1.05}
+.ring .rsub{font-family:var(--digit-font);font-size:clamp(1.4rem,3.2vw,3.2rem);margin-top:12px}
+.ring button{margin-top:36px;font-size:1.4rem;padding:12px 40px;border-radius:999px;border:3px solid currentColor;background:transparent;color:inherit;cursor:pointer;font-weight:700}
+.lightbox{position:fixed;inset:0;z-index:9400;background:rgba(0,0,0,.93);display:grid;place-items:center;cursor:zoom-out}
+.lightbox img{max-width:97vw;max-height:95vh;object-fit:contain}
+.toast{position:fixed;left:50%;bottom:calc(100px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#111;color:#fff;padding:10px 16px;border-radius:10px;z-index:9600;font-size:.95rem;max-width:90vw;box-shadow:0 6px 20px rgba(0,0,0,.4);display:flex;gap:12px;align-items:center}
+.toast button{background:#fff;color:#111;border:0;border-radius:6px;padding:4px 10px;cursor:pointer;font-weight:700}
+.ack{position:fixed;inset:0;z-index:9450;display:grid;place-items:center;background:rgba(0,0,0,.35);padding:16px}
+.ackbox{background:var(--card-solid);color:var(--ink);border:2px solid var(--accent);border-radius:16px;padding:22px 28px;max-width:min(520px,92vw);text-align:center;box-shadow:0 18px 50px rgba(0,0,0,.45);display:flex;flex-direction:column;gap:12px;align-items:center}
+.acktime{color:var(--muted);font-size:.95rem}
+.ackmsg{font-family:var(--title-font);font-weight:700;font-size:clamp(1.4rem,3vw,2.2rem);line-height:1.35;white-space:pre-line;color:var(--accent)}
+.ackbox .btn{font-size:1.15rem;padding:8px 34px}
+.w.glow{animation:wglow 1.1s ease-in-out infinite;z-index:5000!important;cursor:pointer}
+.w.glow .ms{color:var(--hot)!important;transform:scale(1.15)}
+@keyframes wglow{0%,100%{box-shadow:0 0 0 3px var(--accent),0 0 18px 4px var(--accent)}50%{box-shadow:0 0 0 6px var(--accent),0 0 70px 26px var(--accent)}}
+@media (prefers-reduced-motion:reduce){.ring,.urgent,.die.shake,.rres.got,.w.glow{animation:none}.w.glow{box-shadow:0 0 0 6px var(--accent),0 0 50px 16px var(--accent)}}
+</style>
+
+<div id="stage"></div>
+
+<nav id="bar" aria-label="小工具列"></nav>
+<button type="button" class="btn" id="barShow" hidden>顯示工具列（B）</button>
+
+<div class="pop" id="pop" hidden>
+  <h3>預設設定</h3>
+  <div class="frow"><span>預設</span><button type="button" class="btn primary" id="presetSave">把目前設定存為預設</button><button type="button" class="btn" id="presetLoad">還原成預設</button></div>
+  <div class="pnote" id="presetNote"></div>
+  <h3>風格與外觀</h3>
+  <div class="frow"><span>風格</span><div class="seg" id="styleSeg"><button type="button" data-s="chalk">黑板</button><button type="button" data-s="cork">軟木板</button><button type="button" data-s="led">計分板</button><button type="button" data-s="isle">小島</button></div></div>
+  <div class="frow col"><span>背景</span><div class="bgs" id="bgSeg"></div></div>
+  <div class="frow"><span>文字字型</span><div class="seg" id="fontSeg"></div></div>
+  <div class="frow"><span>數字字型</span><div class="seg" id="dfontSeg"></div></div>
+  <h3>匯出／匯入</h3>
+  <div class="frow"><span>圖片</span><button type="button" class="btn" id="expPng">匯出這個畫面（PNG）</button></div>
+  <div class="frow"><span>設定檔</span><button type="button" class="btn" id="expJson">匯出全部設定</button><button type="button" class="btn" id="impJson">匯入設定</button></div>
+  <div class="pnote">設定檔包含所有畫面、定時、風格和圖片。在家裡做好，匯出後帶到別台電腦匯入即可。</div>
+  <div class="frow"><span>重設</span><button type="button" class="btn danger" id="resetAll">清空成空白畫面</button></div>
+  <div class="ver">快捷鍵：B 工具列｜F 全螢幕｜← → 換畫面｜空白鍵 啟動選取的工具｜Esc 關閉</div>
+</div>
+<div class="pop" id="screens" hidden>
+  <h3>畫面管理</h3>
+  <div class="pnote">點編號切換畫面，直接改名稱，用 ↑ ↓ 調整順序。</div>
+  <div id="scrList" style="display:flex;flex-direction:column;gap:8px"></div>
+  <div class="frow"><button type="button" class="btn primary" id="scrNew">＋ 新增空白畫面</button></div>
+</div>
+<div class="pop" id="sched" hidden>
+  <h3>定時</h3>
+  <div class="pnote">到了設定的時間會自動執行，每天重複。網頁要保持開著才會執行。</div>
+  <div id="jobs" style="display:flex;flex-direction:column;gap:8px"></div>
+  <div class="frow"><button type="button" class="btn primary" id="jobAdd">＋ 新增定時</button></div>
+  <h3>自動輪播畫面</h3>
+  <div class="frow"><label><input type="checkbox" id="rotOn"> 開啟</label>每<input type="number" id="rotSec" min="5" max="3600" style="max-width:5em">秒換下一個畫面</div>
+  <div class="pnote">有人點畫面或按鍵時，會暫停 20 秒再繼續輪播。</div>
+</div>
+<input type="file" id="fileIn" accept="image/*" hidden>
+<input type="file" id="bgIn" accept="image/*" hidden>
+<script type="application/json" id="presetData"></script>
+<input type="file" id="jsonIn" accept=".json,application/json" hidden>
+
+<div class="ring" id="ring" hidden role="alertdialog" aria-live="assertive">
+  <div><div class="rbig" id="ringBig">時間到！</div><div class="rsub" id="ringSub"></div><button type="button" id="ringOff">知道了（Esc）</button></div>
+</div>
+<div class="ack" id="ack" hidden role="dialog" aria-modal="true" aria-labelledby="ackMsg"><div class="ackbox"><div class="acktime" id="ackTime"></div><div class="ackmsg" id="ackMsg"></div><button type="button" class="btn primary" id="ackOk">知道了</button></div></div>
+<div class="lightbox" id="lightbox" hidden><img id="lbImg" alt="放大圖片"></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/* 螢幕公告（源自 classboard v3.5） */
+(function(){
+const $=s=>document.querySelector(s);
+const KEY='classboard_v2',IMGKEY='classboard_v2_img';
+const pad=n=>String(n).padStart(2,'0');
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const toMin=t=>{const[a,b]=String(t).split(':').map(Number);return a*60+(b||0)};
+const todayKey=()=>{const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
+const fmt=s=>{s=Math.max(0,Math.ceil(s));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return h?h+':'+pad(m)+':'+pad(x):pad(m)+':'+pad(x)};
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const icons=()=>{try{window.lucide&&lucide.createIcons()}catch(e){}};
+const WK='日一二三四五六';
+
+/* ---------- 小工具定義（預設內容） ---------- */
+const SYMS=[['quiet','volume-x','安靜'],['whisper','message-circle','小聲討論'],['team','users','小組合作'],['hand','hand','舉手發言'],['eye','eye','看前面'],['work','pencil','獨立作業'],['read','book-open','閱讀'],['pc','monitor','電腦操作'],['tidy','archive','收拾整理']];
+const INIT={
+  text:()=>({text:'在這裡輸入文字',align:'center',color:'ink'}),
+  clock:()=>({mode:'digital',sec:true,date:true}),
+  timer:()=>({total:300,remain:300,running:false,endAt:0,label:''}),
+  countdown:()=>({time:'09:00',label:'距離開始',done:'開始！',fired:''}),
+  stopwatch:()=>({run:false,start:0,acc:0,laps:[]}),
+  interval:()=>({every:10,msg:'記得存檔！',mode:'range',start:'13:00',end:'16:10',how:'glow',sound:false,auto:60,on:true,anchor:0,fired:''}),
+  alarm:()=>({list:[{id:uid(),time:'11:55',label:'收拾桌面',on:true,fired:''}]}),
+  schedule:()=>({title:'今日流程',items:[{id:uid(),time:'08:20',text:'報到集合',hot:false}]}),
+  image:()=>({fit:'contain'}),
+  random:()=>({mode:'name',min:1,max:30,noRep:true,picked:[],last:''}),
+  group:()=>({n:4,groups:[]}),
+  score:()=>({teams:[1,2,3,4].map(i=>({id:uid(),name:'第 '+i+' 隊',score:0}))}),
+  poll:()=>({q:'你選哪一個？',opts:[{t:'A',c:0},{t:'B',c:0},{t:'C',c:0}]}),
+  light:()=>({on:0,labels:['安靜作答','小聲討論','自由活動']}),
+  symbol:()=>({sel:'quiet'}),
+  dice:()=>({n:2,vals:[6,6]}),
+  noise:()=>({limit:60}),
+  draw:()=>({}),
+  qr:()=>({text:'https://www.google.com',cap:'掃我看題目'})
+};
+const META={
+  text:['文字','type',.32,.2], schedule:['時程表','list-checks',.32,.45], clock:['時鐘','clock',.3,.22], timer:['計時器','timer',.28,.3],
+  countdown:['倒數','hourglass',.3,.24], stopwatch:['碼錶','watch',.26,.3], alarm:['鬧鐘','alarm-clock',.22,.28], image:['圖片','image',.32,.38],
+  random:['抽籤','shuffle',.28,.32], group:['分組','users',.4,.4], score:['計分板','trophy',.42,.32], poll:['投票','vote',.28,.34],
+  light:['紅綠燈','circle-dot',.26,.42], symbol:['工作符號','hand',.22,.34], dice:['骰子','dices',.26,.28], noise:['音量','mic',.32,.26],
+  interval:['間隔提醒','bell-ring',.28,.3], draw:['畫板','pencil',.38,.45], qr:['QR碼','qr-code',.2,.38]
+};
+function mk(type,x,y,w,h,d,fs){return{id:uid(),type,x,y,w,h,z:1,fs:fs||1,d:Object.assign(INIT[type](),d||{})}}
+function defaults(){
+  // 第一次打開跟著大屏風格：可愛溫暖風配小島，其他配軟木板
+  let style='cork';try{if((JSON.parse(localStorage.getItem('morningBoardSettings')||'{}')||{}).boardStyle==='cozy')style='isle'}catch(e){}
+  return{v:2,tpl:'blank',style,cur:0,z:20,bg:'default',font:'auto',dfont:'auto',rotate:{on:false,sec:30},names:'',jobs:[],
+    screens:[{id:uid(),name:'畫面 1',widgets:[]}]};
+}
+let S,IMG={};
+try{S=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){S=null}
+const PRESETKEY=KEY+'_preset';
+function readPreset(){let o=null;try{o=JSON.parse(localStorage.getItem(PRESETKEY)||'null')}catch(e){}
+  if(!o){try{const t=(document.getElementById('presetData')||{}).textContent||'';if(t.trim())o=JSON.parse(t);if(o)o.builtin=true}catch(e){o=null}}
+  return o&&o.S&&Array.isArray(o.S.screens)&&o.S.screens.length?o:null}
+let fresh=false;
+if(!S||S.v!==2||!Array.isArray(S.screens)||!S.screens.length){fresh=true;const pr=readPreset();S=pr?JSON.parse(JSON.stringify(pr.S)):defaults();if(pr)IMG=pr.IMG||{}}
+if(!fresh){try{IMG=JSON.parse(localStorage.getItem(IMGKEY)||'{}')||{}}catch(e){IMG={}}}
+const KEEP=['text','schedule','clock','timer','countdown','stopwatch','alarm','interval','image','draw'];
+S.screens.forEach(sc=>{sc.id=sc.id||uid();sc.widgets=sc.widgets.filter(w=>KEEP.includes(w.type))});
+if(!S.bg)S.bg=S.photo?'photo':'default';S.font=S.font||'auto';S.dfont=S.dfont||'auto';
+S.rotate=S.rotate||{on:false,sec:30};S.jobs=S.jobs||[];
+let saveT,imgT;
+function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}},250)}
+function saveImgs(){clearTimeout(imgT);imgT=setTimeout(()=>{try{localStorage.setItem(IMGKEY,JSON.stringify(IMG))}catch(e){toast('圖片太多，瀏覽器存不下；這次仍可使用，重新整理後可能消失')}},400)}
+let toastT;
+function toast(m,act,fn,ms){const t=$('#toast');t.innerHTML='';const s=document.createElement('span');s.textContent=m;t.appendChild(s);
+  if(act){const b=document.createElement('button');b.textContent=act;b.onclick=()=>{fn();t.hidden=true};t.appendChild(b)}
+  t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,ms||(act?6000:3200))}
+const isTyping=el=>el&&(el.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
+const scr=()=>S.screens[S.cur];
+const allW=()=>S.screens.flatMap(s=>s.widgets);
+
+/* ---------- 聲音、響鈴、螢幕常亮 ---------- */
+let AC=null,wake=null;
+function unlock(){
+  try{if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume()}catch(e){}
+  const b=$('#soundTb');if(b){const ok=!!AC;b.classList.toggle('warn',!ok);b.querySelector('.lb').textContent=ok?'測試聲音':'開聲音'}
+  if(!wake&&navigator.wakeLock)navigator.wakeLock.request('screen').then(w=>{wake=w;w.addEventListener('release',()=>wake=null)}).catch(()=>{});
+}
+document.addEventListener('pointerdown',unlock);document.addEventListener('keydown',unlock);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&!wake)unlock()});
+function beep(f,dur,when){if(!AC)return;const t=AC.currentTime+when,o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.22,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g).connect(AC.destination);o.start(t);o.stop(t+dur+.03)}
+function chime(){beep(988,.15,0);beep(988,.15,.2);beep(1319,.32,.4)}
+let ringLoop,ringStop;
+function ring(big,sub){$('#ring').classList.remove('calm');$('#ringBig').textContent=big;$('#ringSub').textContent=sub||'';$('#ring').hidden=false;clearInterval(ringLoop);clearTimeout(ringStop);chime();ringLoop=setInterval(chime,1400);ringStop=setTimeout(()=>clearInterval(ringLoop),45000)}
+function ringOff(){$('#ring').hidden=true;clearInterval(ringLoop);clearTimeout(ringStop)}
+$('#ringOff').onclick=ringOff;
+$('#lightbox').onclick=()=>$('#lightbox').hidden=true;
+
+/* ---------- 設定表單小幫手 ---------- */
+function form(box,W){
+  const row=(l,cls)=>{const r=document.createElement('div');r.className='frow'+(cls?' '+cls:'');if(l!==null){const s=document.createElement('span');s.textContent=l||'';r.appendChild(s)}box.appendChild(r);return r};
+  const done=()=>{save();refresh(W)};
+  return{
+    seg(l,opts,get,set){const r=row(l),s=document.createElement('div');s.className='seg';opts.forEach(([v,t])=>{const b=document.createElement('button');b.type='button';b.textContent=t;b.setAttribute('aria-pressed',get()===v);b.onclick=()=>{set(v);s.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));done()};s.appendChild(b)});r.appendChild(s);return this},
+    inp(l,type,get,set,attrs){const r=row(l),i=document.createElement('input');i.type=type;i.id='f'+uid();Object.assign(i,attrs||{});i.value=get();i.addEventListener(type==='text'||type==='url'?'input':'change',()=>{set(type==='number'||type==='range'?+i.value:i.value);done()});r.appendChild(i);return this},
+    chk(l,get,set){const r=row(null),lb=document.createElement('label'),i=document.createElement('input');i.type='checkbox';i.id='f'+uid();i.checked=get();i.onchange=()=>{set(i.checked);done()};lb.append(i,' '+l);r.appendChild(lb);return this},
+    ta(l,get,set,rows){const r=row(l,'col'),t=document.createElement('textarea');t.id='f'+uid();t.rows=rows||5;t.value=get();t.spellcheck=false;t.oninput=()=>{set(t.value);done()};r.appendChild(t);return this},
+    btns(list){const r=row('');list.forEach(([t,fn,cls])=>{const b=document.createElement('button');b.type='button';b.className='btn '+(cls||'');b.textContent=t;b.onclick=()=>{fn(b);done()};r.appendChild(b)});return this},
+    el(node){box.appendChild(node);return this},
+    note(t){const r=row(null);r.style.color='var(--muted)';r.style.fontSize='.85rem';r.textContent=t;return this}
+  };
+}
+/* 可編輯的清單（時程表、鬧鐘） */
+function listEditor(box,W,arr,fields,mkNew,after){
+  const wrap=document.createElement('div');wrap.style.cssText='display:flex;flex-direction:column;gap:6px';
+  const draw=()=>{wrap.innerHTML='';arr().forEach((it,i)=>{
+    const r=document.createElement('div');r.className='erow';
+    const t=document.createElement('input');t.type='time';t.id='f'+uid();t.value=it.time||'';t.onchange=()=>{it.time=t.value;save();refresh(W)};
+    const x=document.createElement('input');x.type='text';x.id='f'+uid();x.value=it[fields.text]||'';x.placeholder=fields.ph;x.oninput=()=>{it[fields.text]=x.value;save();refresh(W)};
+    const bs=document.createElement('div');bs.className='x';
+    const B=(t,fn,c)=>{const b=document.createElement('button');b.type='button';b.className='btn '+(c||'');b.textContent=t;b.onclick=()=>{fn();save();refresh(W);draw()};bs.appendChild(b)};
+    if(fields.flag)B(it[fields.flag[0]]?fields.flag[2]:fields.flag[1],()=>{it[fields.flag[0]]=!it[fields.flag[0]];if(fields.flag[0]==='on')it.fired=''},it[fields.flag[0]]?'primary':'');
+    if(fields.move){B('↑',()=>{const a=arr();if(i>0)[a[i-1],a[i]]=[a[i],a[i-1]]});B('↓',()=>{const a=arr();if(i<a.length-1)[a[i+1],a[i]]=[a[i],a[i+1]]})}
+    B('刪',()=>arr().splice(i,1),'danger');
+    r.append(t,x,bs);wrap.appendChild(r)});
+    const add=document.createElement('button');add.type='button';add.className='btn primary';add.textContent='＋ 新增一列';add.onclick=()=>{arr().push(mkNew());save();refresh(W);draw();const ins=wrap.querySelectorAll('input[type=text]');ins[ins.length-1]?.focus()};
+    wrap.appendChild(add);after&&after()};
+  draw();box.appendChild(wrap);
+}
+
+/* ---------- 各小工具 ---------- */
+const COLV={ink:'var(--ink)',accent:'var(--accent)',hot:'var(--hot)'};
+const tLeft=d=>d.running?Math.max(0,(d.endAt-Date.now())/1000):d.remain;
+const swNow=d=>d.acc+(d.run?Date.now()-d.start:0);
+const swFmt=ms=>{const t=Math.floor(ms/100),m=Math.floor(t/600),s=Math.floor(t/10)%60;return(m>=60?Math.floor(m/60)+':'+pad(m%60):pad(m))+':'+pad(s)+'.'+(t%10)};
+const nameList=()=>S.names.split('\n').map(s=>s.trim()).filter(Boolean);
+const PIPS={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+let MIC=null,AN=null,ABUF=null;
+
+const T={
+text:{
+  render(b,W){const d=W.d;b.innerHTML='<div class="tx" spellcheck="false"></div>';const tx=b.firstChild;tx.textContent=d.text;tx.style.textAlign=d.align;tx.style.color=COLV[d.color];
+    tx.setAttribute('contenteditable','plaintext-only');tx.oninput=()=>{d.text=tx.innerText;save()}},
+  settings(f,W){f.seg('對齊',[['left','靠左'],['center','置中'],['right','靠右']],()=>W.d.align,v=>W.d.align=v)
+    .seg('顏色',[['ink','一般'],['accent','強調'],['hot','醒目']],()=>W.d.color,v=>W.d.color=v).note('直接點文字就能修改。字太大或太小用標題列的 A− A+。')}
+},
+clock:{
+  render(b,W){const d=W.d;
+    if(d.mode==='analog'){let t='';for(let i=0;i<60;i++){const a=i*6*Math.PI/180,L=i%5?45:41;t+=`<line x1="${50+Math.sin(a)*L}" y1="${50-Math.cos(a)*L}" x2="${50+Math.sin(a)*48}" y2="${50-Math.cos(a)*48}" stroke="currentColor" stroke-width="${i%5?.6:1.8}"/>`}
+      b.innerHTML=`<div class="ctr"><svg class="anal" viewBox="0 0 100 100" style="color:var(--ink)"><circle cx="50" cy="50" r="49" fill="none" stroke="currentColor" stroke-width="1"/>${t}
+      <line class="hh" x1="50" y1="50" x2="50" y2="26" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/><line class="mm" x1="50" y1="50" x2="50" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      ${d.sec?'<line class="ss" x1="50" y1="58" x2="50" y2="8" stroke="var(--hot)" stroke-width=".9"/>':''}<circle cx="50" cy="50" r="2.2" fill="var(--hot)"/></svg>${d.date?'<div class="lbl dt"></div>':''}</div>`}
+    else b.innerHTML=`<div class="ctr"><div class="big clk${d.sec?' s':''}"></div>${d.date?'<div class="lbl dt"></div>':''}</div>`},
+  tick(b,W){const n=new Date(),d=W.d,k=n.getSeconds();if(b._s===k)return;b._s=k;
+    const dt=b.querySelector('.dt');if(dt)dt.textContent=(n.getFullYear()-1911)+' 年 '+(n.getMonth()+1)+' 月 '+n.getDate()+' 日（'+WK[n.getDay()]+'）';
+    if(d.mode==='analog'){const h=n.getHours()%12,m=n.getMinutes(),r=(el,deg)=>el&&el.setAttribute('transform',`rotate(${deg} 50 50)`);
+      r(b.querySelector('.hh'),h*30+m*.5);r(b.querySelector('.mm'),m*6+k*.1);r(b.querySelector('.ss'),k*6)}
+    else b.querySelector('.clk').innerHTML=pad(n.getHours())+':'+pad(n.getMinutes())+(d.sec?'<span class="sec">'+pad(k)+'</span>':'')},
+  settings(f,W){f.seg('樣式',[['digital','數字'],['analog','指針']],()=>W.d.mode,v=>W.d.mode=v).chk('顯示秒',()=>W.d.sec,v=>W.d.sec=v).chk('顯示日期',()=>W.d.date,v=>W.d.date=v)}
+},
+timer:{
+  render(b,W){b.innerHTML=`<div class="ctr"><div class="lbl tl opt-mid"></div><div class="big tdg"></div><div class="bar opt-mid"><i></i></div>
+    <div class="ctl opt-mid"><button type="button" class="btn primary go">開始</button><button type="button" class="btn rs">重設</button><button type="button" class="btn p1">+1 分</button></div>
+    <div class="ctl opt-tall pre">${[1,3,5,10,15,30].map(m=>`<button type="button" class="btn" data-m="${m}">${m}分</button>`).join('')}</div></div>`;
+    const d=W.d;
+    b.querySelector('.go').onclick=()=>T.timer.primary(b,W);
+    b.querySelector('.rs').onclick=()=>{d.running=false;d.remain=d.total;save()};
+    b.querySelector('.p1').onclick=()=>{if(d.running)d.endAt+=60000;else d.remain+=60;d.total=Math.max(d.total,Math.ceil(tLeft(d)));save()};
+    b.querySelector('.pre').onclick=e=>{const x=e.target.closest('[data-m]');if(x){d.total=d.remain=x.dataset.m*60;d.running=false;save()}};
+    b._k=null},
+  primary(b,W){const d=W.d;if(d.running){d.remain=tLeft(d);d.running=false}else{if(d.remain<=0)d.remain=d.total;d.endAt=Date.now()+d.remain*1000;d.running=true}save()},
+  tick(b,W){const d=W.d,l=tLeft(d),urg=d.running&&l<=10;const k=fmt(l)+d.running+urg+d.label;if(b._k===k)return;b._k=k;
+    const g=b.querySelector('.tdg');g.textContent=fmt(l);g.classList.toggle('urgent',urg);
+    b.querySelector('.bar i').style.width=(d.total?Math.min(100,l/d.total*100):0)+'%';b.querySelector('.bar').classList.toggle('urg',urg);
+    b.querySelector('.go').textContent=d.running?'暫停':(d.remain<d.total&&d.remain>0?'繼續':'開始');
+    b.querySelector('.tl').textContent=d.label||('計時 '+fmt(d.total))},
+  settings(f,W){const d=W.d;f.inp('名稱','text',()=>d.label,v=>d.label=v,{placeholder:'例如：第一場'})
+    .inp('分鐘','number',()=>+(d.total/60).toFixed(2),v=>{if(v>0){d.total=d.remain=Math.round(v*60);d.running=false}},{min:.1,step:.5})
+    .note('時間到會全螢幕閃爍並響鈴。點計時器後按空白鍵也能開始／暫停。')}
+},
+countdown:{
+  render(b,W){b.innerHTML='<div class="ctr"><div class="ttl cl"></div><div class="big tdg cd"></div><div class="lbl ct opt-mid"></div></div>';b._k=null},
+  tick(b,W){const d=W.d,n=new Date(),[h,m]=d.time.split(':').map(Number),tg=new Date(n);tg.setHours(h||0,m||0,0,0);
+    const left=(tg-n)/1000,k=Math.ceil(left)+d.label+d.done;if(b._k===k)return;b._k=k;
+    b.querySelector('.cl').textContent=d.label;const c=b.querySelector('.cd');
+    if(left>0){c.textContent=fmt(left);c.classList.toggle('urgent',left<=60);c.style.fontFamily='';c.style.fontSize=''}else{const t=d.done||'時間到';c.textContent=t;c.classList.remove('urgent');c.style.fontFamily='var(--title-font)';c.style.whiteSpace='normal';c.style.fontSize=`calc(var(--fs)*min(30cqh,${Math.max(6,Math.floor(92/Math.max(1,t.length)))}cqw))`}
+    b.querySelector('.ct').textContent='目標時間 '+d.time},
+  settings(f,W){const d=W.d;f.inp('目標時間','time',()=>d.time,v=>{d.time=v;d.fired=''}).inp('標題','text',()=>d.label,v=>d.label=v).inp('到時顯示','text',()=>d.done,v=>d.done=v).note('倒數到 0 會全螢幕響鈴一次。')}
+},
+stopwatch:{
+  render(b,W){b.innerHTML=`<div class="ctr"><div class="big tdg sw"></div><div class="ctl opt-mid"><button type="button" class="btn primary go">開始</button><button type="button" class="btn lp">記錄</button><button type="button" class="btn rs">歸零</button></div><ol class="laps opt-tall"></ol></div>`;
+    const d=W.d;b.querySelector('.go').onclick=()=>T.stopwatch.primary(b,W);
+    b.querySelector('.lp').onclick=()=>{if(swNow(d)){d.laps.push(swNow(d));save();T.stopwatch.laps(b,W)}};
+    b.querySelector('.rs').onclick=()=>{d.run=false;d.acc=0;d.laps=[];save();T.stopwatch.laps(b,W)};T.stopwatch.laps(b,W)},
+  laps(b,W){b.querySelector('.laps').innerHTML=W.d.laps.map((t,i)=>`<li><span>第 ${i+1} 筆</span><b>${swFmt(t)}</b></li>`).reverse().join('')},
+  primary(b,W){const d=W.d;if(d.run){d.acc=swNow(d);d.run=false}else{d.start=Date.now();d.run=true}save()},
+  tick(b,W){const d=W.d;b.querySelector('.sw').textContent=swFmt(swNow(d));b.querySelector('.go').textContent=d.run?'暫停':(d.acc?'繼續':'開始')}
+},
+interval:{
+  next(d,now){const n=new Date(now);
+    if(d.mode==='now'){if(!d.anchor)return null;const k=Math.floor((now-d.anchor)/(d.every*60000))+1;return d.anchor+k*d.every*60000}
+    const day=new Date(n);day.setSeconds(0,0);const at=t=>{const[h,m]=String(t||'').split(':').map(Number);const x=new Date(day);x.setHours(h||0,m||0,0,0);return x.getTime()};
+    const st=at(d.start||'00:00'),en=d.end?at(d.end):at('23:59')+60000;if(now>=en)return null;
+    if(now<st)return st<=en?st:null;
+    const k=Math.floor((now-st)/(d.every*60000))+1,t=st+k*d.every*60000;return t<=en?t:null},
+  render(b,W){b.innerHTML=`<div class="ctr"><div class="lbl ev"></div><div class="big tdg nx"></div><div class="ttl ms"></div><div class="lbl rg opt-tall"></div><div class="ctl opt-mid"><button type="button" class="btn go"></button><button type="button" class="btn ts">試一次</button></div></div>`;
+    b.querySelector('.go').onclick=()=>T.interval.primary(b,W);
+    b.querySelector('.ts').onclick=e=>{e.stopPropagation();fireIv(W)};b._k=null},
+  primary(b,W){const d=W.d;d.on=!d.on;if(d.on&&d.mode==='now')d.anchor=Date.now();save();b._k=null},
+  tick(b,W){const d=W.d,now=Date.now(),nx=d.on?T.interval.next(d,now):null,left=nx?(nx-now)/1000:0;
+    const k=(nx?Math.ceil(left):'x')+String(d.on)+d.msg+d.every+d.mode+d.start+d.end;if(b._k===k)return;b._k=k;
+    b.querySelector('.ev').textContent='每 '+d.every+' 分鐘提醒';
+    const g=b.querySelector('.nx');g.textContent=!d.on?'已暫停':nx?fmt(left):(d.mode==='now'?'--:--':'今天結束了');
+    g.style.fontFamily=nx?'':'var(--title-font)';
+    b.querySelector('.ms').textContent=d.msg;
+    b.querySelector('.rg').textContent=d.mode==='now'?(d.on?'從按下開始的時間起算':'按「開始」後起算'):((d.start||'00:00')+' ～ '+(d.end||'23:59')+(nx?'　下一次 '+pad(new Date(nx).getHours())+':'+pad(new Date(nx).getMinutes()):''));
+    b.querySelector('.go').textContent=d.on?'暫停':'開始';b.querySelector('.go').classList.toggle('primary',!d.on)},
+  glowTick(W){const o=ELS[W.id];if(!o)return;const on=(GLOW[W.id]||0)>Date.now();if(o.el.classList.contains('glow')!==on)o.el.classList.toggle('glow',on)},
+  settings(f,W){const d=W.d;
+    f.inp('提示文字','text',()=>d.msg,v=>d.msg=v,{placeholder:'例如：記得存檔！'})
+     .inp('每幾分鐘','number',()=>d.every,v=>d.every=clamp(+v||1,1,600),{min:1,max:600})
+     .seg('起算',[['range','指定時段'],['now','從按開始起']],()=>d.mode,v=>{d.mode=v;d.anchor=v==='now'&&d.on?Date.now():d.anchor;setTimeout(()=>rebuild(W))});
+    if(d.mode==='range')f.inp('開始時間','time',()=>d.start,v=>d.start=v).inp('結束時間','time',()=>d.end,v=>d.end=v);
+    f.seg('提醒方式',[['glow','小工具發光'],['pop','跳出全螢幕']],()=>d.how||'pop',v=>{d.how=v;setTimeout(()=>rebuild(W))})
+     .chk('提醒時響鈴',()=>d.sound,v=>d.sound=v)
+     .inp((d.how||'pop')==='glow'?'發光幾秒':'幾秒後自動關閉','number',()=>d.auto,v=>d.auto=clamp(Math.round(+v)||0,0,600),{min:0,max:600})
+     .note(((d.how||'pop')==='glow'?'發光時點一下小工具，會跳出小視窗，按「知道了」就停止發光。':'自動關閉填 0 代表要按「知道了」才會關。')+'指定時段的話，開始時間就提醒第一次，之後每 '+d.every+' 分鐘一次。')}
+},
+alarm:{
+  render(b,W){b.innerHTML='<div class="ctr"><div class="lbl">下一個鬧鐘</div><div class="big tdg nt"></div><div class="ttl nl"></div><div class="lbl nd opt-mid"></div><ul class="al-list opt-tall"></ul></div>';b._k=null},
+  tick(b,W){const n=new Date(),now=n.getHours()*60+n.getMinutes(),tk=todayKey(),k=now+JSON.stringify(W.d.list);if(b._k===k)return;b._k=k;
+    const L=W.d.list.slice().sort((a,c)=>a.time.localeCompare(c.time));const nx=L.find(a=>a.on&&a.fired!==tk&&toMin(a.time)>=now);
+    b.querySelector('.nt').textContent=nx?nx.time:'--:--';b.querySelector('.nl').textContent=nx?(nx.label||'鬧鐘'):'今天沒有了';
+    const df=nx?toMin(nx.time)-now:0;b.querySelector('.nd').textContent=nx?(df<=0?'即將響鈴':df<60?'還有 '+df+' 分鐘':'還有 '+Math.floor(df/60)+' 小時 '+df%60+' 分'):'';
+    b.querySelector('.al-list').innerHTML=L.filter(a=>a!==nx).map(a=>`<li class="${a.on&&a.fired!==tk?'':'off'}">${esc(a.time)}　${esc(a.label||'鬧鐘')}</li>`).join('')},
+  settings(f,W,box){f.note('時間到會全螢幕顯示說明文字並響鈴（記得先開聲音）。');listEditor(box,W,()=>W.d.list,{text:'label',ph:'響鈴時顯示的字',flag:['on','已關','開']},()=>({id:uid(),time:'',label:'',on:true,fired:''}))}
+},
+schedule:{
+  render(b,W){b.innerHTML='<div class="ttl" style="margin-bottom:.3em"></div><ul class="sch"></ul>';b.firstChild.textContent=W.d.title;
+    b.querySelector('.sch').innerHTML=W.d.items.length?W.d.items.map(it=>`<li class="${it.hot?'hot':''}" data-t="${esc(it.time)}"><span class="tm">${esc(it.time)}</span><span class="tx2">${it.hot?'<span class="tag">重要</span>':''}${esc(it.text)}</span><span class="st"></span></li>`).join(''):'<li><span></span><span class="tx2" style="color:var(--muted)">點標題列的「設定」加入項目</span></li>';b._m=-1},
+  tick(b,W){const n=new Date(),now=n.getHours()*60+n.getMinutes();if(b._m===now)return;b._m=now;
+    const lis=[...b.querySelectorAll('.sch li[data-t]')];let cur=null;lis.forEach(li=>{const t=li.dataset.t;if(t&&toMin(t)<=now&&(!cur||toMin(t)>=toMin(cur.dataset.t)))cur=li});
+    lis.forEach(li=>{const t=li.dataset.t,st=li.querySelector('.st');li.classList.remove('past','now');st.textContent='';if(!t)return;const df=toMin(t)-now;
+      if(df>0){if(df<=90)st.textContent='還有 '+df+' 分'}else if(li===cur){li.classList.add('now');st.textContent='進行中'}else li.classList.add('past')})},
+  settings(f,W,box){f.inp('標題','text',()=>W.d.title,v=>W.d.title=v);listEditor(box,W,()=>W.d.items,{text:'text',ph:'內容（時間可空白）',flag:['hot','重要','重要✓'],move:true},()=>({id:uid(),time:'',text:'',hot:false}))}
+},
+image:{
+  render(b,W){const src=IMG['img_'+W.id];
+    if(src){b.innerHTML='<div class="imgw"><img alt="圖片"></div>';const im=b.querySelector('img');im.src=src;im.className=W.d.fit==='cover'?'cover':'';im.onclick=()=>{$('#lbImg').src=src;$('#lightbox').hidden=false}}
+    else{b.innerHTML='<div class="imgw"><div class="empty">點一下這個框，再按 <kbd>Ctrl</kbd>+<kbd>V</kbd> 貼上截圖<br>或把圖片拖進來<br><button type="button" class="btn pick" style="margin-top:8px">選擇圖片</button></div></div>';b.querySelector('.pick').onclick=()=>pickFile(W)}},
+  settings(f,W){f.btns([['換一張圖片',()=>pickFile(W),'primary'],['移除圖片',()=>{delete IMG['img_'+W.id];saveImgs()},'danger']]).seg('顯示',[['contain','完整顯示'],['cover','填滿裁切']],()=>W.d.fit,v=>W.d.fit=v).note('點圖片可全螢幕放大。')}
+},
+random:{
+  render(b,W){const d=W.d;b.innerHTML=`<div class="ctr"><div class="rres">${esc(d.last||'？')}</div><div class="ctl opt-mid"><button type="button" class="btn primary go">抽一個</button></div><div class="lbl inf opt-tall"></div></div>`;
+    b.querySelector('.go').onclick=()=>T.random.primary(b,W);T.random.info(b,W)},
+  pool(W){const d=W.d;let all=d.mode==='num'?Array.from({length:Math.max(0,d.max-d.min+1)},(_,i)=>String(d.min+i)):nameList();return d.noRep?all.filter(x=>!d.picked.includes(x)):all},
+  info(b,W){const d=W.d,p=T.random.pool(W),el=b.querySelector('.inf');if(el)el.textContent=d.noRep?'剩 '+p.length+' 個可抽':'可重複抽'},
+  primary(b,W){const d=W.d,p=T.random.pool(W),r=b.querySelector('.rres');if(b._busy)return;
+    if(!p.length){r.textContent='抽完了';return}b._busy=true;r.classList.remove('got');r.classList.add('roll');const fin=p[Math.floor(Math.random()*p.length)];let n=0;
+    const iv=setInterval(()=>{r.textContent=p[Math.floor(Math.random()*p.length)];beep(600+Math.random()*300,.03,0);
+      if(++n>=22){clearInterval(iv);r.textContent=fin;r.classList.remove('roll');void r.offsetWidth;r.classList.add('got');beep(1047,.12,0);beep(1568,.25,.13);
+        d.last=fin;if(d.noRep)d.picked.push(fin);save();T.random.info(b,W);b._busy=false}},70)},
+  settings(f,W){const d=W.d;f.seg('抽什麼',[['name','名單'],['num','數字']],()=>d.mode,v=>{d.mode=v;d.picked=[];setTimeout(()=>rebuild(W))});
+    if(d.mode==='num')f.inp('從','number',()=>d.min,v=>{d.min=v;d.picked=[]}).inp('到','number',()=>d.max,v=>{d.max=v;d.picked=[]});
+    else f.ta('名單（一行一位，抽籤和分組共用）',()=>S.names,v=>{S.names=v},6);
+    f.chk('抽過的不再抽',()=>d.noRep,v=>d.noRep=v).btns([['重新開始',()=>{d.picked=[];d.last=''}]])}
+},
+group:{
+  render(b,W){const d=W.d;b.innerHTML=`<div class="ctl"><button type="button" class="btn primary go">隨機分成 ${d.n} 組</button></div><div class="groups"></div>`;
+    b.querySelector('.go').onclick=()=>T.group.primary(b,W);
+    b.querySelector('.groups').innerHTML=d.groups.length?d.groups.map((g,i)=>`<div class="gc"><b>第 ${i+1} 組</b>${g.map(esc).join('<br>')}</div>`).join(''):'<div class="empty">名單在「抽籤」的設定裡，兩個工具共用。</div>'},
+  primary(b,W){const d=W.d,names=shuffle(nameList());if(!names.length){toast('名單是空的，請到抽籤或分組的設定填入名單');return}
+    d.groups=Array.from({length:d.n},()=>[]);names.forEach((x,i)=>d.groups[i%d.n].push(x));save();refresh(W);chime()},
+  settings(f,W){f.inp('組數','number',()=>W.d.n,v=>W.d.n=clamp(Math.round(v)||2,2,12),{min:2,max:12}).ta('名單（一行一位）',()=>S.names,v=>{S.names=v},6)}
+},
+score:{
+  render(b,W){const d=W.d,max=Math.max(...d.teams.map(t=>t.score)),ties=d.teams.filter(t=>t.score===max).length;
+    b.innerHTML='<div class="teams">'+d.teams.map(t=>{const l=max>0&&t.score===max;return`<div class="team${l?' lead':''}" data-id="${t.id}"><div class="tn">${esc(t.name)}</div><div class="big sc">${t.score}</div><div class="ld opt-mid">${l?(ties>1?'並列領先':'領先'):''}</div><div class="ctl opt-mid"><button type="button" class="btn" data-d="-1">−1</button><button type="button" class="btn primary" data-d="1">+1</button><button type="button" class="btn" data-d="5">+5</button></div></div>`}).join('')+'</div>';
+    b.querySelector('.teams').onclick=e=>{const x=e.target.closest('[data-d]');if(!x)return;const t=d.teams.find(t=>t.id===x.closest('.team').dataset.id);t.score+=+x.dataset.d;if(+x.dataset.d>0)beep(880,.08,0);save();refresh(W)}},
+  settings(f,W,box){const d=W.d;f.note('隊名：');
+    const wrap=document.createElement('div');wrap.style.cssText='display:flex;flex-direction:column;gap:6px';
+    const draw=()=>{wrap.innerHTML='';d.teams.forEach((t,i)=>{const r=document.createElement('div');r.className='erow';r.style.gridTemplateColumns='1fr auto auto';
+      const x=document.createElement('input');x.type='text';x.id='f'+uid();x.value=t.name;x.oninput=()=>{t.name=x.value;save();refresh(W)};
+      const s=document.createElement('input');s.type='number';s.id='f'+uid();s.value=t.score;s.style.cssText='width:5em;padding:5px;border-radius:6px;border:1px solid var(--btn-edge);background:var(--field)';s.onchange=()=>{t.score=+s.value||0;save();refresh(W)};
+      const del=document.createElement('button');del.type='button';del.className='btn danger';del.textContent='刪';del.onclick=()=>{d.teams.splice(i,1);save();refresh(W);draw()};
+      r.append(x,s,del);wrap.appendChild(r)})};
+    draw();box.appendChild(wrap);
+    f.btns([['＋ 加一隊',()=>{d.teams.push({id:uid(),name:'第 '+(d.teams.length+1)+' 隊',score:0});draw()},'primary'],['分數歸零',b=>{if(b.dataset.arm){d.teams.forEach(t=>t.score=0);draw()}else{b.dataset.arm=1;b.textContent='再按一次確認';setTimeout(()=>{delete b.dataset.arm;b.textContent='分數歸零'},3000)}},'danger']])}
+},
+poll:{
+  render(b,W){const d=W.d,tot=d.opts.reduce((a,o)=>a+o.c,0);
+    b.innerHTML='<div class="ttl q"></div><div class="poll">'+d.opts.map((o,i)=>`<button type="button" class="po" data-i="${i}"><i style="width:${tot?o.c/tot*100:0}%"></i><span>${esc(o.t)}</span><b>${o.c}</b></button>`).join('')+'</div><div class="lbl opt-tall" style="text-align:center">共 '+tot+' 票・點選項加一票</div>';
+    b.querySelector('.q').textContent=d.q;b.querySelector('.poll').onclick=e=>{const x=e.target.closest('[data-i]');if(x){d.opts[+x.dataset.i].c++;beep(880,.06,0);save();refresh(W)}}},
+  settings(f,W){const d=W.d;f.inp('題目','text',()=>d.q,v=>d.q=v).ta('選項（一行一個）',()=>d.opts.map(o=>o.t).join('\n'),v=>{const L=v.split('\n').map(s=>s.trim()).filter(Boolean);d.opts=L.map((t,i)=>({t,c:d.opts[i]?.c||0}))},4)
+    .btns([['票數歸零',()=>d.opts.forEach(o=>o.c=0),'danger']])}
+},
+light:{
+  render(b,W){const d=W.d,C=['#ff3b30','#e6b800','#34c759'];b.innerHTML=`<div class="lightw"><div class="lampbox">${['r','y','g'].map((c,i)=>`<button type="button" class="lamp ${c}${d.on===i?' on':''}" data-l="${i}" aria-label="${['紅','黃','綠'][i]}燈"></button>`).join('')}</div><div class="lmsg"></div></div>`;
+    const m=b.querySelector('.lmsg');m.textContent=d.labels[d.on];m.style.color=C[d.on];
+    b.querySelector('.lampbox').onclick=e=>{const x=e.target.closest('[data-l]');if(x){d.on=+x.dataset.l;save();refresh(W)}}},
+  primary(b,W){W.d.on=(W.d.on+1)%3;save();refresh(W)},
+  settings(f,W){const d=W.d;['紅燈','黃燈','綠燈'].forEach((l,i)=>f.inp(l,'text',()=>d.labels[i],v=>d.labels[i]=v))}
+},
+symbol:{
+  render(b,W){const s=SYMS.find(x=>x[0]===W.d.sel)||SYMS[0];b.innerHTML=`<div class="ctr"><div class="sym"><i data-lucide="${s[1]}"></i></div><div class="symt"></div></div>`;b.querySelector('.symt').textContent=s[2]},
+  settings(f,W){const g=document.createElement('div');g.className='symgrid';
+    SYMS.forEach(s=>{const b=document.createElement('button');b.type='button';b.className='btn';b.setAttribute('aria-pressed',W.d.sel===s[0]);b.innerHTML=`<i data-lucide="${s[1]}"></i><span>${s[2]}</span>`;b.onclick=()=>{W.d.sel=s[0];g.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));save();refresh(W)};g.appendChild(b)});f.el(g)}
+},
+dice:{
+  render(b,W,shake){const d=W.d;b.innerHTML=`<div class="ctr"><div class="dice" style="--n:${d.vals.length}">${d.vals.map(v=>`<div class="die${v===1?' one':''}${shake?' shake':''}">${[...Array(9)].map((_,k)=>`<i class="${PIPS[v].includes(k)?'':'n'}"></i>`).join('')}</div>`).join('')}</div>
+    <div class="lbl opt-mid">${d.vals.length>1?'總和 '+d.vals.reduce((a,c)=>a+c,0)+'　':''}點骰子就能擲</div></div>`;b.querySelector('.dice').onclick=()=>T.dice.primary(b,W)},
+  primary(b,W){if(b._busy)return;b._busy=true;let n=0;const d=W.d,r=()=>Array.from({length:d.n},()=>1+Math.floor(Math.random()*6));
+    const iv=setInterval(()=>{d.vals=r();T.dice.render(b,W,n===0);beep(300+Math.random()*200,.03,0);if(++n>=10){clearInterval(iv);d.vals=r();T.dice.render(b,W);beep(784,.15,0);save();b._busy=false}},60)},
+  settings(f,W){f.seg('顆數',[1,2,3,4,5,6].map(n=>[n,n+' 顆']),()=>W.d.n,v=>{W.d.n=v;W.d.vals=Array(v).fill(6)})}
+},
+noise:{
+  render(b,W){b.innerHTML=`<div class="ctr"><div class="nmsg">${MIC?'保持安靜':'音量偵測'}</div><div class="nmeter"><i></i><b style="left:${W.d.limit}%"></b></div><div class="ctl opt-mid"><button type="button" class="btn primary go">${MIC?'停止偵測':'開始偵測'}</button></div></div>`;
+    b.querySelector('.go').onclick=()=>T.noise.primary(b,W)},
+  async primary(b,W){
+    if(MIC){MIC.getTracks().forEach(t=>t.stop());MIC=null;renderScreen();return}
+    try{unlock();MIC=await navigator.mediaDevices.getUserMedia({audio:true});const src=AC.createMediaStreamSource(MIC);AN=AC.createAnalyser();AN.fftSize=1024;ABUF=new Float32Array(AN.fftSize);src.connect(AN);renderScreen()}
+    catch(e){MIC=null;toast('無法使用麥克風：請用 Chrome 開啟下載的 HTML 檔，並允許麥克風')}},
+  tick(b,W){if(!MIC||!AN)return;AN.getFloatTimeDomainData(ABUF);let s=0;for(const v of ABUF)s+=v*v;const lv=clamp((20*Math.log10(Math.sqrt(s/ABUF.length)+1e-6)+60)*1.8,0,100);
+    b.querySelector('.nmeter i').style.width=lv+'%';const m=b.querySelector('.nmsg');
+    if(lv>W.d.limit){b._ls=b._ls||Date.now();if(Date.now()-b._ls>600){m.textContent='太大聲了！';m.classList.add('urgent')}}else{b._ls=0;m.textContent='保持安靜';m.classList.remove('urgent')}},
+  settings(f,W){f.inp('警戒線','range',()=>W.d.limit,v=>W.d.limit=v,{min:10,max:95}).note('需要麥克風。Claude 預覽裡會被擋，下載 HTML 用 Chrome 開啟即可。')}
+},
+draw:{
+  render(b,W){const P=['ink','#e53935','#1e88e5','#2e9d4a','#f4b400'];b._pen=b._pen||{c:'ink',w:6,er:false};const pen=b._pen;
+    b.innerHTML=`<div class="padw"><canvas></canvas></div><div class="ptools opt-mid"><div class="seg pc">${P.map(c=>`<button type="button" data-c="${c}" aria-pressed="${!pen.er&&pen.c===c}"><span class="sw" style="background:${c==='ink'?'var(--ink)':c}"></span></button>`).join('')}</div>
+      <div class="seg ps">${[[3,'細'],[6,'中'],[14,'粗']].map(([w,t])=>`<button type="button" data-w="${w}" aria-pressed="${pen.w===w}">${t}</button>`).join('')}</div>
+      <button type="button" class="btn er" aria-pressed="${pen.er}">橡皮擦</button><button type="button" class="btn danger cl">清除</button></div>`;
+    const cv=b.querySelector('canvas'),ctx=cv.getContext('2d'),key='draw_'+W.id;
+    const size=()=>{const r=cv.getBoundingClientRect(),k=devicePixelRatio||1;if(!r.width)return;cv.width=Math.round(r.width*k);cv.height=Math.round(r.height*k);
+      if(IMG[key]){const im=new Image();im.onload=()=>ctx.drawImage(im,0,0,cv.width,cv.height);im.src=IMG[key]}};
+    requestAnimationFrame(size);
+    b.querySelector('.pc').onclick=e=>{const x=e.target.closest('[data-c]');if(x){pen.c=x.dataset.c;pen.er=false;T.draw.render(b,W)}};
+    b.querySelector('.ps').onclick=e=>{const x=e.target.closest('[data-w]');if(x){pen.w=+x.dataset.w;T.draw.render(b,W)}};
+    b.querySelector('.er').onclick=()=>{pen.er=!pen.er;T.draw.render(b,W)};
+    b.querySelector('.cl').onclick=()=>{ctx.clearRect(0,0,cv.width,cv.height);delete IMG[key];saveImgs()};
+    let last=null;const pt=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*cv.width/r.width,(e.clientY-r.top)*cv.height/r.height]};
+    const line=(a,c)=>{const k=devicePixelRatio||1;ctx.globalCompositeOperation=pen.er?'destination-out':'source-over';ctx.strokeStyle=pen.c==='ink'?getComputedStyle(document.body).getPropertyValue('--ink').trim():pen.c;
+      ctx.lineWidth=(pen.er?pen.w*4:pen.w)*k;ctx.lineCap=ctx.lineJoin='round';ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(c[0]+.01,c[1]);ctx.stroke()};
+    cv.onpointerdown=e=>{e.stopPropagation();cv.setPointerCapture(e.pointerId);last=pt(e);line(last,last)};
+    cv.onpointermove=e=>{if(!last)return;const p=pt(e);line(last,p);last=p};
+    cv.onpointerup=cv.onpointercancel=()=>{if(!last)return;last=null;try{IMG[key]=cv.toDataURL('image/png')}catch(e){}saveImgs()}},
+  resized(b,W){T.draw.render(b,W)}
+},
+qr:{
+  render(b,W){const d=W.d;b.innerHTML='<div class="qrbox"><div class="q"></div></div><div class="ttl opt-mid" style="text-align:center;margin-top:6px"></div>';b.querySelector('.ttl').textContent=d.cap;
+    const q=b.querySelector('.q');if(window.QRCode&&d.text){try{new QRCode(q,{text:d.text,width:512,height:512,correctLevel:QRCode.CorrectLevel.M})}catch(e){q.textContent='內容太長'}}
+    else{q.style.color='#333';q.style.padding='12px';q.textContent=window.QRCode?'到設定輸入網址':'需要網路才能產生 QR 碼'}},
+  settings(f,W){f.inp('網址或文字','text',()=>W.d.text,v=>W.d.text=v).inp('說明','text',()=>W.d.cap,v=>W.d.cap=v)}
+}
+};
+
+/* ---------- 畫布與視窗 ---------- */
+const stage=$('#stage'),ELS={},OPEN=new Set();let selId=null;
+function place(el,W){el.classList.toggle('toped',W.y<.06);el.style.left=W.x*100+'%';el.style.top=W.y*100+'%';el.style.width=W.w*100+'%';el.style.height=W.h*100+'%';el.style.zIndex=10+W.z}
+function renderScreen(){
+  stage.innerHTML='';for(const k in ELS)delete ELS[k];
+  const sc=scr();
+  if(!sc.widgets.length){const h=document.createElement('div');h.className='hint';h.innerHTML='這個畫面還是空的<br>從下方工具列點選要放的工具';stage.appendChild(h)}
+  sc.widgets.forEach(buildWidget);drawBar();icons();
+}
+function buildWidget(W){
+  const el=document.createElement('div');el.className='w'+(W.id===selId?' sel':'')+(OPEN.has(W.id)?' setting':'');el.dataset.id=W.id;place(el,W);
+  const hasSet=!!T[W.type].settings;
+  el.innerHTML=`<div class="wh"><span class="wt">${META[W.type][0]}</span><span class="wbs"><button type="button" data-c="sm" title="字變小">A−</button><button type="button" data-c="bg" title="字變大">A+</button>${hasSet?`<button type="button" data-c="set" class="${OPEN.has(W.id)?'on':''}">${OPEN.has(W.id)?'完成':'設定'}</button>`:''}<button type="button" data-c="del" title="移除">✕</button></span></div><div class="wb"></div><div class="wr" title="拖曳調整大小"></div>`;
+  const b=el.querySelector('.wb');b.style.setProperty('--fs',W.fs);
+  stage.appendChild(el);ELS[W.id]={el,b};
+  T[W.type].render(b,W);T[W.type].tick?.(b,W);
+  if(OPEN.has(W.id))openSettings(W);
+  el.addEventListener('pointerdown',()=>select(W.id),true);
+  el.querySelector('.wh').addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;drag(e,W,el,'move')});
+  el.querySelector('.wr').addEventListener('pointerdown',e=>drag(e,W,el,'size'));
+  el.querySelector('.wbs').onclick=e=>{const c=e.target.closest('[data-c]')?.dataset.c;if(!c)return;
+    if(c==='sm'||c==='bg'){W.fs=clamp(+(W.fs+(c==='bg'?.15:-.15)).toFixed(2),.4,3);b.style.setProperty('--fs',W.fs);b._k=null;b._s=null;save()}
+    if(c==='set'){OPEN.has(W.id)?OPEN.delete(W.id):OPEN.add(W.id);rebuild(W)}
+    if(c==='del')removeW(W)};
+}
+function rebuild(W){const o=ELS[W.id];if(o)o.el.remove();delete ELS[W.id];buildWidget(W);icons()}
+function refresh(W){const o=ELS[W.id];if(!o)return;o.b._k=null;o.b._s=null;o.b._m=null;T[W.type].render(o.b,W);T[W.type].tick?.(o.b,W);icons()}
+function openSettings(W){const o=ELS[W.id],box=document.createElement('div');box.className='wset';o.el.appendChild(box);T[W.type].settings(form(box,W),W,box);
+  const done=document.createElement('button');done.type='button';done.className='btn primary';done.textContent='完成';done.style.alignSelf='flex-start';done.onclick=()=>{OPEN.delete(W.id);rebuild(W)};box.appendChild(done)}
+function select(id){if(selId===id)return;selId=id;stage.querySelectorAll('.w').forEach(e=>e.classList.toggle('sel',e.dataset.id===id));const W=scr().widgets.find(w=>w.id===id);if(W&&W.z<S.z){W.z=++S.z;ELS[id].el.style.zIndex=10+W.z;save()}}
+stage.addEventListener('pointerdown',e=>{if(e.target===stage){selId=null;stage.querySelectorAll('.w.sel').forEach(x=>x.classList.remove('sel'))}});
+function drag(e,W,el,mode){
+  e.preventDefault();const R=stage.getBoundingClientRect(),sx=e.clientX,sy=e.clientY,o={x:W.x,y:W.y,w:W.w,h:W.h};
+  const mv=ev=>{const dx=(ev.clientX-sx)/R.width,dy=(ev.clientY-sy)/R.height;
+    if(mode==='move'){W.x=clamp(o.x+dx,0,1-W.w);W.y=clamp(o.y+dy,0,1-W.h)}else{W.w=clamp(o.w+dx,.08,1-W.x);W.h=clamp(o.h+dy,.1,1-W.y)}place(el,W)};
+  const up=()=>{removeEventListener('pointermove',mv);removeEventListener('pointerup',up);save();const b=ELS[W.id]?.b;if(mode==='size'&&b){b._k=null;T[W.type].resized?.(b,W);if(W.type==='qr')refresh(W)}};
+  addEventListener('pointermove',mv);addEventListener('pointerup',up);
+}
+function addW(type,extra){
+  const m=META[type],n=scr().widgets.length,W=mk(type,clamp(.5-m[2]/2+(n%5)*.025,0,1-m[2]),clamp(.36-m[3]/2+(n%5)*.03,0,1-m[3]),m[2],m[3]);
+  W.z=++S.z;Object.assign(W,extra||{});scr().widgets.push(W);selId=W.id;save();renderScreen();return W;
+}
+function removeW(W){
+  const sc=scr(),i=sc.widgets.indexOf(W);sc.widgets.splice(i,1);OPEN.delete(W.id);
+  const keep={img:IMG['img_'+W.id],draw:IMG['draw_'+W.id]};save();renderScreen();
+  toast('已移除「'+META[W.type][0]+'」','復原',()=>{sc.widgets.splice(i,0,W);save();renderScreen()});
+  setTimeout(()=>{if(!allW().includes(W)){delete IMG['img_'+W.id];delete IMG['draw_'+W.id];saveImgs()}},6500);
+}
+
+/* ---------- 圖片：貼上、拖曳、選檔 ---------- */
+function fileToData(file){return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=rej;fr.onload=()=>{const img=new Image();img.onerror=rej;img.onload=()=>{
+  const k=Math.min(1,1920/Math.max(img.naturalWidth,img.naturalHeight)),w=Math.round(img.naturalWidth*k),h=Math.round(img.naturalHeight*k);
+  const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);x.drawImage(img,0,0,w,h);res(c.toDataURL('image/jpeg',.88))};img.src=fr.result};fr.readAsDataURL(file)})}
+let pickTarget=null;
+function pickFile(W){pickTarget=W;$('#fileIn').click()}
+$('#fileIn').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;await putImage(f,pickTarget)};
+async function putImage(file,W){
+  let data;try{data=await fileToData(file)}catch(e){toast('這張圖片讀不出來');return}
+  if(!W||W.type!=='image'||!scr().widgets.includes(W))W=addW('image');
+  IMG['img_'+W.id]=data;saveImgs();refresh(W);
+}
+document.addEventListener('paste',e=>{
+  const f=[...(e.clipboardData?.items||[])].find(i=>i.kind==='file'&&i.type.startsWith('image/'));if(!f)return;e.preventDefault();
+  const W=scr().widgets.find(w=>w.id===selId);putImage(f.getAsFile(),W&&W.type==='image'&&!IMG['img_'+W.id]?W:(W&&W.type==='image'?W:null));
+});
+addEventListener('dragover',e=>e.preventDefault());
+addEventListener('drop',e=>{e.preventDefault();const files=[...(e.dataTransfer?.files||[])].filter(f=>f.type.startsWith('image/'));if(!files.length)return;
+  const el=document.elementFromPoint(e.clientX,e.clientY)?.closest('.w');const W=el?scr().widgets.find(w=>w.id===el.dataset.id):null;
+  files.forEach((f,i)=>putImage(f,i===0&&W&&W.type==='image'?W:null))});
+
+/* ---------- 背景、風格、畫面 ---------- */
+const BGS=[['default','預設',''],['night','夜空','linear-gradient(160deg,#0f2027,#203a43 55%,#2c5364)'],['ocean','海洋','linear-gradient(160deg,#1e3c72,#2a5298)'],
+  ['forest','森林','linear-gradient(160deg,#0f3b2c,#2f7a54)'],['sunset','夕陽','linear-gradient(160deg,#f6a35b,#c94b6b)'],['sky','晴空','linear-gradient(180deg,#8fd0ff,#e6f5ff)'],
+  ['mint','薄荷','linear-gradient(160deg,#c8f0dc,#7fd3b0)'],['gray','淺灰','#e6e8eb'],['black','純黑','#000000'],['photo','上傳照片','']];
+const FONTS=[['auto','跟隨風格',''],['kai','楷書','"DFKai-SB","Kaiti TC","DFKai-SB",serif'],['hei','黑體','"Microsoft JhengHei","PingFang TC","Microsoft JhengHei",sans-serif'],
+  ['ming','明體','"PMingLiU","PMingLiU","Songti TC",serif'],['hand','手寫','"Iansui","DFKai-SB",cursive'],['round','圓體','"Huninn","Microsoft JhengHei",sans-serif'],
+  ['zy-kai','注音楷書','"Bpmf Iansui","DFKai-SB",serif'],['zy-hand','注音手寫','"Bpmf Iansui","Iansui",cursive'],['zy-round','注音圓體','"Bpmf Huninn","Huninn",sans-serif']];
+const DFONTS=[['auto','跟隨風格',''],['chalk','粉筆','"Segoe Print",cursive'],['round','圓潤','"Segoe UI",sans-serif'],['led','電子','"Consolas",monospace'],['plain','一般','"Microsoft JhengHei",sans-serif']];
+function applyStyle(){
+  const B=document.body;B.dataset.style=S.style;
+  document.querySelectorAll('#styleSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.s===S.style));
+  const f=(FONTS.find(x=>x[0]===S.font)||FONTS[0])[2],df=(DFONTS.find(x=>x[0]===S.dfont)||DFONTS[0])[2];
+  ['--title-font','--body-font'].forEach(v=>f?B.style.setProperty(v,f):B.style.removeProperty(v));
+  df?B.style.setProperty('--digit-font',df):B.style.removeProperty('--digit-font');
+  if(S.bg==='photo'&&!IMG.bg)S.bg='default';
+  const bg=BGS.find(x=>x[0]===S.bg)||BGS[0];stage.classList.remove('photo');
+  stage.style.background=S.bg==='photo'?`center/cover no-repeat url(${IMG.bg})`:(bg[2]||'');
+  B.classList.toggle('cbg',S.bg!=='default');
+  drawLook();
+}
+function drawLook(){
+  $('#bgSeg').innerHTML=BGS.map(([k,t,v])=>`<button type="button" data-bg="${k}" aria-pressed="${S.bg===k}" style="background:${k==='default'?'var(--bg)':k==='photo'?(IMG.bg?'center/cover url('+IMG.bg+')':'var(--btn-bg)'):v}">${t}</button>`).join('');
+  $('#fontSeg').innerHTML=FONTS.map(([k,t,v])=>`<button type="button" data-f="${k}" aria-pressed="${S.font===k}" style="${v?'font-family:'+v.replace(/"/g,"'"):''}">${t}</button>`).join('');
+  $('#dfontSeg').innerHTML=DFONTS.map(([k,t,v])=>`<button type="button" data-d="${k}" aria-pressed="${S.dfont===k}" style="${v?'font-family:'+v.replace(/"/g,"'"):''}">${k==='auto'?t:t+' 12:30'}</button>`).join('');
+}
+$('#styleSeg').onclick=e=>{const b=e.target.closest('[data-s]');if(b){S.style=b.dataset.s;applyStyle();save();renderScreen()}};
+$('#bgSeg').onclick=e=>{const b=e.target.closest('[data-bg]');if(!b)return;if(b.dataset.bg==='photo'&&(!IMG.bg||e.detail>1||e.shiftKey)){$('#bgIn').click();return}
+  if(b.dataset.bg==='photo'&&S.bg==='photo'){$('#bgIn').click();return}S.bg=b.dataset.bg;applyStyle();save()};
+$('#fontSeg').onclick=e=>{const b=e.target.closest('[data-f]');if(b){S.font=b.dataset.f;applyStyle();save();renderScreen()}};
+$('#dfontSeg').onclick=e=>{const b=e.target.closest('[data-d]');if(b){S.dfont=b.dataset.d;applyStyle();save();renderScreen()}};
+$('#bgIn').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{IMG.bg=await fileToData(f);S.bg='photo';saveImgs();save();applyStyle()}catch(err){toast('這張照片讀不出來')}};
+function armed(b,label,fn){if(b.dataset.arm){delete b.dataset.arm;b.textContent=label;fn()}else{b.dataset.arm=1;b.textContent='再按一次確認';setTimeout(()=>{delete b.dataset.arm;b.textContent=label},3000)}}
+$('#resetAll').onclick=e=>armed(e.target,'清空成空白畫面',()=>{S=defaults();IMG={};saveImgs();save();applyStyle();goScr(0)});
+function addScreen(after){S.screens.splice(after+1,0,{id:uid(),name:'畫面 '+(S.screens.length+1),widgets:[]});goScr(after+1)}
+function dupScreen(i){const c=JSON.parse(JSON.stringify(S.screens[i]));c.name+='（複製）';c.id=uid();
+  c.widgets.forEach(w=>{const o=w.id;w.id=uid();if(IMG['img_'+o])IMG['img_'+w.id]=IMG['img_'+o];if(IMG['draw_'+o])IMG['draw_'+w.id]=IMG['draw_'+o]});saveImgs();S.screens.splice(i+1,0,c);goScr(i+1)}
+function drawScreens(focusCur){
+  const box=$('#scrList');box.innerHTML='';const curSc=scr();
+  S.screens.forEach((sc,i)=>{
+    const r=document.createElement('div');r.className='srow'+(i===S.cur?' cur':'');
+    r.innerHTML=`<button type="button" class="btn go ${i===S.cur?'primary':''}" title="切換到這個畫面">${i+1}</button><input type="text" id="sn-${sc.id}" aria-label="畫面名稱"><span class="cnt">${sc.widgets.length} 個工具</span>
+      <div class="x"><button type="button" class="btn" data-a="up" ${i?'':'disabled'}>↑ 上移</button><button type="button" class="btn" data-a="down" ${i<S.screens.length-1?'':'disabled'}>↓ 下移</button><button type="button" class="btn" data-a="dup">複製</button><button type="button" class="btn danger" data-a="clr">清空</button><button type="button" class="btn danger" data-a="del">刪除</button></div>`;
+    const inp=r.querySelector('input');inp.value=sc.name;inp.oninput=()=>{sc.name=inp.value;save();drawBar();icons()};
+    inp.onkeydown=e=>{if(e.key==='Enter')inp.blur()};
+    r.querySelector('.go').onclick=()=>goScr(i);
+    r.querySelector('.x').onclick=e=>{const b=e.target.closest('[data-a]');if(!b||b.disabled)return;const a=b.dataset.a;
+      if(a==='up'||a==='down'){const j=a==='up'?i-1:i+1;[S.screens[i],S.screens[j]]=[S.screens[j],S.screens[i]];S.cur=S.screens.indexOf(curSc);save();drawBar();icons();drawScreens()}
+      else if(a==='dup')dupScreen(i);
+      else if(a==='clr')armed(b,'清空',()=>{sc.widgets=[];save();if(i===S.cur)renderScreen();drawScreens()});
+      else if(a==='del')armed(b,'刪除',()=>{if(S.screens.length<2){toast('至少要留一個畫面');return}S.screens.splice(i,1);const k=S.screens.indexOf(curSc);goScr(k>=0?k:Math.min(i,S.screens.length-1));drawScreens()})};
+    box.appendChild(r);
+    if(focusCur&&i===S.cur)setTimeout(()=>{inp.focus();inp.select()},30)});
+}
+$('#scrNew').onclick=()=>{addScreen(S.screens.length-1);drawScreens(true)};
+function goScr(i){lastRot=Date.now();S.cur=(i+S.screens.length)%S.screens.length;selId=null;OPEN.clear();save();renderScreen();if(!$('#screens').hidden)drawScreens()}
+
+/* ---------- 工具列 ---------- */
+// 內嵌在大屏（同網域 iframe）時的大屏視窗；單獨開啟時是 null
+function embedHost(){try{return window.parent!==window&&window.parent.fsToggle?window.parent:null}catch(e){return null}}
+const ORDER=KEEP;
+const TOOL_EMOJI={text:'📝',schedule:'📋',clock:'🕒',timer:'⏱️',countdown:'⏳',stopwatch:'⏲️',alarm:'⏰',interval:'🔔',image:'🖼️',draw:'✏️'};
+function drawBar(){
+  const bar=$('#bar');
+  bar.innerHTML=ORDER.map(t=>`<button type="button" class="tb" data-add="${t}"><span class="ic">${TOOL_EMOJI[t]||'▫️'}</span><span>${META[t][0]}</span></button>`).join('')+
+  `<div class="sep"></div><div class="scr"><button type="button" class="ar" id="scrPrev" aria-label="上一個畫面">‹</button><button type="button" class="nm" id="scrMgr" title="管理畫面"></button><button type="button" class="ar" id="scrNext" aria-label="下一個畫面">›</button><button type="button" class="ar add" id="scrPlus" title="新增畫面" aria-label="新增畫面">＋</button></div>
+  <div class="sep"></div><button type="button" class="tb" id="schedTb"><span class="ic">📅</span><span>定時${S.jobs.filter(j=>j.on).length?' '+S.jobs.filter(j=>j.on).length:''}</span></button><button type="button" class="tb" id="bgTb"><span class="ic">🎨</span><span>風格</span></button>
+  <button type="button" class="tb" id="fsTb"><span class="ic">⛶</span><span>全螢幕</span></button>
+  <button type="button" class="tb ${AC?'':'warn'}" id="soundTb"><span class="ic">🔊</span><span class="lb">${AC?'測試聲音':'開聲音'}</span></button>
+  <button type="button" class="tb" id="hideTb"><span class="ic">▾</span><span>收起</span></button>`;
+  const nm=bar.querySelector('.nm');nm.textContent=scr().name;const sm=document.createElement('small');sm.textContent=(S.cur+1)+' / '+S.screens.length;nm.appendChild(sm);
+}
+$('#bar').onclick=e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.add)addW(b.dataset.add);
+  else if(b.id==='scrMgr'){$('#pop').hidden=true;$('#sched').hidden=true;$('#screens').hidden=!$('#screens').hidden;drawScreens()}
+  else if(b.id==='scrPlus'){addScreen(S.cur);$('#pop').hidden=true;$('#sched').hidden=true;$('#screens').hidden=false;drawScreens(true)}
+  else if(b.id==='scrPrev')goScr(S.cur-1);else if(b.id==='scrNext')goScr(S.cur+1);
+  else if(b.id==='bgTb'){$('#sched').hidden=true;$('#screens').hidden=true;$('#pop').hidden=!$('#pop').hidden;drawLook();presetNote()}
+  else if(b.id==='schedTb'){$('#pop').hidden=true;$('#screens').hidden=true;$('#sched').hidden=!$('#sched').hidden;drawJobs()}
+  else if(b.id==='fsTb')toggleFs();
+  else if(b.id==='soundTb'){unlock();chime()}
+  else if(b.id==='hideTb')toggleBar()};
+function toggleBar(){const h=!$('#bar').classList.contains('hide');$('#bar').classList.toggle('hide',h);$('#barShow').hidden=!h;if(h)$('#pop').hidden=true}
+$('#barShow').onclick=toggleBar;
+function toggleFs(){const host=embedHost();if(host){host.fsToggle(host.document.getElementById('screenBoard'));return}if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});else(document.documentElement.requestFullscreen?.()||Promise.reject()).catch(()=>toast('這裡不能切全螢幕，可以按 F11'))}
+document.addEventListener('pointerdown',e=>{if(!$('#pop').hidden&&!e.target.closest('#pop,#bgTb'))$('#pop').hidden=true;if(!$('#sched').hidden&&!e.target.closest('#sched,#schedTb'))$('#sched').hidden=true;if(!$('#screens').hidden&&!e.target.closest('#screens,#scrMgr,#scrPlus,#scrPrev,#scrNext'))$('#screens').hidden=true});
+
+/* ---------- 匯出／匯入 ---------- */
+let DL=null;
+async function saveFile(name,blob){
+  try{if(!DL&&window.claude&&claude.use)DL=await claude.use('downloads')}catch(e){DL=null}
+  if(DL){try{await DL.save({filename:name,data:blob});toast('已匯出 '+name);return}catch(e){if(e&&e.code==='declined')return;if(e&&e.code==='rate_limited'){toast('上一個下載還沒確認，請稍等');return}}}
+  try{const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000);toast('已匯出 '+name)}
+  catch(e){toast('這裡不能下載檔案，請改用離線版 HTML')}
+}
+const stamp=()=>{const n=new Date();return n.getFullYear()+'-'+pad(n.getMonth()+1)+'-'+pad(n.getDate())+'_'+pad(n.getHours())+pad(n.getMinutes())};
+const safeName=t=>String(t).replace(/[\\/:*?"<>|\s]+/g,'_').slice(0,40)||'畫面';
+$('#expJson').onclick=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+  saveFile('螢幕公告設定_'+stamp()+'.json',new Blob([JSON.stringify({app:'classboard',v:2,ver:'2.3',exported:new Date().toISOString(),S,IMG})],{type:'application/json'}))};
+$('#impJson').onclick=()=>$('#jsonIn').click();
+function presetNote(){const pr=readPreset();$('#presetNote').textContent=pr?(pr.builtin?'目前的預設：內建在網頁裡的設定。':'目前的預設：'+(pr.saved||'')+' 存的設定（只存在這台電腦的瀏覽器）。'):'還沒有存預設。存了以後，按「還原成預設」就會回到這個設定。'}
+$('#presetSave').onclick=e=>armed(e.target,'把目前設定存為預設',()=>{try{const n=new Date();localStorage.setItem(PRESETKEY,JSON.stringify({app:'classboard',v:2,saved:n.getFullYear()+'/'+(n.getMonth()+1)+'/'+n.getDate()+' '+pad(n.getHours())+':'+pad(n.getMinutes()),S,IMG}));toast('已存為預設');presetNote()}catch(err){toast('存不下：圖片太多太大，請刪掉一些圖片再試')}});
+$('#presetLoad').onclick=e=>armed(e.target,'還原成預設',()=>{const pr=readPreset();if(!pr){toast('還沒有存預設');return}S=JSON.parse(JSON.stringify(pr.S));IMG=JSON.parse(JSON.stringify(pr.IMG||{}));OPEN.clear();selId=null;save();saveImgs();applyStyle();goScr(S.cur||0);toast('已還原成預設')});
+$('#jsonIn').onchange=e=>{const f=e.target.files[0];e.target.value='';if(!f)return;const fr=new FileReader();
+  fr.onload=()=>{try{const o=JSON.parse(fr.result);if(o.app!=='classboard'||!o.S||!Array.isArray(o.S.screens))throw 0;
+    S=o.S;IMG=o.IMG||{};S.screens.forEach(sc=>{sc.id=sc.id||uid();sc.widgets=sc.widgets.filter(w=>KEEP.includes(w.type))});
+    S.cur=Math.min(S.cur||0,S.screens.length-1);S.jobs=S.jobs||[];S.rotate=S.rotate||{on:false,sec:30};S.bg=S.bg||'default';S.font=S.font||'auto';S.dfont=S.dfont||'auto';
+    OPEN.clear();selId=null;save();saveImgs();applyStyle();renderScreen();$('#pop').hidden=true;toast('已匯入，共 '+S.screens.length+' 個畫面')}
+    catch(err){toast('這不是本工具匯出的設定檔')}};fr.readAsText(f)};
+$('#expPng').onclick=async()=>{
+  if(!window.html2pdf){await new Promise(res=>{const t=document.createElement('script');t.src='assets/vendor/html2pdf.bundle.min.js';t.onload=res;t.onerror=res;document.head.appendChild(t)})}
+  if(!window.html2pdf){toast('匯出工具載入失敗，請重新整理再試');return}
+  $('#pop').hidden=true;document.body.classList.add('shot');await new Promise(r=>setTimeout(r,80));
+  try{// html2pdf 會把畫布複製到紙張大小的容器：先把畫布固定成實際尺寸，紙張也設一樣大，匯出後還原
+    const R=stage.getBoundingClientRect(),W=Math.round(R.width),H=Math.round(R.height),oldCss=stage.getAttribute('style');
+    stage.style.width=W+'px';stage.style.height=H+'px';stage.style.position='relative';stage.style.inset='auto';
+    let c;try{c=await html2pdf().set({margin:0,jsPDF:{unit:'px',format:[W,H],hotfixes:['px_scaling']},html2canvas:{backgroundColor:getComputedStyle(document.body).getPropertyValue('--bg').trim()||null,scale:Math.min(2,devicePixelRatio||1),useCORS:true,logging:false,width:W,height:H}}).from(stage).toCanvas().get('canvas')}
+    finally{if(oldCss===null)stage.removeAttribute('style');else stage.setAttribute('style',oldCss)}
+    c.toBlob(b=>{if(b)saveFile(safeName(scr().name)+'_'+stamp()+'.png',b);else toast('匯出圖片失敗')},'image/png')}
+  catch(e){toast('匯出圖片失敗')}finally{document.body.classList.remove('shot')}
+};
+
+/* ---------- 定時 ---------- */
+let lastRot=Date.now(),lastUser=0;
+['pointerdown','keydown'].forEach(t=>document.addEventListener(t,()=>lastUser=Date.now()));
+const ACTS=[['screen','切換畫面'],['notice','跳出公告'],['timer','開始計時器']];
+function drawJobs(){
+  const box=$('#jobs');box.innerHTML='';
+  if(!S.jobs.length)box.innerHTML='<div class="pnote">還沒有定時。按「新增定時」，例如 9:00 自動切到「考試中」畫面。</div>';
+  S.jobs.slice().sort((a,b)=>(a.time||'99').localeCompare(b.time||'99')).forEach(j=>{
+    const r=document.createElement('div');r.className='job'+(j.on?'':' off');
+    r.innerHTML=`<button type="button" class="btn ${j.on?'primary':''}" data-a="on">${j.on?'開':'關'}</button><input type="time" id="jt-${j.id}" aria-label="時間"><select id="ja-${j.id}" aria-label="動作">${ACTS.map(([k,t])=>`<option value="${k}"${j.action===k?' selected':''}>${t}</option>`).join('')}</select><button type="button" class="btn danger" data-a="del">刪除</button><div class="pm"></div>`;
+    r.querySelector('input[type=time]').value=j.time||'';
+    r.querySelector('input[type=time]').onchange=e=>{j.time=e.target.value;j.fired='';save()};
+    r.querySelector('select').onchange=e=>{j.action=e.target.value;j.fired='';save();drawJobs()};
+    r.querySelector('[data-a=on]').onclick=()=>{j.on=!j.on;j.fired='';save();drawJobs();drawBar();icons()};
+    r.querySelector('[data-a=del]').onclick=()=>{S.jobs.splice(S.jobs.indexOf(j),1);save();drawJobs();drawBar();icons()};
+    const pm=r.querySelector('.pm');
+    if(j.action==='screen'){
+      if(!S.screens.some(x=>x.id===j.screen))j.screen=S.screens[0].id;
+      pm.innerHTML='到 <select id="js-'+j.id+'">'+S.screens.map(x=>`<option value="${x.id}"${x.id===j.screen?' selected':''}>${esc(x.name)}</option>`).join('')+'</select>';
+      pm.querySelector('select').onchange=e=>{j.screen=e.target.value;save()};
+    }else if(j.action==='notice'){
+      pm.innerHTML=`<input type="text" id="jx-${j.id}" placeholder="要跳出的公告文字"><label><input type="checkbox" id="jb-${j.id}"> 響鈴</label>`;
+      const t=pm.querySelector('input[type=text]');t.value=j.text||'';t.oninput=()=>{j.text=t.value;save()};
+      const c=pm.querySelector('input[type=checkbox]');c.checked=!!j.sound;c.onchange=()=>{j.sound=c.checked;save()};
+    }else{
+      const tm=[];S.screens.forEach(x=>x.widgets.forEach(w=>{if(w.type==='timer')tm.push([w.id,x.name+'・'+(w.d.label||'計時器')+'（'+fmt(w.d.total)+'）'])}));
+      if(!tm.length){pm.innerHTML='<span class="pnote">目前沒有計時器，先從工具列加一個。</span>'}
+      else{if(!tm.some(x=>x[0]===j.timer))j.timer=tm[0][0];
+        pm.innerHTML='<select id="jw-'+j.id+'">'+tm.map(([id,t])=>`<option value="${id}"${id===j.timer?' selected':''}>${esc(t)}</option>`).join('')+'</select><label><input type="checkbox" id="jb-'+j.id+'"> 開始時響一聲</label>';
+        pm.querySelector('select').onchange=e=>{j.timer=e.target.value;save()};
+        const c=pm.querySelector('input[type=checkbox]');c.checked=!!j.sound;c.onchange=()=>{j.sound=c.checked;save()}}
+    }
+    box.appendChild(r)});
+  $('#rotOn').checked=S.rotate.on;$('#rotSec').value=S.rotate.sec;
+}
+$('#jobAdd').onclick=()=>{const n=new Date();n.setMinutes(n.getMinutes()+5);S.jobs.push({id:uid(),on:true,time:pad(n.getHours())+':'+pad(n.getMinutes()),action:'screen',screen:scr().id,text:'',sound:true,fired:''});save();drawJobs();drawBar();icons()};
+$('#rotOn').onchange=e=>{S.rotate.on=e.target.checked;lastRot=Date.now();save()};
+$('#rotSec').onchange=e=>{S.rotate.sec=clamp(+e.target.value||30,5,3600);e.target.value=S.rotate.sec;save()};
+let noticeT,lastIv='';const GLOW={};
+function fireIv(W,key){const d=W.d;
+  if((d.how||'pop')==='glow'){GLOW[W.id]=Date.now()+(d.auto>0?d.auto:600)*1000;T.interval.glowTick(W);if(d.sound&&lastIv!==key)chime();if(key)lastIv=key;return}
+  if(!key||lastIv!==key){if(key)lastIv=key;notice(d.msg||'提醒',d.sound,d.auto)}}
+document.addEventListener('click',e=>{const el=e.target.closest('.w.glow');if(!el||e.target.closest('.wh,.wr,button'))return;
+  const W=allW().find(w=>w.id===el.dataset.id);if(!W)return;e.stopPropagation();
+  $('#ackMsg').textContent=W.d.msg||'提醒';const n=new Date();$('#ackTime').textContent=pad(n.getHours())+':'+pad(n.getMinutes())+' 的提醒';
+  $('#ack').dataset.id=W.id;$('#ack').hidden=false;$('#ackOk').focus()},true);
+function ackOk(){const id=$('#ack').dataset.id;$('#ack').hidden=true;if(!id)return;
+  const W=allW().find(w=>w.id===id);const msg=W&&W.d.msg;
+  allW().forEach(w=>{if(w.type==='interval'&&(w.id===id||w.d.msg===msg)){delete GLOW[w.id];const o=ELS[w.id];if(o)o.el.classList.remove('glow')}})}
+$('#ackOk').onclick=ackOk;$('#ack').onclick=e=>{if(e.target.id==='ack')$('#ack').hidden=true};
+function notice(text,sound,auto){ringOff();const r=$('#ring');r.classList.add('calm');$('#ringBig').textContent=text;const n=new Date();$('#ringSub').textContent=pad(n.getHours())+':'+pad(n.getMinutes())+(auto>0?'　（'+auto+' 秒後自動關閉）':'');r.hidden=false;if(sound)chime();clearTimeout(noticeT);if(auto>0)noticeT=setTimeout(()=>{if(r.classList.contains('calm'))ringOff()},auto*1000)}
+function runJob(j){
+  if(j.action==='screen'){const i=S.screens.findIndex(x=>x.id===j.screen);if(i>=0)goScr(i)}
+  else if(j.action==='notice')notice(j.text||'公告',j.sound);
+  else if(j.action==='timer'){S.screens.forEach((x,si)=>{const W=x.widgets.find(w=>w.id===j.timer);if(!W)return;if(si!==S.cur)goScr(si);
+    const d=W.d;d.remain=d.total;d.endAt=Date.now()+d.total*1000;d.running=true;save();if(j.sound)chime();toast('定時開始：'+(d.label||'計時器')+' '+fmt(d.total))})}
+}
+
+/* ---------- 快捷鍵 ---------- */
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&!$('#ack').hidden){ackOk();return}
+  if(e.key==='Enter'&&!$('#ack').hidden){e.preventDefault();ackOk();return}
+  if(e.key==='Escape'){ringOff();$('#lightbox').hidden=true;$('#pop').hidden=true;$('#sched').hidden=true;$('#screens').hidden=true;return}
+  if(isTyping(e.target)||e.ctrlKey||e.metaKey||e.altKey)return;const k=e.key.toLowerCase();
+  if(k==='b')toggleBar();else if(k==='f')toggleFs();
+  else if(e.key==='ArrowRight')goScr(S.cur+1);else if(e.key==='ArrowLeft')goScr(S.cur-1);
+  else if(k===' '){const W=scr().widgets.find(w=>w.id===selId)||scr().widgets.find(w=>w.type==='timer');if(W&&T[W.type].primary){e.preventDefault();T[W.type].primary(ELS[W.id].b,W)}}
+});
+
+/* ---------- 主迴圈：所有畫面的計時器、鬧鐘、倒數都會照常響 ---------- */
+function loop(){
+  const n=new Date(),hm=pad(n.getHours())+':'+pad(n.getMinutes()),tk=todayKey(),now=Date.now();
+  for(const W of allW()){const d=W.d;
+    if(W.type==='timer'&&d.running&&d.endAt<=now){d.running=false;d.remain=0;save();ring(d.label?d.label+' 時間到！':'時間到！','計時 '+fmt(d.total)+' 結束')}
+    if(W.type==='alarm')d.list.forEach(a=>{if(a.on&&a.time===hm&&a.fired!==tk){a.fired=tk;save();ring(a.label||'鬧鐘',a.time)}});
+    if(W.type==='countdown'&&d.time===hm&&d.fired!==tk){d.fired=tk;save();ring(d.done||'時間到',d.label)}
+  }
+  S.jobs.forEach(j=>{if(j.on&&j.time===hm&&j.fired!==tk){j.fired=tk;save();runJob(j)}});
+  for(const W of allW()){if(W.type!=='interval'||!W.d.on)continue;const d=W.d,nx=T.interval.next(d,now-1000);if(nx&&nx<=now&&now-nx<5000&&d.fired!==String(nx)){d.fired=String(nx);save();fireIv(W,nx+'|'+d.msg)}}
+  for(const W of scr().widgets)if(W.type==='interval')T.interval.glowTick(W);
+  if(S.rotate.on&&S.screens.length>1&&$('#ring').hidden&&!OPEN.size&&$('#pop').hidden&&$('#sched').hidden&&$('#screens').hidden&&now-lastUser>20000&&now-lastRot>S.rotate.sec*1000)goScr(S.cur+1);
+  for(const W of scr().widgets){const o=ELS[W.id];if(o&&T[W.type].tick&&!OPEN.has(W.id))T[W.type].tick(o.b,W)}
+}
+
+applyStyle();renderScreen();loop();setInterval(loop,200);
+// 定時跳出提醒時，大屏切到這個工具，老師和學生才看得到
+['#ring','#ack'].forEach(sel=>new MutationObserver(()=>{const host=embedHost();if(host&&!$(sel).hidden&&host.screenBoardShow)host.screenBoardShow()}).observe($(sel),{attributes:true,attributeFilter:['hidden']}));
+addEventListener('load',icons);
+})();
+</script>
