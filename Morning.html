@@ -120,6 +120,8 @@
     .stat-block .mode-button, .stat-block .ghost-button { padding: 6px 14px; font-size: 15px; border-radius: 10px; }
     .page-hint { display: block; line-height: 1.6; }
     .page-hint .sep { color: var(--line); margin: 0 8px; font-weight: 900; }
+    .hint-callout { display: inline-block; margin: 4px 0 2px; padding: 5px 14px; border: 2px solid #d98a00; border-radius: 999px; background: #fff3d1; color: #7a4a00; font: inherit; font-size: 17px; font-weight: 900; cursor: pointer; }
+    .hint-callout:hover { background: #ffe7a8; }
     .makeup-list { display: grid; gap: 8px; margin-top: 10px; }
     .makeup-item { display: flex; align-items: center; gap: 10px; border: 2px solid var(--line); border-radius: 12px; background: #fffefb; padding: 10px 12px; font-size: 17px; font-weight: 800; flex-wrap: wrap; }
     .makeup-item .who { font-size: 20px; color: var(--missing); }
@@ -411,7 +413,7 @@
       <div class="panel">
         <div class="board-add-row">
           <span class="status-text page-hint">
-            <strong>前幾天沒交的作業</strong>：學生補來了就把號碼點掉。<span class="sep">｜</span>點一下＝<span style="color:var(--missing);font-weight:900">已補交</span>，點完就從清單消失。<span class="sep">｜</span>今天的缺交請到「作業繳交」直接改。
+            <strong>前幾天沒交的作業</strong>：學生補來了就把號碼點掉。<span class="sep">｜</span>點一下＝<span style="color:var(--missing);font-weight:900">已補交</span>，點完就從清單消失。<br><button class="hint-callout" type="button" id="makeupGoHomework">⚠️ 今天的缺交請到「作業繳交」直接改 →</button>
           </span>
         </div>
         <div class="stat-block">
@@ -2832,6 +2834,7 @@
       if (seatButton) cycleAttendance(Number(seatButton.dataset.seat));
     });
     $('addBoardButton').addEventListener('click', addBoard);
+    $('makeupGoHomework').addEventListener('click', () => document.querySelector('.tab-button[data-page="homework"]').click());
     $('boardSubjectSelect').addEventListener('change', renderAssignmentOptions);
     $('boardWall').addEventListener('click', event => {
       const removeButton = event.target.closest('[data-remove-board]');

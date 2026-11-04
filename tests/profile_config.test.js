@@ -859,6 +859,8 @@ assert.match(lineBotSource, /classroomActions = \[[^\]]*'contactbook_month'/, "�
   assert.match(morningHtml, /boardSubjectSelect'\)\.addEventListener\('change', renderAssignmentOptions\)/, "換科目時選單要跟著換");
 }
 
+assert.match(morningHtml, /id="makeupGoHomework">⚠️ 今天的缺交請到「作業繳交」直接改/, "補交頁要強調今天的缺交到作業繳交改");
+
 // G6 🧳 代課包
 assert.match(studioHtml, /data-page="substitute">🧳 代課包/, "應有代課包分頁");
 {
