@@ -139,6 +139,35 @@ class LocalBridgeTest(unittest.TestCase):
             self.request("/health", origin="https://example.com")
         self.assertEqual(context.exception.code, 403)
 
+    def _raw_status(self, path, headers, body=b'{"tasks": []}'):
+        request = Request(f"http://127.0.0.1:{self.port}{path}", data=body, method="POST", headers=headers)
+        try:
+            with urlopen(request, timeout=3) as response:
+                return response.status
+        except HTTPError as error:
+            return error.code
+
+    def test_security_2026_11_06(self):
+        """資安稽核 2026-11-06：null 來源、DNS rebinding、免預檢的外站寫入都要擋在處理資料之前。"""
+        self.assertFalse(bridge_origin_allowed("null"))
+        calls = []
+        original = DummySecretary._bridge_sync
+        DummySecretary._bridge_sync = lambda _self, payload: calls.append(payload) or {"ok": True}
+        try:
+            json_headers = {"Content-Type": "application/json"}
+            self.assertEqual(self._raw_status("/sync", {**json_headers, "Origin": "null"}), 403)
+            self.assertEqual(self._raw_status("/sync", {"Origin": "https://example.com", "Content-Type": "text/plain"}), 403)
+            self.assertEqual(self._raw_status("/sync", {"Origin": "http://127.0.0.1:8765", "Content-Type": "text/plain"}), 403)
+            self.assertEqual(self._raw_status("/sync", {**json_headers, "Origin": "http://127.0.0.1:8765", "Host": "evil.example:8767"}), 403)
+            self.assertEqual(calls, [], "被擋下的請求不可寫入任何資料")
+            self.assertEqual(self._raw_status("/sync", {**json_headers, "Origin": "http://127.0.0.1:8765"}), 200)
+            self.assertEqual(len(calls), 1)
+        finally:
+            DummySecretary._bridge_sync = original
+        request = Request(f"http://127.0.0.1:{self.port}/health", headers={"Origin": "http://127.0.0.1:8765"})
+        with urlopen(request, timeout=3) as response:
+            self.assertEqual(response.headers.get("X-Frame-Options"), "DENY")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -46,10 +46,20 @@ BRIDGE_PORT = 8767
 BRIDGE_MAX_BODY = 5 * 1024 * 1024
 
 
+# 【資安說明】本機橋接（127.0.0.1:8767）的防線，2026-11-06 稽核後補強：
+# 1. 只綁回環位址，區網與外網連不進來。
+# 2. 檢查 Host：網址必須直接寫 127.0.0.1 或 localhost，擋「DNS rebinding」（外部網域解析到本機來繞過來源檢查）。
+# 3. 檢查 Origin：只接受本機頁面與本專案網站。不接受 Origin: null——任何網站的沙箱 iframe、
+#    老師打開的陌生 .html 附件都會送 null，以前會被當成本機而讀走任務與記事。
+# 4. POST 先驗來源與 Content-Type（必須是 application/json）再處理，避免外站用不需預檢的簡單請求偷寫資料。
+# 5. 面板端點（/panel-data、/panel-action）只給秘書頁自己；回應一律禁止被別的網頁用 iframe 嵌入。
+# 6. 不回傳任何金鑰本文，面板只看得到「有沒有設定」。
 def bridge_origin_allowed(origin: str, allowed_web_origin: str = "") -> bool:
     """只接受本機預覽與本專案的公開網頁，避免其他網站讀取教師資料。"""
-    if not origin or origin == "null":
+    if not origin:
         return True
+    if origin == "null":
+        return False   # 沙箱 iframe 與 file:// 頁面，見檔頭【資安說明】第 3 點
     try:
         parsed = urlparse(origin)
         host = (parsed.hostname or "").lower()
@@ -81,7 +91,7 @@ def make_bridge_handler(secretary: "SecretaryPet") -> type[BaseHTTPRequestHandle
         def _is_local_origin(self) -> bool:
             """秘書頁自己（127.0.0.1:8767）或無 Origin 的同源請求；網站來源一律不得碰面板端點。"""
             origin = self._origin()
-            if not origin or origin == "null":
+            if not origin:
                 return True
             try:
                 host = (urlparse(origin).hostname or "").lower()
@@ -89,16 +99,28 @@ def make_bridge_handler(secretary: "SecretaryPet") -> type[BaseHTTPRequestHandle
                 return False
             return host in {"127.0.0.1", "localhost"}
 
+        def _host_allowed(self) -> bool:
+            """擋 DNS rebinding：Host 必須是 127.0.0.1 或 localhost 加上本伺服器的埠號。"""
+            port = self.server.server_address[1]
+            return str(self.headers.get("Host") or "").strip().lower() in {f"127.0.0.1:{port}", f"localhost:{port}"}
+
+        def _reject(self) -> None:
+            self.send_response(403)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+
         def _headers(self, status: int = 200, content_type: str = "application/json; charset=utf-8") -> bool:
             origin = self._origin()
-            if not bridge_origin_allowed(origin, secretary._bridge_allowed_origin()):
-                self.send_response(403)
-                self.send_header("Content-Type", "application/json; charset=utf-8")
-                self.end_headers()
+            if not self._host_allowed() or not bridge_origin_allowed(origin, secretary._bridge_allowed_origin()):
+                self._reject()
                 return False
             self.send_response(status)
             self.send_header("Content-Type", content_type)
             self.send_header("Cache-Control", "no-store")
+            self.send_header("X-Frame-Options", "DENY")
+            self.send_header("Content-Security-Policy", "frame-ancestors 'none'")
+            self.send_header("X-Content-Type-Options", "nosniff")
             self.send_header("Access-Control-Allow-Origin", origin or "null")
             self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
             self.send_header("Access-Control-Allow-Headers", "Content-Type")
@@ -135,6 +157,13 @@ def make_bridge_handler(secretary: "SecretaryPet") -> type[BaseHTTPRequestHandle
         def do_POST(self) -> None:  # noqa: N802 - BaseHTTPRequestHandler API
             if self.path not in ("/sync", "/panel-action"):
                 self._write_json({"ok": False, "error": "not found"}, 404)
+                return
+            # 先驗 Host、來源與 Content-Type 再讀資料；以前是先寫入再回 403，外站的簡單請求仍能改到資料。
+            content_type = str(self.headers.get("Content-Type") or "").lower()
+            if (not self._host_allowed()
+                    or not bridge_origin_allowed(self._origin(), secretary._bridge_allowed_origin())
+                    or not content_type.startswith("application/json")):
+                self._reject()
                 return
             try:
                 length = int(self.headers.get("Content-Length") or "0")
@@ -376,10 +405,11 @@ function renderCloud(c){
   if(document.activeElement!==$('clPoll'))$('clPoll').value=String(c.pollMinutes||2);
   const st=c.state||{};
   if(!c.enabled){$('cloudStatus').textContent=c.url&&!c.hasToken?'已填網址，還缺 🔑C 老師金鑰。':'尚未啟用——點下方「⚙ 設定」貼上網址與 🔑C，小綿助就能自己去拿工作台快照、LINE 待整理與大屏提示。';$('cloudLinkSetup').open=!c.url;return;}
-  let html=`<div>✅ 已啟用，每 ${c.pollMinutes} 分鐘同步`+(st.fetchedAt?`｜最近 ${st.fetchedAt}`:'｜等待第一次同步')+`</div>`;
+  // 雲端回傳的值一律 esc() 後才放進 innerHTML（資安：防雲端資料夾帶 HTML）
+  let html=`<div>✅ 已啟用，每 ${esc(c.pollMinutes)} 分鐘同步`+(st.fetchedAt?`｜最近 ${esc(st.fetchedAt)}`:'｜等待第一次同步')+`</div>`;
   const snap=st.snapshot;
-  if(snap){html+=`<div>📋 工作台快照：今日 <b>${(snap.todayTasks||[]).length}</b> 件・逾期 <b>${snap.overdueCount||(snap.overdueTasks||[]).length}</b> 件`+(snap.updatedAt?`（${String(snap.updatedAt).slice(5,16).replace('T',' ')} 上傳）`:'')+`</div>`;}
-  if('lineCount' in st){html+=`<div>📱 LINE 待整理 <b>${st.lineCount}</b> 則`+((st.linePreview||[]).length?'：'+st.linePreview.map(esc).join('、'):'')+`</div>`;}
+  if(snap){html+=`<div>📋 工作台快照：今日 <b>${(snap.todayTasks||[]).length}</b> 件・逾期 <b>${esc(snap.overdueCount||(snap.overdueTasks||[]).length)}</b> 件`+(snap.updatedAt?`（${esc(String(snap.updatedAt).slice(5,16).replace('T',' '))} 上傳）`:'')+`</div>`;}
+  if('lineCount' in st){html+=`<div>📱 LINE 待整理 <b>${esc(st.lineCount)}</b> 則`+((st.linePreview||[]).length?'：'+st.linePreview.map(esc).join('、'):'')+`</div>`;}
   if(st.prompt&&st.prompt.text){html+=`<div>📣 大屏目前提示：${esc(st.prompt.text)}</div>`;}
   if((st.errors||[]).length){html+=`<div class="note-meta">⚠ ${esc(st.errors.join('；'))}</div>`;}
   if(c.lastError&&!(st.errors||[]).length){html+=`<div class="note-meta">⚠ ${esc(c.lastError)}</div>`;}
@@ -438,9 +468,10 @@ async function loadCloud(){
   try{
     const r=await(await fetch(c.url,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'classroom_today',token:c.token,className:c.cls})})).json();
     if(!r.ok)throw new Error(r.error||'雲端回應異常');
-    const absent=(r.attendance||[]).map(a=>`${a.seat}號${a.status}`);
+    // 雲端回傳的座號與狀態一律 esc()（資安：防雲端資料夾帶 HTML）
+    const absent=(r.attendance||[]).map(a=>`${esc(a.seat)}號${esc(a.status)}`);
     const boards={};
-    (r.homework||[]).forEach(h=>{const k=h.subject+(h.assignment?'／'+h.assignment:'');(boards[k]=boards[k]||{m:[],r:[]})[h.status==='補交'?'r':'m'].push(h.seat);});
+    (r.homework||[]).forEach(h=>{const k=h.subject+(h.assignment?'／'+h.assignment:'');(boards[k]=boards[k]||{m:[],r:[]})[h.status==='補交'?'r':'m'].push(esc(h.seat));});
     let html=`<div>👥 出缺：${absent.length?'<span class="seat-bad">'+absent.join('、')+'</span>':'<span class="seat-ok">全班到齊 🎉</span>'}</div>`;
     const keys=Object.keys(boards);
     html+= keys.length?keys.map(k=>`<div>📚 ${esc(k)}：${boards[k].m.length?'<span class="seat-bad">缺交 '+boards[k].m.join('、')+'號</span>':'<span class="seat-ok">全交 ✅</span>'}${boards[k].r.length?'｜補交 '+boards[k].r.join('、')+'號':''}</div>`).join(''):'<div class="empty">今天還沒有作業登記。</div>';
