@@ -692,10 +692,11 @@ assert.match(morningLevelSource, /const hasCloud = \(\) =>/, "大屏應能判斷
 assert.match(morningLevelSource, /CONTACT_LOCAL_PREFIX = 'morningContactLocal:'/, "第 1 級聯絡本應存本機");
 assert.match(morningLevelSource, /body\.local-only \.tab-button\[data-page="query"\]/, "第 1 級應收起查詢統計");
 assert.doesNotMatch(morningLevelSource, /body\.local-only \.tab-button\[data-page="makeup"\]/, "第 1 級也要能補交");
-assert.match(morningLevelSource, /LOCAL_KEEP_DAYS = 30/, "點名與作業應在本機留 30 天");
-assert.match(morningLevelSource, /shiftDate\(todayKey\(\), -LOCAL_KEEP_DAYS\)/, "清舊資料要照 30 天");
-assert.match(morningLevelSource, /CONTACT_KEEP_DAYS = 180/, "第 1 級聯絡本應留 180 天");
-assert.match(morningLevelSource, /shiftDate\(todayKey\(\), -CONTACT_KEEP_DAYS\)/, "清舊聯絡本要照 180 天");
+assert.match(morningLevelSource, /LOCAL_KEEP_DAYS = 180/, "存本機的紀錄應留 180 天");
+assert.equal((morningLevelSource.match(/shiftDate\(todayKey\(\), -LOCAL_KEEP_DAYS\)/g) || []).length, 2, "點名作業與聯絡本都要照 180 天清");
+assert.match(morningLevelSource, /max="180"/, "第 1 級補交回溯天數應可調到 180");
+assert.match(morningLevelSource, /days: cloudDays\(\)/, "接雲端時送出的天數不可超過 GAS 上限");
+assert.doesNotMatch(morningLevelSource, /localStorage\.setItem\(STATE_PREFIX/, "今天的紀錄要走存滿時會清舊資料的寫入");
 assert.match(morningLevelSource, /body\.local-only #submitButton/, "第 1 級應收起存到雲端");
 assert.match(lineBotSource, /BOT_VERSION = '\d{4}-\d{2}-\d{2} \d{2}:\d{2}'/, "GAS 版本日期");
 
@@ -1009,7 +1010,7 @@ assert.match(studioHtml, /section\('代課教師當日簽認'/, "代課包應有
   assert.match(mh, /const DAY_PREFIX = 'morningToolsDay:'/, "班級工具當日 key 不可改名");
   assert.match(mh, /const CLASS_CONFIG_FIELDS = \['scores', 'teamNames', 'teamCount'\]/, "計分板分數與隊名每班一份");
   assert.match(mh, /const CLASS_DAY_FIELDS = \['drawn', 'boards', 'groups'\]/, "已抽名單、檢核板、分組結果每班一份");
-  assert.match(mh, /localStorage\.setItem\(STATE_PREFIX \+ todayKey\(\) \+ suffix, JSON\.stringify\(\{ boards: state\.boards \}\)\)/, "作業繳交版面每班一份，別班只存 boards");
+  assert.match(mh, /setLocalRecord\(STATE_PREFIX \+ todayKey\(\) \+ suffix, JSON\.stringify\(\{ boards: state\.boards \}\)\)/, "作業繳交版面每班一份，別班只存 boards");
   assert.match(mh, /JSON\.stringify\(\{ attendance: state\.attendance, boards: firstBoards, flags: state\.flags \}\)/, "別班畫面改點名仍寫回第一個班、不蓋掉第一個班的版面");
   assert.match(mh, /const target = cls \|\| \(push !== 'none' \? firstClass\(\) : currentClass\(\)\)/, "推播只送第一個班，一般存檔送目前的班");
   assert.match(mh, /const attendance = \(isFirst \? Object\.entries\(state\.attendance\) : \[\]\)/, "點名只屬第一個班");
