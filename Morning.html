@@ -1676,7 +1676,7 @@
         if (BOOT_HHMM >= state.settings.autoNotifyTime) state.flags.autoNotifyDone = true;
         if (BOOT_HHMM >= state.settings.autoHomeworkNotifyTime) state.flags.autoHomeworkNotifyDone = true;
         saveTodayState();
-        showToast(`大屏在 ${state.settings.autoAbsentTime} 之後才打開，今天不自動轉「未到」；點完名請按「送出」。`);
+        showToast(`大屏在 ${state.settings.autoAbsentTime} 之後才打開，今天不自動轉「未到」${hasCloud() ? '；點完名請按「💾 存到雲端」' : ''}。`);
       }
       if (!state.flags.autoAbsentDone && now >= state.settings.autoAbsentTime) {
         activeSeats().forEach(seat => { if (!state.attendance[seat]) state.attendance[seat] = '未到'; });
