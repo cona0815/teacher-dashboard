@@ -1008,8 +1008,9 @@ assert.match(studioHtml, /section\('代課教師當日簽認'/, "代課包應有
   assert.match(mh, /const STATE_PREFIX = 'morningBoardState:'/, "當日狀態 key 不可改名");
   assert.match(mh, /const CONFIG_KEY = 'morningToolsConfig'/, "班級工具設定 key 不可改名");
   assert.match(mh, /const DAY_PREFIX = 'morningToolsDay:'/, "班級工具當日 key 不可改名");
-  assert.match(mh, /const CLASS_CONFIG_FIELDS = \['scores', 'teamNames', 'teamCount'\]/, "計分板分數與隊名每班一份");
-  assert.match(mh, /const CLASS_DAY_FIELDS = \['drawn', 'boards', 'groups'\]/, "已抽名單、檢核板、分組結果每班一份");
+  assert.match(mh, /const CLASS_CONFIG_FIELDS = \['scores', 'teamNames', 'teamCount', 'drawn'\]/, "計分板分數、隊名與已抽名單每班一份，已抽名單跨天保留");
+  assert.match(mh, /const CLASS_DAY_FIELDS = \['boards', 'groups'\]/, "檢核板、分組結果每班一份");
+  assert.doesNotMatch(mh, /day\.drawn\.push|day\.drawn = \[\]/, "已抽名單不可再存當日，抽籤可能用好幾個星期");
   assert.match(mh, /setLocalRecord\(STATE_PREFIX \+ todayKey\(\) \+ suffix, JSON\.stringify\(\{ boards: state\.boards \}\)\)/, "作業繳交版面每班一份，別班只存 boards");
   assert.match(mh, /JSON\.stringify\(\{ attendance: state\.attendance, boards: firstBoards, flags: state\.flags \}\)/, "別班畫面改點名仍寫回第一個班、不蓋掉第一個班的版面");
   assert.match(mh, /const target = cls \|\| \(push !== 'none' \? firstClass\(\) : currentClass\(\)\)/, "推播只送第一個班，一般存檔送目前的班");

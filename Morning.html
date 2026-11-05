@@ -3373,15 +3373,16 @@
   config.checkNames = Array.isArray(config.checkNames) && config.checkNames.length ? config.checkNames : DEFAULT_CHECK_NAMES.slice();
   config.teamNames = Array.isArray(config.teamNames) ? config.teamNames : [];
   const day = loadJson(DAY_PREFIX + todayKey(), {});
-  day.drawn = Array.isArray(day.drawn) ? day.drawn : [];
   day.boards = Array.isArray(day.boards) ? day.boards : [{ name: config.checkNames[0], done: {}, showMiss: false }];
   day.scores = Array.isArray(day.scores) ? day.scores : [];
   // 計分板分數改為永久保存（使用者要求：只有手動歸零）；舊版存在當日鍵的分數搬過來一次
   config.scores = Array.isArray(config.scores) ? config.scores : (day.scores.length ? day.scores.slice() : []);
+  // 抽籤可能用好幾個星期：已抽名單跨天保留，按「重新開始」才清空；舊版存在當日鍵的名單搬過來一次
+  config.drawn = Array.isArray(config.drawn) ? config.drawn : (Array.isArray(day.drawn) ? day.drawn.slice() : []);
   cleanupOldDays();
   // G10 多班模式：這些欄位每班一份。第一個班（或單班）沿用舊 key；其他班寫到「key:班級」。
-  const CLASS_CONFIG_FIELDS = ['scores', 'teamNames', 'teamCount'];
-  const CLASS_DAY_FIELDS = ['drawn', 'boards', 'groups'];
+  const CLASS_CONFIG_FIELDS = ['scores', 'teamNames', 'teamCount', 'drawn'];
+  const CLASS_DAY_FIELDS = ['boards', 'groups'];
   if (toolsClassSuffix()) loadClassSlice();
 
   function loadJson(key, fallback) {
@@ -3417,7 +3418,7 @@
     // 第一個班沿用舊版「分數存在當日鍵」的搬移規則
     config.scores = Array.isArray(config.scores) ? config.scores
       : (!suffix && Array.isArray(mainDay.scores) && mainDay.scores.length ? mainDay.scores.slice() : []);
-    day.drawn = Array.isArray(day.drawn) ? day.drawn : [];
+    config.drawn = Array.isArray(config.drawn) ? config.drawn : (Array.isArray(d.drawn) ? d.drawn.slice() : []);
     day.boards = Array.isArray(day.boards) ? day.boards : [{ name: config.checkNames[0], done: {}, showMiss: false }];
     day.groups = Array.isArray(day.groups) ? day.groups : [];
   }
@@ -3826,10 +3827,10 @@
     }
     return seatPool($('lotExcludeAbsent').checked);
   }
-  function remainingPool() { return lotteryPool().filter(item => !day.drawn.includes(item)); }
+  function remainingPool() { return lotteryPool().filter(item => !config.drawn.includes(item)); }
   function renderDrawnChips(animateNewest) {
-    $('lotDrawnList').innerHTML = day.drawn.length
-      ? '<span>已抽出：</span>' + day.drawn.map((v, i) => `<span class="lot-chip${animateNewest && i === day.drawn.length - 1 ? ' new' : ''}"><i>${i + 1}</i>${escapeHtml(v)}${/^\d+$/.test(v) ? '號' : ''}</span>`).join('')
+    $('lotDrawnList').innerHTML = config.drawn.length
+      ? '<span>已抽出（隔天接著抽，按「重新開始」才清空）：</span>' + config.drawn.map((v, i) => `<span class="lot-chip${animateNewest && i === config.drawn.length - 1 ? ' new' : ''}"><i>${i + 1}</i>${escapeHtml(v)}${/^\d+$/.test(v) ? '號' : ''}</span>`).join('')
       : '還沒抽過，按「🎯 抽！」開始。';
   }
   function updateLotStatus() {
@@ -4337,8 +4338,8 @@
     burstConfetti();
     lotStage.classList.remove('spinning');
     lotStage.classList.add('revealed');
-    day.drawn.push(picked);
-    saveDay();
+    config.drawn.push(picked);
+    saveConfig();
     const remaining = remainingPool();
     $('lotStatus').textContent = `剩 ${remaining.length} 個可抽`;
     renderDrawnChips(true);
@@ -4365,8 +4366,8 @@
   });
   $('lotResetButton').addEventListener('click', async () => {
     if (lotteryBusy) return;
-    if (day.drawn.length && !(await askDialog({ message: '清空已抽名單、重新開始？' }))) return;
-    day.drawn = []; saveDay();
+    if (config.drawn.length && !(await askDialog({ message: '清空已抽名單、重新開始？' }))) return;
+    config.drawn = []; saveConfig();
     $('lotResult').textContent = '？';
     $('lotResult').classList.remove('reveal');
     $('lotWheelHub').textContent = '🎯';
