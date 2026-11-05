@@ -3424,7 +3424,7 @@
   function cleanupOldDays() {
     for (let i = localStorage.length - 1; i >= 0; i -= 1) {
       const key = localStorage.key(i);
-      if (key && key.startsWith(DAY_PREFIX) && key.slice(DAY_PREFIX.length) < shiftDate(todayKey(), -7)) localStorage.removeItem(key);
+      if (key && key.startsWith(DAY_PREFIX) && key.slice(DAY_PREFIX.length) < shiftDate(todayKey(), -30)) localStorage.removeItem(key);
     }
   }
 
