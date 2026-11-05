@@ -1259,6 +1259,8 @@
     const SETTINGS_KEY = 'morningBoardSettings';
     const STATE_PREFIX = 'morningBoardState:';
     const LOCAL_KEEP_DAYS = 30;   // 點名與作業在這台電腦留 30 天，第 1 級的補交靠它
+    const CONTACT_LOCAL_PREFIX = 'morningContactLocal:';   // 第 1 級的聯絡本，一天一筆
+    const CONTACT_KEEP_DAYS = 180;
     const VISIBLE_CYCLE = ['', '到', '病假', '事假', '未到'];
     const BUILTIN_SUBJECTS = ['國語', '數學', '英語', '自然', '社會', '生活', '健康與體育', '音樂', '視覺藝術', '綜合', '本土語', '聯絡簿', '通知單'];
     const DEFAULT_ENABLED = ['國語', '數學', '英語', '自然', '社會', '聯絡簿', '通知單'];
@@ -1487,6 +1489,7 @@
       for (let index = localStorage.length - 1; index >= 0; index -= 1) {
         const key = localStorage.key(index);
         if (key && key.startsWith(STATE_PREFIX) && key.slice(STATE_PREFIX.length) < shiftDate(todayKey(), -LOCAL_KEEP_DAYS)) localStorage.removeItem(key);
+        if (key && key.startsWith(CONTACT_LOCAL_PREFIX) && key.slice(CONTACT_LOCAL_PREFIX.length) < shiftDate(todayKey(), -CONTACT_KEEP_DAYS)) localStorage.removeItem(key);
       }
     }
     /** 讀某一班今天的作業繳交版面（suffix ''＝第一個班的舊 key）。 */
@@ -1752,8 +1755,6 @@
       const time = state.contact.updatedAt ? new Date(state.contact.updatedAt).toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit' }) : '';
       $('contactMeta').textContent = state.contact.updatedAt ? `${time} 更新${sourceLabel}` : '';
     }
-    // 第 1 級的聯絡本存在這台電腦，一天一筆
-    const CONTACT_LOCAL_PREFIX = 'morningContactLocal:';
     function contactLocalGet(date) {
       try { return JSON.parse(localStorage.getItem(CONTACT_LOCAL_PREFIX + date + classKeySuffix()) || 'null'); } catch (error) { return null; }
     }

@@ -694,6 +694,8 @@ assert.match(morningLevelSource, /body\.local-only \.tab-button\[data-page="quer
 assert.doesNotMatch(morningLevelSource, /body\.local-only \.tab-button\[data-page="makeup"\]/, "第 1 級也要能補交");
 assert.match(morningLevelSource, /LOCAL_KEEP_DAYS = 30/, "點名與作業應在本機留 30 天");
 assert.match(morningLevelSource, /shiftDate\(todayKey\(\), -LOCAL_KEEP_DAYS\)/, "清舊資料要照 30 天");
+assert.match(morningLevelSource, /CONTACT_KEEP_DAYS = 180/, "第 1 級聯絡本應留 180 天");
+assert.match(morningLevelSource, /shiftDate\(todayKey\(\), -CONTACT_KEEP_DAYS\)/, "清舊聯絡本要照 180 天");
 assert.match(morningLevelSource, /body\.local-only #submitButton/, "第 1 級應收起存到雲端");
 assert.match(lineBotSource, /BOT_VERSION = '\d{4}-\d{2}-\d{2} \d{2}:\d{2}'/, "GAS 版本日期");
 
