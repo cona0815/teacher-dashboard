@@ -1054,3 +1054,33 @@ assert.match(studioHtml, /section\('代課教師當日簽認'/, "代課包應有
   [...cozyReady.matchAll(/'([a-z_]+)'/g)].forEach(m => assert.ok(fsArt.existsSync(pathArt.join(__dirname, '..', 'assets', 'art', 'cozy', 'prompt', m[1] + '.webp')), `溫暖風插圖檔存在：${m[1]}.webp`));
 }
 // ── end ART-02 ──
+
+// ── 資安稽核 2026-11-06：修過的漏洞不可再回來 ──
+{
+  const read = name => fs.readFileSync(path.join(projectRoot, name), "utf8");
+  const studio = read("Studio.html"), screen = read("Screen.html"), index = read("Index.html");
+  const morning = read("Morning.html"), lineBot = read("LineBot.gs"), code = read("Code.gs");
+  assert.match(studio, /\/\^m\[0-9a-z\]\{1,16\}\$\/\.test\(String\(i\.id\)\)/, "範文庫匯入只收本工具產生的 id");
+  assert.match(studio, /data-lb-open="\$\{escapeHtml\(i\.id\)\}"/, "範文庫 id 放進屬性前要跳脫");
+  assert.match(studio, /function aiPrivacyHits/, "AI 工作室送出前要檢查個資");
+  assert.match(screen, /function cleanImported\(\)/, "螢幕公告匯入要清理 id 與圖片");
+  assert.match(read("tools/build_screen_board.py"), /cleanImported\(\);/, "螢幕公告的修正要同步到產生器");
+  assert.match(index, /href="\$\{escapeHtml\(safeUrl\(task\.detailUrl\) \|\| '#'\)\}"/, "任務連結只收 http(s)");
+  assert.match(index, /\['teaching', 'manual', 'review', 'assessment', 'buffer'\]\.includes\(row\.type\)/, "還原備份時進度列種類要白名單");
+  assert.doesNotMatch(index, /Object\.assign\(assistantSettings\.privacy, backup\.assistantSettings\.privacy\)/, "備份不可關掉去識別化");
+  assert.doesNotMatch(index, /\?key=\$\{encodeURIComponent\(key\)\}/, "Gemini 金鑰不可放網址");
+  assert.match(index, /prompt = redactSensitiveText\(prompt\)\.text;/, "訊息整理送 AI 前要去識別化");
+  assert.doesNotMatch(morning, /請輸入設定頁密碼（預設/, "密碼框不可提示預設密碼");
+  assert.match(morning, /setupPinLockUntil = Date\.now\(\) \+ 60000/, "設定密碼錯 5 次要鎖 1 分鐘");
+  for (const [name, html] of [["Morning.html", morning], ["Studio.html", studio], ["Screen.html", screen]]) {
+    assert.match(html, /window\.top\.location\.origin !== window\.location\.origin/, `${name} 要有防點擊劫持備援`);
+  }
+  assert.doesNotMatch(index, /window\.top\.location\.origin/, "Index.html 也由 Apps Script 以 iframe 提供，不可加防嵌入");
+  assert.match(lineBot, /event\.source\.type !== 'user'/, "LINE 小幫手只處理一對一聊天");
+  assert.match(lineBot, /教室金鑰只能處理近 60 天的補交/, "教室金鑰的補交要限近 60 天");
+  assert.match(lineBot, /cleanAttendance, pushMode === 'attendance' \? \[\] : cleanHomework/, "推播內容只用驗證過的值");
+  assert.match(lineBot, /不寫進執行紀錄（Logger）/, "含金鑰的安裝摘要不可寫進執行紀錄");
+  assert.equal((lineBot.match(/Logger\.log\(summary\)/g) || []).length, 2, "只剩觸發器與清理重複兩個不含金鑰的摘要會寫紀錄");
+  assert.match(code, /set\("任務名稱", sheetText_\(task\.name \|\| ""\)\)/, "Code.gs 寫試算表要防公式注入");
+}
+// ── end 資安稽核 2026-11-06 ──

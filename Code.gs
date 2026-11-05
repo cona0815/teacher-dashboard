@@ -575,7 +575,7 @@ function syncDesktopPetTasks_(incoming) {
         nextAction: cleanText_(item.source, 500) || "由小綿助建立",
         owner: (before && before.owner) || "本機小綿助",
         boardDisplay: (before && before.boardDisplay) || "自動",
-        archived: "否",
+        archived: (before && before.archived === "是") ? "是" : "否",   // 已封存的任務不會被小綿助同步復活
         updatedAt: now,
         createdAt: before && before.createdAt ? parseDateTime_(before.createdAt) : now,
       });
@@ -1592,21 +1592,22 @@ function taskObjectToRow_(task, headerMap, columnCount) {
     if (column) row[column - 1] = value;
   };
 
-  set("任務ID", task.taskId || createTaskId_());
-  set("任務名稱", task.name || "");
-  set("類型", task.category || "");
+  // 資安：自由文字一律經 sheetText_()，防 = + - @ 開頭被試算表當成公式執行
+  set("任務ID", sheetText_(task.taskId || createTaskId_()));
+  set("任務名稱", sheetText_(task.name || ""));
+  set("類型", sheetText_(task.category || ""));
   set("狀態", task.status || "未開始");
   set("優先級", task.priority || "中");
   set("截止日期", task.dueDate ? parseDateOnly_(task.dueDate) : "");
   set("截止時間", task.dueTime ? parseTimeOnly_(task.dueTime) : "");
-  set("下一步行動", task.nextAction || "");
-  set("等待對象", task.waitingFor || "");
-  set("最近進度", task.progress || "");
-  set("負責人", task.owner || "");
-  set("負責人Email", task.ownerEmail || "");
+  set("下一步行動", sheetText_(task.nextAction || ""));
+  set("等待對象", sheetText_(task.waitingFor || ""));
+  set("最近進度", sheetText_(task.progress || ""));
+  set("負責人", sheetText_(task.owner || ""));
+  set("負責人Email", sheetText_(task.ownerEmail || ""));
   set("看板顯示", task.boardDisplay || "自動");
   set("顯示排序", Number(task.sortOrder) || 9999);
-  set("詳細連結", task.detailUrl || "");
+  set("詳細連結", sheetText_(task.detailUrl || ""));
   set("建立時間", task.createdAt || new Date());
   set("更新時間", task.updatedAt || new Date());
   set("完成時間", task.completedAt || "");
@@ -1756,7 +1757,7 @@ function normalizePayload_(payload) {
     boardDisplay: cleanText_(payload.boardDisplay, 30) || "自動",
     sortOrder: Number(payload.sortOrder) || 9999,
     detailUrl: sanitizeUrl_(payload.detailUrl),
-    archived: cleanText_(payload.archived, 10) || "否",
+    archived: cleanText_(payload.archived, 10) === "是" ? "是" : "否",
     projectId: cleanText_(payload.projectId, 80),
     parentTaskId: cleanText_(payload.parentTaskId, 80),
     taskType: cleanText_(payload.taskType, 20) || "一般任務",
@@ -2207,6 +2208,16 @@ function sameDate_(a, b) {
     a.getMonth() === b.getMonth() &&
     a.getDate() === b.getDate(),
   );
+}
+
+/**
+ * 寫進試算表前把自由文字轉成「純文字」（與 LineBot.gs 同一套）。
+ * Google Sheets 會把 = + - @ 開頭的字串當公式執行，例如任務名稱被填成 =IMAGE("http://…")，
+ * 一打開試算表就會對外連線。加上前導單引號強制為文字，getValues() 讀回來不含引號。
+ */
+function sheetText_(value) {
+  const text = String(value == null ? "" : value);
+  return /^[=+\-@\t\r]/.test(text) ? "'" + text : text;
 }
 
 function cleanText_(value, maxLength) {

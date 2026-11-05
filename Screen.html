@@ -4,6 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<!--
+【資安說明】螢幕公告（2026-11-06 稽核）
+- 匯入的設定檔可能是別人分享的：id 只收英數、圖片只收 data:image 網址（cleanImported），放進 HTML 的 id 一律 esc()。
+- 本頁與大屏同網站，被嵌在大屏裡；資料只存這台電腦。
+-->
+<script>
+  // 資安：防點擊劫持。別的網站把本頁塞進 iframe 時改成整頁開啟（同網站的嵌入不受影響）。
+  // 正式站的 netlify.toml 已用標頭擋；這段是放在其他主機（如 GitHub Pages）時的備援。
+  try { if (window.top !== window.self && window.top.location.origin !== window.location.origin) throw new Error('framed'); }
+  catch (error) { document.documentElement.style.display = 'none'; try { window.top.location.href = window.location.href; } catch (ignored) {} }
+</script>
 <title>螢幕公告</title>
 <style>
 /* 字型都在本站（只有選到才會下載） */
@@ -946,7 +957,7 @@ function drawScreens(focusCur){
   const box=$('#scrList');box.innerHTML='';const curSc=scr();
   S.screens.forEach((sc,i)=>{
     const r=document.createElement('div');r.className='srow'+(i===S.cur?' cur':'');
-    r.innerHTML=`<button type="button" class="btn go ${i===S.cur?'primary':''}" title="切換到這個畫面">${i+1}</button><input type="text" id="sn-${sc.id}" aria-label="畫面名稱"><span class="cnt">${sc.widgets.length} 個工具</span>
+    r.innerHTML=`<button type="button" class="btn go ${i===S.cur?'primary':''}" title="切換到這個畫面">${i+1}</button><input type="text" id="sn-${esc(sc.id)}" aria-label="畫面名稱"><span class="cnt">${sc.widgets.length} 個工具</span>
       <div class="x"><button type="button" class="btn" data-a="up" ${i?'':'disabled'}>↑ 上移</button><button type="button" class="btn" data-a="down" ${i<S.screens.length-1?'':'disabled'}>↓ 下移</button><button type="button" class="btn" data-a="dup">複製</button><button type="button" class="btn danger" data-a="clr">清空</button><button type="button" class="btn danger" data-a="del">刪除</button></div>`;
     const inp=r.querySelector('input');inp.value=sc.name;inp.oninput=()=>{sc.name=inp.value;save();drawBar();icons()};
     inp.onkeydown=e=>{if(e.key==='Enter')inp.blur()};
@@ -1006,12 +1017,19 @@ const safeName=t=>String(t).replace(/[\\/:*?"<>|\s]+/g,'_').slice(0,40)||'畫面
 $('#expJson').onclick=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
   saveFile('螢幕公告設定_'+stamp()+'.json',new Blob([JSON.stringify({app:'classboard',v:2,ver:'2.3',exported:new Date().toISOString(),S,IMG})],{type:'application/json'}))};
 $('#impJson').onclick=()=>$('#jsonIn').click();
+// 資安：設定檔可能是別人分享的。id 只收英數（會放進 HTML），圖片只收真正的圖片 data URL（會放進 CSS），防夾帶程式碼。
+const SAFE_ID=/^[\w-]{1,40}$/,SAFE_IMG=/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/;
+function cleanImported(){
+  S.screens.forEach(sc=>{if(!SAFE_ID.test(String(sc.id)))sc.id=uid();sc.widgets.forEach(w=>{if(!SAFE_ID.test(String(w.id)))w.id=uid()})});
+  S.jobs=(Array.isArray(S.jobs)?S.jobs:[]).filter(j=>j&&SAFE_ID.test(String(j.id)));
+  Object.keys(IMG).forEach(k=>{if(!SAFE_ID.test(k)||typeof IMG[k]!=='string'||!SAFE_IMG.test(IMG[k]))delete IMG[k]})}
 function presetNote(){const pr=readPreset();$('#presetNote').textContent=pr?(pr.builtin?'目前的預設：內建在網頁裡的設定。':'目前的預設：'+(pr.saved||'')+' 存的設定（只存在這台電腦的瀏覽器）。'):'還沒有存預設。存了以後，按「還原成預設」就會回到這個設定。'}
 $('#presetSave').onclick=e=>armed(e.target,'把目前設定存為預設',()=>{try{const n=new Date();localStorage.setItem(PRESETKEY,JSON.stringify({app:'classboard',v:2,saved:n.getFullYear()+'/'+(n.getMonth()+1)+'/'+n.getDate()+' '+pad(n.getHours())+':'+pad(n.getMinutes()),S,IMG}));toast('已存為預設');presetNote()}catch(err){toast('存不下：圖片太多太大，請刪掉一些圖片再試')}});
 $('#presetLoad').onclick=e=>armed(e.target,'還原成預設',()=>{const pr=readPreset();if(!pr){toast('還沒有存預設');return}S=JSON.parse(JSON.stringify(pr.S));IMG=JSON.parse(JSON.stringify(pr.IMG||{}));OPEN.clear();selId=null;save();saveImgs();applyStyle();goScr(S.cur||0);toast('已還原成預設')});
 $('#jsonIn').onchange=e=>{const f=e.target.files[0];e.target.value='';if(!f)return;const fr=new FileReader();
   fr.onload=()=>{try{const o=JSON.parse(fr.result);if(o.app!=='classboard'||!o.S||!Array.isArray(o.S.screens))throw 0;
-    S=o.S;IMG=o.IMG||{};S.screens.forEach(sc=>{sc.id=sc.id||uid();sc.widgets=sc.widgets.filter(w=>KEEP.includes(w.type))});
+    S=o.S;IMG=o.IMG&&typeof o.IMG==='object'?o.IMG:{};S.screens.forEach(sc=>{sc.id=sc.id||uid();sc.widgets=sc.widgets.filter(w=>w&&KEEP.includes(w.type))});
+    cleanImported();
     S.cur=Math.min(S.cur||0,S.screens.length-1);S.jobs=S.jobs||[];S.rotate=S.rotate||{on:false,sec:30};S.bg=S.bg||'default';S.font=S.font||'auto';S.dfont=S.dfont||'auto';
     OPEN.clear();selId=null;save();saveImgs();applyStyle();renderScreen();$('#pop').hidden=true;toast('已匯入，共 '+S.screens.length+' 個畫面')}
     catch(err){toast('這不是本工具匯出的設定檔')}};fr.readAsText(f)};
@@ -1037,7 +1055,7 @@ function drawJobs(){
   if(!S.jobs.length)box.innerHTML='<div class="pnote">還沒有定時。按「新增定時」，例如 9:00 自動切到「考試中」畫面。</div>';
   S.jobs.slice().sort((a,b)=>(a.time||'99').localeCompare(b.time||'99')).forEach(j=>{
     const r=document.createElement('div');r.className='job'+(j.on?'':' off');
-    r.innerHTML=`<button type="button" class="btn ${j.on?'primary':''}" data-a="on">${j.on?'開':'關'}</button><input type="time" id="jt-${j.id}" aria-label="時間"><select id="ja-${j.id}" aria-label="動作">${ACTS.map(([k,t])=>`<option value="${k}"${j.action===k?' selected':''}>${t}</option>`).join('')}</select><button type="button" class="btn danger" data-a="del">刪除</button><div class="pm"></div>`;
+    r.innerHTML=`<button type="button" class="btn ${j.on?'primary':''}" data-a="on">${j.on?'開':'關'}</button><input type="time" id="jt-${esc(j.id)}" aria-label="時間"><select id="ja-${esc(j.id)}" aria-label="動作">${ACTS.map(([k,t])=>`<option value="${k}"${j.action===k?' selected':''}>${t}</option>`).join('')}</select><button type="button" class="btn danger" data-a="del">刪除</button><div class="pm"></div>`;
     r.querySelector('input[type=time]').value=j.time||'';
     r.querySelector('input[type=time]').onchange=e=>{j.time=e.target.value;j.fired='';save()};
     r.querySelector('select').onchange=e=>{j.action=e.target.value;j.fired='';save();drawJobs()};
@@ -1046,17 +1064,17 @@ function drawJobs(){
     const pm=r.querySelector('.pm');
     if(j.action==='screen'){
       if(!S.screens.some(x=>x.id===j.screen))j.screen=S.screens[0].id;
-      pm.innerHTML='到 <select id="js-'+j.id+'">'+S.screens.map(x=>`<option value="${x.id}"${x.id===j.screen?' selected':''}>${esc(x.name)}</option>`).join('')+'</select>';
+      pm.innerHTML='到 <select id="js-'+esc(j.id)+'">'+S.screens.map(x=>`<option value="${esc(x.id)}"${x.id===j.screen?' selected':''}>${esc(x.name)}</option>`).join('')+'</select>';
       pm.querySelector('select').onchange=e=>{j.screen=e.target.value;save()};
     }else if(j.action==='notice'){
-      pm.innerHTML=`<input type="text" id="jx-${j.id}" placeholder="要跳出的公告文字"><label><input type="checkbox" id="jb-${j.id}"> 響鈴</label>`;
+      pm.innerHTML=`<input type="text" id="jx-${esc(j.id)}" placeholder="要跳出的公告文字"><label><input type="checkbox" id="jb-${esc(j.id)}"> 響鈴</label>`;
       const t=pm.querySelector('input[type=text]');t.value=j.text||'';t.oninput=()=>{j.text=t.value;save()};
       const c=pm.querySelector('input[type=checkbox]');c.checked=!!j.sound;c.onchange=()=>{j.sound=c.checked;save()};
     }else{
       const tm=[];S.screens.forEach(x=>x.widgets.forEach(w=>{if(w.type==='timer')tm.push([w.id,x.name+'・'+(w.d.label||'計時器')+'（'+fmt(w.d.total)+'）'])}));
       if(!tm.length){pm.innerHTML='<span class="pnote">目前沒有計時器，先從工具列加一個。</span>'}
       else{if(!tm.some(x=>x[0]===j.timer))j.timer=tm[0][0];
-        pm.innerHTML='<select id="jw-'+j.id+'">'+tm.map(([id,t])=>`<option value="${id}"${id===j.timer?' selected':''}>${esc(t)}</option>`).join('')+'</select><label><input type="checkbox" id="jb-'+j.id+'"> 開始時響一聲</label>';
+        pm.innerHTML='<select id="jw-'+esc(j.id)+'">'+tm.map(([id,t])=>`<option value="${esc(id)}"${id===j.timer?' selected':''}>${esc(t)}</option>`).join('')+'</select><label><input type="checkbox" id="jb-'+esc(j.id)+'"> 開始時響一聲</label>';
         pm.querySelector('select').onchange=e=>{j.timer=e.target.value;save()};
         const c=pm.querySelector('input[type=checkbox]');c.checked=!!j.sound;c.onchange=()=>{j.sound=c.checked;save()}}
     }

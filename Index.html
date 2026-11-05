@@ -5,6 +5,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' https://generativelanguage.googleapis.com https://api.openai.com https://api.x.ai https://script.google.com https://script.googleusercontent.com http://127.0.0.1:8767; object-src 'none'; base-uri 'self'; form-action 'self'">
+<!--
+【資安說明】教師工作台（2026-11-06 稽核）
+- 還原備份：逐欄檢查（進度列種類與日期、任務連結只收 http/https）；備份只能打開去識別化，不能關掉；不還原 AI 端點。
+- 送 AI 前去識別化：AI 助理有預覽；訊息整理、文字附件與檔名也會先遮蔽（redactSensitiveText）。
+- 🔑C／🔑D 不進備份；可選擇不記住（只存在這個分頁）。Gemini 金鑰一律放標頭。
+- 所有動態內容 escapeHtml() 後才上畫面；連結一律經 safeUrl()。
+- 本頁也會由 Apps Script 以 iframe 提供，所以不加「禁止被嵌入」的程式；正式站由 netlify.toml 標頭保護。
+-->
   <title>國小教師工作台</title>
   <style>
     .role-hidden { display: none !important; }
@@ -1384,7 +1392,7 @@
       <div class="top-actions">
         <button class="button button-outline" type="button" id="helpMenuButton">📖 使用說明</button>
         <button class="button button-outline" type="button" id="settingsButton">⚙ 設定</button>
-        <a class="button button-outline" id="boardLink" href="Board.html" target="_blank">電子紙看板</a>
+        <a class="button button-outline" id="boardLink" href="Board.html" target="_blank" rel="noopener">電子紙看板</a>
         <button class="button button-primary" type="button" id="newTaskButton">＋ 新增任務</button>
       </div>
     </header>
@@ -2628,7 +2636,14 @@
           Array.isArray(source.schoolHolidays) ? source.schoolHolidays : parseSchoolHolidayText(source.schoolHolidayDates || '')
         ),
         assessmentDates: Array.isArray(source.assessmentDates) ? source.assessmentDates.slice(0, 3) : [],
-        rows: Array.isArray(source.rows) ? source.rows.slice(0, 120).map(row => ({ ...row, subject: subject || source.subject || fallback.subject })) : []
+        // 資安：備份檔可能是別人給的，進度列的種類、日期、id 逐欄檢查，種類會放進 class 屬性
+        rows: Array.isArray(source.rows) ? source.rows.slice(0, 120).filter(row => row && typeof row === 'object').map(row => ({
+          ...row, subject: subject || source.subject || fallback.subject,
+          id: String(row.id || `progress-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`).slice(0, 60),
+          type: ['teaching', 'manual', 'review', 'assessment', 'buffer'].includes(row.type) ? row.type : 'teaching',
+          content: String(row.content ?? '').slice(0, 200), week: String(row.week ?? '').slice(0, 40),
+          startDate: safeIsoDate(row.startDate), endDate: safeIsoDate(row.endDate)
+        })) : []
       };
     }
 
@@ -4194,7 +4209,8 @@
 
         const existingTaskIds = new Set(state.tasks.map(task => String(task.taskId || '')));
         const desktopTasks = (Array.isArray(payload.tasks) ? payload.tasks : [])
-          .filter(task => task && task.source === 'desktop' && task.taskId && task.name && !existingTaskIds.has(String(task.taskId)));
+          .filter(task => task && task.source === 'desktop' && task.taskId && task.name && !existingTaskIds.has(String(task.taskId)))
+          .map(task => ({ ...task, detailUrl: safeUrl(task.detailUrl) }));   // 資安：本機程式回傳的連結也只收 http(s)
         if (desktopTasks.length && IS_LOCAL_PREVIEW && window.localPreviewStorage) {
           state.tasks = [...desktopTasks, ...state.tasks].slice(0, 5000);
           state.filteredTasks = [...state.tasks];
@@ -5099,7 +5115,7 @@
         const nextMore = nextLines.length > 1;
         const quickStatus = task.status === '已完成' ? '進行中' : '已完成';
         const detailLink = task.detailUrl
-          ? `<a class="mini-button task-link-button" href="${escapeHtml(task.detailUrl)}" target="_blank" rel="noopener" title="${escapeHtml(task.detailUrl)}">🔗 連結</a>`
+          ? `<a class="mini-button task-link-button" href="${escapeHtml(safeUrl(task.detailUrl) || '#')}" target="_blank" rel="noopener" title="${escapeHtml(task.detailUrl)}">🔗 連結</a>`
           : '';
         const gcalLink = task.dueDate
           ? `<button class="mini-button" type="button" data-action="gcal" data-id="${escapeHtml(task.taskId)}" title="在 Google 日曆開啟預填好的新增畫面">📅</button>`
@@ -5217,7 +5233,7 @@
             if (row.calendarNeedsSync) classes.push('needs-sync');
             const range = row.endDate && row.endDate !== row.startDate ? `｜至 ${row.endDate.replace(/-/g, '/')}` : '';
             const subject = row.subject || '課程';
-            return `<button class="${classes.join(' ')}" type="button" data-calendar-progress-id="${escapeHtml(row.id)}" title="${escapeHtml(`${subject}｜${row.content}${range}｜可點擊編輯或拖曳改期`)}">${escapeHtml(`📘 ${subject}｜${row.content}${row.periods ? `（${row.periods}節）` : ''}`)}</button>`;
+            return `<button class="${escapeHtml(classes.join(' '))}" type="button" data-calendar-progress-id="${escapeHtml(row.id)}" title="${escapeHtml(`${subject}｜${row.content}${range}｜可點擊編輯或拖曳改期`)}">${escapeHtml(`📘 ${subject}｜${row.content}${row.periods ? `（${row.periods}節）` : ''}`)}</button>`;
           }
           const task = item.task;
           const classes = ['calendar-task'];
@@ -7344,7 +7360,7 @@
           required: question.required
         }));
         const result = await callLineBridge('form_create', { title: draft.title, description: draft.description, questions, sendCopy: false });
-        $('aiFormStatus').innerHTML = `✓ 已在你的 Google 帳號建立：<a href="${escapeHtml(result.editUrl)}" target="_blank" rel="noopener">編輯表單</a>｜<a href="${escapeHtml(result.formUrl)}" target="_blank" rel="noopener">給家長填的連結</a>`;
+        $('aiFormStatus').innerHTML = `✓ 已在你的 Google 帳號建立：<a href="${escapeHtml(safeUrl(result.editUrl) || '#')}" target="_blank" rel="noopener">編輯表單</a>｜<a href="${escapeHtml(safeUrl(result.formUrl) || '#')}" target="_blank" rel="noopener">給家長填的連結</a>`;
         $('aiCreateGoogleFormButton').disabled = true;
         showToast('Google 表單已建立。');
       } catch (error) {
@@ -7415,8 +7431,9 @@
             const mime = item.type || (item.kind === 'pdf' ? 'application/pdf' : 'image/png');
             parts.push({ inline_data: { mime_type: mime, data: await fileToBase64(item.file) } });
           } else if (/\.(txt|md|csv)$/i.test(item.name)) {
-            const text = (await fileToText(item.file)).slice(0, 20000);
-            parts.push({ text: `附件「${item.name}」的文字內容：\n${text}` });
+            // 資安／個資：文字附件（例如名單 CSV）和檔名也要先去識別化才送 AI
+            const text = redactSensitiveText((await fileToText(item.file)).slice(0, 20000)).text;
+            parts.push({ text: `附件「${redactSensitiveText(item.name).text}」的文字內容：\n${text}` });
           } else {
             parts.push({ text: `附件「${item.name}」為 Office 文件格式，無法直接讀取；請提醒老師自行確認其內容。` });
           }
@@ -7496,7 +7513,7 @@
           if (item.kind === 'image') {
             parts.push({ type: 'image_url', image_url: { url: await fileToDataUrl(item.file) } });
           } else if (/\.(txt|md|csv)$/i.test(item.name)) {
-            parts.push({ type: 'text', text: `附件「${item.name}」的文字內容：\n${(await fileToText(item.file)).slice(0, 20000)}` });
+            parts.push({ type: 'text', text: `附件「${redactSensitiveText(item.name).text}」的文字內容：\n${redactSensitiveText((await fileToText(item.file)).slice(0, 20000)).text}` });
           } else {
             parts.push({ type: 'text', text: `附件「${item.name}」（${item.kind === 'pdf' ? 'PDF' : 'Office 文件'}）此服務無法直接讀取；要讀 PDF 請改用 Google Gemini。` });
           }
@@ -7928,7 +7945,8 @@ ${cleanBase}`;
       try {
         let ids = [];
         if (preset.kind === 'gemini') {
-          const response = await fetch(`${endpoint}?key=${encodeURIComponent(key)}&pageSize=200`);
+          // 資安：金鑰放標頭，不放網址（網址會留在紀錄裡）
+          const response = await fetch(`${endpoint}?pageSize=200`, { headers: { 'x-goog-api-key': key } });
           if (!response.ok) {
             const data = await response.json().catch(() => null);
             throw new Error(data?.error?.message || `HTTP ${response.status}`);
@@ -8284,15 +8302,27 @@ ${cleanBase}`;
         }
         if (backup.tasks.length > 5000) throw new Error('備份檔任務數量異常，已停止匯入。');
         if (!window.confirm(`${sourceLabel}包含 ${backup.tasks.length} 項任務。要還原到目前畫面嗎？\n（目前的任務清單會被覆蓋）`)) return false;
-        state.tasks = backup.tasks.filter(task => task && typeof task === 'object' && task.taskId && task.name);
+        // 資安：備份檔可能是別人給的，連結只收 http(s)，擋 javascript: 這類網址
+        state.tasks = backup.tasks.filter(task => task && typeof task === 'object' && task.taskId && task.name)
+          .map(task => ({ ...task, taskId: String(task.taskId).slice(0, 60), name: String(task.name).slice(0, 200), detailUrl: safeUrl(task.detailUrl) }));
         state.filteredTasks = [...state.tasks];
         if (IS_LOCAL_PREVIEW && window.localPreviewStorage && window.localPreviewStorage.replaceTasks) {
           window.localPreviewStorage.replaceTasks(state.tasks);
         }
         if (backup.assistantSettings && backup.assistantSettings.workspace) Object.assign(assistantSettings.workspace, backup.assistantSettings.workspace);
         if (backup.assistantSettings && backup.assistantSettings.teacher) Object.assign(assistantSettings.teacher, backup.assistantSettings.teacher);
-        if (backup.assistantSettings && backup.assistantSettings.privacy) Object.assign(assistantSettings.privacy, backup.assistantSettings.privacy);
-        if (backup.assistantSettings && backup.assistantSettings.api) Object.assign(assistantSettings.api, backup.assistantSettings.api);
+        // 資安／個資：備份只能「打開」去識別化，不能偷偷關掉；AI 設定不還原網址（endpoint），服務商只收清單內的
+        const restoredPrivacy = backup.assistantSettings && backup.assistantSettings.privacy;
+        if (restoredPrivacy && typeof restoredPrivacy === 'object') {
+          ['phone', 'email', 'id', 'address', 'names', 'auto'].forEach(field => { if (restoredPrivacy[field] === true) assistantSettings.privacy[field] = true; });
+          if (typeof restoredPrivacy.customTerms === 'string') assistantSettings.privacy.customTerms = restoredPrivacy.customTerms.slice(0, 2000);
+        }
+        const restoredApi = backup.assistantSettings && backup.assistantSettings.api;
+        if (restoredApi && typeof restoredApi === 'object') {
+          if (['disabled', 'gemini', 'openai', 'grok'].includes(restoredApi.provider)) assistantSettings.api.provider = restoredApi.provider;
+          if (typeof restoredApi.model === 'string') assistantSettings.api.model = restoredApi.model.slice(0, 80);
+          if (typeof restoredApi.enabled === 'boolean') assistantSettings.api.enabled = restoredApi.enabled;
+        }
         if (backup.assistantSettings && backup.assistantSettings.pet) Object.assign(assistantSettings.pet, backup.assistantSettings.pet);
         if (Array.isArray(backup.promptTemplates) && backup.promptTemplates.length) {
           aiAssistantState.promptTemplates = backup.promptTemplates
@@ -8480,7 +8510,7 @@ ${cleanBase}`;
         const row = document.createElement('div');
         row.className = 'cloud-row';
         const size = file.size ? `${Math.ceil(file.size / 1024)} KB` : '';
-        row.innerHTML = `<div class="cloud-row-main"><div class="cloud-row-name">${escapeHtml(file.name)}</div><div class="cloud-row-meta">${escapeHtml([size, formatCloudDate(file.updatedAt)].filter(Boolean).join('｜'))}</div></div>${file.url ? `<a class="mini-button" href="${escapeHtml(file.url)}" target="_blank" rel="noopener noreferrer">開啟</a>` : '<span class="cloud-row-meta">無連結</span>'}`;
+        row.innerHTML = `<div class="cloud-row-main"><div class="cloud-row-name">${escapeHtml(file.name)}</div><div class="cloud-row-meta">${escapeHtml([size, formatCloudDate(file.updatedAt)].filter(Boolean).join('｜'))}</div></div>${safeUrl(file.url) ? `<a class="mini-button" href="${escapeHtml(safeUrl(file.url))}" target="_blank" rel="noopener noreferrer">開啟</a>` : '<span class="cloud-row-meta">無連結</span>'}`;
         host.appendChild(row);
       });
     }
@@ -8996,7 +9026,7 @@ ${cleanBase}`;
         ${task.waitingFor ? `<div class="calendar-note-popover-row">⏳ 等待：${escapeHtml(task.waitingFor)}</div>` : ''}
         ${task.progress && task.nextAction ? `<div class="calendar-note-popover-row">📈 最近進度：${escapeHtml(task.progress)}</div>` : ''}
         <div class="task-detail-actions">
-          ${task.detailUrl ? `<a class="button button-dark" href="${escapeHtml(task.detailUrl)}" target="_blank" rel="noopener">🔗 開啟連結</a>` : ''}
+          ${safeUrl(task.detailUrl) ? `<a class="button button-dark" href="${escapeHtml(safeUrl(task.detailUrl))}" target="_blank" rel="noopener">🔗 開啟連結</a>` : ''}
           <button class="button button-light" type="button" data-detail-edit>✏️ 編輯</button>
           <button class="button button-light" type="button" data-detail-status="${task.status === '已完成' ? '未開始' : '已完成'}">${task.status === '已完成' ? '重開' : '✅ 完成'}</button>
         </div>`;
@@ -9226,6 +9256,8 @@ ${cleanBase}`;
     async function callAssistantJson(prompt) {
       const cfg = providerConfig();
       if (!cfg.ready) throw new Error('AI 服務尚未設定');
+      // 資安／個資：訊息整理會貼 LINE 群組原文，送出前一律套用去識別化（和 AI 助理同一套規則，依設定頁的勾選）
+      prompt = redactSensitiveText(prompt).text;
       let response;
       if (cfg.kind === 'gemini') {
         response = await fetch(`${cfg.endpoint}/${cfg.model}:generateContent`, {

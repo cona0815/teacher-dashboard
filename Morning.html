@@ -4,6 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' https://script.google.com https://script.googleusercontent.com; frame-src 'self' https://www.youtube-nocookie.com https://www.youtube.com; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<!--
+【資安說明】晨間大屏（2026-11-06 稽核）
+- 本頁放在教室電腦，學生碰得到。設定頁密碼只是擋誤觸，不是加密；錯 5 次鎖 1 分鐘，離開設定頁就重新上鎖。
+- 🔑B 教室金鑰權限受限（只能回報今天、看補交）；🔑C 工作台金鑰不要填在教室電腦。
+- 網頁只准連 Google Apps Script（上面的 CSP），不載入任何外部程式；金鑰只放在 POST 內容，不放網址。
+- 雲端、LINE、試算表回來的文字一律 escapeHtml() 或 textContent 後才上畫面。
+- YouTube 只取 11 碼影片 ID，網域固定 youtube-nocookie.com。
+-->
+<script>
+  // 資安：防點擊劫持。別的網站把本頁塞進 iframe 時改成整頁開啟（同網站的嵌入不受影響）。
+  // 正式站的 netlify.toml 已用標頭擋；這段是放在其他主機（如 GitHub Pages）時的備援。
+  try { if (window.top !== window.self && window.top.location.origin !== window.location.origin) throw new Error('framed'); }
+  catch (error) { document.documentElement.style.display = 'none'; try { window.top.location.href = window.location.href; } catch (ignored) {} }
+</script>
   <title>晨間大屏｜點名與作業繳交</title>
   <style>
     :root {
@@ -1160,8 +1174,8 @@
     <section class="page" id="page-setup">
       <div class="panel">
         <div class="form-grid">
-          <div class="field"><label>設定頁密碼（教室電腦學生碰得到，預設 1234）</label>
-            <input id="setupPin" maxlength="12" placeholder="1234" autocomplete="off">
+          <div class="field"><label>設定頁密碼（預設 1234，請改成只有您知道的）</label>
+            <input id="setupPin" type="password" maxlength="12" autocomplete="new-password">
             <div class="status-text" style="margin-top:4px">留空＝不上鎖。這是防止學生隨手亂改的門檻，不是加密保護——真正的機密請不要只靠它。</div></div>
           <div class="field"><label>班級名稱（例：601）</label><input id="setupClassName" maxlength="20" placeholder="601"></div>
           <div class="field"><label>我教的班級（科任多班用，例：601、602、603）</label><input id="setupClasses" maxlength="160" placeholder="留空＝只有上面這一班">
@@ -2798,16 +2812,17 @@
       });
       $('rateStats').innerHTML = `<h3>📈 科目繳交率（收件次數內）</h3><table class="summary-table"><tr><th>科目</th><th>收件次數</th><th>平均繳交率</th></tr>${rateRows.join('') || '<tr><td colspan="3">區間內沒有作業紀錄。</td></tr>'}</table>`;
       const dates = [...new Set([...data.attendance.map(row => row.date), ...data.homework.map(row => row.date)])].sort().reverse();
-      $('dayDetail').innerHTML = `<h3>🗓 單日明細</h3><div class="query-controls"><div class="field"><label>選擇日期</label><select id="dayDetailSelect">${dates.map(date => `<option value="${date}">${date}</option>`).join('')}</select></div></div><div id="dayDetailBody" class="status-text">${dates.length ? '' : '區間內沒有紀錄。'}</div>`;
+      $('dayDetail').innerHTML = `<h3>🗓 單日明細</h3><div class="query-controls"><div class="field"><label>選擇日期</label><select id="dayDetailSelect">${dates.map(date => `<option value="${escapeHtml(date)}">${escapeHtml(date)}</option>`).join('')}</select></div></div><div id="dayDetailBody" class="status-text">${dates.length ? '' : '區間內沒有紀錄。'}</div>`;
       const select = $('dayDetailSelect');
       if (select && dates.length) {
         const renderDay = () => {
           const date = select.value;
-          const absent = data.attendance.filter(row => row.date === date).map(row => `${row.seat}號${row.status}`);
+          // 資安：試算表可以被手動改，雲端回來的座號與狀態也要跳脫
+          const absent = data.attendance.filter(row => row.date === date).map(row => escapeHtml(`${row.seat}號${row.status}`));
           const perBoard = {};
           data.homework.filter(row => row.date === date).forEach(row => {
             const key = `${workLabel(row.subject, row.assignment)}`;
-            (perBoard[key] ??= []).push(`${row.seat}號${row.status}`);
+            (perBoard[key] ??= []).push(escapeHtml(`${row.seat}號${row.status}`));
           });
           $('dayDetailBody').innerHTML = `<p style="font-size:16px;margin:6px 0"><strong>出缺：</strong>${absent.join('、') || '全班到齊'}</p>` +
             Object.entries(perBoard).map(([label, list]) => `<p style="font-size:16px;margin:6px 0"><strong>${escapeHtml(label)}：</strong>${list.join('、')}</p>`).join('');
@@ -3033,16 +3048,25 @@
     }
 
     // ---------- 事件 ----------
-    // 設定頁只在本次開啟期間解鎖一次；重新整理或隔天開機又要再輸入。
+    // 資安：設定頁密碼只是擋學生誤觸，不是加密（密碼存在這台電腦的瀏覽器裡）。
+    // 輸入框不提示預設值；錯 5 次鎖 1 分鐘；離開設定頁就重新上鎖，早上解鎖不會整天開著。
     let setupUnlocked = false;
+    let setupPinFails = 0, setupPinLockUntil = 0;
     const setupNeedsPin = () => !!String(state.settings.setupPin || '') && !setupUnlocked;
     async function askSetupPin() {
-      const typed = await askDialog({ message: '請輸入設定頁密碼（預設 1234）', input: true, password: true });
+      if (Date.now() < setupPinLockUntil) {
+        showToast(`密碼錯太多次，請 ${Math.ceil((setupPinLockUntil - Date.now()) / 1000)} 秒後再試。`, true);
+        return false;
+      }
+      const typed = await askDialog({ message: '請輸入設定頁密碼', input: true, password: true });
       if (typed === null) return false;
       if (typed.trim() !== String(state.settings.setupPin || '')) {
+        setupPinFails += 1;
+        if (setupPinFails >= 5) { setupPinFails = 0; setupPinLockUntil = Date.now() + 60000; }
         showToast('密碼不正確。', true);
         return false;
       }
+      setupPinFails = 0;
       setupUnlocked = true;
       return true;
     }
@@ -3051,6 +3075,7 @@
         askSetupPin().then(ok => { if (ok) button.click(); });
         return;
       }
+      if (button.dataset.page !== 'setup') setupUnlocked = false;
       document.querySelectorAll('.tab-button').forEach(item => item.classList.toggle('active', item === button));
       document.querySelectorAll('.page').forEach(page => page.classList.toggle('active', page.id === `page-${button.dataset.page}`));
       if (button.dataset.page === 'makeup' && !state.makeup.loaded) loadMakeup();

@@ -4,6 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' https://generativelanguage.googleapis.com https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<!--
+【資安說明】AI 工作室（2026-11-06 稽核）
+- AI 回覆可能被上傳的文件「下指令」影響，所以 AI 文字一律 escapeHtml() 後才上畫面，數字欄位限範圍。
+- 匯入的範文庫備份可能是別人做的：id 只收本工具格式、每欄轉成限長字串。
+- 送 AI 前檢查身分證、手機、Email 與座位表裡的學生姓名，發現了先問老師。
+- 🔑D Gemini 金鑰只放在 x-goog-api-key 標頭，不放網址、不進匯出檔。
+-->
+<script>
+  // 資安：防點擊劫持。別的網站把本頁塞進 iframe 時改成整頁開啟（同網站的嵌入不受影響）。
+  // 正式站的 netlify.toml 已用標頭擋；這段是放在其他主機（如 GitHub Pages）時的備援。
+  try { if (window.top !== window.self && window.top.location.origin !== window.location.origin) throw new Error('framed'); }
+  catch (error) { document.documentElement.style.display = 'none'; try { window.top.location.href = window.location.href; } catch (ignored) {} }
+</script>
   <title>教材小工場｜教師工作台</title>
   <style>
     :root { --bg:#f3f6f4; --surface:#fff; --ink:#1c302d; --muted:#657570; --line:#d5e1dc; --primary:#1f514a; --primary-strong:#173f3a; --soft:#e8f2ee; --gold:#b9852f; --gold-soft:#fff7e6; --danger:#a34339; }
@@ -1530,9 +1543,26 @@
       });
       return { inline_data: { mime_type: file.type || 'image/jpeg', data: b64 } };
     }
+    /** 資安／個資：送 AI 前找出身分證、手機、Email，以及「座位表」裡填的學生姓名。 */
+    function aiPrivacyHits(text) {
+      const hits = [];
+      if (/[A-Z][12]\d{8}/.test(text)) hits.push('身分證字號');
+      if (/09\d{2}[- ]?\d{3}[- ]?\d{3}/.test(text)) hits.push('手機號碼');
+      if (/[\w.+-]+@[\w-]+(\.[\w-]+)+/.test(text)) hits.push('Email');
+      const names = (($('stNames') || {}).value || '').split('\n').map(s => s.trim()).filter(s => s.length >= 2);
+      const found = names.filter(name => text.includes(name));
+      if (found.length) hits.push('學生姓名（' + found.slice(0, 3).join('、') + (found.length > 3 ? '…' : '') + '）');
+      return hits;
+    }
     async function callGemini(prompt, imagePart, statusEl) {
       const key = geminiKey();
       if (!key) { showToast('尚未設定 Gemini 金鑰，請先到工作台 AI 設定填入。', true); throw new Error('no-key'); }
+      // 資安／個資：學生姓名與聯絡方式不送雲端，發現了先問老師（照片請用「個資遮蔽」工具先處理）
+      const privacyHits = aiPrivacyHits(String(prompt || ''));
+      if (privacyHits.length && !window.confirm(`要送給 AI 的文字裡有：${privacyHits.join('、')}。\n建議先刪掉或改成座號。確定還是要送出？`)) {
+        statusEl.textContent = '';
+        throw new Error('已取消：內容含個資，沒有送出。');
+      }
       statusEl.textContent = '🤖 AI 生成中（約 10–30 秒）…';
       const parts = [{ text: prompt }];
       if (Array.isArray(imagePart)) parts.push(...imagePart); else if (imagePart) parts.push(imagePart);
@@ -1764,7 +1794,8 @@
               if (section.type === '選擇題' && item.options) {
                 q += `<div class="ws2-options">${item.options.map((o, i) => `<span class="ws2-opt">(${'ABCD'[i]}) ${escapeHtml(o)}</span>`).join('')}</div>`;
               }
-              if (section.type === '簡答題') q += Array.from({ length: item.lines || 2 }, () => '<div class="ws-lines"></div>').join('');
+              // 資安：行數來自 AI 回覆，限制在 1～6，避免被塞超大數字卡死分頁
+              if (section.type === '簡答題') q += Array.from({ length: Math.min(6, Math.max(1, parseInt(item.lines, 10) || 2)) }, () => '<div class="ws-lines"></div>').join('');
               return q;
             }).join('');
           }
@@ -2679,8 +2710,11 @@
           const image = partsOut.find(p => p.inlineData || p.inline_data);
           if (image) {
             const blob = image.inlineData || image.inline_data;
+            const mime = blob.mimeType || blob.mime_type || 'image/png';
+            // 資安：圖片網址會放進 HTML 與 CSS，只收真正的圖片格式與 base64 字元
+            if (!/^image\/(png|jpeg|webp)$/.test(mime) || !/^[A-Za-z0-9+/=]+$/.test(String(blob.data || ''))) { lastError = '模型回傳的圖片格式不正確'; break; }
             localStorage.setItem('studioImageModel', model);
-            return `data:${blob.mimeType || blob.mime_type || 'image/png'};base64,${blob.data}`;
+            return `data:${mime};base64,${blob.data}`;
           }
           lastError = '模型沒有回傳圖片（可能被安全政策擋下），請換個說法或風格';
           break;
@@ -3582,6 +3616,7 @@
       for (const f of sorted) {
         if (/pdf/i.test(f.type) || /\.pdf$/i.test(f.name)) {
           const src = await PDFLib.PDFDocument.load(await f.arrayBuffer(), { ignoreEncryption: true });
+          if (pages.length + src.getPageCount() > 200) throw new Error('too-many-pages');   // 資安：避免超大 PDF 卡死分頁
           for (let i = 0; i < src.getPageCount(); i += 1) {
             const doc = await PDFLib.PDFDocument.create();
             const [page] = await doc.copyPages(src, [i]);
@@ -3599,7 +3634,7 @@
       if (!files.length) { ES_BATCH.items = []; esBatchRender(); return; }
       $('esBatchStatus').textContent = '📄 整理頁面中…';
       let pages;
-      try { pages = await esSplitPages(files); } catch (e) { $('esBatchStatus').textContent = ''; return showToast('有檔案打不開（PDF 可能有加密），請重新掃描或改用照片。', true); }
+      try { pages = await esSplitPages(files); } catch (e) { $('esBatchStatus').textContent = ''; return showToast(e.message === 'too-many-pages' ? '一次最多 200 頁，請分批上傳。' : '有檔案打不開（PDF 可能有加密），請重新掃描或改用照片。', true); }
       const per = Number($('esBatchPer').value) || 1;
       const skip = new Set($('esBatchSkip').value.split(/[、,，\s]+/).map(Number).filter(Boolean));
       let seat = Math.max(1, Number($('esBatchStart').value) || 1);
@@ -3773,7 +3808,7 @@
       const list = esRecords().slice().reverse();
       $('esRecordList').innerHTML = list.length ? list.slice(0, 12).map(r => `<div class="es-rec">
           <span><b>${escapeHtml(r.seat ? r.seat + '號' : '—')}</b>・${escapeHtml(r.topic || '（沒填題目）')}・${escapeHtml(r.result || '')}<br><span style="color:#888">${escapeHtml(r.date)}・${escapeHtml(r.grade)}年級</span></span>
-          <span><button class="mini" type="button" data-es-open="${r.id}">開啟</button> <button class="mini" type="button" data-es-del="${r.id}">刪除</button></span>
+          <span><button class="mini" type="button" data-es-open="${escapeHtml(r.id)}">開啟</button> <button class="mini" type="button" data-es-del="${escapeHtml(r.id)}">刪除</button></span>
         </div>`).join('') + (list.length > 12 ? `<div style="font-size:12px;color:#888;margin-top:4px">只列最近 12 筆，共 ${list.length} 筆（統計會用全部）</div>` : '')
         : '<div style="font-size:12.5px;color:#888">還沒有紀錄。批改完勾「老師已確認內容」就會存進來。</div>';
     }
@@ -3926,7 +3961,7 @@
       const list = lbItems().slice().reverse();
       $('lbList').innerHTML = list.length ? list.slice(0, 30).map(i => `<div class="es-rec">
           <span><b>${escapeHtml(i.title || '（無題）')}</b>${i.level ? '・' + escapeHtml(i.level) : ''}<br><span style="color:#888">${escapeHtml(i.grade)}年級・${escapeHtml((LB_SOURCES[i.source] || {}).label || '')}</span></span>
-          <span><button class="mini" type="button" data-lb-open="${i.id}">開啟</button> <button class="mini" type="button" data-lb-del="${i.id}">刪除</button></span></div>`).join('')
+          <span><button class="mini" type="button" data-lb-open="${escapeHtml(i.id)}">開啟</button> <button class="mini" type="button" data-lb-del="${escapeHtml(i.id)}">刪除</button></span></div>`).join('')
         : '<div style="font-size:12.5px;color:#888">還沒有範文。可以先用上面的「生成三篇對照範文」。</div>';
     }
     $('lbList').addEventListener('click', event => {
@@ -4020,7 +4055,11 @@
         const incoming = (data && data.kind === 'studio-model-essays' && Array.isArray(data.items)) ? data.items : null;
         if (!incoming) throw new Error('這不是範文庫的備份檔。');
         const have = new Set(lbItems().map(i => i.id));
-        const add = incoming.filter(i => i && i.id && !have.has(i.id) && LB_SOURCES[i.source] && i.text);
+        // 資安：匯入檔可能是別人做的，id 只收本工具產生的格式，每個欄位轉成限長字串，防夾帶 HTML
+        const add = incoming.filter(i => i && /^m[0-9a-z]{1,16}$/.test(String(i.id)) && !have.has(i.id) && LB_SOURCES[i.source] && i.text)
+          .map(i => ({ id: String(i.id), ts: Number(i.ts) || Date.now(), source: String(i.source), grade: String(i.grade || '').slice(0, 4),
+            genre: String(i.genre || '').slice(0, 20), title: String(i.title || '').slice(0, 40), level: String(i.level || '').slice(0, 20),
+            text: String(i.text).slice(0, 20000), analysis: String(i.analysis || '').slice(0, 3000) }));
         lbSave(lbItems().concat(add)); lbRender();
         showToast(`匯入 ${add.length} 篇（重複的略過）。`);
       } catch (e) { showToast(e.message || '匯入失敗。', true); }
@@ -4093,7 +4132,7 @@
           $('gfResult').innerHTML = `
             <div class="cm-row" style="flex-direction:column;align-items:stretch">
               <div style="font-weight:900;color:var(--primary-strong)">✅ 表單建立成功！</div>
-              <div style="margin:6px 0">📤 <strong>給家長／學生填的連結</strong>：<br><a href="${escapeHtml(result.formUrl)}" target="_blank" rel="noopener">${escapeHtml(result.formUrl)}</a>
+              <div style="margin:6px 0">📤 <strong>給家長／學生填的連結</strong>：<br><a href="${/^https:\/\/docs\.google\.com\//.test(String(result.formUrl)) ? escapeHtml(result.formUrl) : '#'}" target="_blank" rel="noopener">${escapeHtml(result.formUrl)}</a>
                 <button class="mini" type="button" data-gf-copy="${escapeHtml(result.formUrl)}">複製</button></div>
               <div style="margin:6px 0">✏️ <strong>老師編輯用連結</strong>：<br><a href="${escapeHtml(result.editUrl)}" target="_blank" rel="noopener">${escapeHtml(result.editUrl)}</a></div>
               ${result.sendCopy ? '<div class="hint">📧 已開啟「填完自動寄副本」：填表者需登入 Google，送出後會收到回覆副本信。</div>' : ''}

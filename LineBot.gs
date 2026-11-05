@@ -71,7 +71,7 @@ function setupLineBot() {
     '  ' + properties.getProperty('LINE_WEBHOOK_TOKEN'),
     'LINE Token（🔑E）用選單「② 填入 LINE Token」，鎖門（👤G）用選單「③ 填入我的 LINE userId」，排程用選單「⑤」。'
   ].join('\n');
-  Logger.log(summary);
+  // 資安：這段含 🔑B／🔑C／🔑F，不寫進執行紀錄（Logger），只顯示在老師自己的對話框
   return summary;
 }
 
@@ -96,8 +96,24 @@ function onOpen() {
       .addItem('🔑 顯示我的金鑰', 'menuShowKeys')
       .addItem('ℹ️ 程式版本（看要不要更新）', 'menuShowVersion')
       .addItem('🧹 清理重複資料（修統計）', 'menuCleanupDuplicates')
+      .addItem('🔄 重新產生 🔑B 教室金鑰（懷疑外洩時）', 'menuRotateClassroomToken')
       .addToUi();
   } catch (error) {}
+}
+
+/**
+ * 資安：🔑B 放在教室電腦，學生有機會看到。懷疑外洩時換一把新的，舊的立刻失效。
+ * 換完要到每台大屏「⚙ 設定」貼上新的 🔑B。
+ */
+function menuRotateClassroomToken() {
+  var ui = SpreadsheetApp.getUi();
+  var answer = ui.alert('重新產生 🔑B 教室金鑰',
+    '舊的 🔑B 會立刻失效，每台教室大屏都要到「⚙ 設定」貼上新的才能再存到雲端。\n確定要換嗎？', ui.ButtonSet.YES_NO);
+  if (answer !== ui.Button.YES) return;
+  var token = Utilities.getUuid().replace(/-/g, '');
+  PropertiesService.getScriptProperties().setProperty('CLASSROOM_TOKEN', token);
+  buildSetupSheet_();
+  menuShowDialog_('新的 🔑B 教室金鑰', ['已換成新的 🔑B，請貼到每台晨間大屏的「⚙ 設定」：', '  ' + token, '', '舊的已經失效。'].join('\n'));
 }
 
 /** 用彈窗把值寫進指令碼屬性，老師不必進「專案設定」。 */
@@ -476,7 +492,7 @@ function doGet() {
 }
 
 // 程式版本（每次發布都要更新；試算表選單「ℹ️ 程式版本」、LINE 傳「版本」、工作台連線檢查都會顯示）
-var BOT_VERSION = '2026-11-05 10:00';
+var BOT_VERSION = '2026-11-06 15:00';
 
 function lineBotJson_(payload) {
   return ContentService.createTextOutput(JSON.stringify(payload)).setMimeType(ContentService.MimeType.JSON);
@@ -497,6 +513,15 @@ function handleLineSyncApi_(body) {
   var classroomActions = ['ping', 'rollcall_submit', 'classroom_today', 'classroom_missing', 'homework_resubmit', 'contactbook_get', 'contactbook_save', 'contactbook_month', 'prompt_get'];
   if (!isTeacher && !(isClassroom && classroomActions.indexOf(action) !== -1)) {
     return lineBotJson_({ ok: false, error: '金鑰不正確或權限不足' });
+  }
+  // 資安：🔑B 放在教室電腦，學生拿得到。今天的紀錄一定要指定班級（不能一次讀全部班），
+  // 補交只能改近 60 天（和大屏補交清單同範圍），避免被拿去竄改很久以前的紀錄。
+  if (!isTeacher && action === 'classroom_today' && !String(body.className || '').trim()) {
+    return lineBotJson_({ ok: false, error: '缺少班級名稱' });
+  }
+  if (!isTeacher && action === 'homework_resubmit') {
+    var oldest = Utilities.formatDate(new Date(new Date().getTime() - 59 * 24 * 3600 * 1000), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+    if (!(String(body.date || '') >= oldest)) return lineBotJson_({ ok: false, error: '教室金鑰只能處理近 60 天的補交' });
   }
   try {
     if (action === 'ping') {
@@ -955,12 +980,20 @@ function lineBotFormCopySweep() {
 function sendFormCopyMail_(form, response) {
   var email = response.getRespondentEmail();
   if (!email) return;
+  // 資安：填表者可以亂填別人的信箱，副本就會用老師的 Gmail 寄出去。
+  // 每天最多寄 50 封、每題答案只附前 300 字，避免被當成垃圾信跳板或用光老師的寄信額度。
+  var props = PropertiesService.getScriptProperties();
+  var today = lineBotToday_();
+  var counter = String(props.getProperty('FORM_COPY_DAILY') || '').split('|');
+  var sentToday = counter[0] === today ? Number(counter[1]) || 0 : 0;
+  if (sentToday >= 50) return;
+  props.setProperty('FORM_COPY_DAILY', today + '|' + (sentToday + 1));
   var lines = ['您好，這是您填寫「' + form.getTitle() + '」的回覆副本：', ''];
   response.getItemResponses().forEach(function (itemResponse) {
     var answer = itemResponse.getResponse();
     if (Array.isArray(answer)) answer = answer.join('、');
     lines.push('■ ' + itemResponse.getItem().getTitle());
-    lines.push('　' + String(answer == null ? '' : answer));
+    lines.push('　' + String(answer == null ? '' : answer).slice(0, 300));
     lines.push('');
   });
   lines.push('（此信由老師的表單系統自動寄出，直接回覆即可聯繫老師。）');
@@ -1024,11 +1057,13 @@ function submitRollcall_(body) {
     deleteRowsByDateClass_(sheets.homework, date, className, 1);
 
     var rollcallRows = [];
+    var cleanAttendance = [];   // 資安：推播內容只用驗證過的值，不用原始輸入（防假訊息混進老師的 LINE）
     attendance.slice(0, 60).forEach(function (entry) {
       var seat = parseInt(entry && entry.seat, 10);
       var status = String((entry && entry.status) || '');
       if (seat >= 1 && seat <= 99 && LINE_BOT_CONFIG.ATTENDANCE_STATUSES.indexOf(status) !== -1) {
         rollcallRows.push([date, sheetText_(className), seat, status]);
+        cleanAttendance.push({ seat: seat, status: status });
       }
     });
     if (rollcallRows.length) {
@@ -1038,10 +1073,16 @@ function submitRollcall_(body) {
     }
 
     var homeworkRows = [];
+    var cleanHomework = [];
+    var seatList = function (list) {
+      return (Array.isArray(list) ? list : []).slice(0, 60).map(function (seat) { return parseInt(seat, 10); })
+        .filter(function (seat) { return seat >= 1 && seat <= 99; });
+    };
     homework.slice(0, 20).forEach(function (entry) {
       var subject = String((entry && entry.subject) || '').trim().slice(0, 20);
       if (!subject) return;
       var assignment = String((entry && entry.assignment) || '').trim().slice(0, 20);
+      cleanHomework.push({ subject: subject, assignment: assignment, missing: seatList(entry.missing), resubmitted: seatList(entry.resubmitted), correcting: seatList(entry.correcting) });
       (Array.isArray(entry.missing) ? entry.missing : []).slice(0, 60).forEach(function (seat) {
         seat = parseInt(seat, 10);
         if (seat >= 1 && seat <= 99) homeworkRows.push([date, sheetText_(className), sheetText_(subject), sheetText_(assignment), seat, '缺交']);
@@ -1075,9 +1116,15 @@ function submitRollcall_(body) {
   if (!pushAllowed_(pushMode === 'attendance' ? 'rollcall' : 'homework')) {
     return { ok: true, pushed: 0, saved: true, skipped: 'push-disabled' };
   }
+  // 資安：🔑B 被拿去狂送時不能把每月推播額度用光。同一班一天最多推 6 次（正常是點名、作業各一次）。
+  var pushCache = CacheService.getScriptCache();
+  var pushCountKey = 'ROLLCALL_PUSH_' + date + '_' + Utilities.base64EncodeWebSafe(className, Utilities.Charset.UTF_8);
+  var pushCount = Number(pushCache.get(pushCountKey) || 0);
+  if (pushCount >= 6) return { ok: true, pushed: 0, saved: true, skipped: 'push-daily-limit' };
+  pushCache.put(pushCountKey, String(pushCount + 1), 21600);
 
   var summaryText = buildRollcallSummaryText_(
-    date, className, attendance, pushMode === 'attendance' ? [] : homework, pushMode);
+    date, className, cleanAttendance, pushMode === 'attendance' ? [] : cleanHomework, pushMode);
   // 點名推播同時當成老師的晨間簡報：附上今日課程、任務、記事與逾期提醒。
   // 同一天只附一次，之後 sendLineDailyBriefing 會自動略過，不會重複轟炸。
   if (pushMode === 'attendance') {
@@ -1320,20 +1367,27 @@ function ackLineInbox_(body) {
   var ids = Array.isArray(body.ids) ? body.ids.map(String) : [];
   var status = body.status === 'ignored' ? 'ignored' : 'imported';
   if (!ids.length) return { ok: true, updated: 0 };
-  var sheets = ensureLineBotSheets_(SpreadsheetApp.getActiveSpreadsheet());
-  var lastRow = sheets.inbox.getLastRow();
-  if (lastRow <= 1) return { ok: true, updated: 0 };
-  var idRange = sheets.inbox.getRange(2, 1, lastRow - 1, 1).getValues();
-  var wanted = {};
-  ids.forEach(function (id) { wanted[id] = true; });
-  var updated = 0;
-  for (var index = 0; index < idRange.length; index += 1) {
-    if (wanted[String(idRange[index][0])]) {
-      sheets.inbox.getRange(index + 2, 8).setValue(status);
-      updated += 1;
+  // 資料完整：先讀列號再寫，期間若有新訊息進來裁切收件匣，會標錯列；和寫入收件匣共用同一把鎖
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var sheets = ensureLineBotSheets_(SpreadsheetApp.getActiveSpreadsheet());
+    var lastRow = sheets.inbox.getLastRow();
+    if (lastRow <= 1) return { ok: true, updated: 0 };
+    var idRange = sheets.inbox.getRange(2, 1, lastRow - 1, 1).getValues();
+    var wanted = {};
+    ids.forEach(function (id) { wanted[id] = true; });
+    var updated = 0;
+    for (var index = 0; index < idRange.length; index += 1) {
+      if (wanted[String(idRange[index][0])]) {
+        sheets.inbox.getRange(index + 2, 8).setValue(status);
+        updated += 1;
+      }
     }
+    return { ok: true, updated: updated };
+  } finally {
+    lock.releaseLock();
   }
-  return { ok: true, updated: updated };
 }
 
 function saveWorkspaceSnapshot_(body) {
@@ -1384,6 +1438,8 @@ function handleLineWebhook_(e, body) {
 
 function handleLineEvent_(event, allowedUsers) {
   if (!event || event.type !== 'message' || !event.message) return;
+  // 資安：只處理一對一聊天。小幫手若被拉進群組，回覆（出缺、座號查詢、代課包）會被整個群組看到。
+  if (!event.source || event.source.type !== 'user') return;
   var userId = String((event.source && event.source.userId) || '');
   if (!allowedUsers.length) {
     // 資安：名單未設定時一律不執行指令，改回覆對方的 userId 引導老師完成安裝第③步。
@@ -2102,19 +2158,26 @@ function appendLineInboxRow_(classified, text, userId, medium) {
   var extra = {};
   if (classified.tag) extra.tag = classified.tag;
   if (medium) extra.medium = medium;
-  sheets.inbox.appendRow([
-    id,
-    new Date(),
-    classified.type === 'task' ? 'task' : 'note',
-    sheetText_(text),
-    sheetText_(String(classified.title || '').slice(0, 120)),
-    String(classified.dueDate || ''),
-    LINE_BOT_CONFIG.WORK_AXES.indexOf(classified.axis) === -1 ? '' : classified.axis,
-    'new',
-    userId,
-    Object.keys(extra).length ? JSON.stringify(extra) : ''
-  ]);
-  trimLineInbox_(sheets.inbox);
+  // 資料完整：新增＋裁切收件匣會刪列，和工作台「已匯入」標記共用同一把鎖
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    sheets.inbox.appendRow([
+      id,
+      new Date(),
+      classified.type === 'task' ? 'task' : 'note',
+      sheetText_(text),
+      sheetText_(String(classified.title || '').slice(0, 120)),
+      sheetText_(String(classified.dueDate || '')),
+      LINE_BOT_CONFIG.WORK_AXES.indexOf(classified.axis) === -1 ? '' : classified.axis,
+      'new',
+      userId,
+      Object.keys(extra).length ? JSON.stringify(extra) : ''
+    ]);
+    trimLineInbox_(sheets.inbox);
+  } finally {
+    lock.releaseLock();
+  }
   return { id: id };
 }
 
@@ -2591,8 +2654,9 @@ function saveWorkspaceBackup_(body) {
     var rows = [];
     var total = Math.ceil(payload.length / BACKUP_CHUNK_SIZE);
     for (var index = 0; index < total; index += 1) {
-      rows.push([id, index + 1, total, now, device, summary,
-        payload.substr(index * BACKUP_CHUNK_SIZE, BACKUP_CHUNK_SIZE)]);
+      // 資安／資料完整：分段可能以 - + = 開頭，會被當公式而毀掉備份，一律轉純文字
+      rows.push([id, index + 1, total, now, sheetText_(device), sheetText_(summary),
+        sheetText_(payload.substr(index * BACKUP_CHUNK_SIZE, BACKUP_CHUNK_SIZE))]);
     }
     sheets.backup.getRange(sheets.backup.getLastRow() + 1, 1, rows.length, LINE_BOT_CONFIG.BACKUP_HEADERS.length).setValues(rows);
     pruneWorkspaceBackups_(sheets.backup);

@@ -30,6 +30,17 @@ head = """<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<!--
+【資安說明】螢幕公告（2026-11-06 稽核）
+- 匯入的設定檔可能是別人分享的：id 只收英數、圖片只收 data:image 網址（cleanImported），放進 HTML 的 id 一律 esc()。
+- 本頁與大屏同網站，被嵌在大屏裡；資料只存這台電腦。
+-->
+<script>
+  // 資安：防點擊劫持。別的網站把本頁塞進 iframe 時改成整頁開啟（同網站的嵌入不受影響）。
+  // 正式站的 netlify.toml 已用標頭擋；這段是放在其他主機（如 GitHub Pages）時的備援。
+  try { if (window.top !== window.self && window.top.location.origin !== window.location.origin) throw new Error('framed'); }
+  catch (error) { document.documentElement.style.display = 'none'; try { window.top.location.href = window.location.href; } catch (ignored) {} }
+</script>
 """
 s = re.sub(r'<link rel="(?:preconnect|stylesheet)"[^>]*>\n', '', s)
 s = re.sub(r'<script src="https://[^"]*"></script>\n', '', s)
@@ -291,6 +302,24 @@ const ORDER=KEEP;""")
 rep("""addEventListener('load',icons);""", """// 定時跳出提醒時，大屏切到這個工具，老師和學生才看得到
 ['#ring','#ack'].forEach(sel=>new MutationObserver(()=>{const host=embedHost();if(host&&!$(sel).hidden&&host.screenBoardShow)host.screenBoardShow()}).observe($(sel),{attributes:true,attributeFilter:['hidden']}));
 addEventListener('load',icons);""")
+
+# ---------- 資安（2026-11-06 稽核）：匯入的設定檔可能是別人分享的 ----------
+rep(r"""$('#impJson').onclick=()=>$('#jsonIn').click();""", r"""$('#impJson').onclick=()=>$('#jsonIn').click();
+// 資安：設定檔可能是別人分享的。id 只收英數（會放進 HTML），圖片只收真正的圖片 data URL（會放進 CSS），防夾帶程式碼。
+const SAFE_ID=/^[\w-]{1,40}$/,SAFE_IMG=/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/;
+function cleanImported(){
+  S.screens.forEach(sc=>{if(!SAFE_ID.test(String(sc.id)))sc.id=uid();sc.widgets.forEach(w=>{if(!SAFE_ID.test(String(w.id)))w.id=uid()})});
+  S.jobs=(Array.isArray(S.jobs)?S.jobs:[]).filter(j=>j&&SAFE_ID.test(String(j.id)));
+  Object.keys(IMG).forEach(k=>{if(!SAFE_ID.test(k)||typeof IMG[k]!=='string'||!SAFE_IMG.test(IMG[k]))delete IMG[k]})}""")
+rep(r"""S=o.S;IMG=o.IMG||{};S.screens.forEach(sc=>{sc.id=sc.id||uid();sc.widgets=sc.widgets.filter(w=>KEEP.includes(w.type))});""",
+    r"""S=o.S;IMG=o.IMG&&typeof o.IMG==='object'?o.IMG:{};S.screens.forEach(sc=>{sc.id=sc.id||uid();sc.widgets=sc.widgets.filter(w=>w&&KEEP.includes(w.type))});
+    cleanImported();""")
+rep(r'''id="sn-${sc.id}"''', r'''id="sn-${esc(sc.id)}"''')
+rep(r'''id="jt-${j.id}" aria-label="時間"><select id="ja-${j.id}"''', r'''id="jt-${esc(j.id)}" aria-label="時間"><select id="ja-${esc(j.id)}"''')
+rep(r'''<select id="js-'+j.id+'">'+S.screens.map(x=>`<option value="${x.id}"''', r'''<select id="js-'+esc(j.id)+'">'+S.screens.map(x=>`<option value="${esc(x.id)}"''')
+rep(r'''id="jx-${j.id}" placeholder="要跳出的公告文字"><label><input type="checkbox" id="jb-${j.id}">''', r'''id="jx-${esc(j.id)}" placeholder="要跳出的公告文字"><label><input type="checkbox" id="jb-${esc(j.id)}">''')
+rep(r'''<select id="jw-'+j.id+'">'+tm.map(([id,t])=>`<option value="${id}"''', r'''<select id="jw-'+esc(j.id)+'">'+tm.map(([id,t])=>`<option value="${esc(id)}"''')
+rep(r'''<input type="checkbox" id="jb-'+j.id+'"> 開始時響一聲''', r'''<input type="checkbox" id="jb-'+esc(j.id)+'"> 開始時響一聲''')
 
 assert '比賽' not in s, [m.group(0) for m in re.finditer(r'.{20}比賽.{10}', s)][:6]
 (root / 'Screen.html').write_text(s, encoding='utf-8')
