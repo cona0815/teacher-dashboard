@@ -248,8 +248,8 @@ details summary{cursor:pointer;font-weight:800;color:var(--strong)}
   <section class="card" style="grid-column:1/-1"><h2>🏫 今日出席與作業繳交（晨間大屏回報）</h2>
     <div id="cloudBody" class="empty">載入中……</div>
     <details id="cloudSetup" style="margin-top:8px"><summary>⚙ 雲端連線設定（第一次使用點我）</summary>
-      <div class="row"><input id="cfgUrl" placeholder="貼上 🌐 機器人網址（/exec 結尾，與大屏同一份）"></div>
-      <div class="row"><input id="cfgToken" type="password" placeholder="貼上 🔑D 教室大屏金鑰（CLASSROOM_TOKEN）"><input id="cfgClass" placeholder="班級名稱（例：501）" style="max-width:160px"></div>
+      <div class="row"><input id="cfgUrl" placeholder="貼上 🌐A 機器人網址（/exec 結尾，與大屏同一份）"></div>
+      <div class="row"><input id="cfgToken" type="password" placeholder="貼上 🔑B 教室大屏金鑰（CLASSROOM_TOKEN）"><input id="cfgClass" placeholder="班級名稱（例：501）" style="max-width:160px"></div>
       <div class="row"><button onclick="saveCloudCfg()">儲存並讀取</button><span class="note-meta">設定只存在這台電腦的瀏覽器。</span></div>
     </details></section>
 
@@ -274,7 +274,7 @@ details summary{cursor:pointer;font-weight:800;color:var(--strong)}
   <section class="card soft" style="grid-column:1/-1"><h2>☁️ 雲端連線（v2.0：不開瀏覽器也能拿到資料）</h2>
     <div id="cloudStatus" class="empty">載入中……</div>
     <details id="cloudLinkSetup" style="margin-top:8px"><summary>⚙ 設定（貼一次就好）</summary>
-      <div class="row"><input id="clUrl" placeholder="🌐 機器人網址（https://script.google.com/macros/s/…/exec，與工作台同一個）"></div>
+      <div class="row"><input id="clUrl" placeholder="🌐A 機器人網址（https://script.google.com/macros/s/…/exec，與工作台同一個）"></div>
       <div class="row"><input id="clToken" type="password" placeholder="🔑C 老師金鑰（與工作台「設定 → LINE 小幫手」同一把；已存過可留白）" style="flex:1">
         每 <select id="clPoll"><option>1</option><option selected>2</option><option>5</option><option>10</option></select> 分鐘拉一次</div>
       <div class="row"><button onclick="saveCloudLink(true)">儲存並啟用</button><button class="light" onclick="testCloudLink()">測試連線</button><button class="light" onclick="saveCloudLink(false)">停用</button>
@@ -302,7 +302,7 @@ details summary{cursor:pointer;font-weight:800;color:var(--strong)}
       <span class="note-meta">先把游標放在任何要打字的地方，<b>按住</b><span id="voHotkeyName">右 Ctrl</span>說話、放開就貼上；<b>按住</b><span id="voPetHotkeyName">右 Alt</span>說話＝直接變成小綿助的記事或任務。</span>
     </div>
     <details id="voiceSetup" style="margin-top:8px"><summary>⚙ 設定（金鑰、快捷鍵、風格）</summary>
-      <div class="row"><input id="voGemini" type="password" placeholder="🔑E Gemini 金鑰（與工作台 AI 設定同一把；已存過可留白）" style="flex:1"><button class="light" onclick="clearKey('gemini')">清除</button></div>
+      <div class="row"><input id="voGemini" type="password" placeholder="🔑D Gemini 金鑰（與工作台 AI 設定同一把；已存過可留白）" style="flex:1"><button class="light" onclick="clearKey('gemini')">清除</button></div>
       <div class="row"><input id="voGroq" type="password" placeholder="（選填）Groq 金鑰 gsk_…：辨識更快（1–2 秒）" style="flex:1"><button class="light" onclick="clearKey('groq')">清除</button></div>
       <div class="row">Gemini 模型 <input id="voModel" placeholder="gemini-2.5-flash" style="max-width:260px"><span class="note-meta">預設 2.5 Flash；可填較新的 Flash 系列試速度（Pro 系列較慢）。速度主要取決於 Flash／Pro 等級，不是版本號。</span></div>
       <div class="row">辨識服務 <select id="voProvider"><option value="auto">自動（有 Groq 用 Groq，否則 Gemini）</option><option value="gemini">Gemini</option><option value="groq">Groq</option></select>
@@ -407,7 +407,7 @@ function renderVoice(v){
   $('voOn').checked=!!v.enabled;
   $('voHotkeyName').textContent=(v.hotkeyChoices||{})[v.hotkey]||'（未設定）';$('voPetHotkeyName').textContent=(v.hotkeyChoices||{})[v.petHotkey]||'（未設定）';
   let html='';
-  if(!v.hasGeminiKey&&!v.hasGroqKey){html='尚未設定——點下方「⚙ 設定」貼上 🔑E Gemini 金鑰（工作台 AI 設定那一把）就能用。';$('voiceSetup').open=true;}
+  if(!v.hasGeminiKey&&!v.hasGroqKey){html='尚未設定——點下方「⚙ 設定」貼上 🔑D Gemini 金鑰（工作台 AI 設定那一把）就能用。';$('voiceSetup').open=true;}
   else if(!v.enabled){html='已關閉。';}
   else if(st.listener==='error'){html='⚠ 快捷鍵元件無法啟動：'+esc(st.lastError||'');}
   else{html=`✅ 使用 <b>${v.resolved==='groq'?'Groq（快）':'Gemini'}</b>｜狀態：${st.status==='listening'?'🔴 聆聽中':st.status==='thinking'?'🔵 辨識中':'待命'}`+(st.lastAt?`｜最近 ${st.lastAt}`:'');}
@@ -875,7 +875,7 @@ class SecretaryPet(DesktopPetPreview):
 
     def _menu_voice(self) -> None:
         if not self.voice.ready:
-            self.notify("還沒有 🔑E 金鑰：秘書頁「🎙 語音輸入」貼上後就能說話記事。", "feedback", actions=[("打開秘書頁", "open")])
+            self.notify("還沒有 🔑D 金鑰：秘書頁「🎙 語音輸入」貼上後就能說話記事。", "feedback", actions=[("打開秘書頁", "open")])
             return
         self._voice_begin("petclick")
 
@@ -1773,8 +1773,8 @@ class SecretaryPet(DesktopPetPreview):
         if self.recorder.active:
             return
         if not self.voice.ready:
-            self.voice_state.update({"status": "idle", "lastError": "尚未填入 🔑E Gemini 金鑰：雙擊小綿助 → 🎙 語音輸入"})
-            self.play("warning", 2, "idle", "還沒有金鑰，先到秘書頁「🎙 語音輸入」貼 🔑E。", level="feedback")
+            self.voice_state.update({"status": "idle", "lastError": "尚未填入 🔑D Gemini 金鑰：雙擊小綿助 → 🎙 語音輸入"})
+            self.play("warning", 2, "idle", "還沒有金鑰，先到秘書頁「🎙 語音輸入」貼 🔑D。", level="feedback")
             return
         try:
             self.recorder.start()
@@ -2125,7 +2125,7 @@ class SecretaryPet(DesktopPetPreview):
             elif action == "voice_test":
                 self._save_data()
                 if not getattr(self, "voice", None) or not self.voice.ready:
-                    return {"ok": False, "error": "請先貼上 🔑E Gemini 金鑰（或 Groq 金鑰）並儲存"}
+                    return {"ok": False, "error": "請先貼上 🔑D Gemini 金鑰（或 Groq 金鑰）並儲存"}
                 if self.recorder.active:
                     return {"ok": False, "error": "正在錄音中"}
                 threading.Thread(target=self._voice_test_worker, daemon=True).start()

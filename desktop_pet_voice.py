@@ -254,7 +254,7 @@ class VoiceEngine:
     def transcribe(self, audio_int16) -> str:
         provider = self.resolved_provider()
         if not provider:
-            raise VoiceError("no_key", "尚未填入 🔑E Gemini 金鑰（或 Groq 金鑰）")
+            raise VoiceError("no_key", "尚未填入 🔑D Gemini 金鑰（或 Groq 金鑰）")
         if is_silent(audio_int16):
             return ""
         wav = wav_bytes(audio_int16)

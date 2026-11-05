@@ -2164,7 +2164,7 @@
       </section>
 
       <section class="settings-panel" data-settings-panel="api">
-        <p class="settings-note"><strong>難度 2</strong>：只要一把 🔑E（<a class="settings-link" href="Install.html#tier2" target="_blank" rel="noopener">安裝教學難度 2</a>，約 3 分鐘）。開啟後才會顯示「AI 行政助理」版面。送出前請先檢查去識別化預覽；API 金鑰只保存在這台電腦的目前瀏覽器，不會寫入 GitHub 或備份檔。</p>
+        <p class="settings-note"><strong>第 3 級</strong>：只要一把 🔑D（<a class="settings-link" href="Install.html#level3" target="_blank" rel="noopener">安裝教學第 3 級</a>，約 3 分鐘）。開啟後才會顯示「AI 行政助理」版面。送出前請先檢查去識別化預覽；API 金鑰只保存在這台電腦的目前瀏覽器，不會寫入 GitHub 或備份檔。</p>
         <label class="check-row" style="margin-bottom:14px"><input type="checkbox" id="aiEnabled">開啟 AI 功能</label>
         <p style="margin:0 0 14px;font-size:12px">沒有金鑰？前往 <a class="settings-link" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio 申請 Gemini API 金鑰</a>。Google 提供部分模型的免費用量，仍受當時的配額與服務條款限制。</p>
         <div class="form-grid" style="padding:0">
@@ -2193,8 +2193,8 @@
             <div class="api-secret-note">⚠ 網站安全政策目前只預先放行 Gemini／OpenAI／Grok 官方網域；其他自訂網域可能被瀏覽器擋下。</div>
           </div>
           <div class="field field-wide">
-            <label for="apiKey">🔑E API 金鑰＝教學裡的「AI 金鑰」　<a href="Install.html#tier1" target="_blank" rel="noopener" style="font-weight:600">如何取得？📖</a></label>
-            <input class="input" id="apiKey" type="password" autocomplete="off" placeholder="貼上 🔑E（選 Gemini 時，與 LINE 小幫手指令碼屬性的 GEMINI_API_KEY 是同一把，可共用）">
+            <label for="apiKey">🔑D API 金鑰＝教學裡的「AI 金鑰」　<a href="Install.html#level3" target="_blank" rel="noopener" style="font-weight:600">如何取得？📖</a></label>
+            <input class="input" id="apiKey" type="password" autocomplete="off" placeholder="貼上 🔑D（選 Gemini 時，與 LINE 小幫手指令碼屬性的 GEMINI_API_KEY 是同一把，可共用）">
             <label class="check-row" style="margin-top:8px"><input type="checkbox" id="rememberApiKey" checked>記住在這台電腦的目前瀏覽器（關閉後不用重打）</label>
             <div class="api-secret-note">金鑰不會放進備份檔或 GitHub。共用電腦請取消勾選，金鑰便只保留到關閉此瀏覽器分頁。</div>
           </div>
@@ -2256,16 +2256,16 @@
       </section>
 
       <section class="settings-panel" data-settings-panel="linebot">
-        <p class="settings-note"><strong>難度 1（雲端大腦）</strong>：照<a class="settings-link" href="Install.html#tier1" target="_blank" rel="noopener">安裝教學難度 1</a>複製一份 Google 程式後，這裡只要填 🌐 與 🔑C，就能用晨間大屏、雲端聯絡本、Google 日曆／Tasks／表單／雲端硬碟。<strong>難度 3（LINE）</strong>的設定在 LINE 與 Google 那邊做，這裡不用填 🔑A；做完後 LINE 訊息會進「LINE 收件匣」由你確認再建立。不設定時，工作台與桌面小綿助完全不受影響。</p>
-        <label class="check-row" style="margin-bottom:14px"><input type="checkbox" id="lineBridgeEnabled">啟用雲端同步（難度 1；做了難度 3 也會收 LINE）</label>
+        <p class="settings-note"><strong>第 2 級（雲端大腦）</strong>：照<a class="settings-link" href="Install.html#level2" target="_blank" rel="noopener">安裝教學第 2 級</a>複製一份 Google 程式後，這裡只要填 🌐A 與 🔑C，就能用晨間大屏、雲端聯絡本、Google 日曆／Tasks／表單／雲端硬碟。<strong>第 4 級（LINE）</strong>的設定在 LINE 與 Google 那邊做，這裡不用填 🔑E；做完後 LINE 訊息會進「LINE 收件匣」由你確認再建立。不設定時，工作台與桌面小綿助完全不受影響。</p>
+        <label class="check-row" style="margin-bottom:14px"><input type="checkbox" id="lineBridgeEnabled">啟用雲端同步（第 2 級；做了第 4 級也會收 LINE）</label>
         <div class="form-grid" style="padding:0">
           <div class="field field-wide">
-            <label for="lineGasUrl">🌐 Apps Script 部署網址（/exec 結尾）＝教學裡的「🌐 機器人網址」　<a href="Install.html#tier1" target="_blank" rel="noopener" style="font-weight:600">還沒有？看難度 1 教學 📖</a></label>
-            <input class="input" id="lineGasUrl" type="url" autocomplete="off" placeholder="貼上 🌐 機器人網址：https://script.google.com/macros/s/……/exec">
+            <label for="lineGasUrl">🌐A Apps Script 部署網址（/exec 結尾）＝教學裡的「🌐A 機器人網址」　<a href="Install.html#level2" target="_blank" rel="noopener" style="font-weight:600">還沒有？看第 2 級教學 📖</a></label>
+            <input class="input" id="lineGasUrl" type="url" autocomplete="off" placeholder="貼上 🌐A 機器人網址：https://script.google.com/macros/s/……/exec">
           </div>
           <div class="field field-wide">
-            <label for="lineSyncToken">🔑C 同步金鑰＝教學裡的「工作台同步金鑰」（執行 setupLineBot 後取得）　<a href="Install.html#tier1" target="_blank" rel="noopener" style="font-weight:600">如何取得？📖</a></label>
-            <input class="input" id="lineSyncToken" type="password" autocomplete="off" placeholder="貼上 🔑C（LINE_SYNC_TOKEN，不是教室金鑰 🔑D）">
+            <label for="lineSyncToken">🔑C 同步金鑰＝教學裡的「工作台同步金鑰」（執行 setupLineBot 後取得）　<a href="Install.html#level2" target="_blank" rel="noopener" style="font-weight:600">如何取得？📖</a></label>
+            <input class="input" id="lineSyncToken" type="password" autocomplete="off" placeholder="貼上 🔑C（LINE_SYNC_TOKEN，不是教室金鑰 🔑B）">
             <label class="check-row" style="margin-top:8px"><input type="checkbox" id="rememberLineSyncToken" checked>記住在這台電腦的目前瀏覽器</label>
             <div class="api-secret-note">同步金鑰與網址不會放進 JSON 備份或 GitHub。共用電腦請取消勾選，金鑰便只保留到關閉此瀏覽器分頁。</div>
           </div>
@@ -8387,7 +8387,7 @@ ${cleanBase}`;
 
     async function createCloudBackup({ silent = false } = {}) {
       if (!cloudBackupReady()) {
-        if (!silent) showToast('請先在「設定 → LINE 小幫手」填入 🌐 網址與 🔑C 同步金鑰。', true);
+        if (!silent) showToast('請先在「設定 → LINE 小幫手」填入 🌐A 網址與 🔑C 同步金鑰。', true);
         return false;
       }
       const button = $('cloudBackupButton');
@@ -8417,7 +8417,7 @@ ${cleanBase}`;
 
     async function refreshCloudBackups() {
       if (!cloudBackupReady()) {
-        $('cloudBackupList').innerHTML = '<div class="cloud-row-meta">尚未設定 LINE 小幫手；雲端備份需要 🌐 網址與 🔑C 同步金鑰。</div>';
+        $('cloudBackupList').innerHTML = '<div class="cloud-row-meta">尚未設定 LINE 小幫手；雲端備份需要 🌐A 網址與 🔑C 同步金鑰。</div>';
         return;
       }
       $('cloudBackupList').innerHTML = '<div class="cloud-row-meta">正在讀取雲端備份……</div>';

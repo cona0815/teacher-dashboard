@@ -60,7 +60,7 @@
     .tier-card b { display:block; font-size:17px; margin-bottom:6px; }
     .tier-card .meta { display:block; font-size:13px; color:var(--muted); line-height:1.55; }
     .tier-card.t1 { border-color:#5fa87f; } .tier-card.t2 { border-color:#d8a33a; } .tier-card.t3 { border-color:#d46a5a; }
-    section.tier1 { border-color:#9fd4b8; } section.tier2 { border-color:#e6c77e; } section.tier3 { border-color:#e3a79b; }
+    section.tierb { border-color:#9dbfe6; } section.tierp { border-color:#c4b0e6; } section.tier1 { border-color:#9fd4b8; } section.tier2 { border-color:#e6c77e; } section.tier3 { border-color:#e3a79b; }
     .tier-head { display:flex; flex-wrap:wrap; gap:6px 14px; align-items:baseline; }
     .pill { display:inline-block; border-radius:999px; padding:1px 10px; font-size:13px; font-weight:800; background:var(--soft); color:var(--primary-strong); }
     .pill.need { background:#fdf0ee; color:#a34339; }
@@ -95,7 +95,7 @@
     .d-okbox { fill:#e3f6ec; stroke:#9fd4b8; }
     .d-toggle { fill:#1d9e5f; } .d-knob { fill:#fff; }
     .d-phone { fill:#1c302d; } .d-screen { fill:#dfe9f2; } .d-bub-me { fill:#8de08d; } .d-bub-bot { fill:#fff; }
-    .d-t1 { fill:#eef8f2; stroke:#5fa87f; stroke-width:2; } .d-t2 { fill:#fff8e6; stroke:#d8a33a; stroke-width:2; } .d-t3 { fill:#fdf0ee; stroke:#d46a5a; stroke-width:2; }
+    .d-tb { fill:#eef4fc; stroke:#4f86c6; stroke-width:2; } .d-tp { fill:#f4effb; stroke:#8a6cc4; stroke-width:2; } .d-t1 { fill:#eef8f2; stroke:#5fa87f; stroke-width:2; } .d-t2 { fill:#fff8e6; stroke:#d8a33a; stroke-width:2; } .d-t3 { fill:#fdf0ee; stroke:#d46a5a; stroke-width:2; }
     .d-seat { fill:#fff; stroke:#c9d6d0; } .d-seat-ok { fill:#bfe8cf; stroke:#5fa87f; }
     section { scroll-margin-top:96px; }
     figure.diagram svg a { cursor:pointer; }
@@ -137,47 +137,46 @@
     nav.toc a { background:#fff; border:1px solid var(--line); box-shadow:0 2px 6px rgba(18,47,42,.05); }
     main { padding:20px 0 80px; }
     section { border:0; border-radius:18px; box-shadow:0 10px 25px -8px rgba(18,47,42,.14); padding:26px 26px; }
-    section.tier1, section.tier2, section.tier3 { border:0; }
-    section.tier1 { border-top:5px solid #5fa87f; } section.tier2 { border-top:5px solid #d8a33a; } section.tier3 { border-top:5px solid #d46a5a; }
+    section.tier1, section.tier2, section.tier3, section.tierb, section.tierp { border:0; }
+    section.tierb { border-top:5px solid #4f86c6; } section.tierp { border-top:5px solid #8a6cc4; } section.tier1 { border-top:5px solid #5fa87f; } section.tier2 { border-top:5px solid #d8a33a; } section.tier3 { border-top:5px solid #d46a5a; }
     .sec-head { display:flex; gap:14px; align-items:flex-start; margin-bottom:10px; }
     .sec-icon { flex:0 0 50px; height:50px; border-radius:14px; background:var(--soft); display:grid; place-items:center; font-size:25px; line-height:1; }
-    section.tier1 .sec-icon { background:#eef8f2; } section.tier2 .sec-icon { background:#fff8e6; } section.tier3 .sec-icon { background:#fdf0ee; }
+    section.tierb .sec-icon { background:#eef4fc; } section.tierp .sec-icon { background:#f4effb; } section.tier1 .sec-icon { background:#eef8f2; } section.tier2 .sec-icon { background:#fff8e6; } section.tier3 .sec-icon { background:#fdf0ee; }
     .sec-titles { flex:1; min-width:0; padding-top:4px; }
     .sec-titles h2 { font-size:clamp(20px,2.6vw,23px); line-height:1.4; margin-bottom:2px; }
     .sec-num { color:var(--primary); margin-right:4px; }
-    section.tier1 .sec-num { color:#2f8a5b; } section.tier2 .sec-num { color:#b07d12; } section.tier3 .sec-num { color:#b5523f; }
+    section.tierb .sec-num { color:#2f65a5; } section.tierp .sec-num { color:#6b4fa8; } section.tier1 .sec-num { color:#2f8a5b; } section.tier2 .sec-num { color:#b07d12; } section.tier3 .sec-num { color:#b5523f; }
     @media (max-width:640px) { section { padding:20px 16px; } .sec-icon { flex-basis:42px; height:42px; font-size:21px; } table { display:block; overflow-x:auto; -webkit-overflow-scrolling:touch; } code { overflow-wrap:anywhere; word-break:break-all; } header.hero .pillcta { border-radius:18px; padding:10px 12px; } }
   </style>
 </head>
 <body>
   <div class="topnav"><div class="bar">
-    <a class="brand" href="#top"><span class="logo">📖</span><span>安裝教學（第 2 版）<small>教師工作台・部署方法</small></span></a>
+    <a class="brand" href="#top"><span class="logo">📖</span><span>安裝教學（五級版）<small>教師工作台・部署方法</small></span></a>
     <a class="nl" href="#part0">🧭 開始前</a>
-    <a class="nl" href="#tier1">🟢 難度 1</a>
-    <a class="nl" href="#tier2">🟡 難度 2</a>
-    <a class="nl" href="#tier3">🔴 難度 3</a>
-    <a class="nl" href="#part3">📺 晨間大屏</a>
-    <a class="nl" href="#pet">🐑 小綿助</a>
+    <a class="nl" href="#level1">🟢 1 大屏</a>
+    <a class="nl" href="#level2">🔵 2 工作台</a>
+    <a class="nl" href="#level3">🟡 3 AI</a>
+    <a class="nl" href="#level4">🟠 4 LINE</a>
+    <a class="nl" href="#level5">🟣 5 桌寵</a>
     <a class="nl" href="#part5">🛟 疑難排解</a>
     <a class="nl" href="#partv2">🆕 舊版升級</a>
-    <a class="cta" href="Index.html">開始使用工作台 →</a>
+    <a class="cta" href="Morning.html">打開晨間大屏 →</a>
   </div></div>
 
   <header class="hero" id="top">
-    <span class="badge">🟢 難度 1 → 🟡 難度 2 → 🔴 難度 3・每一步都附操作畫面</span>
-    <h1>📖 安裝教學（第 2 版）<br><em>照紅框點就對了</em></h1>
-    <p class="intro">先用<strong>免設定</strong>的工作台；想要更多功能，再照「<strong>難度</strong>」挑要不要往下裝。三個難度各自獨立，每一步都附操作畫面，<strong>照紅框點</strong>就對了。</p>
+    <span class="badge">🟢 大屏 → 🔵 工作台 → 🟡 AI → 🟠 LINE → 🟣 桌寵・每一步都附操作畫面</span>
+    <h1>📖 安裝教學（五級版）<br><em>照紅框點就對了</em></h1>
+    <p class="intro">從<strong>只用大屏</strong>開始，不用金鑰；用得順手再一級一級往下加。每一步都附操作畫面，<strong>照紅框點</strong>就對了。</p>
     <div class="pillcta">還在考慮要不要用？先看一頁式功能介紹，那頁也適合直接轉給同事。 <a href="Intro.html">一頁式功能介紹 →</a></div>
   </header>
 
   <nav class="toc"><div class="wrap">
     <a href="#part0">開始前</a>
-    <a href="#part1">A. 工作台</a>
-    <a href="#tier1">🟢 難度 1 雲端</a>
-    <a href="#tier2">🟡 難度 2 AI</a>
-    <a href="#tier3">🔴 難度 3 LINE</a>
-    <a href="#part3">晨間大屏</a>
-    <a href="#pet">小綿助</a>
+    <a href="#level1">🟢 第 1 級 大屏</a>
+    <a href="#level2">🔵 第 2 級 工作台</a>
+    <a href="#level3">🟡 第 3 級 AI</a>
+    <a href="#level4">🟠 第 4 級 LINE</a>
+    <a href="#level5">🟣 第 5 級 桌寵</a>
     <a href="#part4">每天怎麼用</a>
     <a href="#part5">疑難排解</a>
     <a href="#part6">備份與安全</a>
@@ -188,89 +187,164 @@
 
   <main>
     <section id="part0">
-      <div class="sec-head"><div class="sec-icon">🧭</div><div class="sec-titles"><h2><span class="sec-num">1.</span>開始前：你想用到哪裡？</h2></div></div>
-      <p class="lead">不必一次全裝。工作台打開就能用；後面三個難度<strong>各自獨立，可以只做一個</strong>。</p>
-      <figure class="diagram"><svg viewBox="0 0 780 300" role="img" aria-label="安裝路線圖（點方框可跳到該難度）：先用免設定的工作台，再依難度選擇雲端大腦、AI 金鑰、LINE 小幫手">
+      <div class="sec-head"><div class="sec-icon">🧭</div><div class="sec-titles"><h2><span class="sec-num">1.</span>開始前：你想用到哪一級？</h2></div></div>
+      <p class="lead">系統分成五級，<strong>從第 1 級開始，用得順手再往下加</strong>。沒有 AI 經驗的老師，只用第 1 級就很夠用。</p>
+      <figure class="diagram"><svg viewBox="0 0 780 462" role="img" aria-label="五級路線圖（點方框可跳到該級教學）：第 1 級只用大屏，第 2 級加工作台與雲端，第 3 級加 AI，第 4 級加 LINE，第 5 級加桌寵">
 <defs><marker id="ar-road" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
-<rect class="d-box-primary" x="10" y="116" width="160" height="68" rx="12"/>
-<text class="d-title" x="90" y="142" text-anchor="middle">Part A 工作台</text>
-<text class="d-small" x="90" y="162" text-anchor="middle">免設定・3 分鐘</text>
-<a href="#tier1">
-<rect class="d-t1" x="222" y="20" width="236" height="70" rx="12"/>
-<text class="d-title" x="234" y="42" text-anchor="start">🟢 難度 1｜雲端大腦 GAS</text>
-<text class="d-small" x="234" y="62" text-anchor="start">約 15 分・按鈕複製，不貼程式</text>
-<text class="d-small" x="234" y="80" text-anchor="start">拿到 🌐 🔑C 🔑D（🔑B）</text>
-<text class="d-small" x="450" y="80" text-anchor="end">看教學 →</text>
-</a>
-<rect class="d-box" x="530" y="26" width="240" height="58" rx="10"/>
-<text class="d-text" x="542" y="49" text-anchor="start">晨間大屏・雲端聯絡本與備份</text>
-<text class="d-text" x="542" y="69" text-anchor="start">Google 日曆／Tasks／表單・小綿助直連</text>
-<path class="d-line" d="M460,55 L524,55" marker-end="url(#ar-road)"/>
-<path class="d-line" d="M170,150 C196,150 196,55 216,55" marker-end="url(#ar-road)"/>
-<a href="#tier2">
-<rect class="d-t2" x="222" y="116" width="236" height="70" rx="12"/>
-<text class="d-title" x="234" y="138" text-anchor="start">🟡 難度 2｜AI 金鑰 Gemini</text>
-<text class="d-small" x="234" y="158" text-anchor="start">約 3 分・申請一串字</text>
-<text class="d-small" x="234" y="176" text-anchor="start">拿到 🔑E</text>
-<text class="d-small" x="450" y="176" text-anchor="end">看教學 →</text>
-</a>
-<rect class="d-box" x="530" y="122" width="240" height="58" rx="10"/>
-<text class="d-text" x="542" y="145" text-anchor="start">AI 行政助理・訊息整合站</text>
-<text class="d-text" x="542" y="165" text-anchor="start">教材小工場 AI・小綿助語音</text>
-<path class="d-line" d="M460,151 L524,151" marker-end="url(#ar-road)"/>
-<path class="d-line" d="M170,150 C196,150 196,151 216,151" marker-end="url(#ar-road)"/>
-<a href="#tier3">
-<rect class="d-t3" x="222" y="212" width="236" height="70" rx="12"/>
-<text class="d-title" x="234" y="234" text-anchor="start">🔴 難度 3｜LINE 小幫手</text>
-<text class="d-small" x="234" y="254" text-anchor="start">約 30 分・需先完成難度 1</text>
-<text class="d-small" x="234" y="272" text-anchor="start">拿到 🔑A（用到 🌐 🔑B）</text>
-<text class="d-small" x="450" y="272" text-anchor="end">看教學 →</text>
-</a>
-<rect class="d-box" x="530" y="218" width="240" height="58" rx="10"/>
-<text class="d-text" x="542" y="241" text-anchor="start">LINE 傳訊息建任務・晨間推播</text>
-<text class="d-text" x="542" y="261" text-anchor="start">家長訊息草稿・大屏提示遙控</text>
-<path class="d-line" d="M460,247 L524,247" marker-end="url(#ar-road)"/>
-<path class="d-line" d="M170,150 C196,150 196,247 216,247" marker-end="url(#ar-road)"/>
-</svg><figcaption>點方框就會跳到那個難度的教學。三個難度各自獨立，可以只做一個；只有 LINE（難度 3）要用到難度 1 的雲端大腦。</figcaption></figure>
+<a href="#level1"><rect class="d-t1" x="10" y="10" width="344" height="76" rx="12"/>
+<text class="d-title" x="24" y="34" text-anchor="start">🟢 第 1 級｜只用晨間大屏</text>
+<text class="d-small" x="24" y="54" text-anchor="start">約 5 分・打開網址就能用</text>
+<text class="d-small" x="24" y="74" text-anchor="start">不用金鑰</text>
+<text class="d-small" x="344" y="74" text-anchor="end">看教學 →</text></a>
+<rect class="d-box" x="412" y="14" width="358" height="68" rx="10"/>
+<text class="d-text" x="426" y="43" text-anchor="start">點名、收作業、訂正、黑板聯絡本、班級工具</text>
+<text class="d-text" x="426" y="65" text-anchor="start">資料只存這台電腦（不含機敏資料）</text>
+<path class="d-line" d="M356,48 L406,48" marker-end="url(#ar-road)"/>
+<path class="d-line" d="M182,88 L182,100" marker-end="url(#ar-road)"/>
+<a href="#level2"><rect class="d-tb" x="10" y="102" width="344" height="76" rx="12"/>
+<text class="d-title" x="24" y="126" text-anchor="start">🔵 第 2 級｜大屏＋教師工作台</text>
+<text class="d-small" x="24" y="146" text-anchor="start">約 20 分・用 GAS 連結，按按鈕複製</text>
+<text class="d-small" x="24" y="166" text-anchor="start">拿到 🌐A 🔑B 🔑C</text>
+<text class="d-small" x="344" y="166" text-anchor="end">看教學 →</text></a>
+<rect class="d-box" x="412" y="106" width="358" height="68" rx="10"/>
+<text class="d-text" x="426" y="135" text-anchor="start">在家寫聯絡本、作業補交、查詢統計、雲端備份</text>
+<text class="d-text" x="426" y="157" text-anchor="start">任務與教學進度、Google 日曆／Tasks</text>
+<path class="d-line" d="M356,140 L406,140" marker-end="url(#ar-road)"/>
+<path class="d-line" d="M182,180 L182,192" marker-end="url(#ar-road)"/>
+<a href="#level3"><rect class="d-t2" x="10" y="194" width="344" height="76" rx="12"/>
+<text class="d-title" x="24" y="218" text-anchor="start">🟡 第 3 級｜再加 AI 金鑰</text>
+<text class="d-small" x="24" y="238" text-anchor="start">約 3 分・申請一串字</text>
+<text class="d-small" x="24" y="258" text-anchor="start">拿到 🔑D</text>
+<text class="d-small" x="344" y="258" text-anchor="end">看教學 →</text></a>
+<rect class="d-box" x="412" y="198" width="358" height="68" rx="10"/>
+<text class="d-text" x="426" y="227" text-anchor="start">AI 行政助理、訊息整合站</text>
+<text class="d-text" x="426" y="249" text-anchor="start">教材小工場的 AI 工具</text>
+<path class="d-line" d="M356,232 L406,232" marker-end="url(#ar-road)"/>
+<path class="d-line" d="M182,272 L182,284" marker-end="url(#ar-road)"/>
+<a href="#level4"><rect class="d-t3" x="10" y="286" width="344" height="76" rx="12"/>
+<text class="d-title" x="24" y="310" text-anchor="start">🟠 第 4 級｜再加 LINE</text>
+<text class="d-small" x="24" y="330" text-anchor="start">約 30 分・要照 LINE 後台一步步做</text>
+<text class="d-small" x="24" y="350" text-anchor="start">拿到 🔑E 🔑F 👤G</text>
+<text class="d-small" x="344" y="350" text-anchor="end">看教學 →</text></a>
+<rect class="d-box" x="412" y="290" width="358" height="68" rx="10"/>
+<text class="d-text" x="426" y="319" text-anchor="start">LINE 傳訊息建任務、晨間推播</text>
+<text class="d-text" x="426" y="341" text-anchor="start">家長訊息草稿、遙控大屏提示</text>
+<path class="d-line" d="M356,324 L406,324" marker-end="url(#ar-road)"/>
+<path class="d-line" d="M182,364 L182,376" marker-end="url(#ar-road)"/>
+<a href="#level5"><rect class="d-tp" x="10" y="378" width="344" height="76" rx="12"/>
+<text class="d-title" x="24" y="402" text-anchor="start">🟣 第 5 級｜再加桌寵小綿助</text>
+<text class="d-small" x="24" y="422" text-anchor="start">約 3 分・下載解壓（Windows）</text>
+<text class="d-small" x="24" y="442" text-anchor="start">沿用 🌐A 🔑C 🔑D</text>
+<text class="d-small" x="344" y="442" text-anchor="end">看教學 →</text></a>
+<rect class="d-box" x="412" y="382" width="358" height="68" rx="10"/>
+<text class="d-text" x="426" y="411" text-anchor="start">桌面陪伴與健康提醒</text>
+<text class="d-text" x="426" y="433" text-anchor="start">直連資料、按住說話就出字</text>
+<path class="d-line" d="M356,416 L406,416" marker-end="url(#ar-road)"/>
+</svg><figcaption>由上往下，一級一級加。停在哪一級都可以；上一級的資料和設定不會不見。</figcaption></figure>
 
-      <h3>我想要……要做到哪？</h3>
+      <h3>我想要……要做到哪一級？</h3>
       <table>
-        <tr><th>我想要</th><th>要做</th></tr>
-        <tr><td>任務清單、日曆、教學進度排課、記事</td><td><a href="#part1">Part A</a> 就好（3 分鐘）</td></tr>
-        <tr><td>教室大屏點名、收作業、黑板聯絡本</td><td>A ＋ <a href="#tier1">🟢 難度 1</a> ＋ <a href="#part3">晨間大屏</a></td></tr>
-        <tr><td>AI 幫我拆公文、整合 LINE 群組訊息、做學習單、改作文、生海報</td><td>A ＋ <a href="#tier2">🟡 難度 2</a>（不需要難度 1）</td></tr>
-        <tr><td>任務加進 Google 日曆、記事同步 Google Tasks、建 Google 表單</td><td>A ＋ 🟢 難度 1</td></tr>
-        <tr><td>在 LINE 傳一句話就建任務、每天早上收到點名回報</td><td>🟢 難度 1 ＋ <a href="#tier3">🔴 難度 3</a>（建議也做 🟡 難度 2，LINE 才聽得懂語音與照片）</td></tr>
-        <tr><td>桌面小綿助陪伴與健康提醒</td><td>直接<a href="#pet">下載</a>；要直連資料做難度 1，要按住說話做難度 2</td></tr>
+        <tr><th>我想要</th><th>做到</th></tr>
+        <tr><td>教室大屏點名、收作業、訂正、黑板聯絡本、班級工具</td><td><a href="#level1">🟢 第 1 級</a></td></tr>
+        <tr><td>在家寫聯絡本隔天黑板出現、作業補交、查詢統計、任務清單、教學進度、Google 日曆與 Tasks</td><td><a href="#level2">🔵 第 2 級</a></td></tr>
+        <tr><td>AI 幫我拆公文、整合 LINE 群組訊息、做學習單、改作文、生海報、建 Google 表單</td><td><a href="#level3">🟡 第 3 級</a></td></tr>
+        <tr><td>在 LINE 傳一句話就建任務、每天早上收到點名回報</td><td><a href="#level4">🟠 第 4 級</a></td></tr>
+        <tr><td>桌面小綿助陪伴與健康提醒、按住說話就出字</td><td><a href="#level5">🟣 第 5 級</a></td></tr>
       </table>
 
-      <h3>📝 開始前先準備：一份「金鑰記錄表」</h3>
-      <p class="lead">過程中會拿到幾串「金鑰」（一長串亂碼）。按下面的「複製」→ 開 Windows 的<strong>記事本</strong>（開始功能表搜尋「記事本」）→ 貼上 → 存到桌面，取名 <code>我的教師工作台金鑰.txt</code>。之後拿到哪一串，就貼在對應那一行後面。每個要貼的欄位上都印著同樣的符號，<strong>照符號貼就對了</strong>。</p>
-      <pre class="notes" id="keyNotes">🌐 機器人網址（難度 1）：
-🔑C 工作台同步金鑰（難度 1）：
-🔑D 教室大屏金鑰（難度 1）：
-🔑E Gemini 金鑰（難度 2）：
-🔑B Webhook 驗證參數（難度 3）：
-🔑A LINE Token（難度 3）：
-LINE userId（難度 3，U 開頭）：</pre>
-      <div class="dl-row"><button class="copy-btn" data-copy="#keyNotes">複製記錄表</button><span class="lead">⚠ 這份檔案不要傳給別人、不要放群組；教室電腦只需要 🌐 和 🔑D。</span></div>
+      <h3>📝 做到第 2 級再準備：一份「金鑰記錄表」</h3>
+      <p class="lead">第 1 級完全用不到。從第 2 級開始會拿到幾串網址和「金鑰」（一長串亂碼），<strong>代號照用到的先後排成 A、B、C……</strong>。按下面的「複製」→ 開 Windows 的<strong>記事本</strong>（開始功能表搜尋「記事本」）→ 貼上 → 存到桌面，取名 <code>我的教師工作台金鑰.txt</code>。之後拿到哪一串，就貼在對應那一行後面。每個要貼的欄位上都印著同樣的代號，<strong>照代號貼就對了</strong>。</p>
+      <pre class="notes" id="keyNotes">🌐A 機器人網址（第 2 級）：
+🔑B 教室大屏金鑰（第 2 級）：
+🔑C 工作台同步金鑰（第 2 級）：
+🔑D Gemini 金鑰（第 3 級）：
+🔑E LINE Token（第 4 級）：
+🔑F Webhook 驗證參數（第 4 級）：
+👤G LINE userId（第 4 級，U 開頭）：</pre>
+      <div class="dl-row"><button class="copy-btn" data-copy="#keyNotes">複製記錄表</button><span class="lead">⚠ 這份檔案不要傳給別人、不要放群組；教室電腦只需要 🌐A 和 🔑B。</span></div>
 
-      <h3>🗝 金鑰符號對照表</h3>
+      <h3>🗝 代號對照表</h3>
       <table>
-        <tr><th>符號</th><th>屬於</th><th>這是什麼</th><th>哪裡拿到</th><th>貼到哪裡</th></tr>
-        <tr><td><strong>🌐</strong></td><td>🟢 難度 1</td><td>機器人網址（/exec 結尾）</td><td>難度 1 第 2 關，部署後產生</td><td>工作台「① 雲端／LINE 小幫手」、大屏設定、小綿助雲端連線；（難度 3）Webhook</td></tr>
-        <tr><td><strong>🔑C</strong></td><td>🟢 難度 1</td><td>工作台同步金鑰（老師專用，可查歷史）</td><td rowspan="2">難度 1 第 1 關「① 初始化」彈窗<br><span class="lead">隨時可用選單「🔑 顯示我的金鑰」再看</span></td><td>工作台「① 雲端／LINE 小幫手」、小綿助雲端連線、大屏「查詢統計」</td></tr>
-        <tr><td><strong>🔑D</strong></td><td>🟢 難度 1</td><td>教室大屏金鑰（教室專用，只能報當天）</td><td>晨間大屏「設定」分頁的 🔑D 欄（教室電腦只放這把）</td></tr>
-        <tr><td><strong>🔑E</strong></td><td>🟡 難度 2</td><td>AI 金鑰（Gemini）</td><td><a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a> 免費申請</td><td>工作台「② AI 設定」、小綿助「🎙 語音輸入」；（做了難度 3）試算表選單「④ 填入 Gemini 金鑰」</td></tr>
-        <tr><td><strong>🔑B</strong></td><td>🔴 難度 3</td><td>Webhook 驗證參數</td><td>難度 1 初始化時已一起產生（先不用）</td><td>接在 🌐 後面：<code>🌐?hook=🔑B</code>，貼到 LINE 的 Webhook URL</td></tr>
-        <tr><td><strong>🔑A</strong></td><td>🔴 難度 3</td><td>LINE Channel access token</td><td>LINE Developers 按 Issue 發行</td><td>試算表選單「② 填入 LINE Token（🔑A）」</td></tr>
+        <tr><th>代號</th><th>第幾級</th><th>這是什麼</th><th>哪裡拿到</th><th>貼到哪裡</th></tr>
+        <tr><td><strong>🌐A</strong></td><td>🔵 第 2 級</td><td>機器人網址（/exec 結尾）</td><td>第 2 級第 3 關，部署後產生</td><td>大屏設定、工作台「① 雲端／LINE 小幫手」、小綿助雲端連線；（第 4 級）Webhook</td></tr>
+        <tr><td><strong>🔑B</strong></td><td>🔵 第 2 級</td><td>教室大屏金鑰（教室專用，只能報當天）</td><td rowspan="2">第 2 級第 2 關「① 初始化」彈窗<br><span class="lead">隨時可用選單「🔑 顯示我的金鑰」再看</span></td><td>晨間大屏「設定」的 🔑B 欄（教室電腦只放這把）</td></tr>
+        <tr><td><strong>🔑C</strong></td><td>🔵 第 2 級</td><td>工作台同步金鑰（老師專用，可查歷史）</td><td>工作台「① 雲端／LINE 小幫手」、小綿助雲端連線、大屏「查詢統計」</td></tr>
+        <tr><td><strong>🔑D</strong></td><td>🟡 第 3 級</td><td>AI 金鑰（Gemini）</td><td><a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a> 免費申請</td><td>工作台「② AI 設定」、小綿助「🎙 語音輸入」；（第 4 級）試算表選單「④ 填入 Gemini 金鑰」</td></tr>
+        <tr><td><strong>🔑E</strong></td><td>🟠 第 4 級</td><td>LINE Channel access token</td><td>LINE Developers 按 Issue 發行</td><td>試算表選單「② 填入 LINE Token（🔑E）」</td></tr>
+        <tr><td><strong>🔑F</strong></td><td>🟠 第 4 級</td><td>Webhook 驗證參數</td><td>第 2 級初始化時已一起產生（先不用）</td><td>接在 🌐A 後面：<code>🌐A?hook=🔑F</code>，貼到 LINE 的 Webhook URL</td></tr>
+        <tr><td><strong>👤G</strong></td><td>🟠 第 4 級</td><td>LINE userId（U 開頭，用來鎖門）</td><td>對機器人傳「我的ID」</td><td>試算表選單「③ 填入我的 LINE userId」</td></tr>
       </table>
       <div class="warn">💰 <strong>費用：全部免費。</strong>Google 免費額度＋ Gemini 免費額度＋ LINE 官方帳號免費方案就夠用。LINE 唯一的量限制是「主動推播」每月 200 則（晨間回報一天 2 則，一個月約 44 則）。</div>
     </section>
 
-    <section id="part1">
-      <div class="sec-head"><div class="sec-icon">🅰</div><div class="sec-titles"><h2><span class="sec-num">2.</span>Part A：開始使用工作台（3 分鐘，免設定）</h2></div></div>
-      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="Part A 操作畫面">
+    <section id="level1" class="tier1">
+      <span id="part3"></span>
+      <div class="sec-head"><div class="sec-icon">🟢</div><div class="sec-titles"><div class="tier-head"><h2><span class="sec-num">2.</span>第 1 級：只用晨間大屏</h2><span class="pill">約 5 分鐘</span><span class="pill">不用金鑰</span></div></div></div>
+      <p class="lead">沒用過 AI、沒碰過雲端也沒關係。打開網址、填幾個欄位，教室電腦就能點名、收作業、寫黑板。<strong>資料只存在這台電腦</strong>，不會上傳到任何地方。</p>
+      <div class="gets"><span>不用申請任何東西</span></div>
+      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="第 1 級：晨間大屏設定操作畫面">
+<defs><marker id="ar-pl" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
+<rect class="d-win" x="8" y="8" width="170" height="170" rx="8"/><rect class="d-wbar" x="9" y="9" width="168" height="19" rx="7"/><rect class="d-wbar" x="9" y="20" width="168" height="8" rx="0"/><circle cx="18" cy="18" r="3" fill="#e0766a"/><circle cx="27" cy="18" r="3" fill="#e8c15a"/><circle cx="36" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="46" y="22" text-anchor="start">晨間大屏（教室電腦）</text><rect class="d-btn-l" x="16" y="36" width="36" height="20" rx="5"/><text class="d-btxt-d" x="34" y="50" text-anchor="middle">點名</text><rect class="d-btn-l" x="57" y="36" width="36" height="20" rx="5"/><text class="d-btxt-d" x="75" y="50" text-anchor="middle">作業</text><rect class="d-btn-l" x="98" y="36" width="25" height="20" rx="5"/><text class="d-btxt-d" x="110" y="50" text-anchor="middle">…</text><rect class="d-btn-a" x="128" y="36" width="36" height="20" rx="5"/><text class="d-btxt-d" x="146" y="50" text-anchor="middle">設定</text><rect class="d-hl" x="125" y="33" width="42" height="26" rx="6"/><path class="d-cursor" d="M154,48 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/><rect class="d-seat" x="20" y="68" width="23" height="26" rx="4"/><rect class="d-seat" x="49" y="68" width="23" height="26" rx="4"/><rect class="d-seat" x="78" y="68" width="23" height="26" rx="4"/><rect class="d-seat" x="108" y="68" width="23" height="26" rx="4"/><rect class="d-seat" x="137" y="68" width="23" height="26" rx="4"/><rect class="d-seat" x="20" y="100" width="23" height="26" rx="4"/><rect class="d-seat" x="49" y="100" width="23" height="26" rx="4"/><rect class="d-seat" x="78" y="100" width="23" height="26" rx="4"/><rect class="d-seat" x="108" y="100" width="23" height="26" rx="4"/><rect class="d-seat" x="137" y="100" width="23" height="26" rx="4"/><rect class="d-seat" x="20" y="132" width="23" height="26" rx="4"/><rect class="d-seat" x="49" y="132" width="23" height="26" rx="4"/><rect class="d-seat" x="78" y="132" width="23" height="26" rx="4"/><rect class="d-seat" x="108" y="132" width="23" height="26" rx="4"/><rect class="d-seat" x="137" y="132" width="23" height="26" rx="4"/>
+<text class="d-cap" x="93" y="200" text-anchor="middle">① 最右邊分頁「設定」</text>
+<text class="d-small" x="93" y="218" text-anchor="middle"></text>
+<path class="d-line" d="M182,93 L201,93" marker-end="url(#ar-pl)"/>
+<rect class="d-win" x="206" y="8" width="170" height="170" rx="8"/><rect class="d-wbar" x="207" y="9" width="168" height="19" rx="7"/><rect class="d-wbar" x="207" y="20" width="168" height="8" rx="0"/><circle cx="216" cy="18" r="3" fill="#e0766a"/><circle cx="225" cy="18" r="3" fill="#e8c15a"/><circle cx="234" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="244" y="22" text-anchor="start">晨間大屏</text><rect class="d-modal" x="216" y="42" width="150" height="116" rx="8"/><text class="d-title2" x="228" y="66" text-anchor="start">請輸入設定頁密碼</text><text class="d-small" x="228" y="84" text-anchor="start">（預設 1234）</text><rect class="d-field" x="228" y="94" width="126" height="22" rx="4"/><text class="d-mono" x="234" y="109" text-anchor="start">1234</text><rect class="d-hl" x="225" y="91" width="132" height="28" rx="5"/><rect class="d-btn-b" x="304" y="126" width="50" height="22" rx="5"/><text class="d-btxt" x="329" y="141" text-anchor="middle">確定</text>
+<text class="d-cap" x="291" y="200" text-anchor="middle">② 輸入密碼</text>
+<text class="d-small" x="291" y="218" text-anchor="middle">預設 1234</text>
+<path class="d-line" d="M380,93 L399,93" marker-end="url(#ar-pl)"/>
+<rect class="d-win" x="404" y="8" width="170" height="170" rx="8"/><rect class="d-wbar" x="405" y="9" width="168" height="19" rx="7"/><rect class="d-wbar" x="405" y="20" width="168" height="8" rx="0"/><circle cx="414" cy="18" r="3" fill="#e0766a"/><circle cx="423" cy="18" r="3" fill="#e8c15a"/><circle cx="432" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="442" y="22" text-anchor="start">晨間大屏 ｜ 設定</text><text class="d-small" x="414" y="50" text-anchor="start">班級名稱</text><rect class="d-field" x="470" y="37" width="94" height="20" rx="4"/><text class="d-text" x="476" y="51" text-anchor="start">601</text><text class="d-small" x="414" y="84" text-anchor="start">最大座號</text><rect class="d-field" x="470" y="71" width="94" height="20" rx="4"/><text class="d-text" x="476" y="85" text-anchor="start">30</text><text class="d-small" x="414" y="118" text-anchor="start">科目</text><rect class="d-field" x="470" y="105" width="94" height="20" rx="4"/><text class="d-text" x="476" y="119" text-anchor="start">國語、數學</text><rect class="d-btn-p" x="494" y="150" width="70" height="22" rx="5"/><text class="d-btxt" x="529" y="165" text-anchor="middle">儲存設定</text><path class="d-cursor" d="M544,162 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/>
+<text class="d-cap" x="489" y="200" text-anchor="middle">③ 填班級、座號、科目</text>
+<text class="d-small" x="489" y="218" text-anchor="middle">按「儲存設定」</text>
+<path class="d-line" d="M578,93 L597,93" marker-end="url(#ar-pl)"/>
+<rect class="d-win" x="602" y="8" width="170" height="170" rx="8"/><rect class="d-wbar" x="603" y="9" width="168" height="19" rx="7"/><rect class="d-wbar" x="603" y="20" width="168" height="8" rx="0"/><circle cx="612" cy="18" r="3" fill="#e0766a"/><circle cx="621" cy="18" r="3" fill="#e8c15a"/><circle cx="630" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="640" y="22" text-anchor="start">晨間大屏 ｜ 點名</text><rect class="d-seat" x="614" y="38" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="643" y="38" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="672" y="38" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="702" y="38" width="23" height="22" rx="4"/><rect class="d-seat" x="731" y="38" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="614" y="66" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="643" y="66" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="672" y="66" width="23" height="22" rx="4"/><rect class="d-seat" x="702" y="66" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="731" y="66" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="614" y="94" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="643" y="94" width="23" height="22" rx="4"/><rect class="d-seat" x="672" y="94" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="702" y="94" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="731" y="94" width="23" height="22" rx="4"/><text class="d-small" x="612" y="150" text-anchor="start">自動存在這台電腦</text><path class="d-cursor" d="M686,146 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/>
+<text class="d-cap" x="687" y="200" text-anchor="middle">④ 點座號就存好</text>
+<text class="d-small" x="687" y="218" text-anchor="middle">不用按存檔</text>
+</svg>
+</figure>
+      <div class="step"><div class="step-no">1</div><div class="step-body">
+        <strong class="t">教室電腦（接投影機或觸控大屏）開啟大屏網址</strong>
+        <div class="copyrow"><code id="urlMorning">（載入中…）</code><button class="copy-btn" data-copy="#urlMorning">複製</button></div>
+      
+      </div></div>
+      <div class="step"><div class="step-no">2</div><div class="step-body">
+        <strong class="t">點最上排<strong>最右邊的分頁「設定」</strong>→ 輸入密碼（預設 <code>1234</code>）→ 填好 → 最下面「儲存設定」</strong>
+        <table>
+          <tr><th>欄位</th><th>填什麼</th></tr>
+          <tr><td>班級名稱</td><td>例：601</td></tr>
+          <tr><td>班級最大座號／空號</td><td>照實填；轉走的座號填進「空號」就不會出現</td></tr>
+          <tr><td>科目管理／作業項目</td><td>點亮要收作業的科目與項目；不夠的自己新增</td></tr>
+          <tr><td>兩個時間</td><td>預設 08:00 遲到界線／08:05 未填轉未到，都可以自訂</td></tr>
+          <tr><td>設定頁密碼</td><td>建議改掉預設的 1234，免得學生進設定亂改</td></tr>
+          <tr><td>聯絡本字體</td><td>一般：標準／粉圓／芫荽；注音：注音芫荽／注音粉圓（低年級選注音體，第一次切換要等字型下載）</td></tr>
+        </table>
+        <span class="lead">設定頁下面「第 2 級」「第 4 級」那兩塊先不用打開。</span>
+      </div></div>
+      <div class="step"><div class="step-no">3</div><div class="step-body">
+        <strong class="t">（選用）開機自動全螢幕開啟大屏</strong>
+        <p>① 按你教室電腦用的瀏覽器下載啟動檔（會存到「下載」資料夾）：</p>
+        <div class="dl-row"><button type="button" class="dl-btn" data-kiosk="chrome">⬇ 下載「啟動大屏（Chrome）.bat」</button><button type="button" class="dl-btn" data-kiosk="edge">⬇ 下載「啟動大屏（Edge）.bat」</button></div>
+        <p>② 按 <span class="kbd">Win</span>＋<span class="kbd">R</span> 輸入 <code>shell:startup</code> 按 Enter → 把剛下載的 .bat 檔拖進開啟的資料夾。之後開機就自動全螢幕進大屏（要離開全螢幕按 <span class="kbd">Alt</span>＋<span class="kbd">F4</span>）。</p>
+        <details class="box"><summary style="cursor:pointer;font-weight:800">想自己做 .bat？</summary>記事本貼上下面這行 →「另存新檔」→ 存檔類型選「所有檔案」→ 檔名打 <code>啟動大屏.bat</code>：
+          <div class="copyrow"><code id="kioskCmd">（載入中…）</code><button class="copy-btn" data-copy="#kioskCmd">複製</button></div></details>
+      </div></div>
+      
+      <div class="step"><div class="step-no">4</div><div class="step-body">
+        <strong class="t">（內建）🧰 班級工具——不用任何設定</strong>
+        <p>抽籤機、檢核板、計分板、隨機分組、安靜偵測、定評小幫手、番茄鐘、大屏提示、螢幕公告；全部只存教室電腦。使用情境見<a href="About.html" target="_blank" rel="noopener">系統說明</a>。</p>
+      </div></div>
+      <div class="warn">🔒 <strong>第 1 級的資料範圍：</strong>只存在這台電腦的這個瀏覽器。大屏只用<strong>座號</strong>，不輸入學生姓名；聯絡本也請不要寫學生姓名或個資。換電腦或清除瀏覽器資料，內容就不見了。</div>
+      <div class="box"><strong>第 1 級看不到的：</strong>「作業補交」「查詢統計」兩個分頁要看前幾天的資料，接上第 2 級才會出現。</div>
+      <div class="ok">✅ <strong>第 1 級完成！</strong>測一下：點幾個座號 → 到「作業繳交」新增一科 → 黑板按「✏️ 編輯」寫一句並儲存 → 按 F5 重新整理，內容都還在就對了。</div>
+    </section>
+
+    <section id="level2" class="tierb">
+      <span id="tier1"></span><span id="part2"></span><span id="part1"></span>
+      <div class="sec-head"><div class="sec-icon">🔵</div><div class="sec-titles"><div class="tier-head"><h2><span class="sec-num">3.</span>第 2 級：大屏＋教師工作台（用 GAS 連結）</h2><span class="pill">約 20 分鐘</span><span class="pill">不碰程式碼</span></div></div></div>
+      <p class="lead">在你自己的 Google 帳號複製一份程式，當作「雲端大腦」，把大屏和工作台接起來。接好後可以在家寫聯絡本、隔天黑板自動出現，還多了作業補交與查詢統計。<strong>先在瀏覽器登入 Google</strong>（右上角看得到你的頭像），建議用<strong>個人 Gmail</strong>（學校帳號可能被管理員擋）。</p>
+      <div class="gets"><span>會拿到：🌐A 🔑B 🔑C</span><span>（🔑F 會一起產生，第 4 級才用）</span></div>
+
+      <h3>第 1 關：打開工作台（1 分鐘）</h3>
+      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="打開工作台操作畫面">
 <defs><marker id="ar-pa" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
 <rect class="d-win" x="8" y="8" width="236" height="170" rx="8"/><rect class="d-wbar" x="9" y="9" width="234" height="19" rx="7"/><rect class="d-wbar" x="9" y="20" width="234" height="8" rx="0"/><circle cx="18" cy="18" r="3" fill="#e0766a"/><circle cx="27" cy="18" r="3" fill="#e8c15a"/><circle cx="36" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="46" y="22" text-anchor="start">瀏覽器</text><rect class="d-field" x="18" y="38" width="192" height="22" rx="4"/><text class="d-mono" x="24" y="53" text-anchor="start">t-borad2026.netlify.app</text><text class="d-title2" x="222" y="54" text-anchor="middle">☆</text><rect class="d-hl" x="212" y="37" width="22" height="24" rx="5"/><rect class="d-hdr" x="18" y="70" width="216" height="34" rx="6"/><text class="d-white" x="28" y="92" text-anchor="start">教師工作台</text><rect class="d-ph" x="18" y="112" width="216" height="22" rx="4"/><rect class="d-ph" x="18" y="140" width="216" height="22" rx="4"/>
 <text class="d-cap" x="126" y="200" text-anchor="middle">① 打開網址</text>
@@ -296,35 +370,27 @@ LINE userId（難度 3，U 開頭）：</pre>
       </div></div>
       <div class="step"><div class="step-no">3</div><div class="step-body">
         <strong class="t">重要觀念：資料存在「這台電腦的這個瀏覽器」</strong>
-        <p>不用登入、資料不上雲端；但換電腦或換瀏覽器就看不到資料。所以<strong>每週到「⚙ 設定 → 備份與還原 → 下載 JSON 備份」</strong>，換電腦時用備份檔還原（做了難度 1 還能雲端備份）。</p>
+        <p>不用登入、資料不上雲端；但換電腦或換瀏覽器就看不到資料。所以<strong>每週到「⚙ 設定 → 備份與還原 → 下載 JSON 備份」</strong>，換電腦時用備份檔還原（做完這一級還能雲端備份）。</p>
       </div></div>
-      <div class="ok">✅ 任務、日曆、教學進度、記事、教材小工場的本機工具（座位表、PDF 工具、敏感資料遮蔽）都已可用。需要更多功能，挑下面的難度。</div>
-    </section>
-
-    <section id="tier1" class="tier1">
-      <span id="part2"></span>
-      <div class="sec-head"><div class="sec-icon">🟢</div><div class="sec-titles"><div class="tier-head"><h2><span class="sec-num">3.</span>難度 1：Google 雲端大腦（GAS）</h2><span class="pill">約 15 分鐘</span><span class="pill">不碰程式碼</span></div></div></div>
-      <p class="lead">在你自己的 Google 帳號複製一份程式，當作你的「雲端大腦」。<strong>先在瀏覽器登入 Google</strong>（右上角看得到你的頭像），建議用<strong>個人 Gmail</strong>（學校帳號可能被管理員擋）。</p>
-      <div class="gets"><span>會拿到：🌐 🔑C 🔑D</span><span>（🔑B 會一起產生，難度 3 才用）</span></div>
-
-      <h3>第 1 關：一鍵複製試算表副本</h3>
+      
+      <h3>第 2 關：一鍵複製試算表副本</h3>
       <p class="lead">程式已經預先裝在範本試算表裡，點下方按鈕複製一份到你自己的雲端硬碟，<strong>完全不用貼任何程式碼</strong>。</p>
       <p style="text-align:center;margin:16px 0">
         <a href="https://docs.google.com/spreadsheets/d/1mP1N5VOtHnaiZAVlAJ5KATyY0G4EyQ50x6vMzR1j5UU/copy" target="_blank" rel="noopener" style="display:inline-block;background:#1d9e5f;color:#fff;font-size:19px;font-weight:900;padding:14px 32px;border-radius:14px;text-decoration:none;box-shadow:0 3px 10px rgba(20,80,50,.3)">📄 點此一鍵建立試算表副本</a>
       </p>
-      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="難度 1 第 1 關操作畫面">
+      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="第 2 級第 1 關操作畫面">
 <defs><marker id="ar-t1a" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
 <rect class="d-win" x="8" y="8" width="236" height="170" rx="8"/><rect class="d-wbar" x="9" y="9" width="234" height="19" rx="7"/><rect class="d-wbar" x="9" y="20" width="234" height="8" rx="0"/><circle cx="18" cy="18" r="3" fill="#e0766a"/><circle cx="27" cy="18" r="3" fill="#e8c15a"/><circle cx="36" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="46" y="22" text-anchor="start">docs.google.com</text><text class="d-title2" x="20" y="54" text-anchor="start">要建立文件副本嗎？</text><text class="d-small" x="20" y="74" text-anchor="start">會複製到你的雲端硬碟</text><rect class="d-field" x="20" y="86" width="212" height="22" rx="4"/><text class="d-text" x="26" y="101" text-anchor="start">LINE小幫手 的副本</text><rect class="d-btn-l" x="98" y="138" width="52" height="26" rx="5"/><text class="d-btxt-d" x="124" y="155" text-anchor="middle">取消</text><rect class="d-btn-g" x="158" y="138" width="74" height="26" rx="5"/><text class="d-btxt" x="195" y="155" text-anchor="middle">建立副本</text><rect class="d-hl" x="154" y="134" width="82" height="34" rx="6"/><path class="d-cursor" d="M202,154 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/>
 <text class="d-cap" x="126" y="200" text-anchor="middle">① 點綠色按鈕</text>
 <text class="d-small" x="126" y="218" text-anchor="middle">按「建立副本」</text>
 <path class="d-line" d="M248,93 L267,93" marker-end="url(#ar-t1a)"/>
-<rect class="d-win" x="272" y="8" width="236" height="170" rx="8"/><rect class="d-wbar" x="273" y="9" width="234" height="19" rx="7"/><rect class="d-wbar" x="273" y="20" width="234" height="8" rx="0"/><circle cx="282" cy="18" r="3" fill="#e0766a"/><circle cx="291" cy="18" r="3" fill="#e8c15a"/><circle cx="300" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="310" y="22" text-anchor="start">你的試算表</text><rect class="d-mbar" x="273" y="29" width="234" height="18" rx="0"/><text class="d-wtxt" x="280" y="42" text-anchor="start">檔案 編輯</text><text class="d-mtxt" x="500" y="42" text-anchor="end">🤖 LINE 小幫手</text><rect class="d-hl" x="407" y="30" width="98" height="17" rx="4"/><rect class="d-box" x="280" y="52" width="220" height="118" rx="4"/><rect class="d-sel" x="283" y="58" width="214" height="19" rx="3"/><rect class="d-hl" x="282" y="57" width="216" height="21" rx="4"/><text class="d-mtxt" x="289" y="72" text-anchor="start">① 初始化（難度 1）</text><path class="d-cursor" d="M486,69 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/><text class="d-small" x="289" y="93" text-anchor="start">② 填入 LINE Token</text><text class="d-small" x="289" y="114" text-anchor="start">③ 填入 userId</text><text class="d-small" x="289" y="135" text-anchor="start">④ Gemini 金鑰</text><text class="d-small" x="289" y="156" text-anchor="start">🔑 顯示我的金鑰</text>
+<rect class="d-win" x="272" y="8" width="236" height="170" rx="8"/><rect class="d-wbar" x="273" y="9" width="234" height="19" rx="7"/><rect class="d-wbar" x="273" y="20" width="234" height="8" rx="0"/><circle cx="282" cy="18" r="3" fill="#e0766a"/><circle cx="291" cy="18" r="3" fill="#e8c15a"/><circle cx="300" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="310" y="22" text-anchor="start">你的試算表</text><rect class="d-mbar" x="273" y="29" width="234" height="18" rx="0"/><text class="d-wtxt" x="280" y="42" text-anchor="start">檔案 編輯</text><text class="d-mtxt" x="500" y="42" text-anchor="end">🤖 LINE 小幫手</text><rect class="d-hl" x="407" y="30" width="98" height="17" rx="4"/><rect class="d-box" x="280" y="52" width="220" height="118" rx="4"/><rect class="d-sel" x="283" y="58" width="214" height="19" rx="3"/><rect class="d-hl" x="282" y="57" width="216" height="21" rx="4"/><text class="d-mtxt" x="289" y="72" text-anchor="start">① 初始化（第 2 級）</text><path class="d-cursor" d="M486,69 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/><text class="d-small" x="289" y="93" text-anchor="start">② 填入 LINE Token</text><text class="d-small" x="289" y="114" text-anchor="start">③ 填入 userId</text><text class="d-small" x="289" y="135" text-anchor="start">④ Gemini 金鑰</text><text class="d-small" x="289" y="156" text-anchor="start">🔑 顯示我的金鑰</text>
 <text class="d-cap" x="390" y="200" text-anchor="middle">② 🤖 LINE 小幫手</text>
 <text class="d-small" x="390" y="218" text-anchor="middle">選「① 初始化」</text>
 <path class="d-line" d="M512,93 L531,93" marker-end="url(#ar-t1a)"/>
-<rect class="d-win" x="536" y="8" width="236" height="170" rx="8"/><rect class="d-wbar" x="537" y="9" width="234" height="19" rx="7"/><rect class="d-wbar" x="537" y="20" width="234" height="8" rx="0"/><circle cx="546" cy="18" r="3" fill="#e0766a"/><circle cx="555" cy="18" r="3" fill="#e8c15a"/><circle cx="564" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="574" y="22" text-anchor="start">✅ 初始化完成</text><text class="d-tag1" x="546" y="48" text-anchor="start">【難度 1】現在要用</text><rect class="d-chip" x="546" y="56" width="30" height="20" rx="4"/><text class="d-chiptxt" x="561" y="70" text-anchor="middle">🔑C</text><text class="d-mono" x="582" y="70" text-anchor="start">f3a0…c21e</text><text class="d-small" x="762" y="70" text-anchor="end">→ 工作台</text><rect class="d-hl" x="542" y="53" width="224" height="26" rx="5"/><rect class="d-chip" x="546" y="86" width="30" height="20" rx="4"/><text class="d-chiptxt" x="561" y="100" text-anchor="middle">🔑D</text><text class="d-mono" x="582" y="100" text-anchor="start">b90d…4a7f</text><text class="d-small" x="762" y="100" text-anchor="end">→ 大屏</text><rect class="d-hl" x="542" y="83" width="224" height="26" rx="5"/><text class="d-tag3" x="546" y="132" text-anchor="start">【難度 3】做 LINE 才用</text><rect class="d-chip-dim" x="546" y="140" width="30" height="20" rx="4"/><text class="d-small" x="561" y="154" text-anchor="middle">🔑B</text><text class="d-mono d-dim" x="582" y="154" text-anchor="start">e1c4…9b02</text><text class="d-small" x="762" y="154" text-anchor="end">先不用</text>
+<rect class="d-win" x="536" y="8" width="236" height="170" rx="8"/><rect class="d-wbar" x="537" y="9" width="234" height="19" rx="7"/><rect class="d-wbar" x="537" y="20" width="234" height="8" rx="0"/><circle cx="546" cy="18" r="3" fill="#e0766a"/><circle cx="555" cy="18" r="3" fill="#e8c15a"/><circle cx="564" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="574" y="22" text-anchor="start">✅ 初始化完成</text><text class="d-tag1" x="546" y="48" text-anchor="start">【第 2 級】現在要用</text><rect class="d-chip" x="546" y="56" width="30" height="20" rx="4"/><text class="d-chiptxt" x="561" y="70" text-anchor="middle">🔑C</text><text class="d-mono" x="582" y="70" text-anchor="start">f3a0…c21e</text><text class="d-small" x="762" y="70" text-anchor="end">→ 工作台</text><rect class="d-hl" x="542" y="53" width="224" height="26" rx="5"/><rect class="d-chip" x="546" y="86" width="30" height="20" rx="4"/><text class="d-chiptxt" x="561" y="100" text-anchor="middle">🔑B</text><text class="d-mono" x="582" y="100" text-anchor="start">b90d…4a7f</text><text class="d-small" x="762" y="100" text-anchor="end">→ 大屏</text><rect class="d-hl" x="542" y="83" width="224" height="26" rx="5"/><text class="d-tag3" x="546" y="132" text-anchor="start">【第 4 級】做 LINE 才用</text><rect class="d-chip-dim" x="546" y="140" width="30" height="20" rx="4"/><text class="d-small" x="561" y="154" text-anchor="middle">🔑F</text><text class="d-mono d-dim" x="582" y="154" text-anchor="start">e1c4…9b02</text><text class="d-small" x="762" y="154" text-anchor="end">先不用</text>
 <text class="d-cap" x="654" y="200" text-anchor="middle">④ 跳出金鑰視窗</text>
-<text class="d-small" x="654" y="218" text-anchor="middle">抄 🔑C 🔑D（🔑B 先不用）</text>
+<text class="d-small" x="654" y="218" text-anchor="middle">抄 🔑C 🔑B（🔑F 先不用）</text>
 </svg>
 <figcaption>第 ② 步之後會先跳授權（下一張圖的 4 個畫面），授權完<strong>再點一次「① 初始化」</strong>才會出現第 ④ 步的金鑰視窗。</figcaption>
 </figure>
@@ -349,9 +415,9 @@ LINE userId（難度 3，U 開頭）：</pre>
 <figcaption>第 ④ 步如果<strong>沒勾「選取全部」</strong>，之後建表單、寫日曆會失敗。這組畫面之後（部署、升級）可能還會再出現，照同樣方式允許即可。</figcaption>
 </figure>
       <div class="step"><div class="step-no">1</div><div class="step-body">點上方綠色按鈕 → Google 頁面按「<strong>建立副本</strong>」（頁面提到「Apps Script 檔案也會一併複製」是正常的）→ 開啟一份<strong>屬於你自己</strong>的試算表。</div></div>
-      <div class="step"><div class="step-no">2</div><div class="step-body">等 5 秒，試算表<strong>上方選單列最右邊</strong>會出現「<strong>🤖 LINE 小幫手</strong>」（沒看到就按 F5 重新整理）→ 點它 → 選「<strong>① 初始化</strong>」。<br><span class="lead">名字叫「LINE 小幫手」，但難度 1 完全不用 LINE，照點就好。</span></div></div>
+      <div class="step"><div class="step-no">2</div><div class="step-body">等 5 秒，試算表<strong>上方選單列最右邊</strong>會出現「<strong>🤖 LINE 小幫手</strong>」（沒看到就按 F5 重新整理）→ 點它 → 選「<strong>① 初始化</strong>」。<br><span class="lead">名字叫「LINE 小幫手」，但第 2 級完全不用 LINE，照點就好。</span></div></div>
       <div class="step"><div class="step-no">3</div><div class="step-body">第一次會跳出<strong>授權</strong>（上面第二張圖的 4 個畫面）：「需要授權」按<strong>確定</strong> → 選你的帳號 → 看到「Google 尚未驗證這個應用程式」<strong>不用怕</strong>（程式就在你剛複製的試算表裡）→ 點小字「<strong>進階</strong>」→「<strong>前往…（不安全）</strong>」→ 如果出現一排勾選框，勾「<strong>選取全部</strong>」→「<strong>繼續</strong>」（或「允許」）。<br><span class="lead">授權完成後，<strong>再點一次</strong>「🤖 LINE 小幫手 → ① 初始化」。</span></div></div>
-      <div class="step"><div class="step-no">4</div><div class="step-body">跳出的金鑰視窗分成幾段，<strong>難度 1 只要把【難度 1】那段的兩把</strong>貼進你的金鑰記錄表：<br>・<strong>🔑C</strong> 工作台同步金鑰（之後貼工作台、小綿助）<br>・<strong>🔑D</strong> 教室大屏金鑰（之後貼教室大屏）<br><span class="lead">做法：點進視窗裡的文字框 → <span class="kbd">Ctrl</span>＋<span class="kbd">A</span> 全選 → <span class="kbd">Ctrl</span>＋<span class="kbd">C</span> 複製 → 整段貼到記事本最下面，再把兩串搬到對應那一行。<br>【難度 3】那段的 <strong>🔑B（Webhook 驗證參數）先不用管</strong>，做 LINE 時才用得到。任何時候都能用選單「<strong>🔑 顯示我的金鑰</strong>」再看一次；試算表最前面的「📋 安裝總表」分頁也列出每一把的狀態。</span></div></div>
+      <div class="step"><div class="step-no">4</div><div class="step-body">跳出的金鑰視窗分成幾段，<strong>現在只要把【第 2 級】那段的兩把</strong>貼進你的金鑰記錄表：<br>・<strong>🔑B</strong> 教室大屏金鑰（第 4 關貼大屏）<br>・<strong>🔑C</strong> 工作台同步金鑰（第 5 關貼工作台）<br><span class="lead">做法：點進視窗裡的文字框 → <span class="kbd">Ctrl</span>＋<span class="kbd">A</span> 全選 → <span class="kbd">Ctrl</span>＋<span class="kbd">C</span> 複製 → 整段貼到記事本最下面，再把兩串搬到對應那一行。<br>【第 4 級】那段的 <strong>🔑F（Webhook 驗證參數）先不用管</strong>，做 LINE 時才用得到。任何時候都能用選單「<strong>🔑 顯示我的金鑰</strong>」再看一次；試算表最前面的「📋 安裝總表」分頁也列出每一把的狀態。</span></div></div>
       <details class="box" style="margin-top:12px">
         <summary style="cursor:pointer;font-weight:900">🛠 備用方法：手動貼程式碼（一鍵副本失效時才需要）</summary>
         <div class="step"><div class="step-no">1</div><div class="step-body">開 <a href="https://sheets.google.com" target="_blank" rel="noopener">sheets.google.com</a> → 按「＋」建新試算表 → 名稱改成 <code>LINE小幫手資料</code> → 上方選單「<strong>擴充功能 → Apps Script</strong>」。</div></div>
@@ -363,8 +429,9 @@ LINE userId（難度 3，U 開頭）：</pre>
         <div class="step"><div class="step-no">3</div><div class="step-body">回試算表按 F5 重新整理，改用選單「🤖 LINE 小幫手 → ① 初始化」（或在編輯器選函式 <code>setupLineBot</code> 按「執行」，金鑰會出現在下方「執行紀錄」）。</div></div>
       </details>
 
-      <h3>第 2 關：部署（把大腦開機，拿到 🌐）</h3>
-      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="難度 1 第 2 關操作畫面">
+      
+      <h3>第 3 關：部署（把大腦開機，拿到 🌐A）</h3>
+      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="第 2 級第 2 關操作畫面">
 <defs><marker id="ar-t1b" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
 <rect class="d-win" x="8" y="8" width="170" height="170" rx="8"/><rect class="d-wbar" x="9" y="9" width="168" height="19" rx="7"/><rect class="d-wbar" x="9" y="20" width="168" height="8" rx="0"/><circle cx="18" cy="18" r="3" fill="#e0766a"/><circle cx="27" cy="18" r="3" fill="#e8c15a"/><circle cx="36" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="46" y="22" text-anchor="start">你的試算表</text><rect class="d-mbar" x="9" y="29" width="168" height="18" rx="0"/><text class="d-wtxt" x="16" y="42" text-anchor="start">檔案 編輯 檢視</text><text class="d-mtxt" x="170" y="42" text-anchor="end">擴充功能</text><rect class="d-hl" x="121" y="30" width="54" height="17" rx="4"/><rect class="d-box" x="16" y="52" width="154" height="118" rx="4"/><text class="d-small" x="25" y="72" text-anchor="start">外掛程式</text><text class="d-small" x="25" y="93" text-anchor="start">巨集</text><rect class="d-sel" x="19" y="100" width="148" height="19" rx="3"/><rect class="d-hl" x="18" y="99" width="150" height="21" rx="4"/><text class="d-mtxt" x="25" y="114" text-anchor="start">Apps Script</text><path class="d-cursor" d="M156,111 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/>
 <text class="d-cap" x="93" y="200" text-anchor="middle">① 擴充功能</text>
@@ -378,43 +445,72 @@ LINE userId（難度 3，U 開頭）：</pre>
 <text class="d-cap" x="489" y="200" text-anchor="middle">③ ⚙ 網頁應用程式</text>
 <text class="d-small" x="489" y="218" text-anchor="middle">執行身分「我」・存取「任何人」</text>
 <path class="d-line" d="M578,93 L597,93" marker-end="url(#ar-t1b)"/>
-<rect class="d-win" x="602" y="8" width="170" height="170" rx="8"/><rect class="d-wbar" x="603" y="9" width="168" height="19" rx="7"/><rect class="d-wbar" x="603" y="20" width="168" height="8" rx="0"/><circle cx="612" cy="18" r="3" fill="#e0766a"/><circle cx="621" cy="18" r="3" fill="#e8c15a"/><circle cx="630" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="640" y="22" text-anchor="start">部署完成</text><text class="d-small" x="612" y="52" text-anchor="start">網頁應用程式 URL</text><rect class="d-field" x="612" y="60" width="150" height="22" rx="4"/><text class="d-mono" x="618" y="75" text-anchor="start">…/s/AKfy…/exec</text><rect class="d-hl" x="609" y="57" width="156" height="28" rx="5"/><rect class="d-btn-l" x="710" y="92" width="52" height="22" rx="5"/><text class="d-btxt-d" x="736" y="107" text-anchor="middle">複製</text><path class="d-cursor" d="M742,104 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/><text class="d-title2" x="612" y="140" text-anchor="start">＝ 🌐 機器人網址</text><text class="d-small" x="612" y="160" text-anchor="start">存進記事本</text>
+<rect class="d-win" x="602" y="8" width="170" height="170" rx="8"/><rect class="d-wbar" x="603" y="9" width="168" height="19" rx="7"/><rect class="d-wbar" x="603" y="20" width="168" height="8" rx="0"/><circle cx="612" cy="18" r="3" fill="#e0766a"/><circle cx="621" cy="18" r="3" fill="#e8c15a"/><circle cx="630" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="640" y="22" text-anchor="start">部署完成</text><text class="d-small" x="612" y="52" text-anchor="start">網頁應用程式 URL</text><rect class="d-field" x="612" y="60" width="150" height="22" rx="4"/><text class="d-mono" x="618" y="75" text-anchor="start">…/s/AKfy…/exec</text><rect class="d-hl" x="609" y="57" width="156" height="28" rx="5"/><rect class="d-btn-l" x="710" y="92" width="52" height="22" rx="5"/><text class="d-btxt-d" x="736" y="107" text-anchor="middle">複製</text><path class="d-cursor" d="M742,104 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/><text class="d-title2" x="612" y="140" text-anchor="start">＝ 🌐A 機器人網址</text><text class="d-small" x="612" y="160" text-anchor="start">存進記事本</text>
 <text class="d-cap" x="687" y="200" text-anchor="middle">④ 複製網址 → 完成</text>
-<text class="d-small" x="687" y="218" text-anchor="middle">＝ 🌐（/exec 結尾）</text>
+<text class="d-small" x="687" y="218" text-anchor="middle">＝ 🌐A（/exec 結尾）</text>
 </svg>
-<figcaption>存取權一定要選「<strong>任何人</strong>」——安全由亂數金鑰 🔑C／🔑D 把關，不是靠登入。按「部署」若又跳授權，照上一張圖允許。</figcaption>
+<figcaption>存取權一定要選「<strong>任何人</strong>」——安全由亂數金鑰 🔑C／🔑B 把關，不是靠登入。按「部署」若又跳授權，照上一張圖允許。</figcaption>
 </figure>
       <div class="step"><div class="step-no">1</div><div class="step-body">回到你的試算表 → 上方選單「<strong>擴充功能 → Apps Script</strong>」，會<strong>開新分頁</strong>顯示程式編輯器（滿滿的程式碼不用看、也不要動）。</div></div>
       <div class="step"><div class="step-no">2</div><div class="step-body">編輯器<strong>右上角藍色「部署」</strong>→「<strong>新增部署</strong>」→ 跳出視窗後，點左上「選取類型」旁的<strong>齒輪 ⚙</strong> → 選「<strong>網頁應用程式</strong>」。</div></div>
       <div class="step"><div class="step-no">3</div><div class="step-body">「說明」可以空白；執行身分選「<strong>我</strong>」、具有存取權的使用者選「<strong>任何人</strong>」→ 按「<strong>部署</strong>」（若又跳授權，照上面授權圖允許）。</div></div>
-      <div class="step"><div class="step-no">4</div><div class="step-body">完成視窗裡的「<strong>網頁應用程式 網址</strong>」按「複製」（<code>https://script.google.com/macros/s/…/exec</code>）＝ <strong>🌐 機器人網址</strong>，貼進金鑰記錄表 → 按「完成」。<br><span class="lead">✔ 檢查：把網址貼到瀏覽器新分頁打開，看到 <code>{"ok":true,"service":"teacher-dashboard-line-bot",…}</code> 這種英文就代表大腦開機了。</span><br><span class="lead">🔁 以後更新程式要用「部署 → 管理部署 → ✏️ 編輯 → 版本選『新版本』→ 部署」，網址才不會變；千萬不要再按「新增部署」。</span></div></div>
+      <div class="step"><div class="step-no">4</div><div class="step-body">完成視窗裡的「<strong>網頁應用程式 網址</strong>」按「複製」（<code>https://script.google.com/macros/s/…/exec</code>）＝ <strong>🌐A 機器人網址</strong>，貼進金鑰記錄表 → 按「完成」。<br><span class="lead">✔ 檢查：把網址貼到瀏覽器新分頁打開，看到 <code>{"ok":true,"service":"teacher-dashboard-line-bot",…}</code> 這種英文就代表大腦開機了。</span><br><span class="lead">🔁 以後更新程式要用「部署 → 管理部署 → ✏️ 編輯 → 版本選『新版本』→ 部署」，網址才不會變；千萬不要再按「新增部署」。</span></div></div>
 
-      <h3>第 3 關：把工作台接上（🌐＋🔑C）</h3>
-      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="難度 1 第 3 關操作畫面">
+      
+      <h3>第 4 關：把大屏接上（🌐A＋🔑B）</h3>
+      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="晨間大屏設定操作畫面">
+<defs><marker id="ar-pc" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
+<rect class="d-win" x="8" y="8" width="170" height="170" rx="8"/><rect class="d-wbar" x="9" y="9" width="168" height="19" rx="7"/><rect class="d-wbar" x="9" y="20" width="168" height="8" rx="0"/><circle cx="18" cy="18" r="3" fill="#e0766a"/><circle cx="27" cy="18" r="3" fill="#e8c15a"/><circle cx="36" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="46" y="22" text-anchor="start">晨間大屏（教室電腦）</text><rect class="d-btn-l" x="16" y="36" width="36" height="20" rx="5"/><text class="d-btxt-d" x="34" y="50" text-anchor="middle">點名</text><rect class="d-btn-l" x="57" y="36" width="36" height="20" rx="5"/><text class="d-btxt-d" x="75" y="50" text-anchor="middle">作業</text><rect class="d-btn-l" x="98" y="36" width="25" height="20" rx="5"/><text class="d-btxt-d" x="110" y="50" text-anchor="middle">…</text><rect class="d-btn-a" x="128" y="36" width="36" height="20" rx="5"/><text class="d-btxt-d" x="146" y="50" text-anchor="middle">設定</text><rect class="d-hl" x="125" y="33" width="42" height="26" rx="6"/><path class="d-cursor" d="M154,48 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/><rect class="d-seat" x="20" y="68" width="23" height="26" rx="4"/><rect class="d-seat" x="49" y="68" width="23" height="26" rx="4"/><rect class="d-seat" x="78" y="68" width="23" height="26" rx="4"/><rect class="d-seat" x="108" y="68" width="23" height="26" rx="4"/><rect class="d-seat" x="137" y="68" width="23" height="26" rx="4"/><rect class="d-seat" x="20" y="100" width="23" height="26" rx="4"/><rect class="d-seat" x="49" y="100" width="23" height="26" rx="4"/><rect class="d-seat" x="78" y="100" width="23" height="26" rx="4"/><rect class="d-seat" x="108" y="100" width="23" height="26" rx="4"/><rect class="d-seat" x="137" y="100" width="23" height="26" rx="4"/><rect class="d-seat" x="20" y="132" width="23" height="26" rx="4"/><rect class="d-seat" x="49" y="132" width="23" height="26" rx="4"/><rect class="d-seat" x="78" y="132" width="23" height="26" rx="4"/><rect class="d-seat" x="108" y="132" width="23" height="26" rx="4"/><rect class="d-seat" x="137" y="132" width="23" height="26" rx="4"/>
+<text class="d-cap" x="93" y="200" text-anchor="middle">① 最右邊分頁「設定」</text>
+<text class="d-small" x="93" y="218" text-anchor="middle"></text>
+<path class="d-line" d="M182,93 L201,93" marker-end="url(#ar-pc)"/>
+<rect class="d-win" x="206" y="8" width="170" height="170" rx="8"/><rect class="d-wbar" x="207" y="9" width="168" height="19" rx="7"/><rect class="d-wbar" x="207" y="20" width="168" height="8" rx="0"/><circle cx="216" cy="18" r="3" fill="#e0766a"/><circle cx="225" cy="18" r="3" fill="#e8c15a"/><circle cx="234" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="244" y="22" text-anchor="start">晨間大屏</text><rect class="d-modal" x="216" y="42" width="150" height="116" rx="8"/><text class="d-title2" x="228" y="66" text-anchor="start">請輸入設定頁密碼</text><text class="d-small" x="228" y="84" text-anchor="start">（預設 1234）</text><rect class="d-field" x="228" y="94" width="126" height="22" rx="4"/><text class="d-mono" x="234" y="109" text-anchor="start">1234</text><rect class="d-hl" x="225" y="91" width="132" height="28" rx="5"/><rect class="d-btn-b" x="304" y="126" width="50" height="22" rx="5"/><text class="d-btxt" x="329" y="141" text-anchor="middle">確定</text>
+<text class="d-cap" x="291" y="200" text-anchor="middle">② 輸入密碼</text>
+<text class="d-small" x="291" y="218" text-anchor="middle">預設 1234</text>
+<path class="d-line" d="M380,93 L399,93" marker-end="url(#ar-pc)"/>
+<rect class="d-win" x="404" y="8" width="170" height="170" rx="8"/><rect class="d-wbar" x="405" y="9" width="168" height="19" rx="7"/><rect class="d-wbar" x="405" y="20" width="168" height="8" rx="0"/><circle cx="414" cy="18" r="3" fill="#e0766a"/><circle cx="423" cy="18" r="3" fill="#e8c15a"/><circle cx="432" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="442" y="22" text-anchor="start">晨間大屏 ｜ 設定</text><text class="d-small" x="414" y="50" text-anchor="start">班級名稱</text><rect class="d-field" x="470" y="37" width="94" height="20" rx="4"/><text class="d-text" x="476" y="51" text-anchor="start">601</text><text class="d-small" x="414" y="76" text-anchor="start">🌐A Apps Script 部署網址</text><rect class="d-field" x="414" y="81" width="150" height="20" rx="4"/><text class="d-mono" x="420" y="95" text-anchor="start">…/macros/s/AKfy…/exec</text><rect class="d-hl" x="411" y="78" width="156" height="26" rx="5"/><text class="d-small" x="414" y="118" text-anchor="start">🔑B 教室大屏金鑰</text><rect class="d-field" x="414" y="123" width="150" height="20" rx="4"/><text class="d-mono" x="420" y="137" text-anchor="start">••••••••</text><rect class="d-hl" x="411" y="120" width="156" height="26" rx="5"/><rect class="d-btn-p" x="494" y="150" width="70" height="22" rx="5"/><text class="d-btxt" x="529" y="165" text-anchor="middle">儲存設定</text><path class="d-cursor" d="M544,162 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/>
+<text class="d-cap" x="489" y="200" text-anchor="middle">③ 填班級、🌐A、🔑B</text>
+<text class="d-small" x="489" y="218" text-anchor="middle">按「儲存設定」</text>
+<path class="d-line" d="M578,93 L597,93" marker-end="url(#ar-pc)"/>
+<rect class="d-win" x="602" y="8" width="170" height="170" rx="8"/><rect class="d-wbar" x="603" y="9" width="168" height="19" rx="7"/><rect class="d-wbar" x="603" y="20" width="168" height="8" rx="0"/><circle cx="612" cy="18" r="3" fill="#e0766a"/><circle cx="621" cy="18" r="3" fill="#e8c15a"/><circle cx="630" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="640" y="22" text-anchor="start">晨間大屏 ｜ 點名</text><rect class="d-seat" x="614" y="38" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="643" y="38" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="672" y="38" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="702" y="38" width="23" height="22" rx="4"/><rect class="d-seat" x="731" y="38" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="614" y="66" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="643" y="66" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="672" y="66" width="23" height="22" rx="4"/><rect class="d-seat" x="702" y="66" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="731" y="66" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="614" y="94" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="643" y="94" width="23" height="22" rx="4"/><rect class="d-seat" x="672" y="94" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="702" y="94" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="731" y="94" width="23" height="22" rx="4"/><rect class="d-btn-p" x="612" y="132" width="92" height="26" rx="5"/><text class="d-btxt" x="658" y="149" text-anchor="middle">💾 存到雲端</text><rect class="d-hl" x="609" y="129" width="98" height="32" rx="6"/><path class="d-cursor" d="M686,146 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/><text class="d-small" x="712" y="149" text-anchor="start">點座號</text>
+<text class="d-cap" x="687" y="200" text-anchor="middle">④ 點名 → 💾 存到雲端</text>
+<text class="d-small" x="687" y="218" text-anchor="middle">驗收</text>
+</svg>
+</figure>
+      <div class="step"><div class="step-no">1</div><div class="step-body">教室電腦的大屏 →「設定」→ 打開「<strong>🔵 第 2 級：連上工作台</strong>」→「<strong>🌐A</strong>」欄貼 🌐A、「<strong>🔑B</strong>」欄貼 🔑B → 按「<strong>儲存設定</strong>」。<br><span class="lead">⚠ 教室電腦只填這兩個，別填 🔑C——🔑B 只能回報當天，被學生玩到也拿不到你的資料。</span><br><span class="lead">✔ 檢查：上排多出「作業補交」「查詢統計」，左下出現「💾 存到雲端」，按下去看到「已存到雲端」。</span></div></div>
+      <div class="step"><div class="step-no">2</div><div class="step-body">
+        <strong class="t">（選用）平板也能開大屏——拿著改作業、點補交</strong>
+        <p>平板開同一個大屏網址，照第 1 步填一次同一個 🌐A＋🔑B。作業補交／訂正、聯絡本、查詢統計即時相通；今日點名與收作業「存到雲端」才同步，建議固定用教室那一台存。</p>
+      </div></div>
+      
+      <h3>第 5 關：把工作台接上（🌐A＋🔑C）</h3>
+      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="第 2 級第 3 關操作畫面">
 <defs><marker id="ar-t1c" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
 <rect class="d-win" x="8" y="8" width="236" height="170" rx="8"/><rect class="d-wbar" x="9" y="9" width="234" height="19" rx="7"/><rect class="d-wbar" x="9" y="20" width="234" height="8" rx="0"/><circle cx="18" cy="18" r="3" fill="#e0766a"/><circle cx="27" cy="18" r="3" fill="#e8c15a"/><circle cx="36" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="46" y="22" text-anchor="start">教師工作台</text><rect class="d-hdr" x="16" y="36" width="220" height="40" rx="6"/><text class="d-white" x="26" y="61" text-anchor="start">教師工作台</text><rect class="d-btn-o" x="112" y="46" width="66" height="20" rx="5"/><text class="d-btxt" x="145" y="60" text-anchor="middle">📖 使用說明</text><rect class="d-btn-o" x="184" y="46" width="48" height="20" rx="5"/><text class="d-btxt" x="208" y="60" text-anchor="middle">⚙ 設定</text><rect class="d-hl" x="180" y="43" width="56" height="26" rx="6"/><path class="d-cursor" d="M214,58 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/><rect class="d-ph" x="16" y="86" width="68" height="28" rx="5"/><rect class="d-ph" x="92" y="86" width="68" height="28" rx="5"/><rect class="d-ph" x="168" y="86" width="68" height="28" rx="5"/><rect class="d-ph" x="16" y="122" width="220" height="48" rx="5"/>
 <text class="d-cap" x="126" y="200" text-anchor="middle">① 工作台右上「⚙ 設定」</text>
 <text class="d-small" x="126" y="218" text-anchor="middle"></text>
 <path class="d-line" d="M248,93 L267,93" marker-end="url(#ar-t1c)"/>
-<rect class="d-win" x="272" y="8" width="236" height="170" rx="8"/><rect class="d-wbar" x="273" y="9" width="234" height="19" rx="7"/><rect class="d-wbar" x="273" y="20" width="234" height="8" rx="0"/><circle cx="282" cy="18" r="3" fill="#e0766a"/><circle cx="291" cy="18" r="3" fill="#e8c15a"/><circle cx="300" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="310" y="22" text-anchor="start">系統設定</text><rect class="d-btn-l" x="280" y="36" width="52" height="20" rx="5"/><text class="d-btxt-d" x="306" y="50" text-anchor="middle">教師資訊</text><rect class="d-btn-a" x="336" y="36" width="110" height="20" rx="5"/><text class="d-btxt-d" x="391" y="50" text-anchor="middle">① 雲端／LINE 小幫手</text><rect class="d-hl" x="333" y="33" width="116" height="26" rx="6"/><rect class="d-btn-l" x="450" y="36" width="50" height="20" rx="5"/><text class="d-btxt-d" x="475" y="50" text-anchor="middle">② AI</text><text class="d-text" x="282" y="78" text-anchor="start">☑ 啟用雲端同步</text><text class="d-small" x="282" y="98" text-anchor="start">🌐 Apps Script 部署網址</text><rect class="d-field" x="282" y="103" width="216" height="20" rx="4"/><text class="d-mono" x="288" y="117" text-anchor="start">…/macros/s/AKfy…/exec</text><rect class="d-hl" x="279" y="100" width="222" height="26" rx="5"/><text class="d-small" x="282" y="140" text-anchor="start">🔑C 同步金鑰</text><rect class="d-field" x="282" y="145" width="216" height="20" rx="4"/><text class="d-mono" x="288" y="159" text-anchor="start">••••••••••••</text><rect class="d-hl" x="279" y="142" width="222" height="26" rx="5"/>
+<rect class="d-win" x="272" y="8" width="236" height="170" rx="8"/><rect class="d-wbar" x="273" y="9" width="234" height="19" rx="7"/><rect class="d-wbar" x="273" y="20" width="234" height="8" rx="0"/><circle cx="282" cy="18" r="3" fill="#e0766a"/><circle cx="291" cy="18" r="3" fill="#e8c15a"/><circle cx="300" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="310" y="22" text-anchor="start">系統設定</text><rect class="d-btn-l" x="280" y="36" width="52" height="20" rx="5"/><text class="d-btxt-d" x="306" y="50" text-anchor="middle">教師資訊</text><rect class="d-btn-a" x="336" y="36" width="110" height="20" rx="5"/><text class="d-btxt-d" x="391" y="50" text-anchor="middle">① 雲端／LINE 小幫手</text><rect class="d-hl" x="333" y="33" width="116" height="26" rx="6"/><rect class="d-btn-l" x="450" y="36" width="50" height="20" rx="5"/><text class="d-btxt-d" x="475" y="50" text-anchor="middle">② AI</text><text class="d-text" x="282" y="78" text-anchor="start">☑ 啟用雲端同步</text><text class="d-small" x="282" y="98" text-anchor="start">🌐A Apps Script 部署網址</text><rect class="d-field" x="282" y="103" width="216" height="20" rx="4"/><text class="d-mono" x="288" y="117" text-anchor="start">…/macros/s/AKfy…/exec</text><rect class="d-hl" x="279" y="100" width="222" height="26" rx="5"/><text class="d-small" x="282" y="140" text-anchor="start">🔑C 同步金鑰</text><rect class="d-field" x="282" y="145" width="216" height="20" rx="4"/><text class="d-mono" x="288" y="159" text-anchor="start">••••••••••••</text><rect class="d-hl" x="279" y="142" width="222" height="26" rx="5"/>
 <text class="d-cap" x="390" y="200" text-anchor="middle">② 分頁「① 雲端／LINE 小幫手」</text>
-<text class="d-small" x="390" y="218" text-anchor="middle">勾啟用，貼 🌐 與 🔑C</text>
+<text class="d-small" x="390" y="218" text-anchor="middle">勾啟用，貼 🌐A 與 🔑C</text>
 <path class="d-line" d="M512,93 L531,93" marker-end="url(#ar-t1c)"/>
 <rect class="d-win" x="536" y="8" width="236" height="170" rx="8"/><rect class="d-wbar" x="537" y="9" width="234" height="19" rx="7"/><rect class="d-wbar" x="537" y="20" width="234" height="8" rx="0"/><circle cx="546" cy="18" r="3" fill="#e0766a"/><circle cx="555" cy="18" r="3" fill="#e8c15a"/><circle cx="564" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="574" y="22" text-anchor="start">系統設定</text><text class="d-small" x="546" y="52" text-anchor="start">連線狀態</text><rect class="d-btn-l" x="546" y="60" width="74" height="24" rx="5"/><text class="d-btxt-d" x="583" y="76" text-anchor="middle">測試連線</text><rect class="d-hl" x="543" y="57" width="80" height="30" rx="6"/><circle class="d-badge" cx="630" cy="72" r="8"/><text class="d-badge-t" x="630" y="76" text-anchor="middle">1</text><rect class="d-btn-p" x="644" y="60" width="74" height="24" rx="5"/><text class="d-btxt" x="681" y="76" text-anchor="middle">立即同步</text><circle class="d-badge" cx="728" cy="72" r="8"/><text class="d-badge-t" x="728" y="76" text-anchor="middle">2</text><rect class="d-okbox" x="546" y="98" width="216" height="28" rx="6"/><text class="d-text" x="554" y="116" text-anchor="start">✅ 連線成功，已同步</text><text class="d-small" x="546" y="152" text-anchor="start">教師工具箱多出</text><rect class="d-btn-l" x="632" y="139" width="52" height="20" rx="5"/><text class="d-btxt-d" x="658" y="153" text-anchor="middle">聯絡本</text>
 <text class="d-cap" x="654" y="200" text-anchor="middle">③ 測試連線 → 立即同步</text>
 <text class="d-small" x="654" y="218" text-anchor="middle">最後按「儲存設定」</text>
 </svg>
 </figure>
-      <div class="step"><div class="step-no">1</div><div class="step-body">工作台右上「⚙ 設定」→ 分頁「<strong>① 雲端／LINE 小幫手</strong>」→ 勾「啟用雲端同步」→「<strong>🌐 Apps Script 部署網址</strong>」欄貼 🌐、「<strong>🔑C 同步金鑰</strong>」欄貼 🔑C（欄位上印著同樣符號）→ 按「<strong>測試連線</strong>」→ 成功後按「<strong>立即同步</strong>」→ 最下面「<strong>儲存設定</strong>」。</div></div>
-      <div class="ok">✅ <strong>難度 1 完成！</strong>工作台多出「聯絡本」按鈕；任務可一鍵加 Google 日曆、記事可同步 Google Tasks、AI 可直接建 Google 表單、檔案可歸檔到雲端硬碟、設定裡的「備份與還原」可雲端備份。<br>接著：到<a href="#part3">晨間大屏</a>用同一個 🌐＋🔑D 接上教室電腦；有小綿助的話到<a href="#pet">小綿助</a>貼 🌐＋🔑C。</div>
+      <div class="step"><div class="step-no">1</div><div class="step-body">工作台右上「⚙ 設定」→ 分頁「<strong>① 雲端／LINE 小幫手</strong>」→ 勾「啟用雲端同步」→「<strong>🌐A Apps Script 部署網址</strong>」欄貼 🌐A、「<strong>🔑C 同步金鑰</strong>」欄貼 🔑C（欄位上印著同樣符號）→ 按「<strong>測試連線</strong>」→ 成功後按「<strong>立即同步</strong>」→ 最下面「<strong>儲存設定</strong>」。</div></div>
+      
+      <div class="ok">✅ <strong>第 2 級完成！</strong>工作台多出「聯絡本」按鈕；任務可一鍵加 Google 日曆、記事可同步 Google Tasks、檔案可歸檔到雲端硬碟、設定裡的「備份與還原」可雲端備份。工作台日曆也會出現今日出缺摘要。</div>
       <div class="box"><strong>選配：記事同步 Google Tasks</strong>（想在手機 Google 日曆看到記事才要做）：Apps Script 編輯器<strong>左側「服務」旁的「＋」→ 選「Tasks API」→ 新增</strong>，再做一次「管理部署 → 新版本」（見<a href="#partv2">升級</a>那張圖）。沒做這步其他功能完全不受影響。</div>
     </section>
 
-    <section id="tier2" class="tier2">
-      <div class="sec-head"><div class="sec-icon">🟡</div><div class="sec-titles"><div class="tier-head"><h2><span class="sec-num">4.</span>難度 2：AI 金鑰 🔑E（Gemini）</h2><span class="pill">約 3 分鐘</span><span class="pill">不需要難度 1</span></div></div></div>
+    <section id="level3" class="tier2">
+      <span id="tier2"></span>
+      <div class="sec-head"><div class="sec-icon">🟡</div><div class="sec-titles"><div class="tier-head"><h2><span class="sec-num">4.</span>第 3 級：再加 AI 金鑰 🔑D（Gemini）</h2><span class="pill">約 3 分鐘</span><span class="pill">申請一串字</span></div></div></div>
       <p class="lead">申請一串免費金鑰貼進設定，就打開 AI 行政助理（PDF／訊息拆成任務與記事）、訊息整合站、教材小工場全部 AI 工具（學習單、作文批改、海報生圖、圖像簡報…）、小綿助語音輸入。</p>
-      <div class="gets"><span>會拿到：🔑E</span></div>
-      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="難度 2 操作畫面">
+      <div class="gets"><span>會拿到：🔑D</span></div>
+      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="第 3 級操作畫面">
 <defs><marker id="ar-t2" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
 <rect class="d-win" x="8" y="8" width="170" height="170" rx="8"/><rect class="d-wbar" x="9" y="9" width="168" height="19" rx="7"/><rect class="d-wbar" x="9" y="20" width="168" height="8" rx="0"/><circle cx="18" cy="18" r="3" fill="#e0766a"/><circle cx="27" cy="18" r="3" fill="#e8c15a"/><circle cx="36" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="46" y="22" text-anchor="start">aistudio.google.com</text><text class="d-title2" x="20" y="54" text-anchor="start">API 金鑰</text><text class="d-small" x="20" y="74" text-anchor="start">用 Google 帳號登入</text><rect class="d-btn-b" x="20" y="90" width="146" height="28" rx="5"/><text class="d-btxt" x="93" y="108" text-anchor="middle">🔑 Create API key</text><rect class="d-hl" x="16" y="86" width="154" height="36" rx="6"/><path class="d-cursor" d="M138,106 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/><text class="d-small" x="20" y="148" text-anchor="start">免費額度一般就夠用</text>
 <text class="d-cap" x="93" y="200" text-anchor="middle">① 開 AI Studio</text>
@@ -424,41 +520,42 @@ LINE userId（難度 3，U 開頭）：</pre>
 <text class="d-cap" x="291" y="200" text-anchor="middle">② 選「在新專案中建立」</text>
 <text class="d-small" x="291" y="218" text-anchor="middle">第一次要勾同意條款</text>
 <path class="d-line" d="M380,93 L399,93" marker-end="url(#ar-t2)"/>
-<rect class="d-win" x="404" y="8" width="170" height="170" rx="8"/><rect class="d-wbar" x="405" y="9" width="168" height="19" rx="7"/><rect class="d-wbar" x="405" y="20" width="168" height="8" rx="0"/><circle cx="414" cy="18" r="3" fill="#e0766a"/><circle cx="423" cy="18" r="3" fill="#e8c15a"/><circle cx="432" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="442" y="22" text-anchor="start">API 金鑰已建立</text><text class="d-small" x="414" y="52" text-anchor="start">你的 API 金鑰</text><rect class="d-field" x="414" y="60" width="150" height="22" rx="4"/><text class="d-mono" x="420" y="75" text-anchor="start">AIzaSyB7…x9Qk</text><rect class="d-hl" x="411" y="57" width="156" height="28" rx="5"/><rect class="d-btn-l" x="512" y="92" width="52" height="22" rx="5"/><text class="d-btxt-d" x="538" y="107" text-anchor="middle">複製</text><path class="d-cursor" d="M544,104 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/><text class="d-title2" x="414" y="140" text-anchor="start">＝ 🔑E</text><text class="d-small" x="414" y="160" text-anchor="start">存進記事本，別貼給別人</text>
+<rect class="d-win" x="404" y="8" width="170" height="170" rx="8"/><rect class="d-wbar" x="405" y="9" width="168" height="19" rx="7"/><rect class="d-wbar" x="405" y="20" width="168" height="8" rx="0"/><circle cx="414" cy="18" r="3" fill="#e0766a"/><circle cx="423" cy="18" r="3" fill="#e8c15a"/><circle cx="432" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="442" y="22" text-anchor="start">API 金鑰已建立</text><text class="d-small" x="414" y="52" text-anchor="start">你的 API 金鑰</text><rect class="d-field" x="414" y="60" width="150" height="22" rx="4"/><text class="d-mono" x="420" y="75" text-anchor="start">AIzaSyB7…x9Qk</text><rect class="d-hl" x="411" y="57" width="156" height="28" rx="5"/><rect class="d-btn-l" x="512" y="92" width="52" height="22" rx="5"/><text class="d-btxt-d" x="538" y="107" text-anchor="middle">複製</text><path class="d-cursor" d="M544,104 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/><text class="d-title2" x="414" y="140" text-anchor="start">＝ 🔑D</text><text class="d-small" x="414" y="160" text-anchor="start">存進記事本，別貼給別人</text>
 <text class="d-cap" x="489" y="200" text-anchor="middle">③ 複製 AIza 開頭</text>
-<text class="d-small" x="489" y="218" text-anchor="middle">＝ 🔑E</text>
+<text class="d-small" x="489" y="218" text-anchor="middle">＝ 🔑D</text>
 <path class="d-line" d="M578,93 L597,93" marker-end="url(#ar-t2)"/>
-<rect class="d-win" x="602" y="8" width="170" height="170" rx="8"/><rect class="d-wbar" x="603" y="9" width="168" height="19" rx="7"/><rect class="d-wbar" x="603" y="20" width="168" height="8" rx="0"/><circle cx="612" cy="18" r="3" fill="#e0766a"/><circle cx="621" cy="18" r="3" fill="#e8c15a"/><circle cx="630" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="640" y="22" text-anchor="start">系統設定</text><rect class="d-btn-l" x="610" y="36" width="44" height="18" rx="5"/><text class="d-btxt-d" x="632" y="49" text-anchor="middle">① 雲端</text><rect class="d-btn-a" x="658" y="36" width="62" height="18" rx="5"/><text class="d-btxt-d" x="689" y="49" text-anchor="middle">② AI 設定</text><rect class="d-hl" x="655" y="33" width="68" height="24" rx="6"/><text class="d-text" x="612" y="72" text-anchor="start">☑ 開啟 AI 功能</text><rect class="d-field" x="612" y="80" width="150" height="20" rx="4"/><text class="d-text" x="618" y="94" text-anchor="start">Google Gemini ▾</text><text class="d-small" x="612" y="114" text-anchor="start">🔑E API 金鑰</text><rect class="d-field" x="612" y="119" width="150" height="20" rx="4"/><text class="d-mono" x="618" y="133" text-anchor="start">••••••••••</text><rect class="d-hl" x="609" y="116" width="156" height="26" rx="5"/><rect class="d-btn-l" x="612" y="147" width="70" height="22" rx="5"/><text class="d-btxt-d" x="647" y="162" text-anchor="middle">🔄 取得清單</text><rect class="d-btn-p" x="712" y="147" width="50" height="22" rx="5"/><text class="d-btxt" x="737" y="162" text-anchor="middle">儲存</text>
+<rect class="d-win" x="602" y="8" width="170" height="170" rx="8"/><rect class="d-wbar" x="603" y="9" width="168" height="19" rx="7"/><rect class="d-wbar" x="603" y="20" width="168" height="8" rx="0"/><circle cx="612" cy="18" r="3" fill="#e0766a"/><circle cx="621" cy="18" r="3" fill="#e8c15a"/><circle cx="630" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="640" y="22" text-anchor="start">系統設定</text><rect class="d-btn-l" x="610" y="36" width="44" height="18" rx="5"/><text class="d-btxt-d" x="632" y="49" text-anchor="middle">① 雲端</text><rect class="d-btn-a" x="658" y="36" width="62" height="18" rx="5"/><text class="d-btxt-d" x="689" y="49" text-anchor="middle">② AI 設定</text><rect class="d-hl" x="655" y="33" width="68" height="24" rx="6"/><text class="d-text" x="612" y="72" text-anchor="start">☑ 開啟 AI 功能</text><rect class="d-field" x="612" y="80" width="150" height="20" rx="4"/><text class="d-text" x="618" y="94" text-anchor="start">Google Gemini ▾</text><text class="d-small" x="612" y="114" text-anchor="start">🔑D API 金鑰</text><rect class="d-field" x="612" y="119" width="150" height="20" rx="4"/><text class="d-mono" x="618" y="133" text-anchor="start">••••••••••</text><rect class="d-hl" x="609" y="116" width="156" height="26" rx="5"/><rect class="d-btn-l" x="612" y="147" width="70" height="22" rx="5"/><text class="d-btxt-d" x="647" y="162" text-anchor="middle">🔄 取得清單</text><rect class="d-btn-p" x="712" y="147" width="50" height="22" rx="5"/><text class="d-btxt" x="737" y="162" text-anchor="middle">儲存</text>
 <text class="d-cap" x="687" y="200" text-anchor="middle">④ 工作台「② AI 設定」</text>
 <text class="d-small" x="687" y="218" text-anchor="middle">貼上 → 取得清單 → 儲存</text>
 </svg>
-<figcaption>同一把 🔑E 還可以貼到小綿助（按住說話）與 LINE（聽語音），不用重新申請。</figcaption>
+<figcaption>同一把 🔑D 還可以貼到小綿助（按住說話）與 LINE（聽語音），不用重新申請。</figcaption>
 </figure>
-      <div class="step"><div class="step-no">1</div><div class="step-body"><strong class="t">申請金鑰</strong><br>開 <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">aistudio.google.com/app/apikey</a> → 用 Google 帳號登入（第一次會要你勾同意條款）→「<strong>Create API key</strong>／建立 API 金鑰」→ 問你要放哪個專案時選「<strong>在新專案中建立</strong>」→ 複製 <code>AIza</code> 開頭的字 → 貼進金鑰記錄表的 🔑E 那行。<br><span class="lead">金鑰等於你的 Google 帳號額度，不要貼給別人或放到群組。</span></div></div>
-      <div class="step"><div class="step-no">2</div><div class="step-body"><strong class="t">貼進工作台</strong><br>工作台「⚙ 設定 → <strong>② AI 設定</strong>」→ 勾「開啟 AI 功能」→ AI 服務選 <strong>Google Gemini</strong> →「🔑E API 金鑰」欄貼上 → 按「🔄 取得清單」，在模型選單挑一個名字有 <strong>flash</strong> 的 → 儲存設定。<br><span class="lead">✔ 檢查：教師工具箱出現「AI 行政助理」；教材小工場左上顯示「🔑 已沿用工作台的 Gemini 金鑰」。</span></div></div>
-      <div class="step"><div class="step-no">3</div><div class="step-body"><strong class="t">（選用）貼進小綿助</strong>：見<a href="#pet">小綿助</a>第 5 步，按住右 Ctrl 說話就出字。</div></div>
-      <div class="step"><div class="step-no">4</div><div class="step-body"><strong class="t">（做了難度 3 才需要）貼進 LINE 小幫手</strong>：試算表選單「🤖 LINE 小幫手 → <strong>④ 填入 Gemini 金鑰</strong>」貼 🔑E，LINE 就聽得懂語音、看得懂照片。</div></div>
-      <div class="ok">✅ <strong>難度 2 完成！</strong>AI 只在你按「分析」「生成」時才呼叫，送出前工作台會先去識別化；金鑰只存在這台電腦（瀏覽器與小綿助資料檔），不進備份、不進 GitHub。</div>
+      <div class="step"><div class="step-no">1</div><div class="step-body"><strong class="t">申請金鑰</strong><br>開 <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">aistudio.google.com/app/apikey</a> → 用 Google 帳號登入（第一次會要你勾同意條款）→「<strong>Create API key</strong>／建立 API 金鑰」→ 問你要放哪個專案時選「<strong>在新專案中建立</strong>」→ 複製 <code>AIza</code> 開頭的字 → 貼進金鑰記錄表的 🔑D 那行。<br><span class="lead">金鑰等於你的 Google 帳號額度，不要貼給別人或放到群組。</span></div></div>
+      <div class="step"><div class="step-no">2</div><div class="step-body"><strong class="t">貼進工作台</strong><br>工作台「⚙ 設定 → <strong>② AI 設定</strong>」→ 勾「開啟 AI 功能」→ AI 服務選 <strong>Google Gemini</strong> →「🔑D API 金鑰」欄貼上 → 按「🔄 取得清單」，在模型選單挑一個名字有 <strong>flash</strong> 的 → 儲存設定。<br><span class="lead">✔ 檢查：教師工具箱出現「AI 行政助理」；教材小工場左上顯示「🔑 已沿用工作台的 Gemini 金鑰」。</span></div></div>
+      <div class="step"><div class="step-no">3</div><div class="step-body"><strong class="t">（選用）貼進小綿助</strong>：見<a href="#level5">小綿助</a>第 5 步，按住右 Ctrl 說話就出字。</div></div>
+      <div class="step"><div class="step-no">4</div><div class="step-body"><strong class="t">（做到第 4 級才需要）貼進 LINE 小幫手</strong>：試算表選單「🤖 LINE 小幫手 → <strong>④ 填入 Gemini 金鑰</strong>」貼 🔑D，LINE 就聽得懂語音、看得懂照片。</div></div>
+      <div class="ok">✅ <strong>第 3 級完成！</strong>AI 只在你按「分析」「生成」時才呼叫，送出前工作台會先去識別化；金鑰只存在這台電腦（瀏覽器與小綿助資料檔），不進備份、不進 GitHub。</div>
     </section>
 
-    <section id="tier3" class="tier3">
-      <div class="sec-head"><div class="sec-icon">🔴</div><div class="sec-titles"><div class="tier-head"><h2><span class="sec-num">5.</span>難度 3：LINE 小幫手</h2><span class="pill">約 30 分鐘</span><span class="pill need">需先完成難度 1</span></div></div></div>
-      <p class="lead">申請你自己的 LINE 官方帳號，接上難度 1 的雲端大腦。做完就能在 LINE 傳文字／語音／照片建任務、寫聯絡本、每天早上收到點名回報。<strong>建議用電腦操作，手機放旁邊</strong>（要掃 QR、傳訊息）。</p>
-      <div class="gets"><span>會拿到：🔑A</span><span>會用到：難度 1 的 🌐 與 🔑B</span></div>
-      <figure class="diagram"><svg viewBox="0 0 780 170" role="img" aria-label="難度 3 五關流程：建立 LINE 官方帳號、選單②貼 🔑A、接 Webhook、選單③鎖門、選單⑤自動化並驗收">
+    <section id="level4" class="tier3">
+      <span id="tier3"></span>
+      <div class="sec-head"><div class="sec-icon">🟠</div><div class="sec-titles"><div class="tier-head"><h2><span class="sec-num">5.</span>第 4 級：再加 LINE 小幫手</h2><span class="pill">約 30 分鐘</span><span class="pill need">需先完成第 2 級</span></div></div></div>
+      <p class="lead">申請你自己的 LINE 官方帳號，接上第 2 級的雲端大腦。做完就能在 LINE 傳文字／語音／照片建任務、寫聯絡本、每天早上收到點名回報。<strong>建議用電腦操作，手機放旁邊</strong>（要掃 QR、傳訊息）。</p>
+      <div class="gets"><span>會拿到：🔑E 🔑F 👤G</span><span>會用到：第 2 級的 🌐A</span></div>
+      <figure class="diagram"><svg viewBox="0 0 780 170" role="img" aria-label="第 4 級五關流程：建立 LINE 官方帳號、選單②貼 🔑E、接 Webhook、選單③鎖門、選單⑤自動化並驗收">
 <defs><marker id="ar-t3" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
 <line x1="70" y1="80" x2="710" y2="80" stroke="#cddcd6" stroke-width="3"/>
 <circle cx="70" cy="80" r="21" class="d-box-primary"/><text class="d-title" x="70" y="86" text-anchor="middle">1</text>
-<text class="d-text" x="70" y="122" text-anchor="middle">建 LINE 官方帳號</text><text class="d-small" x="70" y="140" text-anchor="middle">🟩🟦 拿到 🔑A</text>
+<text class="d-text" x="70" y="122" text-anchor="middle">建 LINE 官方帳號</text><text class="d-small" x="70" y="140" text-anchor="middle">🟩🟦 拿到 🔑E</text>
 <circle cx="230" cy="80" r="21" class="d-box-primary"/><text class="d-title" x="230" y="86" text-anchor="middle">2</text>
-<text class="d-text" x="230" y="122" text-anchor="middle">選單② 貼 🔑A</text><text class="d-small" x="230" y="140" text-anchor="middle">試算表 🤖 選單</text>
+<text class="d-text" x="230" y="122" text-anchor="middle">選單② 貼 🔑E</text><text class="d-small" x="230" y="140" text-anchor="middle">試算表 🤖 選單</text>
 <circle cx="390" cy="80" r="21" class="d-box-primary"/><text class="d-title" x="390" y="86" text-anchor="middle">3</text>
-<text class="d-text" x="390" y="122" text-anchor="middle">接上 Webhook</text><text class="d-small" x="390" y="140" text-anchor="middle">🌐?hook=🔑B</text>
+<text class="d-text" x="390" y="122" text-anchor="middle">接上 Webhook</text><text class="d-small" x="390" y="140" text-anchor="middle">🌐A?hook=🔑F</text>
 <circle cx="550" cy="80" r="21" class="d-box-primary"/><text class="d-title" x="550" y="86" text-anchor="middle">4</text>
 <text class="d-text" x="550" y="122" text-anchor="middle">鎖門</text><text class="d-small" x="550" y="140" text-anchor="middle">傳「我的ID」→ 選單③</text>
 <circle cx="710" cy="80" r="21" class="d-box-primary"/><text class="d-title" x="710" y="86" text-anchor="middle">5</text>
 <text class="d-text" x="710" y="122" text-anchor="middle">自動化＋驗收</text><text class="d-small" x="710" y="140" text-anchor="middle">選單⑤ → 傳「推播設定」</text>
-<rect class="d-t1" x="300" y="6" width="180" height="30" rx="8"/><text class="d-small" x="390" y="26" text-anchor="middle">來自難度 1：🌐 ＋ 🔑B</text>
+<rect class="d-t1" x="300" y="6" width="180" height="30" rx="8"/><text class="d-small" x="390" y="26" text-anchor="middle">來自第 2 級：🌐A ＋ 🔑F</text>
 <path class="d-line" d="M390,36 L390,54" marker-end="url(#ar-t3)"/>
 </svg><figcaption>第 3 關做完機器人就會回話；第 4、5 關是上鎖與排程，最後傳「推播設定」驗收。</figcaption></figure>
 
@@ -467,12 +564,12 @@ LINE userId（難度 3，U 開頭）：</pre>
         <strong>⚠️ 這一關會用到 LINE 的「兩個」網站（會開成兩個分頁，來回跳是正常的）</strong>
         <table>
           <tr><th>標記</th><th>網站</th><th>它是什麼</th><th>在這裡做的事</th></tr>
-          <tr><td><strong style="color:#1d9e5f">🟩 網站①</strong></td><td><a href="https://developers.line.biz/console/" target="_blank" rel="noopener"><strong>developers.line.biz</strong></a><br>（Developers Console）</td><td>工程師後台</td><td>建 Provider、發行 🔑A、掃 QR、（第 3 關）接 Webhook</td></tr>
+          <tr><td><strong style="color:#1d9e5f">🟩 網站①</strong></td><td><a href="https://developers.line.biz/console/" target="_blank" rel="noopener"><strong>developers.line.biz</strong></a><br>（Developers Console）</td><td>工程師後台</td><td>建 Provider、發行 🔑E、掃 QR、（第 3 關）接 Webhook</td></tr>
           <tr><td><strong style="color:#2273c9">🟦 網站②</strong></td><td><a href="https://manager.line.biz/" target="_blank" rel="noopener"><strong>manager.line.biz</strong></a><br>（官方帳號管理畫面）</td><td>店家後台</td><td>建立官方帳號、啟用 Messaging API、關自動回應</td></tr>
         </table>
         <span class="lead">迷路時看網址列開頭是 <code>developers</code>（🟩）還是 <code>manager</code>（🟦），再對照下面每一步開頭的標記。畫面是英文時，右上角通常可切成「繁體中文」。</span>
       </div>
-      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="難度 3 第 1 關（上）操作畫面">
+      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="第 4 級第 1 關（上）操作畫面">
 <defs><marker id="ar-t3a" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
 <rect class="d-win" x="8" y="8" width="170" height="170" rx="8"/><rect class="d-wbar" x="9" y="9" width="168" height="19" rx="7"/><rect class="d-wbar" x="9" y="20" width="168" height="8" rx="0"/><circle cx="18" cy="18" r="3" fill="#e0766a"/><circle cx="27" cy="18" r="3" fill="#e8c15a"/><circle cx="36" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="46" y="22" text-anchor="start">🟩 developers.line.biz</text><text class="d-title2" x="20" y="56" text-anchor="start">LINE Developers</text><rect class="d-btn-g" x="20" y="74" width="146" height="28" rx="5"/><text class="d-btxt" x="93" y="92" text-anchor="middle">Log in with LINE</text><rect class="d-hl" x="16" y="70" width="154" height="36" rx="6"/><path class="d-cursor" d="M138,90 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/><text class="d-small" x="20" y="130" text-anchor="start">用手機 LINE 的</text><text class="d-small" x="20" y="146" text-anchor="start">Email 與密碼登入</text>
 <text class="d-cap" x="93" y="200" text-anchor="middle">① 🟩 登入</text>
@@ -498,11 +595,11 @@ LINE userId（難度 3，U 開頭）：</pre>
       <div class="step"><div class="step-no">4</div><div class="step-body"><strong style="color:#2273c9">🟦 網站②</strong>｜填表：帳號名稱（例：<code>班級小幫手</code>，只有你自己看得到）、Email、業種選「<strong>學校 → 小學</strong>」，其他照預設 → 同意條款 → 確定。</div></div>
       <div class="step"><div class="step-no">5</div><div class="step-body"><strong style="color:#2273c9">🟦 網站②</strong>｜完成頁問要不要認證 → 按「<strong>稍後進行認證（前往管理畫面）</strong>」（免費一般帳號就夠用）。</div></div>
       <div class="step"><div class="step-no">6</div><div class="step-body"><strong style="color:#2273c9">🟦 網站②</strong>｜右上「<strong>設定</strong>」→ 左側「<strong>Messaging API</strong>」→「<strong>啟用</strong>」→ 選第 2 步的 Provider（我的教師工具）→ 確定。</div></div>
-      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="難度 3 第 1 關（下）操作畫面">
+      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="第 4 級第 1 關（下）操作畫面">
 <defs><marker id="ar-t3b" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
-<rect class="d-win" x="8" y="8" width="236" height="170" rx="8"/><rect class="d-wbar" x="9" y="9" width="234" height="19" rx="7"/><rect class="d-wbar" x="9" y="20" width="234" height="8" rx="0"/><circle cx="18" cy="18" r="3" fill="#e0766a"/><circle cx="27" cy="18" r="3" fill="#e8c15a"/><circle cx="36" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="46" y="22" text-anchor="start">🟩 developers.line.biz</text><rect class="d-btn-l" x="16" y="36" width="46" height="18" rx="5"/><text class="d-btxt-d" x="39" y="49" text-anchor="middle">Basic</text><rect class="d-btn-a" x="66" y="36" width="90" height="18" rx="5"/><text class="d-btxt-d" x="111" y="49" text-anchor="middle">Messaging API</text><rect class="d-hl" x="63" y="33" width="96" height="24" rx="6"/><text class="d-small" x="18" y="78" text-anchor="start">Channel access token</text><rect class="d-btn-g" x="18" y="86" width="56" height="24" rx="5"/><text class="d-btxt" x="46" y="102" text-anchor="middle">Issue</text><rect class="d-hl" x="15" y="83" width="62" height="30" rx="6"/><path class="d-cursor" d="M58,100 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/><rect class="d-field" x="18" y="120" width="216" height="20" rx="4"/><text class="d-mono" x="24" y="134" text-anchor="start">Xk9f2Qp…（很長）</text><text class="d-title2" x="18" y="162" text-anchor="start">＝ 🔑A</text>
+<rect class="d-win" x="8" y="8" width="236" height="170" rx="8"/><rect class="d-wbar" x="9" y="9" width="234" height="19" rx="7"/><rect class="d-wbar" x="9" y="20" width="234" height="8" rx="0"/><circle cx="18" cy="18" r="3" fill="#e0766a"/><circle cx="27" cy="18" r="3" fill="#e8c15a"/><circle cx="36" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="46" y="22" text-anchor="start">🟩 developers.line.biz</text><rect class="d-btn-l" x="16" y="36" width="46" height="18" rx="5"/><text class="d-btxt-d" x="39" y="49" text-anchor="middle">Basic</text><rect class="d-btn-a" x="66" y="36" width="90" height="18" rx="5"/><text class="d-btxt-d" x="111" y="49" text-anchor="middle">Messaging API</text><rect class="d-hl" x="63" y="33" width="96" height="24" rx="6"/><text class="d-small" x="18" y="78" text-anchor="start">Channel access token</text><rect class="d-btn-g" x="18" y="86" width="56" height="24" rx="5"/><text class="d-btxt" x="46" y="102" text-anchor="middle">Issue</text><rect class="d-hl" x="15" y="83" width="62" height="30" rx="6"/><path class="d-cursor" d="M58,100 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/><rect class="d-field" x="18" y="120" width="216" height="20" rx="4"/><text class="d-mono" x="24" y="134" text-anchor="start">Xk9f2Qp…（很長）</text><text class="d-title2" x="18" y="162" text-anchor="start">＝ 🔑E</text>
 <text class="d-cap" x="126" y="200" text-anchor="middle">⑦-1 🟩 Messaging API 分頁</text>
-<text class="d-small" x="126" y="218" text-anchor="middle">最下方 Issue → 🔑A</text>
+<text class="d-small" x="126" y="218" text-anchor="middle">最下方 Issue → 🔑E</text>
 <path class="d-line" d="M248,93 L267,93" marker-end="url(#ar-t3b)"/>
 <rect class="d-win" x="272" y="8" width="236" height="170" rx="8"/><rect class="d-wbar" x="273" y="9" width="234" height="19" rx="7"/><rect class="d-wbar" x="273" y="20" width="234" height="8" rx="0"/><circle cx="282" cy="18" r="3" fill="#e0766a"/><circle cx="291" cy="18" r="3" fill="#e8c15a"/><circle cx="300" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="310" y="22" text-anchor="start">🟦 manager.line.biz ｜ 回應設定</text><text class="d-text" x="284" y="61" text-anchor="start">加入好友的歡迎訊息</text><rect class="d-toggle-off" x="456" y="48" width="34" height="16" rx="8"/><circle class="d-knob" cx="464" cy="56" r="6"/><rect class="d-hl" x="452" y="44" width="42" height="24" rx="12"/><text class="d-text" x="284" y="95" text-anchor="start">自動回應訊息</text><rect class="d-toggle-off" x="456" y="82" width="34" height="16" rx="8"/><circle class="d-knob" cx="464" cy="90" r="6"/><rect class="d-hl" x="452" y="78" width="42" height="24" rx="12"/><text class="d-tag3" x="284" y="132" text-anchor="start">兩個都要「關閉」（變灰色）</text><text class="d-small" x="284" y="154" text-anchor="start">在 Messaging API 分頁點 Edit 就會到這裡</text>
 <text class="d-cap" x="390" y="200" text-anchor="middle">⑦-2 關掉自動回應</text>
@@ -515,20 +612,20 @@ LINE userId（難度 3，U 開頭）：</pre>
 </figure>
       <div class="step"><div class="step-no">7</div><div class="step-body">
         <strong style="color:#1d9e5f">🟩 網站①</strong>｜切回 Developers Console 的分頁 → 按 F5 → 點你的 Provider → 剛誕生的 channel → 上方「<strong>Messaging API</strong>」分頁，做三件事：<br>
-        ① 捲到最下面「Channel access token」按「<strong>Issue</strong>」→ 複製那一大串到金鑰記錄表的 🔑A。<br>
+        ① 捲到最下面「Channel access token」按「<strong>Issue</strong>」→ 複製那一大串到金鑰記錄表的 🔑E。<br>
         ② 同一頁「LINE Official Account features」區的「Auto-reply messages」按「<strong>Edit</strong>」→ 會跳到 🟦「回應設定」→ 把「<strong>自動回應訊息</strong>」和「<strong>加入好友的歡迎訊息</strong>」都<strong>關閉</strong>。<br>
         ③ 回 🟩 同一頁往上找 QR Code → 用手機 LINE「加入好友 → 行動條碼」掃它，把機器人加為好友。
       </div></div>
 
-      <h3>第 2 關：把 🔑A 交給雲端大腦（選單②）</h3>
-      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="難度 3 第 2 關操作畫面">
+      <h3>第 2 關：把 🔑E 交給雲端大腦（選單②）</h3>
+      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="第 4 級第 2 關操作畫面">
 <defs><marker id="ar-t3c" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
 <rect class="d-win" x="8" y="8" width="236" height="170" rx="8"/><rect class="d-wbar" x="9" y="9" width="234" height="19" rx="7"/><rect class="d-wbar" x="9" y="20" width="234" height="8" rx="0"/><circle cx="18" cy="18" r="3" fill="#e0766a"/><circle cx="27" cy="18" r="3" fill="#e8c15a"/><circle cx="36" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="46" y="22" text-anchor="start">你的試算表</text><rect class="d-mbar" x="9" y="29" width="234" height="18" rx="0"/><text class="d-wtxt" x="16" y="42" text-anchor="start">檔案 編輯</text><text class="d-mtxt" x="236" y="42" text-anchor="end">🤖 LINE 小幫手</text><rect class="d-hl" x="143" y="30" width="98" height="17" rx="4"/><rect class="d-box" x="16" y="52" width="220" height="118" rx="4"/><text class="d-small" x="25" y="72" text-anchor="start">① 初始化</text><rect class="d-sel" x="19" y="79" width="214" height="19" rx="3"/><rect class="d-hl" x="18" y="78" width="216" height="21" rx="4"/><text class="d-mtxt" x="25" y="93" text-anchor="start">② 填入 LINE Token</text><path class="d-cursor" d="M222,90 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/><text class="d-small" x="25" y="114" text-anchor="start">③ 填入我的 userId</text><text class="d-small" x="25" y="135" text-anchor="start">④ Gemini 金鑰</text><text class="d-small" x="25" y="156" text-anchor="start">⑤ 自動化排程</text>
 <text class="d-cap" x="126" y="200" text-anchor="middle">① 選單「② 填入 LINE Token」</text>
 <text class="d-small" x="126" y="218" text-anchor="middle"></text>
 <path class="d-line" d="M248,93 L267,93" marker-end="url(#ar-t3c)"/>
-<rect class="d-win" x="272" y="8" width="236" height="170" rx="8"/><rect class="d-wbar" x="273" y="9" width="234" height="19" rx="7"/><rect class="d-wbar" x="273" y="20" width="234" height="8" rx="0"/><circle cx="282" cy="18" r="3" fill="#e0766a"/><circle cx="291" cy="18" r="3" fill="#e8c15a"/><circle cx="300" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="310" y="22" text-anchor="start">你的試算表</text><rect class="d-modal" x="280" y="36" width="220" height="134" rx="8"/><text class="d-title2" x="288" y="58" text-anchor="start">② 填入 LINE Token（🔑A）</text><text class="d-small" x="288" y="78" text-anchor="start">貼上 Channel access token</text><rect class="d-field" x="288" y="88" width="204" height="22" rx="4"/><text class="d-mono" x="294" y="103" text-anchor="start">Xk9f2Qp…（很長）</text><rect class="d-hl" x="285" y="85" width="210" height="28" rx="5"/><rect class="d-btn-l" x="384" y="142" width="48" height="22" rx="5"/><text class="d-btxt-d" x="408" y="157" text-anchor="middle">取消</text><rect class="d-btn-b" x="438" y="142" width="52" height="22" rx="5"/><text class="d-btxt" x="464" y="157" text-anchor="middle">確定</text><rect class="d-hl" x="434" y="138" width="60" height="30" rx="6"/>
-<text class="d-cap" x="390" y="200" text-anchor="middle">② 貼上 🔑A → 確定</text>
+<rect class="d-win" x="272" y="8" width="236" height="170" rx="8"/><rect class="d-wbar" x="273" y="9" width="234" height="19" rx="7"/><rect class="d-wbar" x="273" y="20" width="234" height="8" rx="0"/><circle cx="282" cy="18" r="3" fill="#e0766a"/><circle cx="291" cy="18" r="3" fill="#e8c15a"/><circle cx="300" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="310" y="22" text-anchor="start">你的試算表</text><rect class="d-modal" x="280" y="36" width="220" height="134" rx="8"/><text class="d-title2" x="288" y="58" text-anchor="start">② 填入 LINE Token（🔑E）</text><text class="d-small" x="288" y="78" text-anchor="start">貼上 Channel access token</text><rect class="d-field" x="288" y="88" width="204" height="22" rx="4"/><text class="d-mono" x="294" y="103" text-anchor="start">Xk9f2Qp…（很長）</text><rect class="d-hl" x="285" y="85" width="210" height="28" rx="5"/><rect class="d-btn-l" x="384" y="142" width="48" height="22" rx="5"/><text class="d-btxt-d" x="408" y="157" text-anchor="middle">取消</text><rect class="d-btn-b" x="438" y="142" width="52" height="22" rx="5"/><text class="d-btxt" x="464" y="157" text-anchor="middle">確定</text><rect class="d-hl" x="434" y="138" width="60" height="30" rx="6"/>
+<text class="d-cap" x="390" y="200" text-anchor="middle">② 貼上 🔑E → 確定</text>
 <text class="d-small" x="390" y="218" text-anchor="middle"></text>
 <path class="d-line" d="M512,93 L531,93" marker-end="url(#ar-t3c)"/>
 <rect class="d-win" x="536" y="8" width="236" height="170" rx="8"/><rect class="d-wbar" x="537" y="9" width="234" height="19" rx="7"/><rect class="d-wbar" x="537" y="20" width="234" height="8" rx="0"/><circle cx="546" cy="18" r="3" fill="#e0766a"/><circle cx="555" cy="18" r="3" fill="#e8c15a"/><circle cx="564" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="574" y="22" text-anchor="start">你的試算表</text><rect class="d-modal" x="544" y="36" width="220" height="134" rx="8"/><text class="d-title2" x="554" y="62" text-anchor="start">✅ 已儲存！</text><text class="d-small" x="554" y="84" text-anchor="start">安裝總表的狀態也更新了</text><rect class="d-btn-b" x="702" y="142" width="52" height="22" rx="5"/><text class="d-btxt" x="728" y="157" text-anchor="middle">確定</text>
@@ -536,18 +633,18 @@ LINE userId（難度 3，U 開頭）：</pre>
 <text class="d-small" x="654" y="218" text-anchor="middle">就完成</text>
 </svg>
 </figure>
-      <div class="step"><div class="step-no">1</div><div class="step-body">回你的試算表 → 選單「🤖 LINE 小幫手 → <strong>② 填入 LINE Token（🔑A）</strong>」→ 貼上 🔑A → 確定。看到「✅ 已儲存」就好。<br><span class="lead">想讓 LINE 聽得懂語音與照片：再用選單「<strong>④ 填入 Gemini 金鑰</strong>」貼 🔑E（難度 2）。<br>備用做法：Apps Script 編輯器 → 齒輪「專案設定」→「指令碼屬性」新增 <code>LINE_CHANNEL_ACCESS_TOKEN</code>＝🔑A（選單就是在幫你做這件事）。</span></div></div>
+      <div class="step"><div class="step-no">1</div><div class="step-body">回你的試算表 → 選單「🤖 LINE 小幫手 → <strong>② 填入 LINE Token（🔑E）</strong>」→ 貼上 🔑E → 確定。看到「✅ 已儲存」就好。<br><span class="lead">想讓 LINE 聽得懂語音與照片：再用選單「<strong>④ 填入 Gemini 金鑰</strong>」貼 🔑D（第 3 級）。<br>備用做法：Apps Script 編輯器 → 齒輪「專案設定」→「指令碼屬性」新增 <code>LINE_CHANNEL_ACCESS_TOKEN</code>＝🔑E（選單就是在幫你做這件事）。</span></div></div>
 
       <h3>第 3 關：接上 LINE（Webhook）</h3>
-      <figure class="diagram"><svg viewBox="0 0 780 118" role="img" aria-label="Webhook 網址拼法：🌐 機器人網址 加上 ?hook= 加上 🔑B">
-<rect class="d-t1" x="10" y="10" width="250" height="56" rx="10"/><text class="d-small" x="135" y="30" text-anchor="middle">🌐 機器人網址</text><text class="d-mono" x="135" y="52" text-anchor="middle">…/macros/s/AKfy…/exec</text>
+      <figure class="diagram"><svg viewBox="0 0 780 118" role="img" aria-label="Webhook 網址拼法：🌐A 機器人網址 加上 ?hook= 加上 🔑F">
+<rect class="d-t1" x="10" y="10" width="250" height="56" rx="10"/><text class="d-small" x="135" y="30" text-anchor="middle">🌐A 機器人網址</text><text class="d-mono" x="135" y="52" text-anchor="middle">…/macros/s/AKfy…/exec</text>
 <rect class="d-box-warn" x="290" y="10" width="110" height="56" rx="10"/><text class="d-small" x="345" y="30" text-anchor="middle">固定打這 6 個字</text><text class="d-mono" x="345" y="52" text-anchor="middle">?hook=</text>
-<rect class="d-t1" x="430" y="10" width="140" height="56" rx="10"/><text class="d-small" x="500" y="30" text-anchor="middle">🔑B（初始化彈窗）</text><text class="d-mono" x="500" y="52" text-anchor="middle">a1b2c3d4…</text>
+<rect class="d-t1" x="430" y="10" width="140" height="56" rx="10"/><text class="d-small" x="500" y="30" text-anchor="middle">🔑F（初始化彈窗）</text><text class="d-mono" x="500" y="52" text-anchor="middle">a1b2c3d4…</text>
 <text class="d-title" x="275" y="45" text-anchor="middle">＋</text><text class="d-title" x="415" y="45" text-anchor="middle">＋</text><text class="d-title" x="585" y="45" text-anchor="middle">＝</text>
 <rect class="d-box-primary" x="600" y="10" width="170" height="56" rx="10"/><text class="d-small" x="685" y="30" text-anchor="middle">完整 Webhook URL</text><text class="d-mono" x="685" y="52" text-anchor="middle">…/exec?hook=a1b2…</text>
 <text class="d-small" x="390" y="96" text-anchor="middle">一整行、中間沒有空格；或直接到試算表「📋 安裝總表」的 🔗 那一列複製（部署後按選單「📋 更新安裝總表」會自動拼好）</text>
 </svg></figure>
-      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="難度 3 第 3 關操作畫面">
+      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="第 4 級第 3 關操作畫面">
 <defs><marker id="ar-t3d" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
 <rect class="d-win" x="8" y="8" width="236" height="170" rx="8"/><rect class="d-wbar" x="9" y="9" width="234" height="19" rx="7"/><rect class="d-wbar" x="9" y="20" width="234" height="8" rx="0"/><circle cx="18" cy="18" r="3" fill="#e0766a"/><circle cx="27" cy="18" r="3" fill="#e8c15a"/><circle cx="36" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="46" y="22" text-anchor="start">🟩 developers.line.biz</text><text class="d-title2" x="18" y="50" text-anchor="start">Webhook settings</text><text class="d-small" x="18" y="70" text-anchor="start">Webhook URL</text><rect class="d-field" x="18" y="76" width="216" height="22" rx="4"/><text class="d-mono" x="24" y="91" text-anchor="start">…/exec?hook=a1b2…</text><rect class="d-hl" x="15" y="73" width="222" height="28" rx="5"/><circle class="d-badge" cx="238" cy="74" r="8"/><text class="d-badge-t" x="238" y="78" text-anchor="middle">1</text><rect class="d-btn-g" x="178" y="106" width="56" height="20" rx="5"/><text class="d-btxt" x="206" y="120" text-anchor="middle">Update</text><text class="d-text" x="18" y="152" text-anchor="start">Use webhook</text><rect class="d-toggle" x="192" y="139" width="40" height="18" rx="9"/><circle class="d-knob" cx="223" cy="148" r="7"/><rect class="d-hl" x="188" y="135" width="48" height="26" rx="13"/><circle class="d-badge" cx="180" cy="148" r="8"/><text class="d-badge-t" x="180" y="152" text-anchor="middle">2</text>
 <text class="d-cap" x="126" y="200" text-anchor="middle">① 貼 Webhook → Update</text>
@@ -564,7 +661,7 @@ LINE userId（難度 3，U 開頭）：</pre>
 </figure>
       <div class="step"><div class="step-no">1</div><div class="step-body"><strong class="t">拿到完整的 Webhook 網址（兩種方法擇一）</strong><br>
         <strong>省事法（推薦）</strong>：試算表選單「<strong>📋 更新安裝總表</strong>」→ 點最前面的「📋 安裝總表」分頁 → 🔗 那一列的「值」就是拼好的網址，點那一格複製。<br>
-        <strong>手動法</strong>：在記事本照順序拼：🌐 機器人網址 ＋ <code>?hook=</code>（問號、h、o、o、k、等號）＋ 🔑B。拼好長這樣（一整行、沒有空格）：
+        <strong>手動法</strong>：在記事本照順序拼：🌐A 機器人網址 ＋ <code>?hook=</code>（問號、h、o、o、k、等號）＋ 🔑F。拼好長這樣（一整行、沒有空格）：
         <div class="box" style="font-family:Consolas,monospace;font-size:13px;word-break:break-all">https://script.google.com/macros/s/AKfy…很長一串…/exec<strong style="color:#a34339">?hook=</strong>a1b2c3d4e5…</div>
       </div></div>
       <div class="step"><div class="step-no">2</div><div class="step-body"><strong style="color:#1d9e5f">🟩 網站①</strong>｜Developers Console → 你的 channel →「<strong>Messaging API</strong>」分頁 → 往下找「<strong>Webhook settings</strong>」→ Webhook URL 旁「<strong>Edit</strong>」→ 貼上 →「<strong>Update</strong>」。<br><span class="lead">✔ 檢查：儲存後網址結尾看得到 <code>?hook=</code>（欄位太窄時點進去按 End 鍵看結尾）。</span></div></div>
@@ -572,7 +669,7 @@ LINE userId（難度 3，U 開頭）：</pre>
       <div class="step"><div class="step-no">4</div><div class="step-body">🎉 <strong>見證時刻</strong>：用手機對機器人傳「<code>我的ID</code>」→ 它會回一串 <code>U</code> 開頭的字。有回話就是全線打通了！<br><span class="lead">沒回話？最常見三個原因：①網址拼錯 ②「Use webhook」沒開 ③「自動回應訊息」沒關（第 1 關第 7 步②）。</span></div></div>
 
       <h3>第 4 關：鎖門（只聽你的話）</h3>
-      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="難度 3 第 4 關操作畫面">
+      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="第 4 級第 4 關操作畫面">
 <defs><marker id="ar-t3e" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
 <rect class="d-phone" x="68" y="8" width="116" height="170" rx="14"/><rect class="d-screen" x="74" y="18" width="104" height="150" rx="8"/><rect class="d-bub-me" x="122" y="30" width="50" height="20" rx="8"/><text class="d-text" x="147" y="44" text-anchor="middle">我的ID</text><rect class="d-bub-bot" x="80" y="58" width="94" height="46" rx="8"/><text class="d-small" x="86" y="74" text-anchor="start">你的 userId：</text><text class="d-mono" x="86" y="92" text-anchor="start">U1a2b3c4d5…</text><rect class="d-hl" x="78" y="56" width="98" height="50" rx="8"/><rect class="d-menu" x="94" y="112" width="66" height="24" rx="5"/><text class="d-small" x="127" y="128" text-anchor="middle">長按 → 複製</text>
 <text class="d-cap" x="126" y="200" text-anchor="middle">① 長按那串 U… → 複製</text>
@@ -590,7 +687,7 @@ LINE userId（難度 3，U 開頭）：</pre>
       <div class="step"><div class="step-no">1</div><div class="step-body">手機上<strong>長按</strong>機器人回的那串 <code>U</code> 開頭的字 →「複製」→ 用 LINE 電腦版或傳給自己的 Email 帶到電腦（或直接在電腦版 LINE 複製）→ 試算表選單「<strong>③ 填入我的 LINE userId（鎖門）</strong>」→ 貼上 → 確定。<br><span class="lead">還沒鎖門前，第 2 版的機器人<strong>不會執行任何指令</strong>，只會回你的 userId 請你填——避免陌生人加好友就能指揮你的班級系統。</span></div></div>
 
       <h3>第 5 關：設定自動化與驗收</h3>
-      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="難度 3 第 5 關操作畫面">
+      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="第 4 級第 5 關操作畫面">
 <defs><marker id="ar-t3f" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
 <rect class="d-win" x="8" y="8" width="236" height="170" rx="8"/><rect class="d-wbar" x="9" y="9" width="234" height="19" rx="7"/><rect class="d-wbar" x="9" y="20" width="234" height="8" rx="0"/><circle cx="18" cy="18" r="3" fill="#e0766a"/><circle cx="27" cy="18" r="3" fill="#e8c15a"/><circle cx="36" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="46" y="22" text-anchor="start">你的試算表</text><rect class="d-mbar" x="9" y="29" width="234" height="18" rx="0"/><text class="d-wtxt" x="16" y="42" text-anchor="start">檔案 編輯</text><text class="d-mtxt" x="236" y="42" text-anchor="end">🤖 LINE 小幫手</text><rect class="d-hl" x="143" y="30" width="98" height="17" rx="4"/><rect class="d-box" x="16" y="52" width="220" height="118" rx="4"/><text class="d-small" x="25" y="72" text-anchor="start">① 初始化</text><text class="d-small" x="25" y="93" text-anchor="start">② 填入 LINE Token</text><text class="d-small" x="25" y="114" text-anchor="start">③ 填入我的 userId</text><text class="d-small" x="25" y="135" text-anchor="start">④ Gemini 金鑰</text><rect class="d-sel" x="19" y="142" width="214" height="19" rx="3"/><rect class="d-hl" x="18" y="141" width="216" height="21" rx="4"/><text class="d-mtxt" x="25" y="156" text-anchor="start">⑤ 自動化排程</text><path class="d-cursor" d="M222,153 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/>
 <text class="d-cap" x="126" y="200" text-anchor="middle">① 選單「⑤ 自動化排程」</text>
@@ -621,70 +718,13 @@ LINE userId（難度 3，U 開頭）：</pre>
         </div>
         <p><strong>看到這 8 項與本月用量，就代表全部設定成功。</strong>想調整就傳「<code>開啟 放學小結</code>」或「<code>關閉 作業推播</code>」。</p>
       </div></div>
-      <div class="ok">✅ <strong>難度 3 完成！</strong>工作台「教師工具箱」的「LINE 收件匣」會收到你在 LINE 傳的內容，確認後才建立任務或記事。傳「<code>說明</code>」看全部指令。</div>
+      <div class="ok">✅ <strong>第 4 級完成！</strong>工作台「教師工具箱」的「LINE 收件匣」會收到你在 LINE 傳的內容，確認後才建立任務或記事。傳「<code>說明</code>」看全部指令。</div>
     </section>
 
-    <section id="part3">
-      <div class="sec-head"><div class="sec-icon">📺</div><div class="sec-titles"><div class="tier-head"><h2><span class="sec-num">6.</span>晨間大屏（教室電腦）</h2><span class="pill">10 分鐘</span><span class="pill need">需先完成難度 1</span></div></div></div>
-      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="晨間大屏設定操作畫面">
-<defs><marker id="ar-pc" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
-<rect class="d-win" x="8" y="8" width="170" height="170" rx="8"/><rect class="d-wbar" x="9" y="9" width="168" height="19" rx="7"/><rect class="d-wbar" x="9" y="20" width="168" height="8" rx="0"/><circle cx="18" cy="18" r="3" fill="#e0766a"/><circle cx="27" cy="18" r="3" fill="#e8c15a"/><circle cx="36" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="46" y="22" text-anchor="start">晨間大屏（教室電腦）</text><rect class="d-btn-l" x="16" y="36" width="36" height="20" rx="5"/><text class="d-btxt-d" x="34" y="50" text-anchor="middle">點名</text><rect class="d-btn-l" x="57" y="36" width="36" height="20" rx="5"/><text class="d-btxt-d" x="75" y="50" text-anchor="middle">作業</text><rect class="d-btn-l" x="98" y="36" width="25" height="20" rx="5"/><text class="d-btxt-d" x="110" y="50" text-anchor="middle">…</text><rect class="d-btn-a" x="128" y="36" width="36" height="20" rx="5"/><text class="d-btxt-d" x="146" y="50" text-anchor="middle">設定</text><rect class="d-hl" x="125" y="33" width="42" height="26" rx="6"/><path class="d-cursor" d="M154,48 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/><rect class="d-seat" x="20" y="68" width="23" height="26" rx="4"/><rect class="d-seat" x="49" y="68" width="23" height="26" rx="4"/><rect class="d-seat" x="78" y="68" width="23" height="26" rx="4"/><rect class="d-seat" x="108" y="68" width="23" height="26" rx="4"/><rect class="d-seat" x="137" y="68" width="23" height="26" rx="4"/><rect class="d-seat" x="20" y="100" width="23" height="26" rx="4"/><rect class="d-seat" x="49" y="100" width="23" height="26" rx="4"/><rect class="d-seat" x="78" y="100" width="23" height="26" rx="4"/><rect class="d-seat" x="108" y="100" width="23" height="26" rx="4"/><rect class="d-seat" x="137" y="100" width="23" height="26" rx="4"/><rect class="d-seat" x="20" y="132" width="23" height="26" rx="4"/><rect class="d-seat" x="49" y="132" width="23" height="26" rx="4"/><rect class="d-seat" x="78" y="132" width="23" height="26" rx="4"/><rect class="d-seat" x="108" y="132" width="23" height="26" rx="4"/><rect class="d-seat" x="137" y="132" width="23" height="26" rx="4"/>
-<text class="d-cap" x="93" y="200" text-anchor="middle">① 最右邊分頁「設定」</text>
-<text class="d-small" x="93" y="218" text-anchor="middle"></text>
-<path class="d-line" d="M182,93 L201,93" marker-end="url(#ar-pc)"/>
-<rect class="d-win" x="206" y="8" width="170" height="170" rx="8"/><rect class="d-wbar" x="207" y="9" width="168" height="19" rx="7"/><rect class="d-wbar" x="207" y="20" width="168" height="8" rx="0"/><circle cx="216" cy="18" r="3" fill="#e0766a"/><circle cx="225" cy="18" r="3" fill="#e8c15a"/><circle cx="234" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="244" y="22" text-anchor="start">晨間大屏</text><rect class="d-modal" x="216" y="42" width="150" height="116" rx="8"/><text class="d-title2" x="228" y="66" text-anchor="start">請輸入設定頁密碼</text><text class="d-small" x="228" y="84" text-anchor="start">（預設 1234）</text><rect class="d-field" x="228" y="94" width="126" height="22" rx="4"/><text class="d-mono" x="234" y="109" text-anchor="start">1234</text><rect class="d-hl" x="225" y="91" width="132" height="28" rx="5"/><rect class="d-btn-b" x="304" y="126" width="50" height="22" rx="5"/><text class="d-btxt" x="329" y="141" text-anchor="middle">確定</text>
-<text class="d-cap" x="291" y="200" text-anchor="middle">② 輸入密碼</text>
-<text class="d-small" x="291" y="218" text-anchor="middle">預設 1234</text>
-<path class="d-line" d="M380,93 L399,93" marker-end="url(#ar-pc)"/>
-<rect class="d-win" x="404" y="8" width="170" height="170" rx="8"/><rect class="d-wbar" x="405" y="9" width="168" height="19" rx="7"/><rect class="d-wbar" x="405" y="20" width="168" height="8" rx="0"/><circle cx="414" cy="18" r="3" fill="#e0766a"/><circle cx="423" cy="18" r="3" fill="#e8c15a"/><circle cx="432" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="442" y="22" text-anchor="start">晨間大屏 ｜ 設定</text><text class="d-small" x="414" y="50" text-anchor="start">班級名稱</text><rect class="d-field" x="470" y="37" width="94" height="20" rx="4"/><text class="d-text" x="476" y="51" text-anchor="start">601</text><text class="d-small" x="414" y="76" text-anchor="start">🌐 Apps Script 部署網址</text><rect class="d-field" x="414" y="81" width="150" height="20" rx="4"/><text class="d-mono" x="420" y="95" text-anchor="start">…/macros/s/AKfy…/exec</text><rect class="d-hl" x="411" y="78" width="156" height="26" rx="5"/><text class="d-small" x="414" y="118" text-anchor="start">🔑D 教室大屏金鑰</text><rect class="d-field" x="414" y="123" width="150" height="20" rx="4"/><text class="d-mono" x="420" y="137" text-anchor="start">••••••••</text><rect class="d-hl" x="411" y="120" width="156" height="26" rx="5"/><rect class="d-btn-p" x="494" y="150" width="70" height="22" rx="5"/><text class="d-btxt" x="529" y="165" text-anchor="middle">儲存設定</text><path class="d-cursor" d="M544,162 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/>
-<text class="d-cap" x="489" y="200" text-anchor="middle">③ 填班級、🌐、🔑D</text>
-<text class="d-small" x="489" y="218" text-anchor="middle">按「儲存設定」</text>
-<path class="d-line" d="M578,93 L597,93" marker-end="url(#ar-pc)"/>
-<rect class="d-win" x="602" y="8" width="170" height="170" rx="8"/><rect class="d-wbar" x="603" y="9" width="168" height="19" rx="7"/><rect class="d-wbar" x="603" y="20" width="168" height="8" rx="0"/><circle cx="612" cy="18" r="3" fill="#e0766a"/><circle cx="621" cy="18" r="3" fill="#e8c15a"/><circle cx="630" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="640" y="22" text-anchor="start">晨間大屏 ｜ 點名</text><rect class="d-seat" x="614" y="38" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="643" y="38" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="672" y="38" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="702" y="38" width="23" height="22" rx="4"/><rect class="d-seat" x="731" y="38" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="614" y="66" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="643" y="66" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="672" y="66" width="23" height="22" rx="4"/><rect class="d-seat" x="702" y="66" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="731" y="66" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="614" y="94" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="643" y="94" width="23" height="22" rx="4"/><rect class="d-seat" x="672" y="94" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="702" y="94" width="23" height="22" rx="4"/><rect class="d-seat-ok" x="731" y="94" width="23" height="22" rx="4"/><rect class="d-btn-p" x="612" y="132" width="92" height="26" rx="5"/><text class="d-btxt" x="658" y="149" text-anchor="middle">💾 存到雲端</text><rect class="d-hl" x="609" y="129" width="98" height="32" rx="6"/><path class="d-cursor" d="M686,146 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/><text class="d-small" x="712" y="149" text-anchor="start">點座號</text>
-<text class="d-cap" x="687" y="200" text-anchor="middle">④ 點名 → 💾 存到雲端</text>
-<text class="d-small" x="687" y="218" text-anchor="middle">驗收</text>
-</svg>
-</figure>
-      <div class="step"><div class="step-no">1</div><div class="step-body">
-        <strong class="t">教室電腦（接投影機或觸控大屏）開啟大屏網址</strong>
-        <div class="copyrow"><code id="urlMorning">（載入中…）</code><button class="copy-btn" data-copy="#urlMorning">複製</button></div>
-      </div></div>
-      <div class="step"><div class="step-no">2</div><div class="step-body">
-        <strong class="t">點最上排<strong>最右邊的分頁「設定」</strong>→ 輸入密碼（預設 <code>1234</code>）→ 填好 → 最下面「儲存設定」</strong>
-        <table>
-          <tr><th>欄位</th><th>填什麼</th></tr>
-          <tr><td>班級名稱</td><td>例：601</td></tr>
-          <tr><td>班級最大座號／空號</td><td>照實填；轉走的座號填進「空號」就不會出現</td></tr>
-          <tr><td>科目管理／作業名稱</td><td>點亮要收作業的科目；不夠的自己新增</td></tr>
-          <tr><td>四個時間</td><td>預設 08:00 遲到界線／08:05 未填轉未到／08:08 點名推播／08:40 作業推播，皆可自訂</td></tr>
-          <tr><td>🌐 Apps Script 部署網址</td><td>貼 <strong>🌐</strong>（難度 1 第 2 關拿到的那個）</td></tr>
-          <tr><td>🔑D 教室大屏金鑰</td><td>貼 <strong>🔑D</strong>（⚠ 教室電腦只填這把，別填 🔑C——D 只能回報當天，被學生玩到也拿不到你的資料）</td></tr>
-          <tr><td>設定頁密碼</td><td>建議改掉預設的 1234，免得學生進設定亂改</td></tr>
-          <tr><td>聯絡本字體</td><td>一般：標準／粉圓／芫荽；注音：注音芫荽／注音粉圓（低年級選注音體，第一次切換要等字型下載）</td></tr>
-        </table>
-      </div></div>
-      <div class="step"><div class="step-no">3</div><div class="step-body">
-        <strong class="t">（選用）開機自動全螢幕開啟大屏</strong>
-        <p>① 按你教室電腦用的瀏覽器下載啟動檔（會存到「下載」資料夾）：</p>
-        <div class="dl-row"><button type="button" class="dl-btn" data-kiosk="chrome">⬇ 下載「啟動大屏（Chrome）.bat」</button><button type="button" class="dl-btn" data-kiosk="edge">⬇ 下載「啟動大屏（Edge）.bat」</button></div>
-        <p>② 按 <span class="kbd">Win</span>＋<span class="kbd">R</span> 輸入 <code>shell:startup</code> 按 Enter → 把剛下載的 .bat 檔拖進開啟的資料夾。之後開機就自動全螢幕進大屏（要離開全螢幕按 <span class="kbd">Alt</span>＋<span class="kbd">F4</span>）。</p>
-        <details class="box"><summary style="cursor:pointer;font-weight:800">想自己做 .bat？</summary>記事本貼上下面這行 →「另存新檔」→ 存檔類型選「所有檔案」→ 檔名打 <code>啟動大屏.bat</code>：
-          <div class="copyrow"><code id="kioskCmd">（載入中…）</code><button class="copy-btn" data-copy="#kioskCmd">複製</button></div></details>
-      </div></div>
-      <div class="step"><div class="step-no">4</div><div class="step-body">
-        <strong class="t">（選用）平板也能開大屏——拿著改作業、點補交</strong>
-        <p>平板開同一個大屏網址，照第 2 步填一次同一個 🌐＋🔑D。作業補交／訂正、聯絡本、查詢統計即時相通；今日點名與收作業「存到雲端」才同步，建議固定用教室那一台存。</p>
-      </div></div>
-      <div class="step"><div class="step-no">5</div><div class="step-body">
-        <strong class="t">（內建）🧰 班級工具——不用任何設定</strong>
-        <p>抽籤機、檢核板、計分板、隨機分組、安靜偵測、定評小幫手、番茄鐘、大屏提示；全部只存教室電腦。使用情境見<a href="About.html" target="_blank" rel="noopener">系統說明</a>。</p>
-      </div></div>
-      <div class="ok">✅ 測一下：「點名」分頁點幾個座號 →「作業繳交」點一科 → 按左下「<strong>💾 存到雲端</strong>」→ 看到「已存到雲端」，工作台日曆也會出現今日出缺摘要；做了難度 3 的話，到了設定的推播時間手機 LINE 會收到晨間回報。</div>
-    </section>
-
-    <section id="pet">
-      <div class="sec-head"><div class="sec-icon">🐑</div><div class="sec-titles"><div class="tier-head"><h2><span class="sec-num">7.</span>桌面小綿助（選用，Windows）</h2><span class="pill">3 分鐘</span></div></div></div>
-      <p class="lead">免安裝的桌面小夥伴：健康提醒、分心提醒、專注模式；做了難度 1 可以直連你的資料，做了難度 2 可以按住說話就出字。</p>
+    <section id="level5" class="tierp">
+      <span id="pet"></span>
+      <div class="sec-head"><div class="sec-icon">🟣</div><div class="sec-titles"><div class="tier-head"><h2><span class="sec-num">6.</span>第 5 級：再加桌寵小綿助（Windows）</h2><span class="pill">3 分鐘</span></div></div></div>
+      <p class="lead">免安裝的桌面小夥伴：健康提醒、分心提醒、專注模式；接上第 2 級可以直連你的資料（用 🌐A＋🔑C），有第 3 級的 🔑D 可以按住說話就出字。</p>
       <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="小綿助安裝操作畫面">
 <defs><marker id="ar-peta" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
 <rect class="d-win" x="8" y="8" width="236" height="170" rx="8"/><rect class="d-wbar" x="9" y="9" width="234" height="19" rx="7"/><rect class="d-wbar" x="9" y="20" width="234" height="8" rx="0"/><circle cx="18" cy="18" r="3" fill="#e0766a"/><circle cx="27" cy="18" r="3" fill="#e8c15a"/><circle cx="36" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="46" y="22" text-anchor="start">檔案總管 ｜ 下載</text><rect class="d-sel" x="18" y="40" width="216" height="22" rx="4"/><text class="d-text" x="24" y="55" text-anchor="start">🗜 xiaomianzhu-…zip</text><rect class="d-menu" x="48" y="68" width="182" height="84" rx="6"/><text class="d-small" x="58" y="88" text-anchor="start">開啟</text><rect class="d-sel" x="51" y="96" width="176" height="20" rx="3"/><text class="d-mtxt" x="58" y="110" text-anchor="start">解壓縮全部…</text><rect class="d-hl" x="50" y="95" width="178" height="22" rx="4"/><text class="d-small" x="58" y="134" text-anchor="start">複製</text><path class="d-cursor" d="M204,106 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/>
@@ -706,21 +746,21 @@ LINE userId（難度 3，U 開頭）：</pre>
       <div class="step"><div class="step-no">3</div><div class="step-body">打開解壓後的資料夾 → 點兩下 <code>XiaoMianZhu.exe</code> → 若跳藍色「Windows 已保護您的電腦」：點「<strong>其他資訊</strong>」→「<strong>仍要執行</strong>」。<br><span class="lead">請只從本專案 GitHub 下載；不要關閉防毒或設定排除。</span></div></div>
       <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="小綿助設定操作畫面">
 <defs><marker id="ar-petb" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
-<rect class="d-win" x="8" y="8" width="368" height="170" rx="8"/><rect class="d-wbar" x="9" y="9" width="366" height="19" rx="7"/><rect class="d-wbar" x="9" y="20" width="366" height="8" rx="0"/><circle cx="18" cy="18" r="3" fill="#e0766a"/><circle cx="27" cy="18" r="3" fill="#e8c15a"/><circle cx="36" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="46" y="22" text-anchor="start">小綿助秘書頁</text><text class="d-title2" x="20" y="52" text-anchor="start">☁️ 雲端連線</text><rect class="d-field" x="18" y="62" width="348" height="20" rx="4"/><text class="d-mono" x="24" y="76" text-anchor="start">🌐 …/exec</text><rect class="d-hl" x="15" y="59" width="354" height="26" rx="5"/><rect class="d-field" x="18" y="92" width="348" height="20" rx="4"/><text class="d-mono" x="24" y="106" text-anchor="start">🔑C ••••••</text><rect class="d-hl" x="15" y="89" width="354" height="26" rx="5"/><rect class="d-btn-p" x="18" y="124" width="86" height="22" rx="5"/><text class="d-btxt" x="61" y="139" text-anchor="middle">儲存並啟用</text><rect class="d-btn-l" x="110" y="124" width="70" height="22" rx="5"/><text class="d-btxt-d" x="145" y="139" text-anchor="middle">測試連線</text><text class="d-small" x="20" y="168" text-anchor="start">只連 script.google.com</text>
-<text class="d-cap" x="192" y="200" text-anchor="middle">①（難度 1）☁️ 雲端連線</text>
-<text class="d-small" x="192" y="218" text-anchor="middle">貼 🌐＋🔑C</text>
+<rect class="d-win" x="8" y="8" width="368" height="170" rx="8"/><rect class="d-wbar" x="9" y="9" width="366" height="19" rx="7"/><rect class="d-wbar" x="9" y="20" width="366" height="8" rx="0"/><circle cx="18" cy="18" r="3" fill="#e0766a"/><circle cx="27" cy="18" r="3" fill="#e8c15a"/><circle cx="36" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="46" y="22" text-anchor="start">小綿助秘書頁</text><text class="d-title2" x="20" y="52" text-anchor="start">☁️ 雲端連線</text><rect class="d-field" x="18" y="62" width="348" height="20" rx="4"/><text class="d-mono" x="24" y="76" text-anchor="start">🌐A …/exec</text><rect class="d-hl" x="15" y="59" width="354" height="26" rx="5"/><rect class="d-field" x="18" y="92" width="348" height="20" rx="4"/><text class="d-mono" x="24" y="106" text-anchor="start">🔑C ••••••</text><rect class="d-hl" x="15" y="89" width="354" height="26" rx="5"/><rect class="d-btn-p" x="18" y="124" width="86" height="22" rx="5"/><text class="d-btxt" x="61" y="139" text-anchor="middle">儲存並啟用</text><rect class="d-btn-l" x="110" y="124" width="70" height="22" rx="5"/><text class="d-btxt-d" x="145" y="139" text-anchor="middle">測試連線</text><text class="d-small" x="20" y="168" text-anchor="start">只連 script.google.com</text>
+<text class="d-cap" x="192" y="200" text-anchor="middle">①（第 2 級）☁️ 雲端連線</text>
+<text class="d-small" x="192" y="218" text-anchor="middle">貼 🌐A＋🔑C</text>
 <path class="d-line" d="M380,93 L399,93" marker-end="url(#ar-petb)"/>
-<rect class="d-win" x="404" y="8" width="368" height="170" rx="8" stroke-dasharray="6 4"/><rect class="d-wbar" x="405" y="9" width="366" height="19" rx="7"/><rect class="d-wbar" x="405" y="20" width="366" height="8" rx="0"/><circle cx="414" cy="18" r="3" fill="#e0766a"/><circle cx="423" cy="18" r="3" fill="#e8c15a"/><circle cx="432" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="442" y="22" text-anchor="start">小綿助秘書頁（選用）</text><text class="d-title2" x="416" y="54" text-anchor="start">🎙 語音輸入</text><text class="d-small" x="416" y="74" text-anchor="start">⚙ 設定</text><rect class="d-field" x="414" y="82" width="348" height="22" rx="4"/><text class="d-text" x="420" y="97" text-anchor="start">🔑E ••••••</text><rect class="d-hl" x="411" y="79" width="354" height="28" rx="5"/><rect class="d-btn-p" x="712" y="112" width="50" height="22" rx="5"/><text class="d-btxt" x="737" y="127" text-anchor="middle">儲存</text><text class="d-small" x="416" y="152" text-anchor="start">按住右 Ctrl 說話</text><text class="d-small" x="416" y="168" text-anchor="start">放開就打字</text>
-<text class="d-cap" x="588" y="200" text-anchor="middle">②（難度 2）🎙 語音輸入</text>
-<text class="d-small" x="588" y="218" text-anchor="middle">貼 🔑E</text>
+<rect class="d-win" x="404" y="8" width="368" height="170" rx="8" stroke-dasharray="6 4"/><rect class="d-wbar" x="405" y="9" width="366" height="19" rx="7"/><rect class="d-wbar" x="405" y="20" width="366" height="8" rx="0"/><circle cx="414" cy="18" r="3" fill="#e0766a"/><circle cx="423" cy="18" r="3" fill="#e8c15a"/><circle cx="432" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="442" y="22" text-anchor="start">小綿助秘書頁（選用）</text><text class="d-title2" x="416" y="54" text-anchor="start">🎙 語音輸入</text><text class="d-small" x="416" y="74" text-anchor="start">⚙ 設定</text><rect class="d-field" x="414" y="82" width="348" height="22" rx="4"/><text class="d-text" x="420" y="97" text-anchor="start">🔑D ••••••</text><rect class="d-hl" x="411" y="79" width="354" height="28" rx="5"/><rect class="d-btn-p" x="712" y="112" width="50" height="22" rx="5"/><text class="d-btxt" x="737" y="127" text-anchor="middle">儲存</text><text class="d-small" x="416" y="152" text-anchor="start">按住右 Ctrl 說話</text><text class="d-small" x="416" y="168" text-anchor="start">放開就打字</text>
+<text class="d-cap" x="588" y="200" text-anchor="middle">②（第 3 級）🎙 語音輸入</text>
+<text class="d-small" x="588" y="218" text-anchor="middle">貼 🔑D</text>
 </svg>
 </figure>
-      <div class="step"><div class="step-no">4</div><div class="step-body"><span class="lead">小綿助怎麼跟你說話：頭上冒出對話泡泡（附「打開／晚點」按鈕，滑鼠移上去不會消失）；頭上的紅色數字＝逾期＋LINE 待整理；<strong>滑鼠停在羊上</strong>看今日狀態；<strong>右鍵</strong>是小選單（喝水、起身、專注 25 分、語音記事、勿擾 1 小時）；<strong>雙擊</strong>開秘書頁。上課<strong>投影或全螢幕</strong>時牠會自己睡覺，不跳泡泡、不亮紅點。</span><br>（做了難度 1）<strong>雙擊</strong>桌面上的小綿羊開秘書頁 →「<strong>☁️ 雲端連線 → ⚙ 設定</strong>」貼 🌐＋🔑C →「儲存並啟用」→「測試連線」。</div></div>
-      <div class="step"><div class="step-no">5</div><div class="step-body">（做了難度 2）秘書頁「<strong>🎙 語音輸入 → ⚙ 設定</strong>」貼 🔑E → 儲存 → 按「測試 3 秒錄音」。之後按住<strong>右 Ctrl</strong> 說話＝打字到游標處；按住<strong>右 Alt</strong> 說話＝直接變成小綿助的記事或任務。</div></div>
+      <div class="step"><div class="step-no">4</div><div class="step-body"><span class="lead">小綿助怎麼跟你說話：頭上冒出對話泡泡（附「打開／晚點」按鈕，滑鼠移上去不會消失）；頭上的紅色數字＝逾期＋LINE 待整理；<strong>滑鼠停在羊上</strong>看今日狀態；<strong>右鍵</strong>是小選單（喝水、起身、專注 25 分、語音記事、勿擾 1 小時）；<strong>雙擊</strong>開秘書頁。上課<strong>投影或全螢幕</strong>時牠會自己睡覺，不跳泡泡、不亮紅點。</span><br>（做了第 2 級）<strong>雙擊</strong>桌面上的小綿羊開秘書頁 →「<strong>☁️ 雲端連線 → ⚙ 設定</strong>」貼 🌐A＋🔑C →「儲存並啟用」→「測試連線」。</div></div>
+      <div class="step"><div class="step-no">5</div><div class="step-body">（做了第 3 級）秘書頁「<strong>🎙 語音輸入 → ⚙ 設定</strong>」貼 🔑D → 儲存 → 按「測試 3 秒錄音」。之後按住<strong>右 Ctrl</strong> 說話＝打字到游標處；按住<strong>右 Alt</strong> 說話＝直接變成小綿助的記事或任務。</div></div>
     </section>
 
     <section id="part4">
-      <div class="sec-head"><div class="sec-icon">🅳</div><div class="sec-titles"><h2><span class="sec-num">8.</span>Part D：每天怎麼用（日常流程）</h2></div></div>
+      <div class="sec-head"><div class="sec-icon">📅</div><div class="sec-titles"><h2><span class="sec-num">7.</span>每天怎麼用（日常流程）</h2></div></div>
       <figure class="diagram">
         <svg viewBox="0 0 780 250" role="img" aria-label="一天的自動化時間軸：前一晚寫聯絡本、晨間點名收作業、8:05 自動未到、8:08 推播點名、8:40 推播作業、16:00 選用推播">
           <defs>
@@ -774,24 +814,24 @@ LINE userId（難度 3，U 開頭）：</pre>
       </figure>
       <table>
         <tr><th>時間</th><th>發生什麼</th></tr>
-        <tr><td>前一晚</td><td>工作台「聯絡本」用下拉選單快速輸入明天內容 → 儲存到雲端（或隨時對 LINE 說「<code>聯絡本：數習P.20、帶直笛</code>」）<br><span class="lead">想先寫下週的？說「<code>聯絡本：下週一 要帶泳具</code>」，小幫手會先問你要存哪一天；存好後那天大屏一開就顯示。工作台「聯絡本」的清單會把未來日期獨立標示。</span></td></tr>
+        <tr><td>前一晚<br><span class="lead">第 2 級</span></td><td>工作台「聯絡本」用下拉選單快速輸入明天內容 → 儲存到雲端（或隨時對 LINE 說「<code>聯絡本：數習P.20、帶直笛</code>」）<br><span class="lead">想先寫下週的？說「<code>聯絡本：下週一 要帶泳具</code>」，小幫手會先問你要存哪一天；存好後那天大屏一開就顯示。工作台「聯絡本」的清單會把未來日期獨立標示。</span></td></tr>
         <tr><td>早上開機</td><td>大屏自動開啟，黑板已顯示今日聯絡本，學生照抄</td></tr>
         <tr><td>晨間</td><td>點名（點座號）＋收作業（點已交的變綠，或按「全班繳交」再取消少數）；可用倒數計時管理節奏</td></tr>
         <tr><td>08:05</td><td>未填的座號自動轉「未到」</td></tr>
-        <tr><td>08:08</td><td><strong>你的 LINE 收到晨間第一則</strong>：出缺情況＋今日課程進度＋今日任務＋今日記事提醒＋逾期任務（等於早安簡報，一則看完）</td></tr>
-        <tr><td>08:40</td><td><strong>你的 LINE 收到完整回報</strong>（點名＋各科作業繳交，等收完作業再送）</td></tr>
-        <tr><td>白天隨時</td><td>LINE 傳「明天要收回條」→ 開工作台按立即同步 → 收件匣確認轉任務；語音、拍照通知單也可以</td></tr>
+        <tr><td>08:08<br><span class="lead">第 4 級</span></td><td><strong>你的 LINE 收到晨間第一則</strong>：出缺情況＋今日課程進度＋今日任務＋今日記事提醒＋逾期任務（等於早安簡報，一則看完）</td></tr>
+        <tr><td>08:40<br><span class="lead">第 4 級</span></td><td><strong>你的 LINE 收到完整回報</strong>（點名＋各科作業繳交，等收完作業再送）</td></tr>
+        <tr><td>白天隨時<br><span class="lead">第 4 級</span></td><td>LINE 傳「明天要收回條」→ 開工作台按立即同步 → 收件匣確認轉任務；語音、拍照通知單也可以</td></tr>
         <tr><td>批改後</td><td>大屏「<strong>作業訂正</strong>」分頁（延續作業繳交的版面）：沒交的自動變灰不能點，點已交的座號＝<strong>待訂正</strong>，學生改完再點一次＝<strong>訂正完成</strong>（回綠加小勾）；也可按「全部訂正完成」一次結清。
           <br><span class="lead">整塊清完的版面會自己收起來不佔畫面（要補標時按下方「顯示已完成的 N 個版面」叫回來）；正在點的那塊不會在手指底下消失，離開分頁再進來才收。</span>
           <br><span class="lead">下方「訂正統計」三種看法：<strong>依座號</strong>（誰身上還有幾筆）→<strong>按科目</strong>（科目 → 進度兩層，點進度旁的 ▲ 直接跳到上面的版面）→<strong>日曆</strong>（哪一天還沒清完）。統計是<strong>近 30 天</strong>、跨日累計，不是只有今天。</span></td></tr>
-        <tr><td>下課</td><td>大屏「<strong>作業補交</strong>」分頁：前幾天沒交的，學生補來了就把號碼點掉。<strong>操作方式與「作業訂正」完全一致</strong>——一樣是依座號／按科目／日曆三種看法，一樣是科目 → 進度兩層，一樣點號碼＝完成。待訂正的項目也會一起列出來。</td></tr>
-        <tr><td>週五下午</td><td>缺交達 5 次的學生，LINE 自動送上委婉家長訊息草稿（在工作台收件匣，補上孩子優點再轉發）</td></tr>
-        <tr><td>期末</td><td>大屏「查詢統計」輸入 🔑C → 查區間 → 「⬇ 匯出 Excel」變輔導紀錄素材（含各科<strong>缺交／補交／待訂正／已訂正</strong>次數）</td></tr>
+        <tr><td>下課<br><span class="lead">第 2 級</span></td><td>大屏「<strong>作業補交</strong>」分頁：前幾天沒交的，學生補來了就把號碼點掉。<strong>操作方式與「作業訂正」完全一致</strong>——一樣是依座號／按科目／日曆三種看法，一樣是科目 → 進度兩層，一樣點號碼＝完成。待訂正的項目也會一起列出來。</td></tr>
+        <tr><td>週五下午<br><span class="lead">第 4 級</span></td><td>缺交達 5 次的學生，LINE 自動送上委婉家長訊息草稿（在工作台收件匣，補上孩子優點再轉發）</td></tr>
+        <tr><td>期末<br><span class="lead">第 2 級</span></td><td>大屏「查詢統計」輸入 🔑C → 查區間 → 「⬇ 匯出 Excel」變輔導紀錄素材（含各科<strong>缺交／補交／待訂正／已訂正</strong>次數）</td></tr>
       </table>
       <div class="box">
         <strong>🎨 訂正用什麼顏色？</strong>「設定 → 待訂正顏色」有 6 色可挑（<strong>棕</strong>／靛／琥珀／松綠／紫／橘），預設是棕色。
         選好之後大屏版面、統計方塊、日曆標記會一起換色，不影響已交（綠）與缺交（灰）。<br>
-        <span class="lead">⚠️ <strong>「作業訂正」與「作業補交」的統計要看得到前幾天，必須先在「設定」填入「班級名稱」與 🔑D 教室金鑰</strong>——
+        <span class="lead">⚠️ <strong>「作業訂正」與「作業補交」的統計要看得到前幾天，必須做到第 2 級（「設定」填入「班級名稱」、🌐A 與 🔑B）</strong>——
         沒填的話只看得到這台電腦今天登記的內容，畫面上會直接標示提醒。大屏與你的教師工作台常常不是同一台電腦，資料是以雲端為準的。</span>
       </div>
       <div class="box"><strong>LINE 指令速查（這些都不用 LINE 額度）：</strong><br>
@@ -827,49 +867,62 @@ LINE userId（難度 3，U 開頭）：</pre>
           <tr><td><code>DRIVE_BACKUP_MAX_MB</code></td><td>單檔上限，預設 20（MB）</td></tr>
           <tr><td><code>CLASS_NOTES</code></td><td>代課包裡要附上的班級注意事項（選填）</td></tr>
         </table>
-        <span class="lead">⚠️ 此功能需要雲端硬碟權限：更新程式碼後第一次執行會再跳一次授權，照難度 1 第 1 關第 3 步的方式（進階 → 前往 → 允許）允許即可。備份會佔用你 Google 帳號的免費容量（與 Gmail 共用 15GB）。</span>
+        <span class="lead">⚠️ 此功能需要雲端硬碟權限：更新程式碼後第一次執行會再跳一次授權，照第 2 級第 2 關第 3 步的方式（進階 → 前往 → 允許）允許即可。備份會佔用你 Google 帳號的免費容量（與 Gmail 共用 15GB）。</span>
       </div>
     </section>
 
     <section id="part5">
-      <div class="sec-head"><div class="sec-icon">🛟</div><div class="sec-titles"><h2><span class="sec-num">9.</span>疑難排解</h2></div></div>
+      <div class="sec-head"><div class="sec-icon">🛟</div><div class="sec-titles"><h2><span class="sec-num">8.</span>疑難排解</h2></div></div>
       <table>
-        <tr><th>症狀</th><th>難度</th><th>解法</th></tr>
-        <tr><td>按綠色按鈕後說「沒有權限」或要登入</td><td>🟢 1</td><td>先在瀏覽器登入 Google（建議個人 Gmail），再點一次按鈕</td></tr>
-        <tr><td>試算表沒出現「🤖 LINE 小幫手」選單</td><td>🟢 1</td><td>按 F5 重新整理、等 5 秒；仍沒有就用「擴充功能 → Apps Script」確認程式存在（或用備用方法手動貼）</td></tr>
-        <tr><td>授權視窗一閃就關</td><td>🟢 1</td><td>瀏覽器擋了彈出視窗或擴充功能。改用無痕視窗（Ctrl+Shift+N）登入 Google 重做</td></tr>
-        <tr><td>建表單、寫日曆說「沒有權限」</td><td>🟢 1</td><td>授權時沒勾「選取全部」。到 <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">Google 帳戶的第三方存取權</a>移除「LINE小幫手」，再點一次「① 初始化」重新授權並勾選全部</td></tr>
-        <tr><td>學校帳號部署被擋</td><td>🟢 1</td><td>改用個人 Gmail 重做難度 1</td></tr>
-        <tr><td>打開 🌐 網址要求登入或顯示錯誤</td><td>🟢 1</td><td>部署時「具有存取權的使用者」沒選「任何人」：管理部署 → 編輯改成任何人 → 新版本 → 部署</td></tr>
-        <tr><td>工作台「測試連線」失敗</td><td>🟢 1</td><td>🔑C 貼錯（前後多了空白）、網址不是 /exec 結尾、或改過程式忘了「新版本」重新部署</td></tr>
+        <tr><th>症狀</th><th>哪一級</th><th>解法</th></tr>
+        <tr><td>按綠色按鈕後說「沒有權限」或要登入</td><td>🔵 2</td><td>先在瀏覽器登入 Google（建議個人 Gmail），再點一次按鈕</td></tr>
+        <tr><td>試算表沒出現「🤖 LINE 小幫手」選單</td><td>🔵 2</td><td>按 F5 重新整理、等 5 秒；仍沒有就用「擴充功能 → Apps Script」確認程式存在（或用備用方法手動貼）</td></tr>
+        <tr><td>授權視窗一閃就關</td><td>🔵 2</td><td>瀏覽器擋了彈出視窗或擴充功能。改用無痕視窗（Ctrl+Shift+N）登入 Google 重做</td></tr>
+        <tr><td>建表單、寫日曆說「沒有權限」</td><td>🔵 2</td><td>授權時沒勾「選取全部」。到 <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">Google 帳戶的第三方存取權</a>移除「LINE小幫手」，再點一次「① 初始化」重新授權並勾選全部</td></tr>
+        <tr><td>學校帳號部署被擋</td><td>🔵 2</td><td>改用個人 Gmail 重做第 2 級</td></tr>
+        <tr><td>打開 🌐A 網址要求登入或顯示錯誤</td><td>🔵 2</td><td>部署時「具有存取權的使用者」沒選「任何人」：管理部署 → 編輯改成任何人 → 新版本 → 部署</td></tr>
+        <tr><td>工作台「測試連線」失敗</td><td>🔵 2</td><td>🔑C 貼錯（前後多了空白）、網址不是 /exec 結尾、或改過程式忘了「新版本」重新部署</td></tr>
+        <tr><td>大屏看不到「作業補交」「查詢統計」「存到雲端」</td><td>🟢 1</td><td>第 1 級本來就沒有；要用就做第 2 級，把 🌐A＋🔑B 填進大屏設定</td></tr>
         <tr><td>大屏進設定說密碼錯</td><td>—</td><td>預設 1234；改過忘了的話，清除這台瀏覽器的網站資料後會回到預設（大屏設定需重填）</td></tr>
-        <tr><td>大屏「存到雲端」失敗</td><td>🟢 1</td><td>🔑D 貼錯，或班級名稱空白</td></tr>
-        <tr><td>AI 按了「分析」沒反應</td><td>🟡 2</td><td>看結果框最上面「⚠」那一行的原因：金鑰貼錯、額度用完（429）、內容太長被截斷；可按「🔁 重試 AI」</td></tr>
-        <tr><td>Webhook Verify 顯示「302 Found」</td><td>🔴 3</td><td><strong>正常，可忽略</strong>——用手機傳「我的ID」實測為準</td></tr>
-        <tr><td>機器人已讀不回</td><td>🔴 3</td><td>①網址結尾少了 <code>?hook=🔑B</code> ②「Use webhook」沒開 ③「自動回應訊息」沒關 ④ 🔑A 沒用選單②填入</td></tr>
-        <tr><td>機器人只回一串 U 開頭的字</td><td>🔴 3</td><td>還沒鎖門：把那串用選單「③ 填入我的 LINE userId」貼上</td></tr>
-        <tr><td>語音／照片沒反應</td><td>🔴 3</td><td>沒用選單「④ 填入 Gemini 金鑰」貼 🔑E</td></tr>
+        <tr><td>大屏「存到雲端」失敗</td><td>🔵 2</td><td>🔑B 貼錯，或班級名稱空白</td></tr>
+        <tr><td>AI 按了「分析」沒反應</td><td>🟡 3</td><td>看結果框最上面「⚠」那一行的原因：金鑰貼錯、額度用完（429）、內容太長被截斷；可按「🔁 重試 AI」</td></tr>
+        <tr><td>Webhook Verify 顯示「302 Found」</td><td>🟠 4</td><td><strong>正常，可忽略</strong>——用手機傳「我的ID」實測為準</td></tr>
+        <tr><td>機器人已讀不回</td><td>🟠 4</td><td>①網址結尾少了 <code>?hook=🔑F</code> ②「Use webhook」沒開 ③「自動回應訊息」沒關 ④ 🔑E 沒用選單②填入</td></tr>
+        <tr><td>機器人只回一串 U 開頭的字</td><td>🟠 4</td><td>還沒鎖門：把那串用選單「③ 填入我的 LINE userId」貼上</td></tr>
+        <tr><td>語音／照片沒反應</td><td>🟠 4</td><td>沒用選單「④ 填入 Gemini 金鑰」貼 🔑D</td></tr>
         <tr><td>小綿助點兩下沒反應</td><td>—</td><td>還在 ZIP 裡面：先「解壓縮全部」再執行；或被「Windows 已保護您的電腦」擋住，按「其他資訊 → 仍要執行」</td></tr>
-        <tr><td>換了電腦資料不見</td><td>—</td><td>資料存在各電腦的瀏覽器裡：舊電腦「下載 JSON 備份」→ 新電腦「從備份還原」（難度 1 可用雲端備份）</td></tr>
+        <tr><td>換了電腦資料不見</td><td>—</td><td>資料存在各電腦的瀏覽器裡：舊電腦「下載 JSON 備份」→ 新電腦「從備份還原」（第 2 級可用雲端備份）</td></tr>
       </table>
     </section>
 
     <section id="part6">
-      <div class="sec-head"><div class="sec-icon">🔐</div><div class="sec-titles"><h2><span class="sec-num">10.</span>備份與安全</h2></div></div>
+      <div class="sec-head"><div class="sec-icon">🔐</div><div class="sec-titles"><h2><span class="sec-num">9.</span>備份與安全</h2></div></div>
       <ul>
-        <li><strong>☁️ 雲端備份（做了難度 1 才有）</strong>：工作台「設定 → 備份與還原 → 立即雲端備份」，整份存進<strong>你自己的試算表</strong>（「工作台備份」分頁），保留最近 10 份，預設每天開啟工作台時自動備份。換電腦時「查看雲端備份 → 還原這份」。</li>
+        <li><strong>☁️ 雲端備份（做了第 2 級才有）</strong>：工作台「設定 → 備份與還原 → 立即雲端備份」，整份存進<strong>你自己的試算表</strong>（「工作台備份」分頁），保留最近 10 份，預設每天開啟工作台時自動備份。換電腦時「查看雲端備份 → 還原這份」。</li>
         <li><strong>每週一次</strong>：「設定 → 備份與還原 → 下載 JSON 備份」（不含金鑰，可安心存隨身碟），不依賴任何服務的離線保險。</li>
         <li class="warn" style="list-style:none;margin-left:-22px"><strong>⚠️ 工作台的任務與教學進度平常只存在「這台電腦的這個瀏覽器」。</strong>試算表裡的「工作台快照」只是給 LINE 簡報用的摘要，<strong>不是備份、不能還原</strong>；能還原的只有上面兩種。</li>
-        <li><strong>金鑰的家</strong>：你的金鑰記錄表；🔑B🔑C🔑D 也能在試算表選單「🔑 顯示我的金鑰」再看；🔑E 在 <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a>；🔑A 在 LINE Developers。金鑰與 🌐 <strong>不要</strong>貼到公開網頁或群組。</li>
-        <li><strong>權限分層</strong>：教室電腦只放 🔑D（只能回報當天）；🔑C（老師金鑰，可查歷史）只放自己的電腦。</li>
+        <li><strong>金鑰的家</strong>：你的金鑰記錄表；🔑B🔑C🔑F 也能在試算表選單「🔑 顯示我的金鑰」再看；🔑D 在 <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a>；🔑E 在 LINE Developers。金鑰與 🌐A <strong>不要</strong>貼到公開網頁或群組。</li>
+        <li><strong>權限分層</strong>：教室電腦只放 🔑B（只能回報當天）；🔑C（老師金鑰，可查歷史）只放自己的電腦。</li>
         <li><strong>試算表就是雲端紀錄</strong>：點名、作業、聯絡本的歷史都在你自己 Google 帳號的試算表裡。</li>
         <li>大屏只使用<strong>座號</strong>，不輸入學生姓名；遲到紀錄只有老師在 LINE 與統計看得到。</li>
       </ul>
     </section>
 
     <section id="partv2">
-      <div class="sec-head"><div class="sec-icon">🆕</div><div class="sec-titles"><h2><span class="sec-num">11.</span>已經在用舊版？升級看這裡</h2></div></div>
+      <div class="sec-head"><div class="sec-icon">🆕</div><div class="sec-titles"><h2><span class="sec-num">10.</span>已經在用舊版？升級看這裡</h2></div></div>
       <p class="lead">怎麼知道自己的版本？網站每頁左下角有「版本 日期 時間」；雲端大腦在試算表選單「🤖 LINE 小幫手 → ℹ️ 程式版本」或對機器人傳「版本」。<strong>本段下方會顯示網站上最新的 LineBot.gs 版本</strong>，比你的新就照下面更新。全新安裝的老師照上面做就是最新版，這段可以跳過。</p>
+      <h3>🔤 金鑰代號換了（金鑰本身沒變，不用重貼）</h3>
+      <p class="lead">為了配合五級，代號改成照用到的先後排。你記事本裡那幾串字完全不用動，只是名字不一樣；舊代號只出現在舊的教學和舊的記錄表。</p>
+      <table>
+        <tr><th>這是什麼</th><th>舊代號</th><th>新代號</th></tr>
+        <tr><td>機器人網址</td><td>🌐</td><td><strong>🌐A</strong></td></tr>
+        <tr><td>教室大屏金鑰</td><td>舊 D</td><td><strong>🔑B</strong></td></tr>
+        <tr><td>工作台同步金鑰</td><td>舊 C</td><td><strong>🔑C</strong>（沒變）</td></tr>
+        <tr><td>Gemini 金鑰</td><td>舊 E</td><td><strong>🔑D</strong></td></tr>
+        <tr><td>LINE Token</td><td>舊 A</td><td><strong>🔑E</strong></td></tr>
+        <tr><td>Webhook 驗證參數</td><td>舊 B</td><td><strong>🔑F</strong></td></tr>
+        <tr><td>LINE userId</td><td>（沒有代號）</td><td><strong>👤G</strong></td></tr>
+      </table>
       <h3>第 2 版多了什麼？</h3>
       <table>
         <tr><th>在哪裡</th><th>新功能</th></tr>
@@ -879,7 +932,7 @@ LINE userId（難度 3，U 開頭）：</pre>
         <tr><td>🧰 大屏班級工具</td><td>🍅 番茄鐘（呼吸動畫＋LO-FI 音樂角：匯入 MP3、貼 YouTube）、📣 大屏提示（22 句班級經營句＋插圖，<strong>工作台或 LINE 傳「提示 排隊」就能遠端切換</strong>）、安靜偵測角色互動（安靜集 ⭐）、計分板改為手動歸零</td></tr>
         <tr><td>📅 Google 整合</td><td>任務一鍵加入 Google 日曆、小綿助記事 ↔ Google Tasks 雙向同步</td></tr>
         <tr><td>☁️ 工作台雲端功能<br>（以前只是模擬）</td><td>教學進度「同步到 Google 日曆」、Drive 資料庫上傳、AI 助理「建立 Google 表單」——第 1 版在網頁上只會顯示假的成功訊息，第 2 版起<strong>真的寫進你的 Google 日曆／雲端硬碟「LINE小幫手備份／工作台檔案」／表單</strong>（需已安裝 LINE 小幫手；沒裝會明確告訴你）</td></tr>
-        <tr><td>🐑 小綿助 v2.3<br>（桌面程式）</td><td><strong>直連你自己的 LINE 小幫手</strong>（不開瀏覽器也拿得到工作台快照、LINE 待整理，還能遙控大屏提示）、<strong>分心提醒</strong>（只讀作用中視窗標題、不截圖不上傳；滑 YouTube／IG 連續 3 分鐘會跑出來提醒）、專注 25／50 分模式、探頭與蹭滑鼠新行為。工作台「⚙ 設定 → 小綿助」下載新版，解壓覆蓋舊資料夾即可，設定與記事都在 AppData 不會消失<br><strong>v2.1 會聽的小綿助</strong>：秘書頁貼一次 🔑E → 任何程式按住右 Ctrl 說話、放開就貼上整理好的繁體中文；按住右 Alt 說給小綿助變記事／任務。選填 Groq 金鑰更快。升級方式同下（換新 ZIP）。</td></tr>
+        <tr><td>🐑 小綿助 v2.3<br>（桌面程式）</td><td><strong>直連你自己的 LINE 小幫手</strong>（不開瀏覽器也拿得到工作台快照、LINE 待整理，還能遙控大屏提示）、<strong>分心提醒</strong>（只讀作用中視窗標題、不截圖不上傳；滑 YouTube／IG 連續 3 分鐘會跑出來提醒）、專注 25／50 分模式、探頭與蹭滑鼠新行為。工作台「⚙ 設定 → 小綿助」下載新版，解壓覆蓋舊資料夾即可，設定與記事都在 AppData 不會消失<br><strong>v2.1 會聽的小綿助</strong>：秘書頁貼一次 🔑D → 任何程式按住右 Ctrl 說話、放開就貼上整理好的繁體中文；按住右 Alt 說給小綿助變記事／任務。選填 Groq 金鑰更快。升級方式同下（換新 ZIP）。</td></tr>
       </table>
 
 
@@ -906,7 +959,7 @@ LINE userId（難度 3，U 開頭）：</pre>
 </figure>
       <ol class="steps">
         <li><strong>網站免更新</strong>：網頁版會自動是最新版，按 Ctrl+F5 重新整理就好。</li>
-        <li><strong>更新雲端大腦程式（有做難度 1 的老師才要做）</strong>：
+        <li><strong>更新雲端大腦程式（有做第 2 級的老師才要做）</strong>：
           <ol>
             <li>開你的試算表 → 擴充功能 → Apps Script</li>
             <li>按這顆按鈕取得最新程式碼：<br>
@@ -917,16 +970,16 @@ LINE userId（難度 3，U 開頭）：</pre>
             <li>回 Apps Script：點進程式碼區 → <strong>Ctrl+A 全選 → Ctrl+V 貼上（會直接蓋掉舊的）→ 按 💾 儲存</strong>（不應出現紅色錯誤）</li>
             <li><strong>部署 → 管理部署 → ✏️ 編輯 → 版本選「新版本」→ 部署</strong>（⚠️ 千萬不要按「新增部署」，網址會變）</li>
           </ol></li>
-        <li><strong>重新授權一次（正常現象，不是壞掉）</strong>：第 2 版多了「建立表單、寄信、圖文選單、寫入 Google 日曆、存檔到雲端硬碟」等能力，<strong>第一次使用這些新功能</strong>時 Google 會再跳一次授權——照<a href="#tier1">難度 1 授權圖</a>允許並勾「選取全部」，只會問這一次。</li>
+        <li><strong>重新授權一次（正常現象，不是壞掉）</strong>：第 2 版多了「建立表單、寄信、圖文選單、寫入 Google 日曆、存檔到雲端硬碟」等能力，<strong>第一次使用這些新功能</strong>時 Google 會再跳一次授權——照<a href="#level2">第 2 級授權圖</a>允許並勾「選取全部」，只會問這一次。</li>
       </ol>
-      <div class="box"><strong>🐑 有裝小綿助的老師</strong>：關掉舊版（工作列右下角小綿羊圖示按右鍵結束，或工作管理員結束 <code>XiaoMianZhu.exe</code>）→ 下載新版 ZIP 解壓覆蓋舊資料夾（記事與設定在 <code>%APPDATA%\XiaoMianZhuSecretary</code>，不受影響）→ 打開新版，照<a href="#pet">小綿助</a>第 4、5 步設定。</div>
+      <div class="box"><strong>🐑 有裝小綿助的老師</strong>：關掉舊版（工作列右下角小綿羊圖示按右鍵結束，或工作管理員結束 <code>XiaoMianZhu.exe</code>）→ 下載新版 ZIP 解壓覆蓋舊資料夾（記事與設定在 <code>%APPDATA%\XiaoMianZhuSecretary</code>，不受影響）→ 打開新版，照<a href="#level5">小綿助</a>第 4、5 步設定。</div>
       <div class="box"><strong>🔒 第 2 版的保護機制</strong>：如果還沒用選單③填 userId，機器人<strong>不會執行任何指令</strong>，只會回你的 userId 請你填——貼進選單③就通了。</div>
       <div class="warn">🧹 <strong>從很舊的版本升上來？</strong>如果曾遇到「同一天點名被記很多筆」，升級後按選單「🤖 LINE 小幫手 → 🧹 清理重複資料（修統計）」一次。</div>
       <div class="ok">✅ 升級驗收：對機器人傳「<code>版本</code>」回覆的日期跟本頁一樣、傳「<code>說明</code>」有回覆，就代表新版部署成功。</div>
     </section>
 
     <section id="part7">
-      <div class="sec-head"><div class="sec-icon">©️</div><div class="sec-titles"><h2><span class="sec-num">12.</span>版權與授權資料</h2></div></div>
+      <div class="sec-head"><div class="sec-icon">©️</div><div class="sec-titles"><h2><span class="sec-num">11.</span>版權與授權資料</h2></div></div>
       <p>本系統為開源軟體，採 <strong>MIT License</strong> 授權，可自由使用、修改與分享（需保留授權聲明）。分享給其他老師時，請一併保留本說明。</p>
       <table>
         <tr><th>項目</th><th>來源與授權</th></tr>

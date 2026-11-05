@@ -189,6 +189,13 @@
     .ask-input { width: 100%; box-sizing: border-box; border: 2px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 20px; font-family: inherit; }
     .ask-actions { display: flex; justify-content: flex-end; gap: 10px; }
     html[data-board-style="cozy"] .ask-card { border-color: var(--cozy-wood); border-radius: 28px; box-shadow: 0 6px 0 var(--cozy-wood), 0 24px 48px -16px rgba(91,70,54,.45); }
+    /* ===== 第 1 級（只有大屏、沒接雲端）：收起一定要雲端才能用的東西 ===== */
+    body.local-only .tab-button[data-page="makeup"], body.local-only .tab-button[data-page="query"],
+    body.local-only #submitButton, body.local-only #contactRefreshButton { display: none !important; }
+    .level-box { margin-top: 14px; max-width: 1000px; border: 2px solid var(--line); border-radius: 12px; padding: 12px 16px; background: var(--surface); }
+    .level-box summary { cursor: pointer; font-size: 17px; font-weight: 800; color: var(--primary-strong); }
+    .level-box[open] summary { margin-bottom: 12px; }
+    .level-box .note { margin-top: 12px; }
     /* ===== 聯絡本日曆 ===== */
     .contact-title { border: 0; background: none; font: inherit; font-size: 18px; font-weight: 900; color: var(--primary-strong); display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px 3px 2px; border-radius: 10px; cursor: pointer; }
     .contact-title:hover { background: var(--ok-soft); }
@@ -1134,7 +1141,7 @@
     <section class="page" id="page-query">
       <div class="panel">
         <div class="query-controls">
-          <div class="field"><label>🔑C 老師查詢金鑰</label><div class="status-text" style="padding:9px 0">已統一放在「⚙ 設定」分頁（🌐 網址與 🔑D 旁邊）；填好儲存後這裡直接查。</div></div>
+          <div class="field"><label>🔑C 老師查詢金鑰</label><div class="status-text" style="padding:9px 0">已統一放在「⚙ 設定」分頁（🌐A 網址與 🔑B 旁邊）；填好儲存後這裡直接查。</div></div>
           <div class="field"><label>起始日</label><input type="date" id="queryFrom"></div>
           <div class="field"><label>結束日</label><input type="date" id="queryTo"></div>
           <button class="ghost-button" type="button" data-range="week">本週</button>
@@ -1202,23 +1209,39 @@
           </div>
           <div class="field"><label>遲到界線（此時間後點到校＝記遲到）</label><input id="setupLateTime" type="time" value="08:00"></div>
           <div class="field"><label>自動缺席（未填自動轉未到）</label><input id="setupAutoAbsentTime" type="time" value="08:05"></div>
+          <div class="field"><label>補交回溯天數</label><input id="setupLookbackDays" type="number" min="1" max="60" value="30"></div>
+        </div>
+        <details class="level-box" id="setupLevel2">
+          <summary>🔵 第 2 級：連上工作台（要在家寫聯絡本、看補交與統計才填）</summary>
+          <div class="form-grid">
+          <div class="field" style="grid-column:1/-1"><label>🌐A Apps Script 部署網址（/exec 結尾，與 LINE 小幫手同一份）＝教學裡的「🌐A 機器人網址」　<a href="Install.html#level2" target="_blank" rel="noopener" style="font-weight:700">還沒有？看申請教學 📖</a></label><input id="setupGasUrl" type="url" placeholder="貼上 🌐A 機器人網址：https://script.google.com/macros/s/……/exec"></div>
+          <div class="field" style="grid-column:1/-1"><label>🔑B 教室大屏金鑰＝教學裡的「教室大屏金鑰」（執行 setupLineBot 後取得的 CLASSROOM_TOKEN）　<a href="Install.html#level2" target="_blank" rel="noopener" style="font-weight:700">如何取得？📖</a></label><input id="setupClassroomToken" type="password" autocomplete="off" placeholder="貼上 🔑B（教室只放這把；老師金鑰 🔑C 不要貼這裡）"></div>
+          <div class="field" style="grid-column:1/-1"><label>🔑C 老師查詢金鑰（選填；填了才能用「查詢」分頁看歷史統計。⚠️ 教室公用電腦建議不要填）</label><input id="setupTeacherToken" type="password" autocomplete="off" placeholder="貼上 🔑C 工作台同步金鑰（老師自己的電腦才填）"></div>
+          </div>
+          <p class="note">
+            ・「💾 存到雲端」只把資料存進試算表，<strong>不會</strong>推播 LINE；每 5 分鐘與離開頁面時也會自動存一次。<br>
+            ・教室金鑰權限受限：只能回報當天、讀取近期缺交、把缺交標成補交；歷史統計需要老師金鑰，別把老師金鑰存在教室電腦。<br>
+            ・遲到只有老師在 LINE 與查詢統計看得到。
+          </p>
+        </details>
+        <details class="level-box" id="setupLevel4">
+          <summary>🟠 第 4 級：LINE 推播時間（接上 LINE 才有作用）</summary>
+          <div class="form-grid">
           <div class="field"><label>① 點名推播（出缺＋今日任務／記事／逾期）</label><input id="setupAutoNotifyTime" type="time" value="08:08"></div>
           <div class="field"><label>② 作業推播（點名＋作業繳交到 LINE）</label><input id="setupAutoHomeworkNotifyTime" type="time" value="08:40"></div>
-          <div class="field"><label>補交回溯天數</label><input id="setupLookbackDays" type="number" min="1" max="60" value="30"></div>
-          <div class="field" style="grid-column:1/-1"><label>🌐 Apps Script 部署網址（/exec 結尾，與 LINE 小幫手同一份）＝教學裡的「🌐 機器人網址」　<a href="Install.html#tier1" target="_blank" rel="noopener" style="font-weight:700">還沒有？看申請教學 📖</a></label><input id="setupGasUrl" type="url" placeholder="貼上 🌐 機器人網址：https://script.google.com/macros/s/……/exec"></div>
-          <div class="field" style="grid-column:1/-1"><label>🔑D 教室大屏金鑰＝教學裡的「教室大屏金鑰」（執行 setupLineBot 後取得的 CLASSROOM_TOKEN）　<a href="Install.html#tier1" target="_blank" rel="noopener" style="font-weight:700">如何取得？📖</a></label><input id="setupClassroomToken" type="password" autocomplete="off" placeholder="貼上 🔑D（教室只放這把；老師金鑰 🔑C 不要貼這裡）"></div>
-          <div class="field" style="grid-column:1/-1"><label>🔑C 老師查詢金鑰（選填；填了才能用「查詢」分頁看歷史統計。⚠️ 教室公用電腦建議不要填）</label><input id="setupTeacherToken" type="password" autocomplete="off" placeholder="貼上 🔑C 工作台同步金鑰（老師自己的電腦才填）"></div>
-        </div>
+          </div>
+          <p class="note">
+            ・LINE 只在兩個時間推播：① 點名推播（出缺，並附上工作台的今日課程、任務、記事與逾期提醒）② 作業推播（點名＋各科繳交）。教室電腦需開著本頁。<br>
+            ・可在 Apps Script 另設 sendRollcallReminder 每日觸發器作雲端備援：當天沒回報時 LINE 提醒老師。
+          </p>
+        </details>
         <button class="primary-button" type="button" id="saveSetupButton" style="margin-top:14px;font-size:18px;padding:12px 26px">儲存設定</button>
         <p class="note">
-          ・第一次設定？<a href="Install.html" target="_blank" rel="noopener"><strong>📖 開啟新手安裝教學</strong></a>（含金鑰怎麼取得、開機自動開大屏教學）。<br>
-          ・設定保存在這台電腦的瀏覽器；只使用座號，不輸入學生姓名。<br>
-          ・點名預設全部未填。遲到界線後點「到校」，大屏顯示「到」，但資料記為遲到——遲到只有老師在 LINE 與查詢統計看得到。<br>
-          ・「💾 存到雲端」只把資料存進試算表，<strong>不會</strong>推播 LINE；每 5 分鐘與離開頁面時也會自動存一次。<br>
-          ・LINE 只在兩個時間推播：① 點名推播（出缺，並附上工作台的今日課程、任務、記事與逾期提醒）② 作業推播（點名＋各科繳交）。教室電腦需開著本頁。<br>
+          ・第一次設定？<a href="Install.html" target="_blank" rel="noopener"><strong>📖 開啟新手教學</strong></a>（從第 1 級開始，含開機自動開大屏）。<br>
+          ・沒有填下面第 2 級的網址和金鑰，就是第 1 級：資料只存在這台電腦，不會上傳。<br>
+          ・設定保存在這台電腦的瀏覽器；只使用座號，不輸入學生姓名，聯絡本也請不要寫學生姓名或個資。<br>
+          ・點名預設全部未填。遲到界線後點「到校」，大屏顯示「到」，但資料記為遲到。<br>
           ・自動缺席時間一到，仍未填的座號自動轉「未到」。<br>
-          ・可在 Apps Script 另設 sendRollcallReminder 每日觸發器作雲端備援：當天沒回報時 LINE 提醒老師。<br>
-          ・教室金鑰權限受限：只能回報當天、讀取近期缺交、把缺交標成補交；歷史統計需要老師金鑰，別把老師金鑰存在教室電腦。<br>
           ・完整的使用情境教學與資安說明請看 <a href="About.html" target="_blank" rel="noopener">📚 系統說明與資安</a>。
         </p>
       </div>
@@ -1357,6 +1380,8 @@
     }
     function isFirstClass() { return currentClass() === firstClass(); }
     /** 第一個班（或單班）回傳 ''＝舊 key；其他班回傳「:602」。 */
+    // 第 2 級的網址和大屏金鑰都填了才算接上雲端；沒填就是第 1 級，資料只存這台電腦
+    const hasCloud = () => !!(state.settings.gasUrl && state.settings.classroomToken);
     function classKeySuffix(cls = currentClass()) {
       return !isMultiClass() || cls === state.settings.classes[0] ? '' : ':' + cls;
     }
@@ -1639,7 +1664,7 @@
           state.flags.autoHomeworkNotifyDone = true;
           saveTodayState();
         }
-        $('autoStatus').textContent = `自動化：已過晨間時段（${state.settings.autoAbsentTime} 未填轉未到、${state.settings.autoNotifyTime} 點名推播、${state.settings.autoHomeworkNotifyTime} 作業推播只在中午前執行）。「送出」仍可隨時存到雲端。`;
+        $('autoStatus').textContent = !hasCloud() ? `自動化：已過晨間時段（${state.settings.autoAbsentTime} 未填轉未到只在中午前執行）。` : `自動化：已過晨間時段（${state.settings.autoAbsentTime} 未填轉未到、${state.settings.autoNotifyTime} 點名推播、${state.settings.autoHomeworkNotifyTime} 作業推播只在中午前執行）。「送出」仍可隨時存到雲端。`;
         return;
       }
       let changed = false;
@@ -1677,7 +1702,7 @@
         submitReport({ auto: true, push: 'full' });
       }
       if (changed) { saveTodayState(); renderRollcall(); }
-      $('autoStatus').textContent = `自動化：${state.settings.lateTime} 後點到校記遲到（大屏不顯示）｜${state.settings.autoAbsentTime} 未填轉未到${state.flags.autoAbsentDone ? '（已執行）' : ''}｜${state.settings.autoNotifyTime} 推播點名${state.flags.autoNotifyDone ? '（已執行）' : ''}｜${state.settings.autoHomeworkNotifyTime} 推播點名＋作業${state.flags.autoHomeworkNotifyDone ? '（已執行）' : ''}`;
+      $('autoStatus').textContent = !hasCloud() ? `自動化：${state.settings.lateTime} 後點到校記遲到（大屏不顯示）｜${state.settings.autoAbsentTime} 未填轉未到${state.flags.autoAbsentDone ? '（已執行）' : ''}` : `自動化：${state.settings.lateTime} 後點到校記遲到（大屏不顯示）｜${state.settings.autoAbsentTime} 未填轉未到${state.flags.autoAbsentDone ? '（已執行）' : ''}｜${state.settings.autoNotifyTime} 推播點名${state.flags.autoNotifyDone ? '（已執行）' : ''}｜${state.settings.autoHomeworkNotifyTime} 推播點名＋作業${state.flags.autoHomeworkNotifyDone ? '（已執行）' : ''}`;
     }
 
     // ---------- 點名 ----------
@@ -1720,13 +1745,26 @@
       if (!state.contact.editing) {
         $('contactContent').innerHTML = state.contact.text
           ? escapeHtml(state.contact.text)
-          : '<span class="chalk-empty">今天還沒有聯絡本內容。<br>老師可在教師工作台預先輸入，或按「✏️ 編輯」直接在這裡寫。</span>';
+          : `<span class="chalk-empty">今天還沒有聯絡本內容。<br>${hasCloud() ? '老師可在教師工作台預先輸入，或按「✏️ 編輯」直接在這裡寫。' : '按「✏️ 編輯」直接在這裡寫。'}</span>`;
       }
-      const sourceLabel = state.contact.source === 'teacher' ? '（工作台輸入）' : state.contact.source === 'classroom' ? '（教室輸入）' : state.contact.source === 'line' ? '（LINE 輸入）' : '';
+      const sourceLabel = state.contact.source === 'teacher' ? '（工作台輸入）' : state.contact.source === 'classroom' ? '（教室輸入）' : state.contact.source === 'local' ? '（存在這台電腦）' : state.contact.source === 'line' ? '（LINE 輸入）' : '';
       const time = state.contact.updatedAt ? new Date(state.contact.updatedAt).toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit' }) : '';
       $('contactMeta').textContent = state.contact.updatedAt ? `${time} 更新${sourceLabel}` : '';
     }
+    // 第 1 級的聯絡本存在這台電腦，一天一筆
+    const CONTACT_LOCAL_PREFIX = 'morningContactLocal:';
+    function contactLocalGet(date) {
+      try { return JSON.parse(localStorage.getItem(CONTACT_LOCAL_PREFIX + date + classKeySuffix()) || 'null'); } catch (error) { return null; }
+    }
     async function loadContactBook({ silent = true } = {}) {
+      if (!hasCloud()) {
+        const saved = contactLocalGet(todayKey());
+        state.contact.text = saved ? String(saved.text || '') : '';
+        state.contact.updatedAt = saved ? String(saved.updatedAt || '') : '';
+        state.contact.source = saved ? 'local' : '';
+        renderContactBook();
+        return;
+      }
       if (!state.settings.className || !state.settings.classroomToken || !state.settings.gasUrl) { renderContactBook(); return; }
       try {
         const result = await callGas({ action: 'contactbook_get', token: state.settings.classroomToken, className: state.settings.className, date: todayKey() });
@@ -1769,9 +1807,18 @@
     const ccal = { month: '', sel: '', cache: {}, loading: false, error: '' };
     const ccalPad = n => String(n).padStart(2, '0');
     const ccalWeek = ['日', '一', '二', '三', '四', '五', '六'];
-    const CCAL_SOURCE = { teacher: '工作台輸入', classroom: '教室輸入', line: 'LINE 輸入' };
+    const CCAL_SOURCE = { teacher: '工作台輸入', classroom: '教室輸入', line: 'LINE 輸入', local: '存在這台電腦' };
     async function ccalFetch(month) {
-      if (!state.settings.gasUrl || !state.settings.classroomToken) throw new Error('要先在「設定」填雲端網址和教室大屏金鑰，才看得到以前的聯絡本。');
+      if (!hasCloud()) {
+        const [y, m] = month.split('-').map(Number);
+        const entries = [];
+        for (let d = 1; d <= new Date(y, m, 0).getDate(); d += 1) {
+          const date = `${month}-${String(d).padStart(2, '0')}`;
+          const saved = contactLocalGet(date);
+          if (saved && String(saved.text || '').trim()) entries.push({ date, text: String(saved.text), updatedAt: String(saved.updatedAt || ''), source: 'local' });
+        }
+        return entries;
+      }
       const result = await callGas({ action: 'contactbook_month', token: state.settings.classroomToken, className: state.settings.className, month });
       return result.entries || [];
     }
@@ -1862,6 +1909,22 @@
         return;
       }
       const text = $('contactTextarea').value.trim().slice(0, 5000);
+      if (!hasCloud()) {
+        const updatedAt = new Date().toISOString();
+        try {
+          localStorage.setItem(CONTACT_LOCAL_PREFIX + todayKey() + classKeySuffix(), JSON.stringify({ text, updatedAt }));
+        } catch (error) {
+          showToast('這台電腦存不下了，聯絡本沒有存到。', true);
+          return;
+        }
+        state.contact.text = text;
+        state.contact.updatedAt = updatedAt;
+        state.contact.source = 'local';
+        state.contact.editing = false;
+        renderContactBook();
+        showToast('聯絡本已存在這台電腦。');
+        return;
+      }
       try {
         await callGas({ action: 'contactbook_save', token: state.settings.classroomToken, className: state.settings.className, date: todayKey(), text });
         state.contact.text = text;
@@ -2115,7 +2178,7 @@
     async function loadCorrectStats() {
       if (!state.settings.className || !state.settings.classroomToken) {
         // 沒設金鑰也要看得到今天的訂正狀況，只是撈不到前幾天的紀錄。
-        $('correctStatus').textContent = '⚠ 這台電腦還沒填「設定 → 班級名稱＋教室金鑰」，所以只看得到今天這台自己登記的訂正。填好後會自動統計近 ' + state.settings.lookbackDays + ' 天（含前幾天沒訂正完的）。';
+        $('correctStatus').textContent = '這台電腦還沒接上雲端（第 2 級：班級名稱＋🌐A＋🔑B），所以只看得到今天這台自己登記的訂正。接好後會自動統計近 ' + state.settings.lookbackDays + ' 天（含前幾天沒訂正完的）。';
         renderCorrectStats();
         return;
       }
@@ -2792,8 +2855,28 @@
       reloadClassData();
       showToast(`已切換到 ${cls}。`);
     }
+    // 切換第 1 級／第 2 級：沒接雲端就收起要雲端的分頁與按鈕，接上後全部回來
+    const SUBMIT_STATUS_DEFAULT = '尚未存到雲端（每 5 分鐘與離開頁面時會自動存；LINE 只在設定的推播時間通知）。';
+    let levelLocal = null;
+    function applyLevelUi() {
+      const local = !hasCloud();
+      if (local === levelLocal) return;
+      const changed = levelLocal !== null;
+      levelLocal = local;
+      document.body.classList.toggle('local-only', local);
+      $('setupLevel2').open = !local;
+      if (local) {
+        $('submitStatus').innerHTML = '📁 資料只存在這台電腦，不會上傳。想在家寫聯絡本、看補交與統計：<a href="Install.html#level2" target="_blank" rel="noopener">看第 2 級教學</a>';
+        const active = document.querySelector('.tab-button.active');
+        if (active && ['makeup', 'query'].includes(active.dataset.page)) document.querySelector('.tab-button[data-page="rollcall"]').click();
+      } else {
+        $('submitStatus').textContent = SUBMIT_STATUS_DEFAULT;
+      }
+      if (changed) { state.makeup.loaded = false; state.correct.loaded = false; loadContactBook(); }
+    }
     function applySettingsToUi() {
       const s = state.settings;
+      applyLevelUi();
       renderClassSwitch();
       document.title = `${s.boardTitle}｜點名與作業繳交`;
       $('setupPin').value = s.setupPin;

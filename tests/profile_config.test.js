@@ -666,8 +666,32 @@ for (const menu of ["② 填入 LINE Token", "③ 填入我的 LINE userId", "�
   assert.match(installHtml, new RegExp(menu.replace(/[()]/g, "\\$&")), `安裝教學應使用實際選單名稱「${menu}」`);
   assert.match(lineBotSource, new RegExp(menu.replace(/[()]/g, "\\$&")), `GAS 選單應有「${menu}」`);
 }
-assert.match(installHtml, /🔑B（Webhook 驗證參數）先不用管/, "難度 1 應說明 🔑B 先不用");
-assert.match(lineBotSource, /【難度 1：雲端大腦】現在就要用這兩把/, "初始化彈窗應依難度分段");
+const morningLevelSource = fs.readFileSync(path.join(__dirname, "..", "Morning.html"), "utf8");
+assert.match(installHtml, /🔑F（Webhook 驗證參數）先不用管/, "第 2 級應說明 🔑F 先不用");
+assert.match(lineBotSource, /【第 2 級：連上大屏和工作台】現在就要用這兩把/, "初始化彈窗應依五級分段");
+
+// 2026-11-05 五級路線：教學照 1 大屏 → 2 工作台 → 3 AI → 4 LINE → 5 桌寵；代號照用到的先後排
+const levelOrder = ["level1", "level2", "level3", "level4", "level5"].map(id => installHtml.indexOf(`<section id="${id}"`));
+assert.ok(levelOrder.every(at => at > 0) && levelOrder.every((at, i) => !i || at > levelOrder[i - 1]), "安裝教學應依五級順序排列");
+const keySheet = installHtml.slice(installHtml.indexOf('id="keyNotes"'), installHtml.indexOf("</pre>", installHtml.indexOf('id="keyNotes"')));
+assert.deepStrictEqual(keySheet.match(/(?:🌐|🔑|👤)[A-G]/gu), ["🌐A", "🔑B", "🔑C", "🔑D", "🔑E", "🔑F", "👤G"], "金鑰記錄表應依代號順序");
+for (const [name, source] of [["大屏", morningLevelSource], ["工作台", indexHtml], ["GAS", lineBotSource], ["教學", installHtml]]) {
+  assert.doesNotMatch(source, /難度 ?[123](?![–-])/, `${name}不應再出現舊的「難度 1～3」`);
+}
+for (const [source, pattern, label] of [
+  [morningLevelSource, /🌐A Apps Script 部署網址/, "大屏 🌐A"], [morningLevelSource, /🔑B 教室大屏金鑰/, "大屏 🔑B"], [morningLevelSource, /🔑C 老師查詢金鑰/, "大屏 🔑C"],
+  [indexHtml, /🔑D API 金鑰/, "工作台 🔑D"], [indexHtml, /🔑C 同步金鑰/, "工作台 🔑C"],
+  [lineBotSource, /填入 LINE Token（🔑E/, "GAS 🔑E"], [lineBotSource, /🌐A\?hook=🔑F/, "GAS 🔑F"]
+]) assert.match(source, pattern, `${label} 代號應正確`);
+// 內部欄位名稱不能動，已在用的老師資料才不會斷
+for (const name of ["LINE_SYNC_TOKEN", "CLASSROOM_TOKEN", "LINE_WEBHOOK_TOKEN", "LINE_CHANNEL_ACCESS_TOKEN", "GEMINI_API_KEY"]) {
+  assert.match(lineBotSource, new RegExp(`getProperty\\('${name}'\\)`), `指令碼屬性 ${name} 不可改名`);
+}
+// 第 1 級：沒接雲端也要能用，聯絡本存本機、要雲端的分頁收起來
+assert.match(morningLevelSource, /const hasCloud = \(\) =>/, "大屏應能判斷是否接上雲端");
+assert.match(morningLevelSource, /CONTACT_LOCAL_PREFIX = 'morningContactLocal:'/, "第 1 級聯絡本應存本機");
+assert.match(morningLevelSource, /body\.local-only \.tab-button\[data-page="makeup"\]/, "第 1 級應收起作業補交");
+assert.match(morningLevelSource, /body\.local-only #submitButton/, "第 1 級應收起存到雲端");
 assert.match(lineBotSource, /BOT_VERSION = '\d{4}-\d{2}-\d{2} \d{2}:\d{2}'/, "GAS 版本日期");
 
 // 2026-09-28 小白視角第二輪：授權四畫面、大屏密碼、下載 .bat、SmartScreen、金鑰記錄表
