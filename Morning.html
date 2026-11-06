@@ -698,6 +698,7 @@
         /* 有 hidden 屬性就一定藏起來（舊樣式的 display:flex 會蓋掉 hidden，造成編輯框與名稱列常駐） */
         .tool-opts[hidden], .tomato-edit[hidden], .tomato-time[hidden], .tool-panel[hidden] { display: none !important; }
         #toolTabs { gap: 10px; }
+        #page-tools.solo-tool #toolTabs { display: none; }   /* 從上面選單的「檢核板／螢幕公告」進來：只顯示那一個工具 */
         #toolTabs .status-text { flex-basis: 100%; margin-top: 2px; }
         .tool-tab[data-tool="lottery"] { --tc: #d9573f; --tc-soft: #fdece8; }
         .tool-tab[data-tool="check"] { --tc: #2273c9; --tc-soft: #e6f0fb; }
@@ -3750,13 +3751,39 @@
   }
   applyToolsTabIcon();
   document.addEventListener('boardstylechange', applyToolsTabIcon);
-  if (setupTab) setupTab.parentNode.insertBefore(toolsTab, setupTab);
-  toolsTab.addEventListener('click', () => {
-    document.querySelectorAll('.tab-button').forEach(item => item.classList.toggle('active', item === toolsTab));
-    document.querySelectorAll('.page').forEach(page => page.classList.toggle('active', page.id === 'page-tools'));
-    renderCheckWall(); renderScoreWall(); updateLotStatus();
+  // 檢核板、螢幕公告常用，上面選單也各放一顆：開的是班級工具裡同一個面板（資料共用），只是把工具列收起來
+  const SOLO_TOOLS = [['check', '✅', '檢核板'], ['screen', '📺', '螢幕公告']];
+  const soloTabs = {};
+  SOLO_TOOLS.forEach(([tool, emoji, label]) => {
+    const btn = document.createElement('button');
+    btn.className = 'tab-button'; btn.type = 'button'; btn.dataset.page = 'tool-' + tool;
+    btn.addEventListener('click', () => showToolsPage(btn, tool));
+    soloTabs[tool] = { btn, emoji, label };
+    if (setupTab) setupTab.parentNode.insertBefore(btn, setupTab);
   });
+  function applySoloTabIcons() {
+    Object.entries(soloTabs).forEach(([tool, { btn, emoji, label }]) => {
+      const cozy = state.settings.boardStyle === 'cozy' && COZY_ICON_READY.has('tool_' + tool);
+      btn.innerHTML = cozy ? `<img class="tab-icon" src="assets/art/cozy/icon/tool_${tool}.webp" alt="">${label}` : `${emoji} ${label}`;
+    });
+  }
+  applySoloTabIcons();
+  document.addEventListener('boardstylechange', applySoloTabIcons);
+  if (setupTab) setupTab.parentNode.insertBefore(toolsTab, setupTab);
+  let toolsLastTool = 'lottery';   // 回到「班級工具」時接著顯示原本那個工具
+  function showToolsPage(tabButton, tool) {
+    setupUnlocked = false;   // 資安：離開設定頁就重新上鎖（這幾顆是後來注入的，沒掛到原本分頁的處理）
+    document.querySelectorAll('.tab-button').forEach(item => item.classList.toggle('active', item === tabButton));
+    document.querySelectorAll('.page').forEach(page => page.classList.toggle('active', page.id === 'page-tools'));
+    $('page-tools').classList.toggle('solo-tool', tabButton !== toolsTab);
+    const tile = document.querySelector(`#toolTabs .tool-tab[data-tool="${tool}"]`);
+    if (tile && !tile.classList.contains('active')) tile.click();
+    if (tool !== 'quiet') stopQuiet();
+    renderCheckWall(); renderScoreWall(); updateLotStatus();
+  }
+  toolsTab.addEventListener('click', () => showToolsPage(toolsTab, toolsLastTool));
   document.querySelectorAll('#toolTabs .tool-tab').forEach(tab => tab.addEventListener('click', () => {
+    if (!$('page-tools').classList.contains('solo-tool')) toolsLastTool = tab.dataset.tool;
     document.querySelectorAll('#toolTabs .tool-tab').forEach(item => item.classList.toggle('active', item === tab));
     document.querySelectorAll('.tool-panel').forEach(panel => { panel.hidden = panel.dataset.toolPanel !== tab.dataset.tool; });
     if (tab.dataset.tool !== 'quiet') stopQuiet();
@@ -3771,8 +3798,8 @@
   });
   // 螢幕公告定時跳提醒時叫這個，不然提醒藏在別的分頁後面
   window.screenBoardShow = () => {
-    if (!document.querySelector('.tab-button[data-page="tools"]').classList.contains('active')) toolsTab.click();
-    if (!screenTile.classList.contains('active')) screenTile.click();
+    const showing = $('page-tools').classList.contains('active') && screenTile.classList.contains('active');
+    if (!showing) soloTabs.screen.btn.click();
   };
   // 投影模式：把整個工具面板放到全螢幕（抽籤、檢核、計分、分組、安靜）
   document.querySelectorAll('[data-fs-panel]').forEach(btn => btn.addEventListener('click', () => {
