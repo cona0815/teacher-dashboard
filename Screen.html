@@ -7,6 +7,7 @@
 <!--
 【資安說明】螢幕公告（2026-11-06 稽核）
 - 匯入的設定檔可能是別人分享的：id 只收英數、圖片只收 data:image 網址（cleanImported），放進 HTML 的 id 一律 esc()。
+- 書籤只收 http(s) 網址（bmHref），名稱用 textContent 顯示。
 - 本頁與大屏同網站，被嵌在大屏裡；資料只存這台電腦。
 -->
 <script>
@@ -182,6 +183,16 @@ body[data-style="cork"] .w::before{content:"";position:absolute;top:-7px;left:50
 .qrmsg{padding:10px;color:#555;font-weight:700;text-align:center;font-size:calc(var(--fs)*clamp(13px,6cqw,22px));line-height:1.35}
 .qrcap{font-family:var(--title-font);font-weight:700;color:var(--ink);text-align:center;font-size:calc(var(--fs)*clamp(13px,6cqw,26px));line-height:1.2}
 .qrin{flex:none;width:100%;box-sizing:border-box;padding:5px 10px;border:1px solid var(--btn-edge);border-radius:8px;background:var(--field);color:var(--ink);font:inherit;font-size:clamp(12px,4.2cqw,18px);text-align:center;text-overflow:ellipsis}
+.bmw{height:100%;min-height:0;display:flex;flex-direction:column;gap:6px}
+.bmw .ttl[hidden]{display:none}
+.bmlist{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:6px;scrollbar-width:thin}
+.bmi{flex:none;display:flex;align-items:baseline;gap:.6em;padding:.45em .7em;border-radius:10px;background:var(--field);border:1px solid var(--btn-edge);color:var(--ink);text-decoration:none;font-weight:700;font-size:calc(var(--fs)*clamp(14px,5.5cqw,26px));line-height:1.25}
+a.bmi:hover{outline:3px solid var(--accent);outline-offset:-1px}
+.bmi.bad{opacity:.55}
+.bmn{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bmh{margin-left:auto;flex:none;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:400;font-size:.62em;color:var(--muted)}
+.bmmsg{padding:10px;color:var(--muted);font-weight:700;text-align:center;font-size:calc(var(--fs)*clamp(13px,5cqw,20px));line-height:1.4}
+.erow.bmrow{grid-template-columns:minmax(0,1fr) minmax(0,1.4fr) auto}
 .swatches{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
 .swatch{width:28px;height:28px;padding:0;border-radius:50%;border:2px solid var(--btn-edge);cursor:pointer}
 .swatch[aria-pressed="true"]{outline:3px solid var(--accent);outline-offset:2px}
@@ -432,6 +443,26 @@ function qrPaint(b,d){
   const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.fillStyle='#000';
   code.modules.forEach((row,r)=>row.forEach((dark,k)=>{if(dark)x.fillRect((k+quiet)*scale,(r+quiet)*scale,scale,scale)}));
 }
+// 資安：書籤只收 http(s) 網址（擋 javascript: 之類）；沒打 https:// 的自動補上
+function bmHref(u){try{const x=new URL(qrTarget(u));return /^https?:$/.test(x.protocol)?x.href:''}catch(e){return ''}}
+function bmHost(href){try{return new URL(href).hostname.replace(/^www\./,'')}catch(e){return ''}}
+// 匯入的設定檔可能是別人分享的：書籤逐欄整理
+function bmClean(w){const d=w.d=w.d&&typeof w.d==='object'?w.d:{};d.title=String(d.title||'').slice(0,60);
+  d.items=(Array.isArray(d.items)?d.items:[]).filter(it=>it&&typeof it==='object').slice(0,100).map(it=>({id:/^[\w-]{1,40}$/.test(String(it.id))?it.id:uid(),name:String(it.name||'').slice(0,60),url:bmHref(it.url)}))}
+function bmEditor(box,W){
+  const wrap=document.createElement('div');wrap.style.cssText='display:flex;flex-direction:column;gap:6px';
+  const draw=()=>{wrap.innerHTML='';const a=W.d.items;a.forEach((it,i)=>{
+    const r=document.createElement('div');r.className='erow bmrow';
+    const n=document.createElement('input');n.type='text';n.id='f'+uid();n.value=it.name||'';n.placeholder='名稱（可空白）';n.oninput=()=>{it.name=n.value;save();refresh(W)};
+    const u=document.createElement('input');u.type='text';u.id='f'+uid();u.value=it.url||'';u.placeholder='網址';u.spellcheck=false;u.onchange=()=>{it.url=bmHref(u.value);u.value=it.url;save();refresh(W)};
+    const bs=document.createElement('div');bs.className='x';
+    const B=(t,fn,c)=>{const b=document.createElement('button');b.type='button';b.className='btn '+(c||'');b.textContent=t;b.onclick=()=>{fn();save();refresh(W);draw()};bs.appendChild(b)};
+    B('↑',()=>{if(i>0)[a[i-1],a[i]]=[a[i],a[i-1]]});B('↓',()=>{if(i<a.length-1)[a[i+1],a[i]]=[a[i],a[i+1]]});B('刪',()=>a.splice(i,1),'danger');
+    r.append(n,u,bs);wrap.appendChild(r)});
+    const add=document.createElement('button');add.type='button';add.className='btn primary';add.textContent='＋ 新增書籤';add.onclick=()=>{W.d.items.push({id:uid(),name:'',url:''});save();refresh(W);draw();const ins=wrap.querySelectorAll('.bmrow input');ins[ins.length-2]?.focus()};
+    wrap.appendChild(add)};
+  draw();box.appendChild(wrap);
+}
 const INIT={
   text:()=>({text:'在這裡輸入文字',align:'center',color:'ink'}),
   clock:()=>({mode:'digital',sec:true,date:true}),
@@ -451,14 +482,15 @@ const INIT={
   dice:()=>({n:2,vals:[6,6]}),
   noise:()=>({limit:60}),
   draw:()=>({}),
-  qr:()=>({text:'',cap:''})
+  qr:()=>({text:'',cap:''}),
+  bm:()=>({title:'常用網站',items:[]})
 };
 const META={
   text:['文字','type',.32,.2], schedule:['時程表','list-checks',.32,.45], clock:['時鐘','clock',.3,.22], timer:['計時器','timer',.28,.3],
   countdown:['倒數','hourglass',.3,.24], stopwatch:['碼錶','watch',.26,.3], alarm:['鬧鐘','alarm-clock',.22,.28], image:['圖片','image',.32,.38],
   random:['抽籤','shuffle',.28,.32], group:['分組','users',.4,.4], score:['計分板','trophy',.42,.32], poll:['投票','vote',.28,.34],
   light:['紅綠燈','circle-dot',.26,.42], symbol:['工作符號','hand',.22,.34], dice:['骰子','dices',.26,.28], noise:['音量','mic',.32,.26],
-  interval:['間隔提醒','bell-ring',.28,.3], draw:['畫板','pencil',.38,.45], qr:['QR Code','qr-code',.26,.5]
+  interval:['間隔提醒','bell-ring',.28,.3], draw:['畫板','pencil',.38,.45], qr:['QR Code','qr-code',.26,.5], bm:['書籤','bookmark',.3,.45]
 };
 function mk(type,x,y,w,h,d,fs){return{id:uid(),type,x,y,w,h,z:1,fs:fs||1,d:Object.assign(INIT[type](),d||{})}}
 function defaults(){
@@ -476,7 +508,7 @@ function readPreset(){let o=null;try{o=JSON.parse(localStorage.getItem(PRESETKEY
 let fresh=false;
 if(!S||S.v!==2||!Array.isArray(S.screens)||!S.screens.length){fresh=true;const pr=readPreset();S=pr?JSON.parse(JSON.stringify(pr.S)):defaults();if(pr)IMG=pr.IMG||{}}
 if(!fresh){try{IMG=JSON.parse(localStorage.getItem(IMGKEY)||'{}')||{}}catch(e){IMG={}}}
-const KEEP=['text','schedule','clock','timer','stopwatch','alarm','interval','image','draw','qr'];
+const KEEP=['text','schedule','clock','timer','stopwatch','alarm','interval','image','draw','qr','bm'];
 S.screens.forEach(sc=>{sc.id=sc.id||uid();sc.widgets=sc.widgets.filter(w=>KEEP.includes(w.type))});
 if(!S.bg)S.bg=S.photo?'photo':'default';S.font=S.font||'auto';S.dfont=S.dfont||'auto';
 S.rotate=S.rotate||{on:false,sec:30};S.jobs=S.jobs||[];
@@ -767,6 +799,23 @@ draw:{
     cv.onpointerup=cv.onpointercancel=()=>{if(!last)return;last=null;try{IMG[key]=cv.toDataURL('image/png')}catch(e){}saveImgs()}},
   resized(b,W){T.draw.render(b,W)}
 },
+bm:{
+  render(b,W){const d=W.d;if(!Array.isArray(d.items))d.items=[];
+    b.innerHTML='<div class="bmw"><div class="ttl"></div><div class="bmlist"></div><input class="qrin bmin" type="text" placeholder="貼上網址，按 Enter 加入書籤" spellcheck="false" autocomplete="off" aria-label="新增書籤的網址"></div>';
+    const ttl=b.querySelector('.ttl');ttl.textContent=d.title||'';ttl.hidden=!d.title;
+    const list=b.querySelector('.bmlist');
+    if(!d.items.length){const m=document.createElement('div');m.className='bmmsg';m.textContent='在下面貼上常用網站的網址，按 Enter 就會加進來；點書籤會開新分頁。';list.appendChild(m)}
+    d.items.forEach(it=>{const href=bmHref(it.url),a=document.createElement(href?'a':'span');a.className='bmi'+(href?'':' bad');
+      if(href){a.href=href;a.target='_blank';a.rel='noopener noreferrer'}
+      const n=document.createElement('span');n.className='bmn';n.textContent='🔗 '+(it.name||bmHost(href)||'請到「設定」填網址');
+      const h=document.createElement('span');h.className='bmh';h.textContent=href&&it.name?bmHost(href):'';
+      a.append(n,h);list.appendChild(a)});
+    const i=b.querySelector('.bmin');
+    i.onkeydown=e=>{if(e.key!=='Enter'||e.isComposing)return;e.preventDefault();const href=bmHref(i.value);
+      if(!href){toast('請貼上網址，例如 www.google.com');return}
+      d.items.push({id:uid(),name:'',url:href});save();refresh(W);ELS[W.id]?.b.querySelector('.bmin')?.focus();toast('已加入書籤；要改名字或順序，按標題列的「設定」')}},
+  settings(f,W,box){f.inp('標題','text',()=>W.d.title,v=>W.d.title=v);bmEditor(box,W);f.note('點書籤會開新分頁。沒有打 https:// 也可以，系統會自動補上。')}
+},
 qr:{
   render(b,W){const d=W.d;b.innerHTML='<div class="qrw"><div class="qrpaper"><canvas class="qrc"></canvas><div class="qrmsg"></div></div><div class="qrcap"></div><input class="qrin" type="text" placeholder="在這裡打上或貼上網址" spellcheck="false" autocomplete="off" aria-label="網址"></div>';
     const i=b.querySelector('.qrin');i.value=d.text;i.oninput=()=>{d.text=i.value;save();qrPaint(b,d)};qrPaint(b,d)},
@@ -977,7 +1026,7 @@ function goScr(i){lastRot=Date.now();S.cur=(i+S.screens.length)%S.screens.length
 // 內嵌在大屏（同網域 iframe）時的大屏視窗；單獨開啟時是 null
 function embedHost(){try{return window.parent!==window&&window.parent.fsToggle?window.parent:null}catch(e){return null}}
 const ORDER=KEEP;
-const TOOL_EMOJI={text:'📝',schedule:'📋',clock:'🕒',timer:'⏱️',countdown:'⏳',stopwatch:'⏲️',alarm:'⏰',interval:'🔔',image:'🖼️',draw:'✏️',qr:'🔳'};
+const TOOL_EMOJI={text:'📝',schedule:'📋',clock:'🕒',timer:'⏱️',countdown:'⏳',stopwatch:'⏲️',alarm:'⏰',interval:'🔔',image:'🖼️',draw:'✏️',qr:'🔳',bm:'🔖'};
 function drawBar(){
   const bar=$('#bar');
   bar.innerHTML=ORDER.map(t=>`<button type="button" class="tb" data-add="${t}"><span class="ic">${TOOL_EMOJI[t]||'▫️'}</span><span>${META[t][0]}</span></button>`).join('')+
@@ -989,7 +1038,7 @@ function drawBar(){
   const nm=bar.querySelector('.nm');nm.textContent=scr().name;const sm=document.createElement('small');sm.textContent=(S.cur+1)+' / '+S.screens.length;nm.appendChild(sm);
 }
 $('#bar').onclick=e=>{const b=e.target.closest('button');if(!b)return;
-  if(b.dataset.add){const added=addW(b.dataset.add);if(added.type==='qr')ELS[added.id].b.querySelector('.qrin').focus()}
+  if(b.dataset.add){const added=addW(b.dataset.add);if(added.type==='qr'||added.type==='bm')ELS[added.id].b.querySelector('.qrin').focus()}
   else if(b.id==='scrMgr'){$('#pop').hidden=true;$('#sched').hidden=true;$('#screens').hidden=!$('#screens').hidden;drawScreens()}
   else if(b.id==='scrPlus'){addScreen(S.cur);$('#pop').hidden=true;$('#sched').hidden=true;$('#screens').hidden=false;drawScreens(true)}
   else if(b.id==='scrPrev')goScr(S.cur-1);else if(b.id==='scrNext')goScr(S.cur+1);
@@ -1020,7 +1069,7 @@ $('#impJson').onclick=()=>$('#jsonIn').click();
 // 資安：設定檔可能是別人分享的。id 只收英數（會放進 HTML），圖片只收真正的圖片 data URL（會放進 CSS），防夾帶程式碼。
 const SAFE_ID=/^[\w-]{1,40}$/,SAFE_IMG=/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/;
 function cleanImported(){
-  S.screens.forEach(sc=>{if(!SAFE_ID.test(String(sc.id)))sc.id=uid();sc.widgets.forEach(w=>{if(!SAFE_ID.test(String(w.id)))w.id=uid()})});
+  S.screens.forEach(sc=>{if(!SAFE_ID.test(String(sc.id)))sc.id=uid();sc.widgets.forEach(w=>{if(!SAFE_ID.test(String(w.id)))w.id=uid();if(w.type==='bm')bmClean(w)})});
   S.jobs=(Array.isArray(S.jobs)?S.jobs:[]).filter(j=>j&&SAFE_ID.test(String(j.id)));
   Object.keys(IMG).forEach(k=>{if(!SAFE_ID.test(k)||typeof IMG[k]!=='string'||!SAFE_IMG.test(IMG[k]))delete IMG[k]})}
 function presetNote(){const pr=readPreset();$('#presetNote').textContent=pr?(pr.builtin?'目前的預設：內建在網頁裡的設定。':'目前的預設：'+(pr.saved||'')+' 存的設定（只存在這台電腦的瀏覽器）。'):'還沒有存預設。存了以後，按「還原成預設」就會回到這個設定。'}

@@ -913,7 +913,8 @@ assert.match(morningHtml, /id="makeupGoHomework">⚠️ 今天的缺交請到「
   assert.doesNotMatch(screenHtml.match(/const KEEP=\[[^\]]*\]/)[0], /countdown/, "老師不要倒數工具");
   assert.match(screenHtml, /id="inkTb"/, "要有畫筆");
   assert.match(screenHtml, /<script src="assets\/studio\/qr-encode\.js"><\/script>/, "QR Code 要用本站的編碼器");
-  assert.match(screenHtml, /const KEEP=\[[^\]]*'qr'\]/, "QR Code 要在工具列");
+  assert.match(screenHtml, /const KEEP=\[[^\]]*'qr'[,\]]/, "QR Code 要在工具列");
+  assert.match(screenHtml, /const KEEP=\[[^\]]*'bm'\]/, "書籤要在工具列（老師 2026-11-07）");
   assert.ok(fs.existsSync(path.join(projectRoot, "assets", "studio", "qr-encode.js")), "編碼器檔要存在");
 }
 
@@ -1065,6 +1066,8 @@ assert.match(studioHtml, /section\('代課教師當日簽認'/, "代課包應有
   assert.match(studio, /function aiPrivacyHits/, "AI 工作室送出前要檢查個資");
   assert.match(screen, /function cleanImported\(\)/, "螢幕公告匯入要清理 id 與圖片");
   assert.match(read("tools/build_screen_board.py"), /cleanImported\(\);/, "螢幕公告的修正要同步到產生器");
+  assert.match(screen, /return \/\^https\?:\$\/\.test\(x\.protocol\)\?x\.href:''/, "螢幕公告書籤只收 http(s) 網址");
+  assert.match(screen, /if\(w\.type==='bm'\)bmClean\(w\)/, "匯入設定時書籤要逐欄整理");
   assert.match(index, /href="\$\{escapeHtml\(safeUrl\(task\.detailUrl\) \|\| '#'\)\}"/, "任務連結只收 http(s)");
   assert.match(index, /\['teaching', 'manual', 'review', 'assessment', 'buffer'\]\.includes\(row\.type\)/, "還原備份時進度列種類要白名單");
   assert.doesNotMatch(index, /Object\.assign\(assistantSettings\.privacy, backup\.assistantSettings\.privacy\)/, "備份不可關掉去識別化");

@@ -321,6 +321,72 @@ rep(r'''id="jx-${j.id}" placeholder="要跳出的公告文字"><label><input typ
 rep(r'''<select id="jw-'+j.id+'">'+tm.map(([id,t])=>`<option value="${id}"''', r'''<select id="jw-'+esc(j.id)+'">'+tm.map(([id,t])=>`<option value="${esc(id)}"''')
 rep(r'''<input type="checkbox" id="jb-'+j.id+'"> 開始時響一聲''', r'''<input type="checkbox" id="jb-'+esc(j.id)+'"> 開始時響一聲''')
 
-assert '比賽' not in s, [m.group(0) for m in re.finditer(r'.{20}比賽.{10}', s)][:6]
+# ---------- 🔖 書籤（老師 2026-11-07「可以建立書籤」）：常用網站一點就開新分頁 ----------
+# 資料 {title, items:[{id,name,url}]}；網址只收 http(s)（bmHref），名稱一律 textContent
+rep("""'image','draw','qr'];""", """'image','draw','qr','bm'];""")
+rep("""qr:['QR Code','qr-code',.26,.5]""", """qr:['QR Code','qr-code',.26,.5], bm:['書籤','bookmark',.3,.45]""")
+rep("""draw:'✏️',qr:'🔳'};""", """draw:'✏️',qr:'🔳',bm:'🔖'};""")
+rep("""  qr:()=>({text:'',cap:''})
+};""", """  qr:()=>({text:'',cap:''}),
+  bm:()=>({title:'常用網站',items:[]})
+};""")
+rep("""if(added.type==='qr')ELS[added.id].b.querySelector('.qrin').focus()""", """if(added.type==='qr'||added.type==='bm')ELS[added.id].b.querySelector('.qrin').focus()""")
+rep("""qr:{
+  render(b,W)""", r"""bm:{
+  render(b,W){const d=W.d;if(!Array.isArray(d.items))d.items=[];
+    b.innerHTML='<div class="bmw"><div class="ttl"></div><div class="bmlist"></div><input class="qrin bmin" type="text" placeholder="貼上網址，按 Enter 加入書籤" spellcheck="false" autocomplete="off" aria-label="新增書籤的網址"></div>';
+    const ttl=b.querySelector('.ttl');ttl.textContent=d.title||'';ttl.hidden=!d.title;
+    const list=b.querySelector('.bmlist');
+    if(!d.items.length){const m=document.createElement('div');m.className='bmmsg';m.textContent='在下面貼上常用網站的網址，按 Enter 就會加進來；點書籤會開新分頁。';list.appendChild(m)}
+    d.items.forEach(it=>{const href=bmHref(it.url),a=document.createElement(href?'a':'span');a.className='bmi'+(href?'':' bad');
+      if(href){a.href=href;a.target='_blank';a.rel='noopener noreferrer'}
+      const n=document.createElement('span');n.className='bmn';n.textContent='🔗 '+(it.name||bmHost(href)||'請到「設定」填網址');
+      const h=document.createElement('span');h.className='bmh';h.textContent=href&&it.name?bmHost(href):'';
+      a.append(n,h);list.appendChild(a)});
+    const i=b.querySelector('.bmin');
+    i.onkeydown=e=>{if(e.key!=='Enter'||e.isComposing)return;e.preventDefault();const href=bmHref(i.value);
+      if(!href){toast('請貼上網址，例如 www.google.com');return}
+      d.items.push({id:uid(),name:'',url:href});save();refresh(W);ELS[W.id]?.b.querySelector('.bmin')?.focus();toast('已加入書籤；要改名字或順序，按標題列的「設定」')}},
+  settings(f,W,box){f.inp('標題','text',()=>W.d.title,v=>W.d.title=v);bmEditor(box,W);f.note('點書籤會開新分頁。沒有打 https:// 也可以，系統會自動補上。')}
+},
+qr:{
+  render(b,W)""")
+rep("""const INIT={""", r"""// 資安：書籤只收 http(s) 網址（擋 javascript: 之類）；沒打 https:// 的自動補上
+function bmHref(u){try{const x=new URL(qrTarget(u));return /^https?:$/.test(x.protocol)?x.href:''}catch(e){return ''}}
+function bmHost(href){try{return new URL(href).hostname.replace(/^www\./,'')}catch(e){return ''}}
+// 匯入的設定檔可能是別人分享的：書籤逐欄整理
+function bmClean(w){const d=w.d=w.d&&typeof w.d==='object'?w.d:{};d.title=String(d.title||'').slice(0,60);
+  d.items=(Array.isArray(d.items)?d.items:[]).filter(it=>it&&typeof it==='object').slice(0,100).map(it=>({id:/^[\w-]{1,40}$/.test(String(it.id))?it.id:uid(),name:String(it.name||'').slice(0,60),url:bmHref(it.url)}))}
+function bmEditor(box,W){
+  const wrap=document.createElement('div');wrap.style.cssText='display:flex;flex-direction:column;gap:6px';
+  const draw=()=>{wrap.innerHTML='';const a=W.d.items;a.forEach((it,i)=>{
+    const r=document.createElement('div');r.className='erow bmrow';
+    const n=document.createElement('input');n.type='text';n.id='f'+uid();n.value=it.name||'';n.placeholder='名稱（可空白）';n.oninput=()=>{it.name=n.value;save();refresh(W)};
+    const u=document.createElement('input');u.type='text';u.id='f'+uid();u.value=it.url||'';u.placeholder='網址';u.spellcheck=false;u.onchange=()=>{it.url=bmHref(u.value);u.value=it.url;save();refresh(W)};
+    const bs=document.createElement('div');bs.className='x';
+    const B=(t,fn,c)=>{const b=document.createElement('button');b.type='button';b.className='btn '+(c||'');b.textContent=t;b.onclick=()=>{fn();save();refresh(W);draw()};bs.appendChild(b)};
+    B('↑',()=>{if(i>0)[a[i-1],a[i]]=[a[i],a[i-1]]});B('↓',()=>{if(i<a.length-1)[a[i+1],a[i]]=[a[i],a[i+1]]});B('刪',()=>a.splice(i,1),'danger');
+    r.append(n,u,bs);wrap.appendChild(r)});
+    const add=document.createElement('button');add.type='button';add.className='btn primary';add.textContent='＋ 新增書籤';add.onclick=()=>{W.d.items.push({id:uid(),name:'',url:''});save();refresh(W);draw();const ins=wrap.querySelectorAll('.bmrow input');ins[ins.length-2]?.focus()};
+    wrap.appendChild(add)};
+  draw();box.appendChild(wrap);
+}
+const INIT={""")
+rep("""sc.widgets.forEach(w=>{if(!SAFE_ID.test(String(w.id)))w.id=uid()})""", """sc.widgets.forEach(w=>{if(!SAFE_ID.test(String(w.id)))w.id=uid();if(w.type==='bm')bmClean(w)})""")
+rep("""- 本頁與大屏同網站""", """- 書籤只收 http(s) 網址（bmHref），名稱用 textContent 顯示。
+- 本頁與大屏同網站""")
+rep(""".swatches{display:flex;""", """.bmw{height:100%;min-height:0;display:flex;flex-direction:column;gap:6px}
+.bmw .ttl[hidden]{display:none}
+.bmlist{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:6px;scrollbar-width:thin}
+.bmi{flex:none;display:flex;align-items:baseline;gap:.6em;padding:.45em .7em;border-radius:10px;background:var(--field);border:1px solid var(--btn-edge);color:var(--ink);text-decoration:none;font-weight:700;font-size:calc(var(--fs)*clamp(14px,5.5cqw,26px));line-height:1.25}
+a.bmi:hover{outline:3px solid var(--accent);outline-offset:-1px}
+.bmi.bad{opacity:.55}
+.bmn{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bmh{margin-left:auto;flex:none;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:400;font-size:.62em;color:var(--muted)}
+.bmmsg{padding:10px;color:var(--muted);font-weight:700;text-align:center;font-size:calc(var(--fs)*clamp(13px,5cqw,20px));line-height:1.4}
+.erow.bmrow{grid-template-columns:minmax(0,1fr) minmax(0,1.4fr) auto}
+.swatches{display:flex;""")
+
+assert '比賽' not in s,[m.group(0) for m in re.finditer(r'.{20}比賽.{10}', s)][:6]
 (root / 'Screen.html').write_text(s, encoding='utf-8')
 print('Screen.html', len(s) // 1024, 'KB')
