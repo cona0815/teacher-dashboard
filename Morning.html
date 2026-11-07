@@ -71,7 +71,7 @@
     .chalk-bpmfhuninn .chalk-content, .chalk-bpmfhuninn .chalk-textarea { font-family: 'BpmfHuninn', 'Microsoft JhengHei', 'Noto Sans TC', sans-serif; line-height: 2.3; }
     .chalk-huninn .chalk-content,   .chalk-huninn .chalk-textarea   { font-family: 'Huninn', 'Microsoft JhengHei', 'Noto Sans TC', sans-serif; line-height: 1.9; }
     .chalk-iansui .chalk-content,   .chalk-iansui .chalk-textarea   { font-family: 'Iansui', 'DFKai-SB', 'Microsoft JhengHei', sans-serif; line-height: 1.95; }
-    main { padding: 10px 18px 72px; }
+    main { padding: 10px 18px 24px; }
     .page { display: none; }
     .page.active { display: block; }
     .panel { background: var(--surface); border: 2px solid var(--line); border-radius: 0 16px 16px 16px; padding: 12px 14px; }
@@ -112,6 +112,7 @@
     .summary-table th { background: var(--ok-soft); }
     .summary-table thead th { font-size: 14px; color: var(--primary-strong); white-space: nowrap; }
     .summary-table tbody tr:nth-child(even) td, .summary-table tbody tr:nth-child(even) th { background: #fafcfb; }
+    .submit-bar[hidden] { display: none !important; }
     .submit-bar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--surface); border-top: 2px solid var(--line); padding: 7px 18px; display: flex; gap: 12px; align-items: center; z-index: 20; }
     .primary-button { border: 0; background: var(--primary); color: #fff; border-radius: 12px; padding: 10px 28px; font-size: 19px; font-weight: 900; cursor: pointer; }
     .primary-button:disabled { opacity: .5; }
@@ -206,6 +207,18 @@
     /* ===== 第 1 級（只有大屏、沒接雲端）：收起一定要雲端才能用的東西 ===== */
     body.local-only .tab-button[data-page="query"],
     body.local-only #submitButton, body.local-only #contactRefreshButton { display: none !important; }
+    .storage-choice { margin: 14px 0 0; max-width: 1000px; border: 2px solid var(--line); border-radius: 12px; padding: 10px 16px 14px; background: var(--surface); display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 10px; }
+    .storage-choice legend { font-size: 17px; font-weight: 800; color: var(--primary-strong); padding: 0 6px; }
+    .storage-card { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; align-items: start; border: 2px solid var(--line); border-radius: 12px; padding: 10px 12px; cursor: pointer; }
+    .storage-card:has(input:checked) { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(31,81,74,.12); }
+    .storage-card input { margin-top: 4px; width: 18px; height: 18px; accent-color: var(--primary); }
+    .storage-card .sc-title { font-size: 16px; font-weight: 900; }
+    .storage-card .sc-body { grid-column: 2; font-size: 14px; line-height: 1.6; color: var(--muted); }
+    .storage-card .sc-body strong { color: var(--primary-strong); }
+    .storage-choice .status-text { grid-column: 1 / -1; }
+    .cloud-chip { border: 2px solid var(--line); background: var(--surface); color: var(--primary-strong); border-radius: 999px; padding: 3px 12px; font-size: 14px; font-weight: 800; cursor: pointer; font-family: inherit; white-space: nowrap; }
+    .cloud-chip.fail { border-color: #d9534f; color: #b52b27; }
+    .cloud-chip[hidden] { display: none; }
     .level-box { margin-top: 14px; max-width: 1000px; border: 2px solid var(--line); border-radius: 12px; padding: 12px 16px; background: var(--surface); }
     .level-box summary { cursor: pointer; font-size: 17px; font-weight: 800; color: var(--primary-strong); }
     .level-box[open] summary { margin-bottom: 12px; }
@@ -323,6 +336,7 @@
     <div class="brand" id="classNameLabel">晨間大屏</div>
     <div class="class-switch" id="classSwitch" hidden></div>
     <div class="today-label" id="todayLabel"></div>
+    <button class="cloud-chip" type="button" id="cloudChip" hidden title="資料會自動存到雲端；按一下立刻存一次">☁️ 自動存雲端</button>
     <div class="clock" id="bigClock">--:--:--</div>
     <div class="countdown-box" id="countdownBox">
       <span style="font-weight:900">⏳</span>
@@ -711,7 +725,7 @@
         .tool-tab[data-tool="prompt"] { --tc: #1f514a; --tc-soft: #e8f2ee; }
         .tool-tab[data-tool="screen"] { --tc: #0f7d8c; --tc-soft: #e2f3f5; }
         .tool-tab[data-tool="mind"] { --tc: #c2477a; --tc-soft: #fbe6ef; }
-        .screen-board { height: max(420px, calc(100vh - 430px)); margin-top: 8px; }   /* 要留給上方工具列與底部「存到雲端」，內嵌的工具列才不會被蓋住 */
+        .screen-board { height: max(420px, calc(100vh - 430px)); margin-top: 8px; }   /* 要留給上方工具列，內嵌的工具列才不會被蓋住 */
         .screen-board iframe { display: block; width: 100%; height: 100%; border: 2px solid var(--line); border-radius: 14px; background: var(--bg); }
         .screen-board:is(:fullscreen, .fake-fs) { height: 100vh; margin-top: 0 !important; }
         .screen-board:is(:fullscreen, .fake-fs) iframe { border: 0; border-radius: 0; }
@@ -1237,6 +1251,25 @@
           <div class="field"><label>自動缺席（未填自動轉未到）</label><input id="setupAutoAbsentTime" type="time" value="08:05"></div>
           <div class="field"><label>補交回溯天數（接雲端最多 60）</label><input id="setupLookbackDays" type="number" min="1" max="180" value="30"></div>
         </div>
+        <fieldset class="storage-choice" id="storageChoice">
+          <legend>💾 資料要存在哪裡？</legend>
+          <label class="storage-card">
+            <input type="radio" name="storageMode" value="local">
+            <span class="sc-title">💻 只存在這台電腦（本機）</span>
+            <span class="sc-body">不用申請任何東西，打開就能用。點名、作業、聯絡本留在這台電腦 180 天。<br>
+              ・換電腦、清除瀏覽器資料，紀錄就看不到了<br>
+              ・不能在家寫聯絡本、看查詢統計，也不會推播 LINE</span>
+          </label>
+          <label class="storage-card">
+            <input type="radio" name="storageMode" value="cloud">
+            <span class="sc-title">☁️ 存到雲端（Google 試算表）</span>
+            <span class="sc-body"><strong>可以跟教師工作台連線：</strong>在家用工作台寫的聯絡本、交代的作業，隔天直接出現在大屏；大屏的點名、缺交、補交也會回到工作台和查詢統計。<br>
+              ・每 5 分鐘、離開網頁時自動存，不用按按鈕；換電腦資料也還在<br>
+              ・LINE 小幫手會在設定的時間推播點名與作業<br>
+              ・要先填下面「第 2 級」的網址和金鑰</span>
+          </label>
+          <div class="status-text" id="storageHint"></div>
+        </fieldset>
         <details class="level-box" id="setupLevel2">
           <summary>🔵 第 2 級：連上工作台（要在家寫聯絡本、看查詢統計才填）</summary>
           <div class="form-grid">
@@ -1245,7 +1278,7 @@
           <div class="field" style="grid-column:1/-1"><label>🔑C 老師查詢金鑰（選填；填了才能用「查詢」分頁看歷史統計。⚠️ 教室公用電腦建議不要填）</label><input id="setupTeacherToken" type="password" autocomplete="off" placeholder="貼上 🔑C 工作台同步金鑰（老師自己的電腦才填）"></div>
           </div>
           <p class="note">
-            ・「💾 存到雲端」只把資料存進試算表，<strong>不會</strong>推播 LINE；每 5 分鐘與離開頁面時也會自動存一次。<br>
+            ・選「存到雲端」後，每 5 分鐘與離開頁面時會自動存進試算表（<strong>不會</strong>推播 LINE）；右上角「☁️」可以看最後存檔時間，按一下立刻存。<br>
             ・教室金鑰權限受限：只能回報當天、讀取近期缺交、把缺交標成補交；歷史統計需要老師金鑰，別把老師金鑰存在教室電腦。<br>
             ・遲到只有老師在 LINE 與查詢統計看得到。
           </p>
@@ -1274,7 +1307,8 @@
     </section>
   </main>
 
-  <div class="submit-bar">
+  <!-- 老師 2026-11-07：底部不要再出現存檔列；存哪裡在「設定」選，雲端模式自動存，右上角 ☁️ 可手動存。元素留著給程式寫狀態 -->
+  <div class="submit-bar" hidden>
     <button class="primary-button" type="button" id="submitButton">💾 存到雲端</button>
     <span class="status-text" id="submitStatus">尚未存到雲端（每 5 分鐘與離開頁面時會自動存；LINE 只在設定的推播時間通知）。</span>
   </div>
@@ -1335,7 +1369,7 @@
         className: '', classes: [], boardTitle: '晨間大屏', contactFont: 'default', boardStyle: 'standard', correctColor: 'brown', seatCount: 26, emptySeats: [],
         setupPin: '1234',
         subjects: [], assignmentTypes: [], homeworkPicks: {}, homeworkExtra: {},
-        gasUrl: '', classroomToken: '', teacherToken: '',
+        gasUrl: '', classroomToken: '', teacherToken: '', storageMode: '',
         lateTime: '08:00', autoAbsentTime: '08:05', autoNotifyTime: '08:08', autoHomeworkNotifyTime: '08:40', lookbackDays: 30
       },
       attendance: {},        // {seat: 到|遲到|病假|事假|未到}（遲到畫面顯示為「到」）
@@ -1409,8 +1443,10 @@
     }
     function isFirstClass() { return currentClass() === firstClass(); }
     /** 第一個班（或單班）回傳 ''＝舊 key；其他班回傳「:602」。 */
-    // 第 2 級的網址和大屏金鑰都填了才算接上雲端；沒填就是第 1 級，資料只存這台電腦
-    const hasCloud = () => !!(state.settings.gasUrl && state.settings.classroomToken);
+    // 設定頁選「存到雲端」、而且第 2 級的網址和大屏金鑰都填了，才算接上雲端；其他情況都只存這台電腦
+    // storageMode 是 2026-11-07 加的：舊設定沒有這欄（''）時照舊看有沒有填金鑰
+    const hasCloud = () => state.settings.storageMode !== 'local' && !!(state.settings.gasUrl && state.settings.classroomToken);
+    const storageModeShown = () => state.settings.storageMode || (state.settings.gasUrl && state.settings.classroomToken ? 'cloud' : 'local');
     function classKeySuffix(cls = currentClass()) {
       return !isMultiClass() || cls === state.settings.classes[0] ? '' : ':' + cls;
     }
@@ -1446,6 +1482,7 @@
           s.gasUrl = String(saved.gasUrl || '');
           s.classroomToken = String(saved.classroomToken || '');
           s.teacherToken = String(saved.teacherToken || '');
+          s.storageMode = ['local', 'cloud'].includes(saved.storageMode) ? saved.storageMode : '';
           const timeOk = value => /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(String(value || ''));
           if (timeOk(saved.lateTime)) s.lateTime = saved.lateTime;
           if (timeOk(saved.autoAbsentTime)) s.autoAbsentTime = saved.autoAbsentTime;
@@ -1737,7 +1774,7 @@
         if (BOOT_HHMM >= state.settings.autoNotifyTime) state.flags.autoNotifyDone = true;
         if (BOOT_HHMM >= state.settings.autoHomeworkNotifyTime) state.flags.autoHomeworkNotifyDone = true;
         saveTodayState();
-        showToast(`大屏在 ${state.settings.autoAbsentTime} 之後才打開，今天不自動轉「未到」${hasCloud() ? '；點完名請按「💾 存到雲端」' : ''}。`);
+        showToast(`大屏在 ${state.settings.autoAbsentTime} 之後才打開，今天不自動轉「未到」${hasCloud() ? '；點完名會自動存到雲端，急的話按右上角「☁️」' : ''}。`);
       }
       if (!state.flags.autoAbsentDone && now >= state.settings.autoAbsentTime) {
         activeSeats().forEach(seat => { if (!state.attendance[seat]) state.attendance[seat] = '未到'; });
@@ -2982,6 +3019,7 @@
       const changed = levelLocal !== null;
       levelLocal = local;
       document.body.classList.toggle('local-only', local);
+      $('cloudChip').hidden = local;
       $('setupLevel2').open = !local;
       if (local) {
         $('submitStatus').innerHTML = '📁 資料只存在這台電腦，不會上傳。想在家寫聯絡本、看查詢統計：<a href="Install.html#level2" target="_blank" rel="noopener">看第 2 級教學</a>';
@@ -2991,6 +3029,15 @@
         $('submitStatus').textContent = SUBMIT_STATUS_DEFAULT;
       }
       if (changed) { state.makeup.loaded = false; state.correct.loaded = false; loadContactBook(); }
+    }
+    // 設定頁「資料要存在哪裡」底下的提示：選雲端但還沒填金鑰時要講清楚
+    function renderStorageHint() {
+      const picked = (document.querySelector('input[name="storageMode"]:checked') || {}).value || storageModeShown();
+      const keys = !!($('setupGasUrl').value.trim() && $('setupClassroomToken').value.trim());
+      $('storageHint').textContent = picked === 'cloud'
+        ? (keys ? '✅ 網址和金鑰都填了，儲存設定後就會自動存到雲端、跟工作台連線。' : '⚠️ 還沒填下面「第 2 級」的網址和金鑰；填好並儲存設定之前，資料仍只存在這台電腦。')
+        : '目前選「只存在這台電腦」。' + (keys ? '已填的雲端網址和金鑰會保留，之後改選雲端就能直接用。' : '');
+      if (picked === 'cloud') $('setupLevel2').open = true;
     }
     function applySettingsToUi() {
       const s = state.settings;
@@ -3021,6 +3068,8 @@
       $('setupGasUrl').value = s.gasUrl;
       $('setupClassroomToken').value = s.classroomToken;
       $('setupTeacherToken').value = s.teacherToken || '';
+      document.querySelectorAll('input[name="storageMode"]').forEach(r => { r.checked = r.value === storageModeShown(); });
+      renderStorageHint();
       renderSubjectManager();
       renderBoardPickers();
       renderRollcall();
@@ -3052,6 +3101,8 @@
       s.gasUrl = $('setupGasUrl').value.trim();
       s.classroomToken = $('setupClassroomToken').value.trim();
       s.teacherToken = $('setupTeacherToken').value.trim();
+      const mode = document.querySelector('input[name="storageMode"]:checked');
+      s.storageMode = mode && ['local', 'cloud'].includes(mode.value) ? mode.value : '';
       saveSettings();
       const classChanged = currentClass() !== classBefore || classKeySuffix() !== suffixBefore;
       applySettingsToUi();
@@ -3216,6 +3267,16 @@
       }
     });
     $('submitButton').addEventListener('click', () => submitReport());
+    // 右上角 ☁️：顯示雲端存檔狀態（跟著 submitStatus 走，自動存與手動存都會更新），按一下立刻存一次
+    $('cloudChip').addEventListener('click', () => submitReport());
+    new MutationObserver(() => {
+      const text = $('submitStatus').textContent, chip = $('cloudChip'), fail = /失敗/.test(text);
+      chip.title = `${text}（按一下立刻存一次）`;
+      chip.classList.toggle('fail', fail);
+      chip.textContent = fail ? '☁️ 存檔失敗' : /中……/.test(text) ? '☁️ 存檔中…' : state.lastCloudSaveAt ? `☁️ 已存 ${state.lastCloudSaveAt.slice(0, 5)}` : '☁️ 自動存雲端';
+    }).observe($('submitStatus'), { childList: true, characterData: true, subtree: true });
+    document.querySelectorAll('input[name="storageMode"]').forEach(r => r.addEventListener('change', renderStorageHint));
+    ['setupGasUrl', 'setupClassroomToken'].forEach(id => $(id).addEventListener('input', renderStorageHint));
     $('classSwitch').addEventListener('click', event => {
       const pill = event.target.closest('[data-class-pill]');
       if (pill) switchClass(pill.dataset.classPill);

@@ -1074,6 +1074,9 @@ assert.match(studioHtml, /section\('代課教師當日簽認'/, "代課包應有
   assert.match(mindMap, /function cleanNode\(n, depth\)/, "心智圖讀存檔要逐欄整理");
   assert.match(morning, /\['mind', '🧠', '心智圖'\]/, "大屏上方選單要有心智圖（老師 2026-11-07）");
   assert.match(morning, /\$\('mindFrame'\)\.src = 'MindMap\.html'/, "心智圖第一次點才載入");
+  assert.match(morning, /const hasCloud = \(\) => state\.settings\.storageMode !== 'local' &&/, "設定選「只存本機」時不可連雲端（老師 2026-11-07）");
+  assert.match(morning, /<div class="submit-bar" hidden>/, "底部不再出現存到雲端列");
+  assert.match(morning, /可以跟教師工作台連線/, "存到雲端的說明要強調跟工作台連線");
   assert.match(index, /href="\$\{escapeHtml\(safeUrl\(task\.detailUrl\) \|\| '#'\)\}"/, "任務連結只收 http(s)");
   assert.match(index, /\['teaching', 'manual', 'review', 'assessment', 'buffer'\]\.includes\(row\.type\)/, "還原備份時進度列種類要白名單");
   assert.doesNotMatch(index, /Object\.assign\(assistantSettings\.privacy, backup\.assistantSettings\.privacy\)/, "備份不可關掉去識別化");
