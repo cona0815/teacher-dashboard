@@ -1072,6 +1072,9 @@ assert.match(studioHtml, /section\('代課教師當日簽認'/, "代課包應有
   assert.match(mindMap, /Content-Security-Policy/, "心智圖要有安全設定");
   assert.doesNotMatch(mindMap, /\.innerHTML|insertAdjacentHTML/, "心智圖的主題文字只能用 textContent");
   assert.match(mindMap, /function cleanNode\(n, depth\)/, "心智圖讀存檔要逐欄整理");
+  for (const t of ["mind", "logic", "org", "brace", "flow", "timeline", "fishbone", "bubble"]) {
+    assert.match(mindMap, new RegExp(`^\\s*${t}:\\s*\\{ icon:`, "m"), `心智圖要有「${t}」圖型（老師 2026-11-07）`);
+  }
   assert.match(morning, /\['mind', '🧠', '心智圖'\]/, "大屏上方選單要有心智圖（老師 2026-11-07）");
   assert.match(morning, /\$\('mindFrame'\)\.src = 'MindMap\.html'/, "心智圖第一次點才載入");
   assert.match(morning, /const hasCloud = \(\) => state\.settings\.storageMode !== 'local' &&/, "設定選「只存本機」時不可連雲端（老師 2026-11-07）");

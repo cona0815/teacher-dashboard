@@ -85,18 +85,24 @@ button{cursor:pointer}
 .wrow.cur{border-color:var(--primary)}
 .wrow .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}
 .wrow small{color:var(--muted);font-weight:400}
+.type-pick{display:flex;align-items:center;gap:6px;font-weight:900;font-size:15px;color:var(--muted)}
+.type-pick select{padding:6px 10px;border:2px solid var(--primary);border-radius:12px;background:var(--surface);font-weight:900;font-size:18px;color:var(--ink)}
+.sheet .box.wide{width:min(860px,100%)}
+.type-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
+.type-card{border:2px solid var(--line);border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:6px}
+.type-card b{font-size:17px}.type-card small{color:var(--muted);font-size:13px;line-height:1.4;flex:1}
+.type-card .row{display:flex;gap:6px}.type-card .row .btn{flex:1;padding:5px 8px;font-size:14px}
 .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:30;background:var(--ink);color:#fff;padding:8px 16px;border-radius:12px;font-size:15px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
 .toast[hidden]{display:none}
 @media (max-width:760px){.main{grid-template-columns:1fr;grid-template-rows:auto minmax(320px,1fr)}.side{max-height:34vh}}
 </style>
 <body>
 <header class="top">
-  <h1>🧠 心智圖</h1>
+  <label class="type-pick" title="換圖型：內容不變，只換排法">圖型<select id="typeSel" aria-label="圖型"></select></label>
   <input class="title-in" id="title" maxlength="40" aria-label="心智圖名稱" placeholder="心智圖名稱">
   <div class="actions">
-    <button class="btn" id="newBtn" type="button">＋ 新增心智圖</button>
-    <button class="btn" id="listBtn" type="button">📂 我的心智圖</button>
-    <button class="btn" id="sampleBtn" type="button">↻ 範例</button>
+    <button class="btn" id="newBtn" type="button">＋ 新增</button>
+    <button class="btn" id="listBtn" type="button">📂 我的圖</button>
     <button class="btn" id="undoBtn" type="button" disabled>↶ 復原</button>
     <button class="btn primary" id="pngBtn" type="button">🖼️ 匯出 PNG</button>
   </div>
@@ -105,8 +111,8 @@ button{cursor:pointer}
 <div class="main">
   <aside class="side">
     <h2>① 新增內容</h2>
-    <button class="add" type="button" id="addMain"><span class="ic">＋</span><span><b>主要分支</b><small>把內容分成大類</small></span></button>
-    <button class="add" type="button" id="addChild"><span class="ic">＋</span><span><b>子主題</b><small>加在選取的主題下一層（Tab）</small></span></button>
+    <button class="add" type="button" id="addMain"><span class="ic">＋</span><span><b id="addMainLabel">主要分支</b><small id="addMainSub">把內容分成大類</small></span></button>
+    <button class="add" type="button" id="addChild"><span class="ic">＋</span><span><b id="addChildLabel">子主題</b><small id="addChildSub">加在選取的主題下一層（Tab）</small></span></button>
     <button class="add" type="button" id="addImg"><span class="ic">▧</span><span><b>加入圖片</b><small>放在選取的主題裡</small></span></button>
     <button class="add del" type="button" id="delBtn"><span class="ic">🗑</span><span><b>刪除選取主題</b><small>連同下層一起刪（Delete）</small></span></button>
     <h2>② 主題設定</h2>
@@ -127,7 +133,8 @@ button{cursor:pointer}
   </section>
 </div>
 <input type="file" id="imgFile" accept="image/*" hidden>
-<div class="sheet" id="sheet" hidden><div class="box"><h3>📂 我的心智圖</h3><div id="workList"></div><button class="btn" id="sheetClose" type="button">關閉</button></div></div>
+<div class="sheet" id="sheet" hidden><div class="box"><h3>📂 我的圖</h3><div id="workList"></div><button class="btn" id="sheetClose" type="button">關閉</button></div></div>
+<div class="sheet" id="pickSheet" hidden><div class="box wide"><h3>＋ 新增：選一種圖型</h3><div class="type-grid" id="typeGrid"></div><button class="btn" id="pickClose" type="button">關閉</button></div></div>
 <div class="toast" id="toast" hidden></div>
 <script>
 'use strict';
@@ -145,18 +152,38 @@ const EMOJIS = ['📚', '📤', '🏆', '💡', '⭐', '✅', '❗', '🎯', '�
 const MAX_NODES = 200;
 const uid = () => 'n' + Math.random().toString(36).slice(2, 10);
 
-// 範例：老師資訊教室系統裡那張「資訊教室報到小精靈」心智圖
-function sampleWork() {
-  const n = (text, children, color) => ({ id: uid(), text, color: color || '', children: children || [] });
-  return { id: uid(), title: '電腦教室管理（範例）', updatedAt: Date.now(),
-    root: n('資訊教室報到小精靈', [
-      n('🪄 智慧報到', [n('班級座號'), n('姓名確認')], 'teal'),
-      n('📚 課程學習', [n('教學影片'), n('完成打勾')], 'blue'),
-      n('📤 作業管理', [n('排隊上傳'), n('桌寵通知')], 'gold'),
-      n('🏆 學習成果', [n('學習進度'), n('作品展示')], 'coral')
-    ]) };
+// 圖型（老師 2026-11-07「心智圖有很多種類，時間軸、魚骨圖…」）：
+// 參考 XMind 的結構（心智圖、邏輯圖、括號圖、組織圖／樹狀圖、時間軸、魚骨圖）與學校常用的 Thinking Maps
+// （泡泡圖、樹狀圖、括號圖、流程圖）。資料都是同一棵樹「中心 → 第一層 → 第二層」，換圖型只換排版。
+const TYPES = {
+  mind:     { icon: '🧠', name: '心智圖', use: '從中心往外聯想、整理一個單元', root: '中央主題', main: '主要分支', child: '子主題' },
+  logic:    { icon: '➡️', name: '邏輯圖', use: '一層一層往右推理、列重點', root: '主題', main: '重點', child: '細節' },
+  org:      { icon: '🌳', name: '樹狀圖', use: '由上往下分類、看上下階層（組織圖）', root: '最上層', main: '分類', child: '項目' },
+  brace:    { icon: '🧩', name: '括號圖', use: '把一個整體拆成幾個部分', root: '整體', main: '部分', child: '更小的部分' },
+  flow:     { icon: '🔁', name: '流程圖', use: '照順序排出做事的步驟', root: '標題', main: '步驟', child: '說明' },
+  timeline: { icon: '⏳', name: '時間軸', use: '依時間先後排列事件、歷史', root: '標題', main: '事件', child: '補充' },
+  fishbone: { icon: '🐟', name: '魚骨圖', use: '找出一個問題的原因（魚頭寫問題）', root: '問題', main: '原因類別', child: '細節原因' },
+  bubble:   { icon: '🫧', name: '泡泡圖', use: '用形容詞描述一件事物', root: '主題', main: '形容詞', child: '例子' }
+};
+const TYPE_ORDER = Object.keys(TYPES);
+const typeOf = (w = work()) => TYPES[w.type] ? w.type : 'mind';
+// 每種圖型一個教室範例（原創內容）；第一個是老師資訊教室系統裡那張「資訊教室報到小精靈」
+function sampleWork(type = 'mind') {
+  const n = (text, children, color) => ({ id: uid(), text, color: color || '', children: (children || []).map(c => typeof c === 'string' ? n(c) : c) });
+  const S = {
+    mind: ['電腦教室管理（範例）', n('資訊教室報到小精靈', [n('🪄 智慧報到', ['班級座號', '姓名確認'], 'teal'), n('📚 課程學習', ['教學影片', '完成打勾'], 'blue'), n('📤 作業管理', ['排隊上傳', '桌寵通知'], 'gold'), n('🏆 學習成果', ['學習進度', '作品展示'], 'coral')])],
+    logic: ['做一份好簡報（範例）', n('做一份好簡報', [n('🔍 找資料', ['用關鍵字搜尋', '記下資料出處']), n('📝 規劃內容', ['一頁一個重點', '先寫大綱']), n('🎨 美化版面', ['字要夠大', '圖片清楚']), n('🎤 上台報告', ['看著觀眾', '控制時間'])])],
+    org: ['電腦的組成（範例）', n('電腦', [n('硬體', ['主機', '螢幕', '鍵盤滑鼠']), n('軟體', ['作業系統', '應用程式']), n('網路', ['有線網路', '無線網路'])])],
+    brace: ['一篇作文（範例）', n('一篇作文', [n('開頭', ['點出題目', '引起興趣']), n('中間', ['舉出例子', '說明想法']), n('結尾', ['總結重點', '寫下感想'])])],
+    flow: ['上傳作業的步驟（範例）', n('上傳作業', [n('① 存檔', ['按 Ctrl＋S', '記住檔名']), n('② 打開上傳頁'), n('③ 選擇檔案', ['找到剛才的檔名']), n('④ 按送出'), n('⑤ 看到成功', ['不要先關網頁'])])],
+    timeline: ['電腦的發展（範例）', n('電腦的發展', [n('1940 年代', ['第一台電子計算機']), n('1980 年代', ['個人電腦進入家庭']), n('1990 年代', ['網際網路普及']), n('2000 年代', ['智慧型手機出現']), n('2020 年代', ['生成式 AI 普及'])])],
+    fishbone: ['為什麼教室太吵？（範例）', n('電腦教室太吵', [n('人', ['同學聊天', '不知道要做什麼']), n('設備', ['耳機壞掉', '喇叭太大聲']), n('規則', ['沒有說好安靜時間']), n('環境', ['冷氣聲音大'])])],
+    bubble: ['好的電腦教室（範例）', n('好的電腦教室', [n('安靜', ['說話小聲']), n('整齊', ['椅子靠好']), n('準時', ['五分鐘內報到']), n('互相幫忙', ['教會同學']), n('愛惜設備', ['不敲鍵盤'])])]
+  };
+  const [title, root] = S[type] || S.mind;
+  return { id: uid(), type, title, updatedAt: Date.now(), root };
 }
-function blankWork() { return { id: uid(), title: '我的心智圖', updatedAt: Date.now(), root: { id: uid(), text: '中央主題', color: '', children: [] } }; }
+function blankWork(type = 'mind') { return { id: uid(), type, title: '我的' + TYPES[type].name, updatedAt: Date.now(), root: { id: uid(), text: TYPES[type].root, color: '', children: [] } }; }
 
 // ---------- 存取 ----------
 let store;
@@ -175,7 +202,7 @@ function loadStore() {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) || 'null');
     if (raw && Array.isArray(raw.works) && raw.works.length) {
-      const works = raw.works.map(w => w && w.root ? { id: /^[\w-]{1,24}$/.test(String(w.id)) ? w.id : uid(), title: String(w.title || '我的心智圖').slice(0, 40), updatedAt: Number(w.updatedAt) || Date.now(), root: cleanNode(w.root, 0) } : null).filter(w => w && w.root);
+      const works = raw.works.map(w => w && w.root ? { id: /^[\w-]{1,24}$/.test(String(w.id)) ? w.id : uid(), type: TYPES[w.type] ? w.type : 'mind', title: String(w.title || '我的心智圖').slice(0, 40), updatedAt: Number(w.updatedAt) || Date.now(), root: cleanNode(w.root, 0) } : null).filter(w => w && w.root);
       if (works.length) return { cur: works.some(w => w.id === raw.cur) ? raw.cur : works[0].id, works };
     }
   } catch (error) {}
@@ -249,43 +276,167 @@ function wrap(text, maxW, font) {
   }
   return lines.slice(0, 4);
 }
-function measure(n, depth) {
+function measure(n, depth, round) {
   const s = st(depth), font = `${s.fw} ${s.fs}px ${MAP_FONT}`;
-  n._lines = wrap(n.text || '（空白）', s.maxW, font);
+  n._lines = wrap(n.text || '（空白）', round ? s.maxW * .75 : s.maxW, font);
   meas.font = font;
   const tw = Math.max(...n._lines.map(l => meas.measureText(l).width));
   n._lh = s.fs * 1.3;
   n._w = Math.max(s.minW, tw + s.px * 2, n.img ? n.iw + s.px : 0);
   n._h = n._lines.length * n._lh + s.py * 2 + (n.img ? n.ih + 8 : 0);
-  n.children.forEach(c => measure(c, depth + 1));
+  if (round) { const d = Math.max(s.minW * .9, Math.hypot(n._w - s.px, n._h) * .95); n._w = n._h = d; }   // 泡泡圖：文字放進圓圈
+  n.children.forEach(c => measure(c, depth + 1, round));
 }
-function subtreeH(n, depth) {
-  const gap = depth === 0 ? 36 : 16;
-  const kids = n.children.map(c => subtreeH(c, depth + 1));
-  n._sh = Math.max(n._h, kids.reduce((a, b) => a + b, 0) + gap * Math.max(0, kids.length - 1));
+const sum = list => list.reduce((a, b) => a + b, 0);
+// 把一個節點的所有子孫照順序攤平（時間軸、流程圖、魚骨圖把細節疊成一欄）
+function descendants(n) { const out = []; n.children.forEach(c => { out.push(c); out.push(...descendants(c)); }); return out; }
+
+// 左右（或只往右）展開：心智圖、邏輯圖、括號圖
+function subtreeH(n, depth, gapMain, gapSub) {
+  const gap = depth === 0 ? gapMain : gapSub;
+  const kids = n.children.map(c => subtreeH(c, depth + 1, gapMain, gapSub));
+  n._sh = Math.max(n._h, sum(kids) + gap * Math.max(0, kids.length - 1));
   return n._sh;
 }
-function place(list, side, edgeX, cy, depth, ox, oy) {
-  const gap = depth === 1 ? 36 : 16, gapX = depth === 1 ? 90 : 56;
-  const total = list.reduce((a, c) => a + c._sh, 0) + gap * Math.max(0, list.length - 1);
-  let y = cy - total / 2;
+function placeH(list, side, edgeX, cy, depth, g) {
+  const gap = depth === 1 ? g.gapMain : g.gapSub, gapX = depth === 1 ? g.gapX1 : g.gapX2;
+  let y = cy - (sum(list.map(c => c._sh)) + gap * Math.max(0, list.length - 1)) / 2;
   list.forEach(c => {
-    const ax = ox + (c.dx || 0), ay = oy + (c.dy || 0);
-    c._side = side;
-    c._x = edgeX + side * (gapX + c._w / 2) + ax;
-    c._y = y + c._sh / 2 + ay;
-    place(c.children, side, c._x - ax + side * c._w / 2, y + c._sh / 2, depth + 1, ax, ay);
+    c._x = edgeX + side * (gapX + c._w / 2);
+    c._y = y + c._sh / 2;
+    placeH(c.children, side, c._x + side * c._w / 2, c._y, depth + 1, g);
     y += c._sh + gap;
   });
 }
+function layoutSides(root, both, g) {
+  subtreeH(root, 0, g.gapMain, g.gapSub);
+  const k = root.children.length, cut = both ? Math.ceil(k / 2) : k;
+  placeH(root.children.slice(0, cut), 1, root._w / 2, 0, 1, g);
+  placeH(root.children.slice(cut), -1, -root._w / 2, 0, 1, g);
+}
+// 由上往下：樹狀圖（組織圖）
+function subtreeW(n, depth) {
+  const gap = depth === 0 ? 36 : 18, kids = n.children.map(c => subtreeW(c, depth + 1));
+  n._sw = Math.max(n._w, sum(kids) + gap * Math.max(0, kids.length - 1));
+  return n._sw;
+}
+function placeDown(n, depth) {
+  const gap = depth === 0 ? 36 : 18;
+  let x = n._x - (sum(n.children.map(c => c._sw)) + gap * Math.max(0, n.children.length - 1)) / 2;
+  n.children.forEach(c => { c._x = x + c._sw / 2; c._y = n._y + n._h / 2 + 64 + c._h / 2; placeDown(c, depth + 1); x += c._sw + gap; });
+}
+// 一欄疊放：第一層下面依序疊它的所有子孫
+function stack(main, dir, startY) {
+  let y = startY;
+  descendants(main).forEach(d => { d._x = main._x; d._y = y + dir * d._h / 2; y += dir * (d._h + 12); });
+  return y;
+}
+const colW = n => Math.max(n._w, ...descendants(n).map(d => d._w));
+// 時間軸：一條往右的時間線，事件上下交錯
+function layoutTimeline(root) {
+  const mains = root.children, lineY = 0;
+  root._x = 0; root._y = lineY;
+  const xs = [];
+  mains.forEach((m, i) => {
+    const w = colW(m);
+    let x = i === 0 ? root._w / 2 + 70 + w / 2 : xs[i - 1] + 70;
+    if (i >= 2) x = Math.max(x, xs[i - 2] + (colW(mains[i - 2]) + w) / 2 + 28);   // 同一側的兩個事件不能疊在一起
+    if (i >= 1) x = Math.max(x, xs[i - 1] + (colW(mains[i - 1]) + w) / 4 + 20);
+    xs.push(x);
+    const dir = i % 2 === 0 ? -1 : 1;
+    m._dir = dir; m._x = x; m._y = lineY + dir * (56 + m._h / 2);
+    stack(m, dir, m._y + dir * (m._h / 2 + 12));
+  });
+  root._lineEnd = (xs.length ? xs[xs.length - 1] + colW(mains[mains.length - 1]) / 2 : root._w / 2) + 60;
+}
+// 流程圖：標題在上，步驟由左到右用箭頭串起來，說明疊在步驟下面
+function layoutFlow(root) {
+  const mains = root.children, gap = 64;
+  const ws = mains.map(colW), total = sum(ws) + gap * Math.max(0, mains.length - 1);
+  const rowH = Math.max(0, ...mains.map(m => m._h));
+  root._x = 0; root._y = 0;
+  let x = -total / 2;
+  mains.forEach((m, i) => {
+    m._x = x + ws[i] / 2; m._y = root._h / 2 + 60 + rowH / 2;
+    stack(m, 1, m._y + m._h / 2 + 14);
+    x += ws[i] + gap;
+  });
+}
+// 魚骨圖：魚頭（問題）在右邊，脊骨往左，原因類別上下交錯斜插在脊骨上，細節原因沿著斜骨排
+function layoutFishbone(root) {
+  root._x = 0; root._y = 0;
+  const mains = root.children;
+  let leftEdge = -root._w / 2 - 30;
+  for (let c = 0; c * 2 < mains.length; c += 1) {
+    const pair = mains.slice(c * 2, c * 2 + 2);
+    const info = pair.map((m, k) => {
+      const dir = k === 0 ? -1 : 1, kids = descendants(m);
+      const kidH = sum(kids.map(d => d._h + 10));
+      const bone = m._h / 2 + 34 + kidH + 20, slant = bone * .5;
+      const reachL = Math.max(slant + m._w / 2, ...kids.map((d, j) => slant * (1 - (j + 1) / (kids.length + 1)) + 14 + d._w));
+      const reachR = Math.max(0, m._w / 2 - slant);
+      return { m, dir, kids, bone, slant, reachL, reachR };
+    });
+    const px = leftEdge - 40 - Math.max(...info.map(i => i.reachR));
+    info.forEach(({ m, dir, kids, bone, slant }) => {
+      m._dir = dir; m._px = px; m._x = px - slant; m._y = dir * bone;
+      // 細節原因：沿著斜骨（從原因類別往脊骨）平均排開，放在骨頭左邊
+      const y0 = m._y - dir * (m._h / 2 + 24);
+      let used = 0;
+      kids.forEach(d => {
+        const yy = y0 - dir * (used + d._h / 2);
+        const t = (m._y - yy) / (m._y - 0);   // 0＝原因類別那端，1＝脊骨
+        const bx = m._x + (px - m._x) * t;
+        d._bx = bx; d._by = yy; d._x = bx - 14 - d._w / 2; d._y = yy;
+        used += d._h + 10;
+      });
+    });
+    leftEdge = px - Math.max(...info.map(i => i.reachL));
+  }
+  root._tail = leftEdge - 30;
+}
+// 泡泡圖：主題在中間，形容詞圍一圈，例子再往外長
+function layoutBubble(root) {
+  root._x = 0; root._y = 0;
+  const mains = root.children, k = mains.length;
+  const big = Math.max(0, ...mains.map(m => m._w));
+  const R = Math.max(root._w / 2 + big / 2 + 60, k * (big + 24) / (2 * Math.PI));
+  const outward = (n, ang, depth) => {
+    const kids = n.children;
+    kids.forEach((c, j) => {
+      const a = ang + (j - (kids.length - 1) / 2) * (depth === 1 ? .62 : .45), r = n._w / 2 + c._w / 2 + 34;
+      c._x = n._x + Math.cos(a) * r; c._y = n._y + Math.sin(a) * r;
+      outward(c, a, depth + 1);
+    });
+  };
+  mains.forEach((m, i) => {
+    const a = -Math.PI / 2 + 2 * Math.PI * i / Math.max(1, k);
+    m._x = Math.cos(a) * R; m._y = Math.sin(a) * R;
+    outward(m, a, 1);
+  });
+}
+// 拖曳過的主題：位移連同下層一起加上去（每種圖型共用）
+function applyOffsets(n, ox, oy) {
+  const ax = ox + (n.dx || 0), ay = oy + (n.dy || 0);
+  n._x += ax; n._y += ay;
+  if (n._bx !== undefined) { n._bx += ox; n._by += oy; }
+  if (n._px !== undefined) n._px += ox;
+  n.children.forEach(c => applyOffsets(c, ax, ay));
+}
 function layout() {
-  const root = work().root;
-  measure(root, 0);
-  subtreeH(root, 0);
-  root._x = root.dx || 0; root._y = root.dy || 0;
-  const k = root.children.length, right = root.children.slice(0, Math.ceil(k / 2)), left = root.children.slice(Math.ceil(k / 2));
-  place(right, 1, root._w / 2, 0, 1, root._x, root._y);
-  place(left, -1, -root._w / 2, 0, 1, root._x, root._y);
+  const root = work().root, type = typeOf();
+  walk(n => { delete n._bx; delete n._by; delete n._px; delete n._dir; });
+  measure(root, 0, type === 'bubble');
+  root._x = 0; root._y = 0;
+  if (type === 'mind') layoutSides(root, true, { gapMain: 36, gapSub: 16, gapX1: 90, gapX2: 56 });
+  else if (type === 'logic') layoutSides(root, false, { gapMain: 24, gapSub: 14, gapX1: 80, gapX2: 56 });
+  else if (type === 'brace') layoutSides(root, false, { gapMain: 22, gapSub: 12, gapX1: 64, gapX2: 58 });
+  else if (type === 'org') { subtreeW(root, 0); placeDown(root, 0); }
+  else if (type === 'timeline') layoutTimeline(root);
+  else if (type === 'flow') layoutFlow(root);
+  else if (type === 'fishbone') layoutFishbone(root);
+  else if (type === 'bubble') layoutBubble(root);
+  applyOffsets(root, 0, 0);
 }
 
 // ---------- 畫面 ----------
@@ -296,21 +447,80 @@ let world;
 // SVG 屬性吃不到 CSS 變數，中央主題的底色從目前風格讀出來
 const rootFill = () => getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#1f514a';
 function el(tag, attrs, parent) { const e = document.createElementNS(SVGNS, tag); Object.entries(attrs || {}).forEach(([k, v]) => e.setAttribute(k, v)); if (parent) parent.appendChild(e); return e; }
+function addDefs(target) {
+  const defs = el('defs', {}, target);
+  const f = el('filter', { id: 'shadow', x: '-20%', y: '-30%', width: '140%', height: '170%' }, defs);
+  el('feDropShadow', { dx: 0, dy: 5, stdDeviation: 5, 'flood-color': '#173c55', 'flood-opacity': .14 }, f);
+  const m = el('marker', { id: 'arrow', viewBox: '0 0 10 10', refX: 8, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, defs);
+  el('path', { d: 'M0 0L10 5L0 10z', fill: '#5d6f6a' }, m);
+}
+// 連接線：每種圖型畫法不同
+function drawLinks(links, type) {
+  const root = work().root, line = (d, color, w, extra) => el('path', Object.assign({ d, stroke: color, 'stroke-width': w }, extra || {}), links);
+  const ink = '#5d6f6a';
+  if (type === 'timeline') {
+    const end = Math.max(root._x + root._w / 2 + 120, ...root.children.map(m => m._x + colW(m) / 2 + 50));
+    line(`M${root._x + root._w / 2} ${root._y}H${end}`, ink, 6, { 'marker-end': 'url(#arrow)' });
+  }
+  if (type === 'fishbone') {
+    let tail = root._x - root._w / 2 - 80; walk(n => { tail = Math.min(tail, n._x - n._w / 2 - 30); });
+    line(`M${tail} ${root._y}H${root._x - root._w / 2}`, ink, 7);
+    line(`M${tail} ${root._y}l-34 -28v56z`, ink, 3, { fill: ink, 'stroke-linejoin': 'round' });   // 魚尾
+  }
+  if (type === 'flow') root.children.forEach((m, i) => {
+    const next = root.children[i + 1]; if (!next) return;
+    line(`M${m._x + m._w / 2 + 6} ${m._y}L${next._x - next._w / 2 - 8} ${next._y}`, ink, 4, { 'marker-end': 'url(#arrow)' });
+  });
+  if (type === 'brace') walk(n => {
+    if (!n.children.length) return;
+    const x1 = n._x + n._w / 2 + 8, xb = x1 + 26, xm = (x1 + xb) / 2;
+    const yT = Math.min(...n.children.map(c => c._y)), yB = Math.max(...n.children.map(c => c._y));
+    const color = n === root ? ink : COLORS[branchColor(n.id)][0];
+    if (yB - yT < 8) { line(`M${x1} ${n._y}H${n.children[0]._x - n.children[0]._w / 2 - 6}`, color, 3); return; }
+    const r = Math.min(14, (yB - yT) / 4), ym = Math.min(yB - r, Math.max(yT + r, n._y));
+    line(`M${xb} ${yT}Q${xm} ${yT} ${xm} ${yT + r}L${xm} ${ym - r}Q${xm} ${ym} ${x1} ${ym}Q${xm} ${ym} ${xm} ${ym + r}L${xm} ${yB - r}Q${xm} ${yB} ${xb} ${yB}`, color, 3.5);
+  });
+  walk((n, p, depth) => {
+    if (!p) return;
+    const color = COLORS[branchColor(n.id)][0], w = depth === 1 ? 6 : 3.5, op = { opacity: depth === 1 ? .85 : .75 };
+    if (type === 'mind' || type === 'logic') {
+      const side = n._x >= p._x ? 1 : -1, x1 = p._x + side * (p === root ? p._w / 2 - 10 : p._w / 2), x2 = n._x - side * n._w / 2, dx = Math.abs(x2 - x1) / 2;
+      line(`M${x1} ${p._y}C${x1 + side * dx} ${p._y} ${x2 - side * dx} ${n._y} ${x2} ${n._y}`, color, w, op);
+    } else if (type === 'org') {
+      const y1 = p._y + p._h / 2, y2 = n._y - n._h / 2, ym = (y1 + y2) / 2;
+      line(`M${p._x} ${y1}V${ym}H${n._x}V${y2}`, color, depth === 1 ? 4.5 : 3, Object.assign({ 'stroke-linejoin': 'round' }, op));
+    } else if (type === 'bubble') {
+      line(`M${p._x} ${p._y}L${n._x} ${n._y}`, color, depth === 1 ? 4 : 3, op);
+    } else if (type === 'timeline' && depth === 1) {
+      el('circle', { cx: n._x, cy: root._y, r: 9, fill: '#fff', stroke: color, 'stroke-width': 5 }, links);
+      line(`M${n._x} ${root._y + n._dir * 9}V${n._y - n._dir * n._h / 2}`, color, 3.5);
+    } else if ((type === 'timeline' || type === 'flow') && depth >= 2) {
+      const above = n._y < p._y ? -1 : 1;
+      line(`M${p._x} ${p._y + above * p._h / 2}V${n._y - above * n._h / 2}`, color, 2.5, { 'stroke-dasharray': '2 6' });
+    } else if (type === 'fishbone' && depth === 1) {
+      line(`M${n._x} ${n._y - n._dir * n._h / 2}L${n._px} ${root._y}`, color, 5);
+    } else if (type === 'fishbone' && n._bx !== undefined) {
+      line(`M${n._x + n._w / 2} ${n._y}H${n._bx}`, color, 2.5);
+    }
+  });
+}
 function drawMap(target) {
-  const root = work().root;
+  const root = work().root, type = typeOf();
   const links = el('g', { fill: 'none', 'stroke-linecap': 'round' }, target), nodes = el('g', {}, target);
+  drawLinks(links, type);
   walk((n, p, depth) => {
     const s = st(depth), color = depth ? COLORS[branchColor(n.id)] : null;
-    if (p) {
-      const side = n._x >= p._x ? 1 : -1, x1 = p._x + side * (p === root ? p._w / 2 - 10 : p._w / 2), x2 = n._x - side * n._w / 2, dx = Math.abs(x2 - x1) / 2;
-      el('path', { d: `M${x1} ${p._y}C${x1 + side * dx} ${p._y} ${x2 - side * dx} ${n._y} ${x2} ${n._y}`, stroke: color[0], 'stroke-width': depth === 1 ? 6 : 3.5, opacity: depth === 1 ? .85 : .75 }, links);
-    }
     const g = el('g', { class: 'node', 'data-id': n.id, transform: `translate(${n._x} ${n._y})` }, nodes);
     const fill = depth === 0 ? rootFill() : depth === 1 ? color[1] : '#ffffff';
     const stroke = depth === 0 ? 'none' : color[0];
-    el('rect', { x: -n._w / 2, y: -n._h / 2, width: n._w, height: n._h, rx: s.r, fill, stroke, 'stroke-width': depth === 1 ? 3 : 2.5, filter: 'url(#shadow)' }, g);
-    if (n.id === selId) el('rect', { class: 'sel', x: -n._w / 2 - 6, y: -n._h / 2 - 6, width: n._w + 12, height: n._h + 12, rx: s.r + 6 }, g);
-    let top = -n._h / 2 + s.py;
+    const round = type === 'bubble', shapeAttrs = { fill, stroke, 'stroke-width': depth === 1 ? 3 : 2.5, filter: 'url(#shadow)' };
+    if (round) el('ellipse', Object.assign({ rx: n._w / 2, ry: n._h / 2 }, shapeAttrs), g);
+    else el('rect', Object.assign({ x: -n._w / 2, y: -n._h / 2, width: n._w, height: n._h, rx: s.r }, shapeAttrs), g);
+    if (n.id === selId) {
+      if (round) el('ellipse', { class: 'sel', rx: n._w / 2 + 6, ry: n._h / 2 + 6 }, g);
+      else el('rect', { class: 'sel', x: -n._w / 2 - 6, y: -n._h / 2 - 6, width: n._w + 12, height: n._h + 12, rx: s.r + 6 }, g);
+    }
+    let top = -(n._lines.length * n._lh + (n.img ? n.ih + 8 : 0)) / 2;   // 文字（和圖片）在框裡垂直置中
     if (n.img) { el('image', { href: n.img, x: -n.iw / 2, y: top, width: n.iw, height: n.ih, preserveAspectRatio: 'xMidYMid meet' }, g); top += n.ih + 8; }
     const t = el('text', { 'font-size': s.fs, 'font-weight': s.fw, fill: depth === 0 ? '#ffffff' : '#1c302d', 'font-family': MAP_FONT }, g);
     n._lines.forEach((line, i) => { const ts = el('tspan', { x: 0, y: top + n._lh * (i + .5) }, t); ts.textContent = line || ' '; });
@@ -319,9 +529,7 @@ function drawMap(target) {
 function render() {
   layout();
   svg.textContent = '';
-  const defs = el('defs', {}, svg);
-  const f = el('filter', { id: 'shadow', x: '-20%', y: '-30%', width: '140%', height: '170%' }, defs);
-  el('feDropShadow', { dx: 0, dy: 5, stdDeviation: 5, 'flood-color': '#173c55', 'flood-opacity': .14 }, f);
+  addDefs(svg);
   world = el('g', {}, svg);
   applyView();
   drawMap(world);
@@ -333,14 +541,21 @@ function render() {
   $('imgOff').hidden = !sel.img;
   if (document.activeElement !== $('title')) $('title').value = work().title;
   $('canvasTitle').textContent = work().title || '我的心智圖';
-  const mains = work().root.children.length; let leaves = 0; walk((n, p, d) => { if (d >= 2) leaves += 1; });
-  $('count').textContent = `1 個中央主題・${mains} 個主要分支・${leaves} 個子主題`;
+  const T = TYPES[typeOf()], mains = work().root.children.length; let leaves = 0; walk((n, p, d) => { if (d >= 2) leaves += 1; });
+  $('count').textContent = `${T.icon} ${T.name}：1 個${T.root}・${mains} 個${T.main}・${leaves} 個${T.child}`;
+  if ($('typeSel').value !== typeOf()) $('typeSel').value = typeOf();
+  $('addMainLabel').textContent = T.main; $('addMainSub').textContent = `接在「${T.root}」下面`;
+  $('addChildLabel').textContent = T.child; $('addChildSub').textContent = `加在選取的${T.main}下一層（Tab）`;
   renderChecks();
 }
 function applyView() { if (world) world.setAttribute('transform', `translate(${view.tx} ${view.ty}) scale(${view.s})`); $('zoomLabel').textContent = Math.round(view.s * 100) + '%'; }
 function bounds() {
   let x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
   walk(n => { x1 = Math.min(x1, n._x - n._w / 2); x2 = Math.max(x2, n._x + n._w / 2); y1 = Math.min(y1, n._y - n._h / 2); y2 = Math.max(y2, n._y + n._h / 2); });
+  // 時間軸的箭頭、魚骨圖的魚尾在主題框外面，也要算進畫面
+  const type = typeOf(), root = work().root;
+  if (type === 'timeline') x2 = Math.max(x2, root._x + root._w / 2 + 130, ...root.children.map(m => m._x + colW(m) / 2 + 60));
+  if (type === 'fishbone') { x1 -= 70; y1 = Math.min(y1, root._y - 34); y2 = Math.max(y2, root._y + 34); }
   return { x1, y1, x2, y2 };
 }
 function fit() {
@@ -356,14 +571,16 @@ function zoomAt(f, cx, cy) {
 
 // ---------- 四步驟與自動檢查 ----------
 function renderChecks() {
-  const root = work().root, mains = root.children;
-  const named = !!root.text.trim() && root.text.trim() !== '中央主題';
+  const root = work().root, mains = root.children, T = TYPES[typeOf()];
+  const named = !!root.text.trim() && !Object.values(TYPES).some(t => t.root === root.text.trim());
   const twoMains = mains.length >= 2;
-  const detailed = mains.length > 0 && mains.every(m => m.children.length > 0);
+  // 流程圖、時間軸、泡泡圖的第二層是選填，其他圖型要每個分支都有細節
+  const optionalDetail = ['flow', 'timeline', 'bubble'].includes(typeOf());
+  const detailed = mains.length > 0 && (optionalDetail ? mains.some(m => m.children.length > 0) : mains.every(m => m.children.length > 0));
   let longest = 0; walk(n => { longest = Math.max(longest, Array.from(n.text).length); });
   const short = longest <= 20;
   const done = [named, twoMains, detailed, named && twoMains && detailed && short];
-  const steps = [['中央主題', '一句話說出核心'], ['主要分支', '把內容分成大類'], ['補充細節', '加入關鍵字與例子'], ['檢查完成', '清楚又完整']];
+  const steps = [[T.root, '一句話說出核心'], [T.main, '至少寫 2 個'], [T.child, '加入關鍵字與例子'], ['檢查完成', '清楚又完整']];
   const active = done.indexOf(false);
   $('steps').textContent = '';
   steps.forEach(([t, sub], i) => {
@@ -373,7 +590,7 @@ function renderChecks() {
     const s = document.createElement('span'); s.textContent = t; const sm = document.createElement('small'); sm.textContent = sub; s.appendChild(sm);
     d.append(b, s); $('steps').appendChild(d);
   });
-  const items = [[named, '中央主題寫好了'], [twoMains, `有 ${mains.length} 個主要分支（至少 2 個）`], [detailed, '每個分支都有細節'], [short, '每個框都是關鍵字（20 字內）']];
+  const items = [[named, `${T.root}寫好了`], [twoMains, `有 ${mains.length} 個${T.main}（至少 2 個）`], [detailed, optionalDetail ? `有寫${T.child}` : `每個${T.main}都有${T.child}`], [short, '每個框都是關鍵字（20 字內）']];
   const box = $('check'); box.textContent = '';
   const h = document.createElement('b'); h.textContent = '✅ 自動檢查'; box.appendChild(h);
   const ul = document.createElement('ul');
@@ -393,16 +610,16 @@ function addNode(parent, text) {
   parent.children.push(n); selId = n.id; save(); render();
   return n;
 }
-function addMain() { const n = addNode(work().root, '主要分支'); if (n) { setStatus('＋ 主要分支已連到中央主題，直接打字就能改名。'); startEdit(n.id); } }
+function addMain() { const T = TYPES[typeOf()], n = addNode(work().root, T.main); if (n) { setStatus(`＋ ${T.main}已接到「${work().root.text}」，直接打字就能改名。`); startEdit(n.id); } }
 function addChild() {
   const sel = findNode(selId) || work().root;
   if (sel === work().root) { addMain(); return; }
-  const n = addNode(sel, '子主題'); if (n) { setStatus(`＋ 子主題已加在「${sel.text}」下一層。`); startEdit(n.id); }
+  const T = TYPES[typeOf()], n = addNode(sel, T.child); if (n) { setStatus(`＋ ${T.child}已加在「${sel.text}」下一層。`); startEdit(n.id); }
 }
 function addSibling() {
   const parent = findParent(selId);
   if (!parent) { addMain(); return; }
-  const n = addNode(parent, parent === work().root ? '主要分支' : '子主題'); if (n) startEdit(n.id);
+  const T = TYPES[typeOf()], n = addNode(parent, parent === work().root ? T.main : T.child); if (n) startEdit(n.id);
 }
 function delSelected() {
   const root = work().root;
@@ -465,8 +682,7 @@ function exportPng() {
   const out = document.createElementNS(SVGNS, 'svg');
   out.setAttribute('xmlns', SVGNS); out.setAttribute('width', W * scale); out.setAttribute('height', H * scale); out.setAttribute('viewBox', `${b.x1 - pad} ${b.y1 - pad} ${W} ${H}`);
   el('rect', { x: b.x1 - pad, y: b.y1 - pad, width: W, height: H, fill: '#ffffff' }, out);
-  const defs = el('defs', {}, out), f = el('filter', { id: 'shadow', x: '-20%', y: '-30%', width: '140%', height: '170%' }, defs);
-  el('feDropShadow', { dx: 0, dy: 5, stdDeviation: 5, 'flood-color': '#173c55', 'flood-opacity': .14 }, f);
+  addDefs(out);
   const keep = selId; selId = ''; drawMap(out); selId = keep;
   const img = new Image();
   img.onload = () => {
@@ -533,8 +749,33 @@ let textSnapped = false;
 $('nodeText').addEventListener('focus', () => { textSnapped = false; });
 $('nodeText').addEventListener('input', e => { if (!textSnapped) { snap(); textSnapped = true; } setText(selId, e.target.value); });
 $('title').addEventListener('input', e => { work().title = e.target.value.slice(0, 40); $('canvasTitle').textContent = work().title || '我的心智圖'; save(); });
-$('newBtn').onclick = () => { const w = blankWork(); store.works.push(w); openWork(w.id); setStatus('新的心智圖已建立：先輸入名稱，再按兩下中央主題改字。'); $('title').focus(); $('title').select(); };
-$('sampleBtn').onclick = () => { const w = sampleWork(); store.works.push(w); openWork(w.id); setStatus('已開一張新的範例，原本的心智圖都還在「📂 我的心智圖」。'); };
+// 圖型選單（換目前這張的排法）與「＋ 新增」選圖型
+TYPE_ORDER.forEach(t => { const o = document.createElement('option'); o.value = t; o.textContent = `${TYPES[t].icon} ${TYPES[t].name}`; $('typeSel').appendChild(o); });
+$('typeSel').addEventListener('change', e => {
+  const t = e.target.value; if (!TYPES[t] || t === typeOf()) return;
+  work().type = t; walk(n => { delete n.dx; delete n.dy; });   // 換排法時拖曳過的位置歸零，才不會亂
+  userView = false; save(); render(); fit();
+  setStatus(`已換成「${TYPES[t].name}」：${TYPES[t].use}。內容沒有變。`);
+});
+TYPE_ORDER.forEach(t => {
+  const T = TYPES[t], card = document.createElement('div'); card.className = 'type-card';
+  const b = document.createElement('b'); b.textContent = `${T.icon} ${T.name}`;
+  const sm = document.createElement('small'); sm.textContent = `${T.use}。${T.root} → ${T.main} → ${T.child}`;
+  const row = document.createElement('div'); row.className = 'row';
+  [['空白開始', () => blankWork(t)], ['看範例', () => sampleWork(t)]].forEach(([label, make]) => {
+    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'btn' + (label === '空白開始' ? ' primary' : ''); btn.textContent = label;
+    btn.onclick = () => {
+      const w = make(); store.works.push(w); $('pickSheet').hidden = true; openWork(w.id);
+      setStatus(label === '空白開始' ? `新的${T.name}：先輸入名稱，再按兩下「${T.root}」改字。` : `已開「${T.name}」範例，原本的圖都還在「📂 我的圖」。`);
+      if (label === '空白開始') { $('title').focus(); $('title').select(); }
+    };
+    row.appendChild(btn);
+  });
+  card.append(b, sm, row); $('typeGrid').appendChild(card);
+});
+$('newBtn').onclick = () => { $('pickSheet').hidden = false; };
+$('pickClose').onclick = () => { $('pickSheet').hidden = true; };
+$('pickSheet').addEventListener('click', e => { if (e.target === $('pickSheet')) $('pickSheet').hidden = true; });
 $('listBtn').onclick = () => { renderList(); $('sheet').hidden = false; };
 $('sheetClose').onclick = () => { $('sheet').hidden = true; };
 $('sheet').addEventListener('click', e => { if (e.target === $('sheet')) $('sheet').hidden = true; });
@@ -574,7 +815,7 @@ canvas.addEventListener('wheel', e => { e.preventDefault(); const r = canvas.get
 document.addEventListener('keydown', e => {
   const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !typing) { e.preventDefault(); undo(); return; }
-  if (typing || !$('sheet').hidden || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (typing || !$('sheet').hidden || !$('pickSheet').hidden || e.ctrlKey || e.metaKey || e.altKey) return;
   if (e.key === 'Tab') { e.preventDefault(); addChild(); }
   else if (e.key === 'Enter') { e.preventDefault(); addSibling(); }
   else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); delSelected(); }
