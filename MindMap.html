@@ -1,0 +1,596 @@
+<!doctype html>
+<!-- 心智圖｜班級工具。照老師資訊教室系統的「心智圖工作室」（中央主題→主要分支→子主題、四步驟、自動檢查）重寫成單機版：資料只存這台電腦。 -->
+<html lang="zh-Hant">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<!--
+【資安說明】心智圖（2026-11-07）
+- 主題文字一律用 textContent 放進 SVG，不用 innerHTML；圖片先畫到 canvas 再重新編碼成 data:image，不保留原檔。
+- 不連任何外部網站；資料只存這台電腦的瀏覽器（localStorage）。
+-->
+<script>
+  // 資安：防點擊劫持。別的網站把本頁塞進 iframe 時改成整頁開啟（同網站的嵌入不受影響）
+  try { if (window.top !== window.self && window.top.location.origin !== window.location.origin) throw new Error('framed'); }
+  catch (error) { document.documentElement.style.display = 'none'; try { window.top.location.href = window.location.href; } catch (ignored) {} }
+</script>
+<title>心智圖</title>
+<style>
+@font-face{font-family:"Huninn";font-display:swap;src:local("Huninn"),url("assets/fonts/Huninn-Regular.ttf") format("truetype")}
+:root{--bg:#f3f6f4;--surface:#fff;--ink:#1c302d;--muted:#657570;--line:#d5e1dc;--primary:#1f514a;--primary-soft:#e4f0ec;--accent:#ff9f1c;--grid:#d9e9ee;
+  --ui-font:"Microsoft JhengHei","Noto Sans TC",sans-serif;--radius:16px}
+html[data-style="cozy"]{--bg:#fbf5e6;--surface:#fffdf6;--ink:#5b4636;--muted:#9a8268;--line:#ead9b8;--primary:#4f9a45;--primary-soft:#e8f3dc;--grid:#efe2c4;--ui-font:"Huninn","Microsoft JhengHei",sans-serif;--radius:22px}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--ui-font);display:flex;flex-direction:column;overflow:hidden}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 14px 8px}
+.top h1{margin:0;font-size:22px;white-space:nowrap}
+.title-in{flex:1 1 200px;min-width:160px;max-width:380px;padding:7px 12px;border:2px solid var(--line);border-radius:12px;background:var(--surface);font-weight:700;font-size:17px}
+.btn{border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:7px 13px;font-weight:700;font-size:15px;white-space:nowrap}
+.btn:hover{border-color:var(--primary)}
+.btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+.btn.danger{color:#c0392b}
+.btn:disabled{opacity:.45;cursor:default}
+.actions{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.steps{display:flex;align-items:center;gap:6px;margin:0 14px 8px;padding:8px 12px;background:var(--surface);border:2px solid var(--line);border-radius:var(--radius);overflow-x:auto}
+.steps div{display:flex;align-items:center;gap:8px;white-space:nowrap;color:var(--muted)}
+.steps b{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--line);color:var(--ink);font-size:15px}
+.steps span{display:flex;flex-direction:column;font-weight:700;font-size:15px;line-height:1.2}
+.steps small{font-size:12px;font-weight:400}
+.steps .done{color:var(--ink)}.steps .done b{background:var(--primary-soft);color:var(--primary)}
+.steps .active b{background:var(--primary);color:#fff;box-shadow:0 0 0 4px var(--primary-soft)}
+.steps i{flex:1 1 30px;min-width:20px;height:3px;border-radius:2px;background:var(--line)}
+.steps .done+i{background:var(--primary)}
+.main{flex:1;min-height:0;display:grid;grid-template-columns:230px minmax(0,1fr);gap:10px;padding:0 14px 12px}
+.side{min-height:0;overflow:auto;display:flex;flex-direction:column;gap:8px;background:var(--surface);border:2px solid var(--line);border-radius:var(--radius);padding:12px}
+.side h2{margin:2px 0;font-size:15px;color:var(--muted)}
+.add{display:flex;align-items:center;gap:10px;text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:14px;padding:8px 10px}
+.add:hover{border-color:var(--primary)}
+.add .ic{display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:10px;background:var(--primary-soft);color:var(--primary);font-size:20px;font-weight:900}
+.add b{display:block;font-size:15px}.add small{display:block;font-size:12px;color:var(--muted)}
+.add.del .ic{background:#fde4e0;color:#c0392b}
+.field{display:flex;flex-direction:column;gap:4px;font-size:14px;font-weight:700}
+.field input{padding:7px 10px;border:2px solid var(--line);border-radius:10px;background:var(--bg);font-weight:400;font-size:16px}
+.swatches{display:flex;flex-wrap:wrap;gap:6px}
+.swatch{width:30px;height:30px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px var(--line);padding:0}
+.swatch[aria-pressed="true"]{box-shadow:0 0 0 3px var(--ink)}
+.emojis{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+.emojis button{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:3px 0;font-size:19px}
+.check{border:2px dashed var(--line);border-radius:14px;padding:8px 10px;font-size:14px}
+.check ul{margin:4px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px}
+.tip{font-size:12.5px;color:var(--muted);line-height:1.5}
+.work{min-height:0;display:flex;flex-direction:column;background:var(--surface);border:2px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 10px;border-bottom:2px solid var(--line)}
+.bar .name{font-weight:900;font-size:17px}
+.bar .count{font-size:13px;color:var(--muted)}
+.bar .zoom{margin-left:auto;display:flex;align-items:center;gap:4px}
+.bar .zoom .btn{padding:4px 10px}
+#zoomLabel{min-width:52px;text-align:center;font-size:14px;color:var(--muted)}
+.canvas{position:relative;flex:1;min-height:0;background-color:var(--surface);background-image:radial-gradient(var(--grid) 1.3px,transparent 1.4px);background-size:28px 28px;touch-action:none;cursor:grab}
+.canvas.panning{cursor:grabbing}
+.canvas svg{position:absolute;inset:0;width:100%;height:100%;display:block;user-select:none}
+.node{cursor:pointer}
+.node text{font-family:"Microsoft JhengHei","Noto Sans TC",sans-serif;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.node .sel{fill:none;stroke:var(--accent);stroke-width:4;stroke-dasharray:9 6}
+.edit-in{position:absolute;z-index:5;border:3px solid var(--accent);border-radius:12px;padding:4px 8px;text-align:center;font-weight:700;background:#fff;color:#1c302d;outline:none}
+.status{padding:6px 12px;border-top:2px solid var(--line);font-size:14px;color:var(--muted);display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap}
+.hint{position:absolute;right:10px;bottom:8px;font-size:12px;color:var(--muted);background:var(--surface);border-radius:8px;padding:2px 8px;opacity:.85;pointer-events:none}
+.sheet{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.35);display:grid;place-items:center;padding:16px}
+.sheet[hidden]{display:none}
+.sheet .box{width:min(520px,100%);max-height:80vh;overflow:auto;background:var(--surface);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:8px}
+.sheet h3{margin:0 0 4px}
+.wrow{display:flex;align-items:center;gap:8px;padding:8px;border:2px solid var(--line);border-radius:12px}
+.wrow.cur{border-color:var(--primary)}
+.wrow .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}
+.wrow small{color:var(--muted);font-weight:400}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:30;background:var(--ink);color:#fff;padding:8px 16px;border-radius:12px;font-size:15px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.toast[hidden]{display:none}
+@media (max-width:760px){.main{grid-template-columns:1fr;grid-template-rows:auto minmax(320px,1fr)}.side{max-height:34vh}}
+</style>
+<body>
+<header class="top">
+  <h1>🧠 心智圖</h1>
+  <input class="title-in" id="title" maxlength="40" aria-label="心智圖名稱" placeholder="心智圖名稱">
+  <div class="actions">
+    <button class="btn" id="newBtn" type="button">＋ 新增心智圖</button>
+    <button class="btn" id="listBtn" type="button">📂 我的心智圖</button>
+    <button class="btn" id="sampleBtn" type="button">↻ 範例</button>
+    <button class="btn" id="undoBtn" type="button" disabled>↶ 復原</button>
+    <button class="btn primary" id="pngBtn" type="button">🖼️ 匯出 PNG</button>
+  </div>
+</header>
+<section class="steps" id="steps" aria-label="完成步驟"></section>
+<div class="main">
+  <aside class="side">
+    <h2>① 新增內容</h2>
+    <button class="add" type="button" id="addMain"><span class="ic">＋</span><span><b>主要分支</b><small>把內容分成大類</small></span></button>
+    <button class="add" type="button" id="addChild"><span class="ic">＋</span><span><b>子主題</b><small>加在選取的主題下一層（Tab）</small></span></button>
+    <button class="add" type="button" id="addImg"><span class="ic">▧</span><span><b>加入圖片</b><small>放在選取的主題裡</small></span></button>
+    <button class="add del" type="button" id="delBtn"><span class="ic">🗑</span><span><b>刪除選取主題</b><small>連同下層一起刪（Delete）</small></span></button>
+    <h2>② 主題設定</h2>
+    <label class="field">主題文字<input id="nodeText" maxlength="40" autocomplete="off"></label>
+    <div class="field">分支顏色<div class="swatches" id="swatches"></div></div>
+    <div class="field">快速圖示<div class="emojis" id="emojis"></div></div>
+    <button class="btn" id="imgOff" type="button" hidden>移除圖片</button>
+    <div class="check" id="check"></div>
+    <div class="tip">💡 每個框只放關鍵字。點一下選取、按兩下改字；拖曳主題可以移動，拖曳空白處移動畫布，滾輪縮放。<br>快捷鍵：Tab 子主題、Enter 同層主題、空白鍵改字、Delete 刪除、Ctrl+Z 復原。</div>
+  </aside>
+  <section class="work">
+    <div class="bar">
+      <span class="name" id="canvasTitle"></span><span class="count" id="count"></span>
+      <span class="zoom"><button class="btn" id="zoomOut" type="button" title="縮小">−</button><span id="zoomLabel">100%</span><button class="btn" id="zoomIn" type="button" title="放大">＋</button><button class="btn" id="fitBtn" type="button">適合畫面</button><button class="btn" id="arrangeBtn" type="button">自動排列</button></span>
+    </div>
+    <div class="canvas" id="canvas"><svg id="svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="心智圖"></svg><div class="hint">拖曳空白處移動・滾輪縮放</div></div>
+    <div class="status"><span id="status">點一下主題就能修改。</span><span id="saved"></span></div>
+  </section>
+</div>
+<input type="file" id="imgFile" accept="image/*" hidden>
+<div class="sheet" id="sheet" hidden><div class="box"><h3>📂 我的心智圖</h3><div id="workList"></div><button class="btn" id="sheetClose" type="button">關閉</button></div></div>
+<div class="toast" id="toast" hidden></div>
+<script>
+'use strict';
+const KEY = 'mindmapStudio:v1';
+const $ = id => document.getElementById(id);
+const SVGNS = 'http://www.w3.org/2000/svg';
+const MAP_FONT = '"Microsoft JhengHei","Noto Sans TC",sans-serif';
+// 分支顏色：strong 給線與框，soft 給主要分支的底色
+const COLORS = {
+  teal: ['#22a38a', '#dff7ef', '綠'], blue: ['#3d7fd6', '#e2efff', '藍'], gold: ['#d9961c', '#fff0c8', '黃'],
+  coral: ['#e2674e', '#ffe1da', '紅'], purple: ['#8b5cc9', '#efe5fb', '紫'], pink: ['#d6497f', '#fde3ee', '粉']
+};
+const COLOR_ORDER = Object.keys(COLORS);
+const EMOJIS = ['📚', '📤', '🏆', '💡', '⭐', '✅', '❗', '🎯', '🔍', '🧩', '🖥️', '⌨️', '🖱️', '🔒', '🌐', '📝', '🎨', '⏰'];
+const MAX_NODES = 200;
+const uid = () => 'n' + Math.random().toString(36).slice(2, 10);
+
+// 範例：老師資訊教室系統裡那張「資訊教室報到小精靈」心智圖
+function sampleWork() {
+  const n = (text, children, color) => ({ id: uid(), text, color: color || '', children: children || [] });
+  return { id: uid(), title: '電腦教室管理（範例）', updatedAt: Date.now(),
+    root: n('資訊教室報到小精靈', [
+      n('🪄 智慧報到', [n('班級座號'), n('姓名確認')], 'teal'),
+      n('📚 課程學習', [n('教學影片'), n('完成打勾')], 'blue'),
+      n('📤 作業管理', [n('排隊上傳'), n('桌寵通知')], 'gold'),
+      n('🏆 學習成果', [n('學習進度'), n('作品展示')], 'coral')
+    ]) };
+}
+function blankWork() { return { id: uid(), title: '我的心智圖', updatedAt: Date.now(), root: { id: uid(), text: '中央主題', color: '', children: [] } }; }
+
+// ---------- 存取 ----------
+let store;
+function cleanNode(n, depth) {
+  // 資安：存檔可能被改過，逐欄整理（文字限長、圖片只收 data:image）
+  if (!n || typeof n !== 'object' || depth > 12) return null;
+  const out = { id: /^[\w-]{1,24}$/.test(String(n.id)) ? n.id : uid(), text: String(n.text == null ? '' : n.text).slice(0, 40),
+    color: COLORS[n.color] ? n.color : '', children: [] };
+  if (Number.isFinite(n.dx)) out.dx = n.dx;
+  if (Number.isFinite(n.dy)) out.dy = n.dy;
+  if (typeof n.img === 'string' && /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(n.img)) { out.img = n.img; out.iw = Math.min(260, Number(n.iw) || 160); out.ih = Math.min(260, Number(n.ih) || 120); }
+  (Array.isArray(n.children) ? n.children : []).forEach(c => { const k = cleanNode(c, depth + 1); if (k) out.children.push(k); });
+  return out;
+}
+function loadStore() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (raw && Array.isArray(raw.works) && raw.works.length) {
+      const works = raw.works.map(w => w && w.root ? { id: /^[\w-]{1,24}$/.test(String(w.id)) ? w.id : uid(), title: String(w.title || '我的心智圖').slice(0, 40), updatedAt: Number(w.updatedAt) || Date.now(), root: cleanNode(w.root, 0) } : null).filter(w => w && w.root);
+      if (works.length) return { cur: works.some(w => w.id === raw.cur) ? raw.cur : works[0].id, works };
+    }
+  } catch (error) {}
+  const w = sampleWork();
+  return { cur: w.id, works: [w] };
+}
+store = loadStore();
+const work = () => store.works.find(w => w.id === store.cur) || store.works[0];
+let saveT;
+function save() {
+  work().updatedAt = Date.now();
+  clearTimeout(saveT);
+  saveT = setTimeout(() => {
+    try { localStorage.setItem(KEY, JSON.stringify(store)); $('saved').textContent = '✓ 已自動存在這台電腦'; }
+    catch (error) { $('saved').textContent = '⚠ 這台電腦的空間滿了，這次沒有存到（圖片太多時請刪掉幾張）'; }
+  }, 400);
+}
+
+// ---------- 復原 ----------
+const undoStack = [];
+function snap() { undoStack.push({ id: store.cur, json: JSON.stringify(work().root) }); if (undoStack.length > 40) undoStack.shift(); $('undoBtn').disabled = false; }
+function undo() {
+  for (let i = undoStack.length - 1; i >= 0; i -= 1) {
+    if (undoStack[i].id !== store.cur) continue;
+    work().root = JSON.parse(undoStack.splice(i, 1)[0].json);
+    if (!findNode(selId)) selId = work().root.id;
+    save(); render(); setStatus('↶ 已復原上一步。');
+    break;
+  }
+  $('undoBtn').disabled = !undoStack.some(u => u.id === store.cur);
+}
+
+// ---------- 樹的小工具 ----------
+function walk(fn, n = work().root, parent = null, depth = 0) { fn(n, parent, depth); n.children.forEach(c => walk(fn, c, n, depth + 1)); }
+function findNode(id) { let hit = null; walk(n => { if (n.id === id) hit = n; }); return hit; }
+function findParent(id) { let hit = null; walk((n, p) => { if (n.id === id) hit = p; }); return hit; }
+function depthOf(id) { let d = -1; walk((n, p, depth) => { if (n.id === id) d = depth; }); return d; }
+function countNodes() { let c = 0; walk(() => { c += 1; }); return c; }
+function branchColor(id) {
+  // 往上找到主要分支，用它的顏色；主要分支沒設定就照順序配色
+  let cur = findNode(id), parent = findParent(id);
+  while (cur && parent) {
+    if (cur.color) return cur.color;
+    if (parent === work().root) return COLOR_ORDER[work().root.children.indexOf(cur) % COLOR_ORDER.length];
+    cur = parent; parent = findParent(cur.id);
+  }
+  return 'teal';
+}
+
+// ---------- 量字與排版 ----------
+const meas = document.createElement('canvas').getContext('2d');
+const STYLE = [   // 依層級：字級、粗細、最大字寬、內距、最小寬、圓角
+  { fs: 26, fw: 900, maxW: 230, px: 26, py: 16, minW: 150, r: 30 },
+  { fs: 20, fw: 900, maxW: 190, px: 20, py: 13, minW: 112, r: 22 },
+  { fs: 17, fw: 700, maxW: 170, px: 16, py: 10, minW: 92, r: 16 }
+];
+const st = depth => STYLE[Math.min(depth, 2)];
+function wrap(text, maxW, font) {
+  meas.font = font;
+  const lines = [];
+  let line = '';
+  for (const ch of Array.from(text || ' ')) {
+    if (ch === '\n') { lines.push(line); line = ''; continue; }
+    if (line && meas.measureText(line + ch).width > maxW) { lines.push(line); line = ch.trim() ? ch : ''; } else line += ch;
+  }
+  lines.push(line);
+  // 換行時平均分配，不要第二行只剩一個字
+  if (lines.length > 1 && !String(text).includes('\n') && maxW > 60) {
+    const even = Math.ceil(meas.measureText(text).width / lines.length + meas.measureText('國').width);
+    if (even < maxW) { const again = wrap(text, even, font); if (again.length === lines.length) return again.slice(0, 4); }
+  }
+  return lines.slice(0, 4);
+}
+function measure(n, depth) {
+  const s = st(depth), font = `${s.fw} ${s.fs}px ${MAP_FONT}`;
+  n._lines = wrap(n.text || '（空白）', s.maxW, font);
+  meas.font = font;
+  const tw = Math.max(...n._lines.map(l => meas.measureText(l).width));
+  n._lh = s.fs * 1.3;
+  n._w = Math.max(s.minW, tw + s.px * 2, n.img ? n.iw + s.px : 0);
+  n._h = n._lines.length * n._lh + s.py * 2 + (n.img ? n.ih + 8 : 0);
+  n.children.forEach(c => measure(c, depth + 1));
+}
+function subtreeH(n, depth) {
+  const gap = depth === 0 ? 36 : 16;
+  const kids = n.children.map(c => subtreeH(c, depth + 1));
+  n._sh = Math.max(n._h, kids.reduce((a, b) => a + b, 0) + gap * Math.max(0, kids.length - 1));
+  return n._sh;
+}
+function place(list, side, edgeX, cy, depth, ox, oy) {
+  const gap = depth === 1 ? 36 : 16, gapX = depth === 1 ? 90 : 56;
+  const total = list.reduce((a, c) => a + c._sh, 0) + gap * Math.max(0, list.length - 1);
+  let y = cy - total / 2;
+  list.forEach(c => {
+    const ax = ox + (c.dx || 0), ay = oy + (c.dy || 0);
+    c._side = side;
+    c._x = edgeX + side * (gapX + c._w / 2) + ax;
+    c._y = y + c._sh / 2 + ay;
+    place(c.children, side, c._x - ax + side * c._w / 2, y + c._sh / 2, depth + 1, ax, ay);
+    y += c._sh + gap;
+  });
+}
+function layout() {
+  const root = work().root;
+  measure(root, 0);
+  subtreeH(root, 0);
+  root._x = root.dx || 0; root._y = root.dy || 0;
+  const k = root.children.length, right = root.children.slice(0, Math.ceil(k / 2)), left = root.children.slice(Math.ceil(k / 2));
+  place(right, 1, root._w / 2, 0, 1, root._x, root._y);
+  place(left, -1, -root._w / 2, 0, 1, root._x, root._y);
+}
+
+// ---------- 畫面 ----------
+let selId = work().root.id;
+const view = { s: 1, tx: 0, ty: 0 };
+const svg = $('svg'), canvas = $('canvas');
+let world;
+// SVG 屬性吃不到 CSS 變數，中央主題的底色從目前風格讀出來
+const rootFill = () => getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#1f514a';
+function el(tag, attrs, parent) { const e = document.createElementNS(SVGNS, tag); Object.entries(attrs || {}).forEach(([k, v]) => e.setAttribute(k, v)); if (parent) parent.appendChild(e); return e; }
+function drawMap(target) {
+  const root = work().root;
+  const links = el('g', { fill: 'none', 'stroke-linecap': 'round' }, target), nodes = el('g', {}, target);
+  walk((n, p, depth) => {
+    const s = st(depth), color = depth ? COLORS[branchColor(n.id)] : null;
+    if (p) {
+      const side = n._x >= p._x ? 1 : -1, x1 = p._x + side * (p === root ? p._w / 2 - 10 : p._w / 2), x2 = n._x - side * n._w / 2, dx = Math.abs(x2 - x1) / 2;
+      el('path', { d: `M${x1} ${p._y}C${x1 + side * dx} ${p._y} ${x2 - side * dx} ${n._y} ${x2} ${n._y}`, stroke: color[0], 'stroke-width': depth === 1 ? 6 : 3.5, opacity: depth === 1 ? .85 : .75 }, links);
+    }
+    const g = el('g', { class: 'node', 'data-id': n.id, transform: `translate(${n._x} ${n._y})` }, nodes);
+    const fill = depth === 0 ? rootFill() : depth === 1 ? color[1] : '#ffffff';
+    const stroke = depth === 0 ? 'none' : color[0];
+    el('rect', { x: -n._w / 2, y: -n._h / 2, width: n._w, height: n._h, rx: s.r, fill, stroke, 'stroke-width': depth === 1 ? 3 : 2.5, filter: 'url(#shadow)' }, g);
+    if (n.id === selId) el('rect', { class: 'sel', x: -n._w / 2 - 6, y: -n._h / 2 - 6, width: n._w + 12, height: n._h + 12, rx: s.r + 6 }, g);
+    let top = -n._h / 2 + s.py;
+    if (n.img) { el('image', { href: n.img, x: -n.iw / 2, y: top, width: n.iw, height: n.ih, preserveAspectRatio: 'xMidYMid meet' }, g); top += n.ih + 8; }
+    const t = el('text', { 'font-size': s.fs, 'font-weight': s.fw, fill: depth === 0 ? '#ffffff' : '#1c302d', 'font-family': MAP_FONT }, g);
+    n._lines.forEach((line, i) => { const ts = el('tspan', { x: 0, y: top + n._lh * (i + .5) }, t); ts.textContent = line || ' '; });
+  });
+}
+function render() {
+  layout();
+  svg.textContent = '';
+  const defs = el('defs', {}, svg);
+  const f = el('filter', { id: 'shadow', x: '-20%', y: '-30%', width: '140%', height: '170%' }, defs);
+  el('feDropShadow', { dx: 0, dy: 5, stdDeviation: 5, 'flood-color': '#173c55', 'flood-opacity': .14 }, f);
+  world = el('g', {}, svg);
+  applyView();
+  drawMap(world);
+  const sel = findNode(selId) || work().root;
+  selId = sel.id;
+  if (document.activeElement !== $('nodeText')) $('nodeText').value = sel.text;
+  const depth = depthOf(selId), bc = depth > 0 ? branchColor(selId) : '';
+  document.querySelectorAll('#swatches button').forEach(b => { b.setAttribute('aria-pressed', b.dataset.c === bc); b.disabled = depth < 1; });
+  $('imgOff').hidden = !sel.img;
+  if (document.activeElement !== $('title')) $('title').value = work().title;
+  $('canvasTitle').textContent = work().title || '我的心智圖';
+  const mains = work().root.children.length; let leaves = 0; walk((n, p, d) => { if (d >= 2) leaves += 1; });
+  $('count').textContent = `1 個中央主題・${mains} 個主要分支・${leaves} 個子主題`;
+  renderChecks();
+}
+function applyView() { if (world) world.setAttribute('transform', `translate(${view.tx} ${view.ty}) scale(${view.s})`); $('zoomLabel').textContent = Math.round(view.s * 100) + '%'; }
+function bounds() {
+  let x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
+  walk(n => { x1 = Math.min(x1, n._x - n._w / 2); x2 = Math.max(x2, n._x + n._w / 2); y1 = Math.min(y1, n._y - n._h / 2); y2 = Math.max(y2, n._y + n._h / 2); });
+  return { x1, y1, x2, y2 };
+}
+function fit() {
+  const b = bounds(), W = canvas.clientWidth, H = canvas.clientHeight; if (!W || !H) return;
+  view.s = Math.max(.2, Math.min(1.8, Math.min((W - 60) / (b.x2 - b.x1), (H - 60) / (b.y2 - b.y1))));
+  view.tx = W / 2 - view.s * (b.x1 + b.x2) / 2; view.ty = H / 2 - view.s * (b.y1 + b.y2) / 2;
+  applyView();
+}
+function zoomAt(f, cx, cy) {
+  const s = Math.max(.2, Math.min(3, view.s * f)); if (s === view.s) return;
+  view.tx = cx - (cx - view.tx) * s / view.s; view.ty = cy - (cy - view.ty) * s / view.s; view.s = s; applyView();
+}
+
+// ---------- 四步驟與自動檢查 ----------
+function renderChecks() {
+  const root = work().root, mains = root.children;
+  const named = !!root.text.trim() && root.text.trim() !== '中央主題';
+  const twoMains = mains.length >= 2;
+  const detailed = mains.length > 0 && mains.every(m => m.children.length > 0);
+  let longest = 0; walk(n => { longest = Math.max(longest, Array.from(n.text).length); });
+  const short = longest <= 20;
+  const done = [named, twoMains, detailed, named && twoMains && detailed && short];
+  const steps = [['中央主題', '一句話說出核心'], ['主要分支', '把內容分成大類'], ['補充細節', '加入關鍵字與例子'], ['檢查完成', '清楚又完整']];
+  const active = done.indexOf(false);
+  $('steps').textContent = '';
+  steps.forEach(([t, sub], i) => {
+    if (i) $('steps').appendChild(document.createElement('i'));
+    const d = document.createElement('div'); d.className = done[i] ? 'done' : i === active ? 'active' : '';
+    const b = document.createElement('b'); b.textContent = done[i] ? '✓' : String(i + 1);
+    const s = document.createElement('span'); s.textContent = t; const sm = document.createElement('small'); sm.textContent = sub; s.appendChild(sm);
+    d.append(b, s); $('steps').appendChild(d);
+  });
+  const items = [[named, '中央主題寫好了'], [twoMains, `有 ${mains.length} 個主要分支（至少 2 個）`], [detailed, '每個分支都有細節'], [short, '每個框都是關鍵字（20 字內）']];
+  const box = $('check'); box.textContent = '';
+  const h = document.createElement('b'); h.textContent = '✅ 自動檢查'; box.appendChild(h);
+  const ul = document.createElement('ul');
+  items.forEach(([ok, t]) => { const li = document.createElement('li'); li.textContent = (ok ? '✅ ' : '⬜ ') + t; ul.appendChild(li); });
+  box.appendChild(ul);
+}
+
+// ---------- 編輯動作 ----------
+let toastT;
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 2600); }
+function setStatus(msg) { $('status').textContent = msg; }
+function select(id) { selId = id; render(); }
+function addNode(parent, text) {
+  if (countNodes() >= MAX_NODES) { toast(`一張心智圖最多 ${MAX_NODES} 個主題。`); return null; }
+  snap();
+  const n = { id: uid(), text, color: '', children: [] };
+  parent.children.push(n); selId = n.id; save(); render();
+  return n;
+}
+function addMain() { const n = addNode(work().root, '主要分支'); if (n) { setStatus('＋ 主要分支已連到中央主題，直接打字就能改名。'); startEdit(n.id); } }
+function addChild() {
+  const sel = findNode(selId) || work().root;
+  if (sel === work().root) { addMain(); return; }
+  const n = addNode(sel, '子主題'); if (n) { setStatus(`＋ 子主題已加在「${sel.text}」下一層。`); startEdit(n.id); }
+}
+function addSibling() {
+  const parent = findParent(selId);
+  if (!parent) { addMain(); return; }
+  const n = addNode(parent, parent === work().root ? '主要分支' : '子主題'); if (n) startEdit(n.id);
+}
+function delSelected() {
+  const root = work().root;
+  if (selId === root.id) { setStatus('中央主題要保留，其他主題都可以刪除。'); return; }
+  const parent = findParent(selId), n = findNode(selId); if (!parent || !n) return;
+  snap();
+  let sub = -1; walk(() => { sub += 1; }, n);
+  parent.children.splice(parent.children.indexOf(n), 1);
+  selId = parent.id; save(); render();
+  setStatus(sub ? `✓ 已刪除「${n.text}」和下面 ${sub} 個主題。按「↶ 復原」可以找回來。` : `✓ 已刪除「${n.text}」。按「↶ 復原」可以找回來。`);
+}
+function setText(id, text) { const n = findNode(id); if (!n) return; n.text = String(text).slice(0, 40); save(); render(); }
+
+// 按兩下（或空白鍵）直接在主題上改字
+let editing = null;
+function startEdit(id) {
+  finishEdit();
+  const g = svg.querySelector(`.node[data-id="${CSS.escape(id)}"]`), n = findNode(id); if (!g || !n) return;
+  const r = g.querySelector('rect').getBoundingClientRect(), c = canvas.getBoundingClientRect(), d = depthOf(id);
+  const inp = document.createElement('input');
+  inp.className = 'edit-in'; inp.maxLength = 40; inp.value = n.text;
+  const w = Math.max(140, r.width + 8);
+  Object.assign(inp.style, { left: (r.left - c.left + r.width / 2 - w / 2) + 'px', width: w + 'px', fontSize: Math.max(14, st(d).fs * view.s) + 'px' });
+  canvas.appendChild(inp);
+  inp.style.top = (r.top - c.top + r.height / 2 - inp.offsetHeight / 2) + 'px';
+  inp.focus(); inp.select();
+  const before = n.text;
+  editing = { id, inp, before };
+  inp.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter' && !e.isComposing) finishEdit(); if (e.key === 'Escape') { inp.value = before; finishEdit(); } });
+  inp.addEventListener('blur', () => finishEdit());
+}
+function finishEdit() {
+  if (!editing) return;
+  const { id, inp, before } = editing; editing = null;
+  const v = inp.value.trim() || before; inp.remove();
+  if (v !== before) { snap(); setText(id, v); setStatus('✓ 文字已更新。'); }
+}
+
+// 圖片：縮成最長 260px 再存，避免塞爆這台電腦的空間
+function pickImage() { if (selId === work().root.id && !findNode(selId)) return; $('imgFile').value = ''; $('imgFile').click(); }
+$('imgFile').addEventListener('change', () => {
+  const file = $('imgFile').files[0]; if (!file || !/^image\//.test(file.type)) return;
+  const url = URL.createObjectURL(file), img = new Image();
+  img.onload = () => {
+    const k = Math.min(1, 260 / Math.max(img.naturalWidth, img.naturalHeight)), w = Math.max(1, Math.round(img.naturalWidth * k)), h = Math.max(1, Math.round(img.naturalHeight * k));
+    const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+    const cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, w, h); cx.drawImage(img, 0, 0, w, h);
+    URL.revokeObjectURL(url);
+    const n = findNode(selId); if (!n) return;
+    snap(); n.img = cv.toDataURL('image/jpeg', .85); n.iw = Math.min(160, w); n.ih = Math.round(n.iw * h / w);
+    save(); render(); setStatus('🖼️ 圖片已放進主題。');
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); toast('這個檔案打不開，請換一張圖片。'); };
+  img.src = url;
+});
+
+// ---------- 匯出 PNG ----------
+function exportPng() {
+  const b = bounds(), pad = 40, W = b.x2 - b.x1 + pad * 2, H = b.y2 - b.y1 + pad * 2, scale = 2;
+  const out = document.createElementNS(SVGNS, 'svg');
+  out.setAttribute('xmlns', SVGNS); out.setAttribute('width', W * scale); out.setAttribute('height', H * scale); out.setAttribute('viewBox', `${b.x1 - pad} ${b.y1 - pad} ${W} ${H}`);
+  el('rect', { x: b.x1 - pad, y: b.y1 - pad, width: W, height: H, fill: '#ffffff' }, out);
+  const defs = el('defs', {}, out), f = el('filter', { id: 'shadow', x: '-20%', y: '-30%', width: '140%', height: '170%' }, defs);
+  el('feDropShadow', { dx: 0, dy: 5, stdDeviation: 5, 'flood-color': '#173c55', 'flood-opacity': .14 }, f);
+  const keep = selId; selId = ''; drawMap(out); selId = keep;
+  const img = new Image();
+  img.onload = () => {
+    const cv = document.createElement('canvas'); cv.width = W * scale; cv.height = H * scale;
+    cv.getContext('2d').drawImage(img, 0, 0);
+    cv.toBlob(blob => {
+      if (!blob) { toast('匯出失敗，請再試一次。'); return; }
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = (work().title || '心智圖').replace(/[\\/:*?"<>|]/g, '_') + '.png';
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      toast('🖼️ 已匯出 PNG，在瀏覽器的「下載」裡。');
+    }, 'image/png');
+  };
+  img.onerror = () => toast('匯出失敗，請再試一次。');
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(out));
+}
+
+// ---------- 我的心智圖 ----------
+function openWork(id) { store.cur = id; selId = work().root.id; undoStack.length = 0; $('undoBtn').disabled = true; userView = false; save(); render(); requestAnimationFrame(fit); }
+function renderList() {
+  const list = $('workList'); list.textContent = '';
+  store.works.slice().sort((a, b) => b.updatedAt - a.updatedAt).forEach(w => {
+    const row = document.createElement('div'); row.className = 'wrow' + (w.id === store.cur ? ' cur' : '');
+    const t = document.createElement('div'); t.className = 't'; t.textContent = w.title || '我的心智圖';
+    const sm = document.createElement('small'); sm.textContent = '　' + new Date(w.updatedAt).toLocaleString('zh-TW', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }); t.appendChild(sm);
+    const open = document.createElement('button'); open.type = 'button'; open.className = 'btn'; open.textContent = w.id === store.cur ? '目前這張' : '開啟'; open.disabled = w.id === store.cur;
+    open.onclick = () => { openWork(w.id); $('sheet').hidden = true; };
+    const del = document.createElement('button'); del.type = 'button'; del.className = 'btn danger'; del.textContent = '刪除';
+    del.onclick = () => {
+      if (!del.dataset.arm) { del.dataset.arm = '1'; del.textContent = '再按一次確認'; setTimeout(() => { delete del.dataset.arm; del.textContent = '刪除'; }, 3000); return; }
+      store.works = store.works.filter(x => x.id !== w.id);
+      if (!store.works.length) store.works.push(blankWork());
+      if (!store.works.some(x => x.id === store.cur)) store.cur = store.works[0].id;
+      openWork(store.cur); renderList();
+    };
+    row.append(t, open, del); list.appendChild(row);
+  });
+}
+
+// ---------- 事件 ----------
+COLOR_ORDER.forEach(c => {
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'swatch'; b.dataset.c = c; b.title = COLORS[c][2]; b.setAttribute('aria-label', COLORS[c][2]); b.style.background = COLORS[c][0];
+  b.onclick = () => {
+    const n = findNode(selId), d = depthOf(selId); if (!n || d < 1) return;
+    snap();
+    // 子主題換顏色時，整個分支一起換（顏色跟著主要分支）
+    let main = n, p = findParent(n.id); while (p && p !== work().root) { main = p; p = findParent(p.id); }
+    main.color = c; save(); render(); setStatus('● 已換分支顏色。');
+  };
+  $('swatches').appendChild(b);
+});
+EMOJIS.forEach(em => {
+  const b = document.createElement('button'); b.type = 'button'; b.textContent = em; b.title = '加上 ' + em;
+  b.onclick = () => { const n = findNode(selId); if (!n) return; snap(); setText(n.id, em + ' ' + n.text.replace(/^(\p{Extended_Pictographic}️?\s*)+/u, '')); setStatus('✓ 已加入圖示。'); };
+  $('emojis').appendChild(b);
+});
+$('addMain').onclick = addMain;
+$('addChild').onclick = addChild;
+$('addImg').onclick = pickImage;
+$('delBtn').onclick = delSelected;
+$('imgOff').onclick = () => { const n = findNode(selId); if (!n || !n.img) return; snap(); delete n.img; delete n.iw; delete n.ih; save(); render(); };
+$('undoBtn').onclick = undo;
+let textSnapped = false;
+$('nodeText').addEventListener('focus', () => { textSnapped = false; });
+$('nodeText').addEventListener('input', e => { if (!textSnapped) { snap(); textSnapped = true; } setText(selId, e.target.value); });
+$('title').addEventListener('input', e => { work().title = e.target.value.slice(0, 40); $('canvasTitle').textContent = work().title || '我的心智圖'; save(); });
+$('newBtn').onclick = () => { const w = blankWork(); store.works.push(w); openWork(w.id); setStatus('新的心智圖已建立：先輸入名稱，再按兩下中央主題改字。'); $('title').focus(); $('title').select(); };
+$('sampleBtn').onclick = () => { const w = sampleWork(); store.works.push(w); openWork(w.id); setStatus('已開一張新的範例，原本的心智圖都還在「📂 我的心智圖」。'); };
+$('listBtn').onclick = () => { renderList(); $('sheet').hidden = false; };
+$('sheetClose').onclick = () => { $('sheet').hidden = true; };
+$('sheet').addEventListener('click', e => { if (e.target === $('sheet')) $('sheet').hidden = true; });
+$('pngBtn').onclick = exportPng;
+$('zoomIn').onclick = () => zoomAt(1.2, canvas.clientWidth / 2, canvas.clientHeight / 2);
+$('zoomOut').onclick = () => zoomAt(1 / 1.2, canvas.clientWidth / 2, canvas.clientHeight / 2);
+$('fitBtn').onclick = fit;
+$('arrangeBtn').onclick = () => { snap(); walk(n => { delete n.dx; delete n.dy; }); save(); render(); fit(); setStatus('✓ 已依「中央主題 → 主要分支 → 子主題」重新排列。'); };
+
+// 拖曳：在主題上＝移動主題（連同下層），在空白處＝移動畫布
+let drag = null;
+canvas.addEventListener('pointerdown', e => {
+  if (e.target.closest('.edit-in') || !e.isPrimary) return;
+  finishEdit();
+  const g = e.target.closest('.node');
+  drag = { x: e.clientX, y: e.clientY, id: g ? g.dataset.id : null, moved: false, tx: view.tx, ty: view.ty };
+  canvas.setPointerCapture(e.pointerId);
+  if (g && g.dataset.id !== selId) select(g.dataset.id);
+  if (!g) canvas.classList.add('panning');
+});
+canvas.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if (!drag.moved && Math.hypot(dx, dy) < 4) return;
+  if (!drag.moved && drag.id) snap();
+  drag.moved = true;
+  if (drag.id) {
+    const n = findNode(drag.id); if (!n) return;
+    n.dx = (n.dx || 0) + dx / view.s; n.dy = (n.dy || 0) + dy / view.s; drag.x = e.clientX; drag.y = e.clientY; render();
+  } else { view.tx = drag.tx + dx; view.ty = drag.ty + dy; applyView(); }
+});
+function endDrag() { if (drag && drag.moved && drag.id) { save(); setStatus('● 位置已調整；按「自動排列」可以排回去。'); } drag = null; canvas.classList.remove('panning'); }
+canvas.addEventListener('pointerup', endDrag);
+canvas.addEventListener('pointercancel', endDrag);
+canvas.addEventListener('dblclick', e => { const g = e.target.closest('.node'); if (g) startEdit(g.dataset.id); });
+canvas.addEventListener('wheel', e => { e.preventDefault(); const r = canvas.getBoundingClientRect(); zoomAt(e.deltaY < 0 ? 1.1 : 1 / 1.1, e.clientX - r.left, e.clientY - r.top); }, { passive: false });
+document.addEventListener('keydown', e => {
+  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !typing) { e.preventDefault(); undo(); return; }
+  if (typing || !$('sheet').hidden || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === 'Tab') { e.preventDefault(); addChild(); }
+  else if (e.key === 'Enter') { e.preventDefault(); addSibling(); }
+  else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); delSelected(); }
+  else if (e.key === ' ' || e.key === 'F2') { e.preventDefault(); startEdit(selId); }
+});
+
+// 跟著大屏的風格（可愛溫暖風換暖色與粉圓字）
+try { if ((JSON.parse(localStorage.getItem('morningBoardSettings') || '{}') || {}).boardStyle === 'cozy') document.documentElement.dataset.style = 'cozy'; } catch (error) {}
+// 老師還沒自己移動或縮放前，畫布大小一變（切到這個工具、全螢幕）就重新「適合畫面」
+let userView = false;
+['pointerdown', 'wheel'].forEach(t => canvas.addEventListener(t, () => { userView = true; }, { passive: true }));
+['zoomIn', 'zoomOut'].forEach(id => $(id).addEventListener('click', () => { userView = true; }));
+$('fitBtn').addEventListener('click', () => { userView = false; });
+new ResizeObserver(() => { if (!userView && canvas.clientWidth) fit(); }).observe(canvas);
+render();
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { render(); if (!userView) fit(); });
+</script>
+</body>
+</html>

@@ -1068,6 +1068,12 @@ assert.match(studioHtml, /section\('代課教師當日簽認'/, "代課包應有
   assert.match(read("tools/build_screen_board.py"), /cleanImported\(\);/, "螢幕公告的修正要同步到產生器");
   assert.match(screen, /return \/\^https\?:\$\/\.test\(x\.protocol\)\?x\.href:''/, "螢幕公告書籤只收 http(s) 網址");
   assert.match(screen, /if\(w\.type==='bm'\)bmClean\(w\)/, "匯入設定時書籤要逐欄整理");
+  const mindMap = read("MindMap.html");
+  assert.match(mindMap, /Content-Security-Policy/, "心智圖要有安全設定");
+  assert.doesNotMatch(mindMap, /\.innerHTML|insertAdjacentHTML/, "心智圖的主題文字只能用 textContent");
+  assert.match(mindMap, /function cleanNode\(n, depth\)/, "心智圖讀存檔要逐欄整理");
+  assert.match(morning, /\['mind', '🧠', '心智圖'\]/, "大屏上方選單要有心智圖（老師 2026-11-07）");
+  assert.match(morning, /\$\('mindFrame'\)\.src = 'MindMap\.html'/, "心智圖第一次點才載入");
   assert.match(index, /href="\$\{escapeHtml\(safeUrl\(task\.detailUrl\) \|\| '#'\)\}"/, "任務連結只收 http(s)");
   assert.match(index, /\['teaching', 'manual', 'review', 'assessment', 'buffer'\]\.includes\(row\.type\)/, "還原備份時進度列種類要白名單");
   assert.doesNotMatch(index, /Object\.assign\(assistantSettings\.privacy, backup\.assistantSettings\.privacy\)/, "備份不可關掉去識別化");

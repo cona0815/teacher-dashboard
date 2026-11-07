@@ -709,6 +709,7 @@
         .tool-tab[data-tool="tomato"] { --tc: #e0523f; --tc-soft: #fdebe6; }
         .tool-tab[data-tool="prompt"] { --tc: #1f514a; --tc-soft: #e8f2ee; }
         .tool-tab[data-tool="screen"] { --tc: #0f7d8c; --tc-soft: #e2f3f5; }
+        .tool-tab[data-tool="mind"] { --tc: #c2477a; --tc-soft: #fbe6ef; }
         .screen-board { height: max(420px, calc(100vh - 430px)); margin-top: 8px; }   /* 要留給上方工具列與底部「存到雲端」，內嵌的工具列才不會被蓋住 */
         .screen-board iframe { display: block; width: 100%; height: 100%; border: 2px solid var(--line); border-radius: 14px; background: var(--bg); }
         .screen-board:is(:fullscreen, .fake-fs) { height: 100vh; margin-top: 0 !important; }
@@ -911,6 +912,7 @@
           <button class="tool-tab" type="button" data-tool="tomato"><span class="tt-ico">🍅</span><span>番茄鐘</span></button>
           <button class="tool-tab" type="button" data-tool="prompt"><span class="tt-ico">📣</span><span>大屏提示</span></button>
           <button class="tool-tab" type="button" data-tool="screen"><span class="tt-ico">📺</span><span>螢幕公告</span></button>
+          <button class="tool-tab" type="button" data-tool="mind"><span class="tt-ico">🧠</span><span>心智圖</span></button>
           <span class="status-text">全部只存這台電腦、不進雲端統計；抽籤與分組的座號池自動沿用「設定」（略過空號）。</span>
         </div>
 
@@ -1149,6 +1151,14 @@
             <span class="status-text">自由擺放文字、時程表、時鐘、計時器、圖片、畫板，也能設定時跳提醒。設定只存在這台電腦；定時提醒要網頁開著才會跳。</span>
           </div>
           <div class="screen-board" id="screenBoard"><iframe id="screenFrame" title="螢幕公告" allow="fullscreen; autoplay; screen-wake-lock"></iframe></div>
+        </div>
+        <div class="tool-panel" data-tool-panel="mind" hidden>
+          <div class="tool-opts">
+            <button class="ghost-button" type="button" id="mindFullscreenButton">⛶ 全螢幕</button>
+            <a class="ghost-button" href="MindMap.html" target="_blank" rel="noopener" style="text-decoration:none">↗ 開新分頁</a>
+            <span class="status-text">照資訊教室「心智圖工作室」的做法：中央主題 → 主要分支 → 子主題，可加圖示、圖片、換顏色、匯出 PNG。心智圖只存在這台電腦。</span>
+          </div>
+          <div class="screen-board" id="mindBoard"><iframe id="mindFrame" title="心智圖"></iframe></div>
         </div>
       </div>
     </section>
@@ -3752,7 +3762,7 @@
   applyToolsTabIcon();
   document.addEventListener('boardstylechange', applyToolsTabIcon);
   // 檢核板、螢幕公告常用，上面選單也各放一顆：開的是班級工具裡同一個面板（資料共用），只是把工具列收起來
-  const SOLO_TOOLS = [['check', '✅', '檢核板'], ['screen', '📺', '螢幕公告']];
+  const SOLO_TOOLS = [['check', '✅', '檢核板'], ['screen', '📺', '螢幕公告'], ['mind', '🧠', '心智圖']];
   const soloTabs = {};
   SOLO_TOOLS.forEach(([tool, emoji, label]) => {
     const btn = document.createElement('button');
@@ -3793,6 +3803,12 @@
   const screenTile = document.querySelector('.tool-tab[data-tool="screen"]');
   screenTile.addEventListener('click', () => { if (!$('screenFrame').getAttribute('src')) $('screenFrame').src = 'Screen.html'; });
   $('screenFullscreenButton').addEventListener('click', () => fsToggle($('screenBoard')));
+  // 🧠 心智圖：第一次點才載入
+  document.querySelector('.tool-tab[data-tool="mind"]').addEventListener('click', () => { if (!$('mindFrame').getAttribute('src')) $('mindFrame').src = 'MindMap.html'; });
+  $('mindFullscreenButton').addEventListener('click', () => fsToggle($('mindBoard')));
+  document.addEventListener('fullscreenchange', () => {
+    $('mindFullscreenButton').textContent = fsCurrent() === $('mindBoard') ? '⛶ 離開全螢幕' : '⛶ 全螢幕';
+  });
   document.addEventListener('fullscreenchange', () => {
     $('screenFullscreenButton').textContent = fsCurrent() === $('screenBoard') ? '⛶ 離開全螢幕' : '⛶ 全螢幕播放';
   });
