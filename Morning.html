@@ -698,7 +698,8 @@
         /* 有 hidden 屬性就一定藏起來（舊樣式的 display:flex 會蓋掉 hidden，造成編輯框與名稱列常駐） */
         .tool-opts[hidden], .tomato-edit[hidden], .tomato-time[hidden], .tool-panel[hidden] { display: none !important; }
         #toolTabs { gap: 10px; }
-        #page-tools.solo-tool #toolTabs { display: none; }   /* 從上面選單的「檢核板／螢幕公告」進來：只顯示那一個工具 */
+        #page-tools.solo-tool #toolTabs { display: none; }
+        #page-tools.solo-tool .screen-board { height: max(420px, calc(100vh - 300px)); }   /* 工具列收起來了，螢幕公告／心智圖可以再高一點 */   /* 從上面選單的「檢核板／螢幕公告」進來：只顯示那一個工具 */
         #toolTabs .status-text { flex-basis: 100%; margin-top: 2px; }
         .tool-tab[data-tool="lottery"] { --tc: #d9573f; --tc-soft: #fdece8; }
         .tool-tab[data-tool="check"] { --tc: #2273c9; --tc-soft: #e6f0fb; }
