@@ -26,6 +26,17 @@
     .scene h4 { font-size:16px; color:var(--primary-strong); margin-bottom:5px; }
     .scene .where { display:inline-block; font-size:11.5px; font-weight:900; border-radius:999px; padding:1px 10px; margin-left:8px; vertical-align:2px; background:var(--soft); color:var(--primary-strong); }
     .scene p { font-size:14.5px; margin:4px 0; }
+    .shots { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:10px; margin-top:10px; }
+    .shots figure { margin:0; }
+    .shots img { display:block; width:100%; height:auto; border:1px solid var(--line); border-radius:9px; background:#fff; }
+    .shots figcaption { font-size:12.5px; color:#5d6b66; margin-top:4px; line-height:1.5; }
+    .line-mock { background:#8CABD9; border-radius:14px; padding:12px; max-width:360px; font-size:13.5px; margin-top:10px; }
+    .line-mock .me { margin:0 0 8px auto; width:fit-content; max-width:80%; background:#8DE055; border-radius:12px 12px 2px 12px; padding:6px 10px; }
+    .line-mock .bot { display:flex; gap:6px; margin-bottom:8px; }
+    .line-mock .avatar { flex:none; width:28px; height:28px; border-radius:50%; background:#fff; display:grid; place-items:center; }
+    .line-mock .bubble, .line-mock .card { background:#fff; border-radius:12px; max-width:84%; overflow:hidden; }
+    .line-mock .bubble, .line-mock .card p { padding:6px 10px; margin:0; }
+    .line-mock .card button { display:block; width:100%; border:0; border-top:1px solid #e5e5e5; background:#fff; color:#2a6bd1; font:inherit; font-weight:700; padding:6px; }
     .ex { background:var(--gold-soft); border-radius:9px; padding:7px 12px; font-size:13.5px; margin-top:7px; }
     .ex::before { content:"👉 例："; font-weight:900; color:var(--gold); }
     table { width:100%; border-collapse:collapse; font-size:14px; margin:10px 0; }
@@ -44,12 +55,14 @@
     .perm-body { padding:12px 16px; font-size:14.5px; }
     .perm-body dt { font-weight:900; color:var(--gold); margin-top:8px; font-size:13px; }
     .perm-body dd { margin:2px 0 0 0; }
+      @media (max-width: 640px) { table { display: block; overflow-x: auto; } }
   </style>
 </head>
 <body>
   <header>
     <div class="wrap">
       <h1>📚 系統說明與資安</h1>
+      <p><a href="Guide.html" style="font-weight:800">📘 想看每個按鈕怎麼按？到圖文操作手冊（每個功能都有畫面）→</a></p>
       <p>這一頁回答兩件事：<strong>這套系統每天怎麼用</strong>（依情境、附實例），以及<strong>你的資料到底在哪裡、每個授權在做什麼</strong>（逐條白話）。可直接把本頁連結傳給同事或資訊組長。</p>
     </div>
   </header>
@@ -81,44 +94,72 @@
       <h2>📖 使用情境教學：老師的一天</h2>
       <p class="lead">照時間軸排列；每個情境都附具體例子。標籤代表在哪個裝置操作。</p>
 
+      <div class="scene"><h4>⚙ 第一次打開｜基本設定（只要一次）<span class="where">工作台 → 右上角「⚙ 設定」</span></h4>
+        <p>①「教師資料」填職稱、年級、班級、介面風格；②「隱私保護」勾送 AI 前要遮蔽的資料；③「AI 設定」貼 Gemini 金鑰、按「✓ 測試金鑰」；④「LINE 小幫手」填 GAS 網址與 🔑C、按「測試連線」→「立即同步」。每一頁都在下面附畫面；更詳細的圖解見 <a href="Guide.html">圖文操作手冊</a>。</p>
+        <div class="shots"><figure><a href="assets/guide/n02_overview_marked.webp" target="_blank" rel="noopener"><img src="assets/guide/n02_overview_marked.webp" alt="工作台五個區塊（紅框）" width="1100" height="739" loading="lazy"></a><figcaption>工作台五個區塊（紅框）</figcaption></figure><figure><a href="assets/guide/n03_settings_marked.webp" target="_blank" rel="noopener"><img src="assets/guide/n03_settings_marked.webp" alt="設定視窗：左邊選頁，改完按儲存" width="1100" height="739" loading="lazy"></a><figcaption>設定視窗：左邊選頁，改完按儲存</figcaption></figure><figure><a href="assets/guide/n04_api_marked.webp" target="_blank" rel="noopener"><img src="assets/guide/n04_api_marked.webp" alt="AI 設定四步（紅框）" width="1100" height="1031" loading="lazy"></a><figcaption>AI 設定四步（紅框）</figcaption></figure><figure><a href="assets/guide/g20_set_teacher.webp" target="_blank" rel="noopener"><img src="assets/guide/g20_set_teacher.webp" alt="① 教師資料與介面風格" width="920" height="1089" loading="lazy"></a><figcaption>① 教師資料與介面風格</figcaption></figure><figure><a href="assets/guide/g21_set_privacy.webp" target="_blank" rel="noopener"><img src="assets/guide/g21_set_privacy.webp" alt="② 隱私保護：送 AI 前自動遮蔽" width="920" height="387" loading="lazy"></a><figcaption>② 隱私保護：送 AI 前自動遮蔽</figcaption></figure><figure><a href="assets/guide/g07_settings_ai.webp" target="_blank" rel="noopener"><img src="assets/guide/g07_settings_ai.webp" alt="③ AI 設定：測試金鑰，模型選「自動」" width="920" height="685" loading="lazy"></a><figcaption>③ AI 設定：測試金鑰，模型選「自動」</figcaption></figure><figure><a href="assets/guide/g22_set_linebot.webp" target="_blank" rel="noopener"><img src="assets/guide/g22_set_linebot.webp" alt="④ LINE 小幫手：雲端連線" width="920" height="1106" loading="lazy"></a><figcaption>④ LINE 小幫手：雲端連線</figcaption></figure></div>
+      </div>
+
       <div class="scene"><h4>🌙 前一晚｜把明天的聯絡本先寫好<span class="where">工作台</span></h4>
         <p>教師工具箱 → 聯絡本 → 日期選<strong>明天</strong> → 用快速輸入下拉組內容 → 「儲存到雲端」。明早大屏一開機，黑板就自動顯示。</p>
         <div class="ex">分類選「作業」→ 項目選「國習 P.」→ 補充欄打「20-21」→ 按「＋加入」→ 出現「1. 國習 P.20-21」；再加「帶直笛」「明天國語聽寫」，儲存。</div>
+      
+        <div class="shots"><figure><a href="assets/guide/g13_contact_edit.webp" target="_blank" rel="noopener"><img src="assets/guide/g13_contact_edit.webp" alt="① 工作台「聯絡本」：左邊選日期、下拉快速輸入，右邊就是大屏黑板的樣子" width="1100" height="464" loading="lazy"></a><figcaption>① 工作台「聯絡本」：左邊選日期、下拉快速輸入，右邊就是大屏黑板的樣子</figcaption></figure><figure><a href="assets/guide/g14_contact_calendar.webp" target="_blank" rel="noopener"><img src="assets/guide/g14_contact_calendar.webp" alt="② 按「📅 日曆」一次看整個月，點哪一天就改哪一天" width="1100" height="775" loading="lazy"></a><figcaption>② 按「📅 日曆」一次看整個月，點哪一天就改哪一天</figcaption></figure></div>
       </div>
 
       <div class="scene"><h4>🌅 早上 7:50｜教室大屏開機就緒<span class="where">大屏</span></h4>
         <p>大屏自動顯示今天的聯絡本（字太小就按「字＋」放大）。學生陸續到校——<strong>不用點「到」</strong>，只點例外：請假的點成病假／事假。</p>
         <div class="ex">08:00 後才進教室的學生點「到校」會自動記為遲到（大屏不顯示，只有老師的 LINE 與統計看得到）；08:05 還空白的座號自動轉「未到」；08:08 出缺結果自動推播到你的 LINE。</div>
+      
+        <div class="shots"><figure><a href="assets/guide/m07_setup.webp" target="_blank" rel="noopener"><img src="assets/guide/m07_setup.webp" alt="① 第一次用：大屏「設定」填班級、座號數、科目（各類別分色）" width="1100" height="739" loading="lazy"></a><figcaption>① 第一次用：大屏「設定」填班級、座號數、科目（各類別分色）</figcaption></figure><figure><a href="assets/guide/m01_rollcall.webp" target="_blank" rel="noopener"><img src="assets/guide/m01_rollcall.webp" alt="② 每天早上：學生點自己的座號報到，右邊黑板是今天的聯絡本" width="1100" height="739" loading="lazy"></a><figcaption>② 每天早上：學生點自己的座號報到，右邊黑板是今天的聯絡本</figcaption></figure></div>
       </div>
 
       <div class="scene"><h4>📚 早自習｜收作業<span class="where">大屏</span></h4>
         <p>作業繳交 → 選科目＋作業名稱（可加補充）→「＋新增收件版面」→ 按「全班繳交」一鍵全綠 → 把沒交的點回缺交 → 「📤 送出」。</p>
         <div class="ex">「國語」＋「習作」＋「11-15」→ 版面「國語／習作 11-15」；3 號 7 號沒交就點他們兩下取消。08:40 各科繳交情況自動推播 LINE。</div>
+      
+        <div class="shots"><figure><a href="assets/guide/m02_homework.webp" target="_blank" rel="noopener"><img src="assets/guide/m02_homework.webp" alt="① 「作業繳交」：新增今天的作業，交了的座號點一下變色，沒點＝缺交" width="1100" height="739" loading="lazy"></a><figcaption>① 「作業繳交」：新增今天的作業，交了的座號點一下變色，沒點＝缺交</figcaption></figure><figure><a href="assets/guide/m03_correct.webp" target="_blank" rel="noopener"><img src="assets/guide/m03_correct.webp" alt="② 「作業訂正」：從已交名單點出要訂正的座號，改完再點一次＝完成" width="1100" height="739" loading="lazy"></a><figcaption>② 「作業訂正」：從已交名單點出要訂正的座號，改完再點一次＝完成</figcaption></figure></div>
       </div>
 
       <div class="scene"><h4>🎓 課堂中｜班級經營小工具<span class="where">大屏</span></h4>
         <p>「🧰 班級工具」分頁：抽籤機（轉盤／扭蛋／抓娃娃，抽完不放回、隔天接著抽，按「重新開始」才清空、可排除今日缺席）、小組計分板（分數常駐、手動歸零）、隨機分組、安靜偵測（安靜換可愛動物站崗、連續安靜集 ⭐）、🍅 番茄鐘（附 LO-FI 音樂角：匯入 MP3 或貼 YouTube）、📣 大屏提示。除提示遙控外全部只存教室電腦，不進任何統計。</p>
         <div class="ex">抽人回答：勾「排除今日缺席」→ 按「🎯 抽！」→ 轉盤轉 3 秒 →「17 號！🎉」。科任課鐘響前，你人在辦公室對 LINE 傳「<strong>提示 排隊</strong>」→ 教室大屏 20 秒內換成「排隊囉！快、靜、齊」＋插圖。定期評量日用「📝 定評小幫手」。</div>
+      
+        <div class="shots"><figure><a href="assets/guide/m04_tools.webp" target="_blank" rel="noopener"><img src="assets/guide/m04_tools.webp" alt="抽籤機（可排除今日缺席）" width="1100" height="739" loading="lazy"></a><figcaption>抽籤機（可排除今日缺席）</figcaption></figure><figure><a href="assets/guide/m10_check.webp" target="_blank" rel="noopener"><img src="assets/guide/m10_check.webp" alt="檢核板：誰交了誰還沒，一眼看" width="1100" height="739" loading="lazy"></a><figcaption>檢核板：誰交了誰還沒，一眼看</figcaption></figure><figure><a href="assets/guide/m12_score.webp" target="_blank" rel="noopener"><img src="assets/guide/m12_score.webp" alt="小組計分板" width="1100" height="739" loading="lazy"></a><figcaption>小組計分板</figcaption></figure><figure><a href="assets/guide/m13_group.webp" target="_blank" rel="noopener"><img src="assets/guide/m13_group.webp" alt="隨機分組" width="1100" height="739" loading="lazy"></a><figcaption>隨機分組</figcaption></figure><figure><a href="assets/guide/m15_tomato.webp" target="_blank" rel="noopener"><img src="assets/guide/m15_tomato.webp" alt="番茄鐘＋音樂角" width="1100" height="739" loading="lazy"></a><figcaption>番茄鐘＋音樂角</figcaption></figure><figure><a href="assets/guide/m16_prompt.webp" target="_blank" rel="noopener"><img src="assets/guide/m16_prompt.webp" alt="📣 大屏提示：點一句全螢幕" width="1100" height="739" loading="lazy"></a><figcaption>📣 大屏提示：點一句全螢幕</figcaption></figure><figure><a href="assets/guide/m11_tooth.webp" target="_blank" rel="noopener"><img src="assets/guide/m11_tooth.webp" alt="潔牙點名" width="1100" height="739" loading="lazy"></a><figcaption>潔牙點名</figcaption></figure><figure><a href="assets/guide/m14_exam.webp" target="_blank" rel="noopener"><img src="assets/guide/m14_exam.webp" alt="定期評量看板" width="1100" height="739" loading="lazy"></a><figcaption>定期評量看板</figcaption></figure><figure><a href="assets/guide/m18_mind.webp" target="_blank" rel="noopener"><img src="assets/guide/m18_mind.webp" alt="心智圖" width="1100" height="739" loading="lazy"></a><figcaption>心智圖</figcaption></figure><figure><a href="assets/guide/m17_screen.webp" target="_blank" rel="noopener"><img src="assets/guide/m17_screen.webp" alt="螢幕公告" width="1100" height="739" loading="lazy"></a><figcaption>螢幕公告</figcaption></figure></div>
       </div>
 
       <div class="scene"><h4>🌜 備課夜｜教材小工場一條龍<span class="where">工作台 → 教師工具箱 → 備課</span></h4>
-        <p>工作台「教師工具箱 → 備課」按「🎨 教材小工場」，分頁依用途分四組。<strong>📝 出題備課</strong>：學習單、數學出題（也能拍課本題目出類似題，系統自動驗算）、段考複習講義、心智圖（可直接在大屏心智圖打開）。<strong>✍️ 語文寫作</strong>：生詞本、作文引導單、作文批改、作文範文庫、閱讀分級改寫（找最新兒童適讀新聞，一鍵做成中文或英文的三種難度）。<strong>📣 親師溝通</strong>：家長通知單（Gemini 真的生圖）、Google 表單、LINE 圖文選單。<strong>🧰 班務工具</strong>：座位表、敏感資料遮蔽、📎 PDF 工具（加入 PDF 或照片後看到每一頁，直接刪除、轉向、拖曳排順序；可輸出成 PDF、圖片或 Word；還能多頁合一、加頁碼、加浮水印、拆成多份、掃描檔瘦身，全部本機處理不上傳）。作文引導單有「🍊 感官觀察四頁組」；<strong>📚 閱讀分級改寫</strong>可按「找最新國際時事」，由 AI 搜尋近 14 天兒童適讀新聞，程式端再過濾政治／暴力／色情。所有「選擇檔案」都能<strong>📷 拍照、📋 貼上、Ctrl+V</strong>；所有產出可列印、下載 Word／Excel／<strong>PDF</strong>。</p>
+        <p>工作台「教師工具箱 → 備課」按「🎨 教材小工場」，分頁依用途分四組。<strong>📝 出題備課</strong>：學習單、數學出題（也能拍課本題目出類似題，系統自動驗算）、段考複習講義、心智圖（可直接在大屏心智圖打開）。<strong>✍️ 語文寫作</strong>：生詞本、作文引導單、作文批改、作文範文庫、閱讀分級改寫（找最新兒童適讀新聞，一鍵做成中文或英文的三種難度）。<strong>📣 親師溝通</strong>：家長通知單（Gemini 真的生圖）、Google 表單、LINE 圖文選單。<strong>🧰 班務工具</strong>：座位表、敏感資料遮蔽、📎 PDF 工具（加入 PDF 或照片後看到每一頁，直接刪除、轉向、拖曳排順序；可輸出成 PDF、圖片或 Word；還能多頁合一、加頁碼、加浮水印、拆成多份、掃描檔瘦身，全部本機處理不上傳）。作文引導單有「🍊 感官觀察四頁組」；<strong>📚 閱讀分級改寫</strong>可按「找最新國際時事」，由 AI 搜尋近 14 天兒童適讀新聞，程式端再過濾政治／暴力／色情。所有「選擇檔案」都能<strong>📷 拍照、📋 貼上、Ctrl+V</strong>；所有產出可列印、下載 Word／Excel／<strong>PDF</strong>。2026-11 起：所有讓 AI 讀資料的欄位都收<strong>拍照、PDF、Word、PPT、Excel</strong>；作文引導單多一格「內容簡述」，AI 照你班這次的經驗設計；對照範文的評語用 ①②③ 對應文章裡的句子；主題欄位下有<strong>本月學校活動</strong>按鈕；空白欄位按 Tab 會帶入「例：」範例。</p>
         <div class="ex">明天要教作文「難忘的運動會」：選五年級＋記敘文 → 生成 → 印 25 份學生引導單＋1 份教師參考頁，備課 10 分鐘完成。</div>
+      
+        <div class="shots"><figure><a href="assets/guide/s01_ws.webp" target="_blank" rel="noopener"><img src="assets/guide/s01_ws.webp" alt="① 學習單：選科目年級、打主題（下面有本月學校活動按鈕），可放課本照片／PDF／Word" width="1100" height="739" loading="lazy"></a><figcaption>① 學習單：選科目年級、打主題（下面有本月學校活動按鈕），可放課本照片／PDF／Word</figcaption></figure><figure><a href="assets/guide/s02_math.webp" target="_blank" rel="noopener"><img src="assets/guide/s02_math.webp" alt="② 數學出題：選題型按「🎲 產生題目」" width="1100" height="739" loading="lazy"></a><figcaption>② 數學出題：選題型按「🎲 產生題目」</figcaption></figure><figure><a href="assets/guide/s20_math_sheet.webp" target="_blank" rel="noopener"><img src="assets/guide/s20_math_sheet.webp" alt="③ 出好的數學卷（最後一頁是答案）" width="794" height="1124" loading="lazy"></a><figcaption>③ 出好的數學卷（最後一頁是答案）</figcaption></figure><figure><a href="assets/guide/s10_review.webp" target="_blank" rel="noopener"><img src="assets/guide/s10_review.webp" alt="④ 段考複習講義" width="1100" height="739" loading="lazy"></a><figcaption>④ 段考複習講義</figcaption></figure><figure><a href="assets/guide/s11_mindmap.webp" target="_blank" rel="noopener"><img src="assets/guide/s11_mindmap.webp" alt="⑤ 心智圖：可直接送到大屏心智圖" width="1100" height="739" loading="lazy"></a><figcaption>⑤ 心智圖：可直接送到大屏心智圖</figcaption></figure><figure><a href="assets/guide/s12_vocab.webp" target="_blank" rel="noopener"><img src="assets/guide/s12_vocab.webp" alt="⑥ 生詞本：貼一串字自動查注音、部首、筆畫" width="1100" height="739" loading="lazy"></a><figcaption>⑥ 生詞本：貼一串字自動查注音、部首、筆畫</figcaption></figure><figure><a href="assets/guide/s14_reading.webp" target="_blank" rel="noopener"><img src="assets/guide/s14_reading.webp" alt="⑦ 閱讀分級改寫（中文／英文三種難度）" width="1100" height="739" loading="lazy"></a><figcaption>⑦ 閱讀分級改寫（中文／英文三種難度）</figcaption></figure><figure><a href="assets/guide/s18_seat_result.webp" target="_blank" rel="noopener"><img src="assets/guide/s18_seat_result.webp" alt="⑧ 座位表：貼名單一鍵排好、可拖拉換位" width="1100" height="739" loading="lazy"></a><figcaption>⑧ 座位表：貼名單一鍵排好、可拖拉換位</figcaption></figure></div>
       </div>
 
       <div class="scene"><h4>📝 批改作文夜<span class="where">🎨 教材小工場</span></h4>
         <p>「✍️ 作文批改」：拍手寫作文（或 PDF、Ctrl+V 貼截圖，<strong>不限張數</strong>，照片會自動縮圖）→ AI 依<strong>會考寫作六級分規準</strong>（四向度、依年級調整期待）產出批改單：亮點稱讚、<strong>原文逐段批改</strong>（錯字／標點／用字／語詞／語句劃線變色＋→正確答案＋第幾段）、修改清單、<strong>逐段修改指引</strong>（每段的問題／怎麼修／示範改寫）、結構建議，評語固定<strong>兩條正向＋一條待改進</strong>。老師確認調整後列印夾回作文本。</p>
-        <div class="ex">照片請避開姓名欄，或先用「🛡 敏感資料遮蔽」拖曳打碼再上傳。AI 是助手草稿，級分由老師定奪。</div>
+        <div class="ex">照片請避開姓名欄，或先用「🛡 敏感資料遮蔽」打碼再上傳（Word、Excel、PowerPoint 也能直接放，勾選要遮的項目就自動遮好、下載同一種檔案）。AI 是助手草稿，級分由老師定奪。</div>
+      
+        <div class="shots"><figure><a href="assets/guide/s13_essay.webp" target="_blank" rel="noopener"><img src="assets/guide/s13_essay.webp" alt="① 作文批改：拍手寫作文或放 PDF，依年段規準批改" width="1100" height="739" loading="lazy"></a><figcaption>① 作文批改：拍手寫作文或放 PDF，依年段規準批改</figcaption></figure><figure><a href="assets/guide/s03_guide.webp" target="_blank" rel="noopener"><img src="assets/guide/s03_guide.webp" alt="② 作文引導單：寫主題和「內容簡述」" width="1100" height="739" loading="lazy"></a><figcaption>② 作文引導單：寫主題和「內容簡述」</figcaption></figure><figure><a href="assets/guide/s22_guide_sheet.webp" target="_blank" rel="noopener"><img src="assets/guide/s22_guide_sheet.webp" alt="③ 產出的引導單（審題、心智圖、段落鷹架）" width="794" height="1124" loading="lazy"></a><figcaption>③ 產出的引導單（審題、心智圖、段落鷹架）</figcaption></figure><figure><a href="assets/guide/s04_library.webp" target="_blank" rel="noopener"><img src="assets/guide/s04_library.webp" alt="④ 對照範文：評語 ①②③ 對應文章裡畫底色的句子" width="794" height="1124" loading="lazy"></a><figcaption>④ 對照範文：評語 ①②③ 對應文章裡畫底色的句子</figcaption></figure></div>
+      </div>
+
+      <div class="scene"><h4>📊 早上第一眼｜今日看板<span class="where">工作台 → 右上角「📊 今日看板」</span></h4>
+        <p>按「📊 今日看板」，畫面切成班況：今天出席幾人、誰請假或未到、每份作業交了幾份、誰還沒交、誰還沒訂正，以及近 30 天<strong>要多關心</strong>的座號和今天的聯絡本。資料來自晨間大屏（每 5 分鐘自動存檔），只用座號。看完按橘色的「↩ 回工作台」回到原本畫面；重新整理也一定回到工作台。</p>
+        <div class="ex">每月初任務清單上方還有「📅 本月學校常見活動」（依學校行事曆），點一下活動就變任務，已有的打 ✓。</div>
+      
+        <div class="shots"><figure><a href="assets/guide/g19_today_full.webp" target="_blank" rel="noopener"><img src="assets/guide/g19_today_full.webp" alt="① 按右上角「📊 今日看板」：出席、缺交、待訂正、要多關心、今天的聯絡本" width="1100" height="604" loading="lazy"></a><figcaption>① 按右上角「📊 今日看板」：出席、缺交、待訂正、要多關心、今天的聯絡本</figcaption></figure><figure><a href="assets/guide/g04_month.webp" target="_blank" rel="noopener"><img src="assets/guide/g04_month.webp" alt="② 任務清單上方的「本月學校常見活動」：點一下就新增任務" width="1100" height="200" loading="lazy"></a><figcaption>② 任務清單上方的「本月學校常見活動」：點一下就新增任務</figcaption></figure></div>
       </div>
 
       <div class="scene"><h4>🗂 主任交辦一大串｜AI 行政助理拆成任務<span class="where">工作台 → 教師工具箱 → 📥 收件與 AI → AI 行政助理</span></h4>
         <p>把晨會 PDF、主任的 LINE 訊息貼進去 → 出現<strong>一張「整理成任務／記事」清單</strong>，每一件都先選好<strong>任務／記事／不要</strong>並抓出原文的日期時間（記事＝只要記得，任務＝要動手做、有期限），重複的會併成一件。<strong>任務用拖曳決定主／子</strong>（拖到另一個任務上＝子任務，拖到虛線區＝解除；名稱、日期、時間可就地改），按一次「確認建立」，任務寫進任務清單、記事存到小綿助記事。任務清單裡的每一列也能同樣拖曳分組或拆回獨立。原文或 PDF 裡的<strong>網址</strong>（表單、報名、雲端資料夾）會被逐字抄出，任務帶「🔗 連結」按鈕；<strong>點任務名稱</strong>會彈出完整說明、來源附件檔名與 AI 分析摘要，可直接開連結、編輯或完成。</p>
         <div class="ex">「10/17 運動會，10/10 前回傳人數表、10/13 繳隊形圖、10/16 13:30 彩排」→ 清單出現 4 個任務，把後三個拖到「運動會」底下 → 確認 → 任務清單出現 1 主 3 子，期限與時間都填好了。</div>
+      
+        <div class="shots"><figure><a href="assets/guide/g05a_ai_input.webp" target="_blank" rel="noopener"><img src="assets/guide/g05a_ai_input.webp" alt="① 「📥 收件與 AI → AI 行政助理」：貼公文或附 PDF／照片／Word" width="522" height="1217" loading="lazy"></a><figcaption>① 「📥 收件與 AI → AI 行政助理」：貼公文或附 PDF／照片／Word</figcaption></figure><figure><a href="assets/guide/g16_ai_result.webp" target="_blank" rel="noopener"><img src="assets/guide/g16_ai_result.webp" alt="② AI 分析與建議" width="638" height="1217" loading="lazy"></a><figcaption>② AI 分析與建議</figcaption></figure><figure><a href="assets/guide/g05_ai_board.webp" target="_blank" rel="noopener"><img src="assets/guide/g05_ai_board.webp" alt="③ 整理成任務／記事：每件選任務、記事或不要，可改日期、拖成子任務" width="606" height="703" loading="lazy"></a><figcaption>③ 整理成任務／記事：每件選任務、記事或不要，可改日期、拖成子任務</figcaption></figure><figure><a href="assets/guide/g17_ai_created.webp" target="_blank" rel="noopener"><img src="assets/guide/g17_ai_created.webp" alt="④ 按「確認建立」後：任務進清單、記事進小綿助記事" width="606" height="703" loading="lazy"></a><figcaption>④ 按「確認建立」後：任務進清單、記事進小綿助記事</figcaption></figure><figure><a href="assets/guide/g18_ai_docs.webp" target="_blank" rel="noopener"><img src="assets/guide/g18_ai_docs.webp" alt="⑤ 行政文書：研習心得選研習名稱，自動寫成「115 學年度 ○○研習」" width="1100" height="425" loading="lazy"></a><figcaption>⑤ 行政文書：研習心得選研習名稱，自動寫成「115 學年度 ○○研習」</figcaption></figure></div>
       </div>
 
       <div class="scene"><h4>💬 家長傳訊息來｜回覆家長<span class="where">工作台 → 教師工具箱 → 級務 → 💬 回覆家長</span></h4>
         <p>把家長傳來的話貼上（老師主動聯繫就不用貼），在「你想回覆的重點」寫下要說的事，選語氣（溫和親切／正式有禮／簡短明確）→「✍️ 幫我寫回覆」，就得到一則以「家長您好」開頭、可以直接傳的訊息；不滿意按「🔁 換一種寫法」。有填 AI 金鑰會依內容起草（送出前先遮蔽電話、身分證、Email），沒有就給範本。草稿若出現責備或貼標籤的字眼，會自動換成保守版本。請用「孩子」或座號稱呼，不要打學生全名。</p>
         <div class="ex">家長：「孩子說數學作業不會寫，可以明天交嗎？」→ 重點寫「可以明天交；先把會的寫完，不會的圈起來，明天下課我再教他」→ 一鍵產生回覆、複製貼到 LINE。</div>
+      
+        <div class="shots"><figure><a href="assets/guide/g09_parent.webp" target="_blank" rel="noopener"><img src="assets/guide/g09_parent.webp" alt="貼上家長的話、寫重點、選語氣 →「✍️ 幫我寫回覆」" width="1100" height="498" loading="lazy"></a><figcaption>貼上家長的話、寫重點、選語氣 →「✍️ 幫我寫回覆」</figcaption></figure></div>
       </div>
 
       <div class="scene"><h4>🐑 小綿助換新衣：新畫風＋會看場合的動作（v2.3）<span class="where">桌面小綿助</span></h4>
@@ -136,28 +177,40 @@
 
       <div class="scene"><h4>📋 要調查意願｜Google 表單一條龍<span class="where">🎨 教材小工場＋LINE</span></h4>
         <p>「📋 Google 表單」：描述需求 → AI 擬題 → 按「建立」直接在你的 Google 帳號生成表單，可勾「填完自動寄回覆副本給填表者」。拿到連結貼進 LINE 聯絡簿公告發給家長；回條改用「📱 LINE 圖文選單」把常用指令做成機器人下方的按鈕選單。</p>
+      
+        <div class="shots"><figure><a href="assets/guide/s15_gform.webp" target="_blank" rel="noopener"><img src="assets/guide/s15_gform.webp" alt="用一句話說要調查什麼，AI 擬好題目再建立 Google 表單" width="1100" height="739" loading="lazy"></a><figcaption>用一句話說要調查什麼，AI 擬好題目再建立 Google 表單</figcaption></figure></div>
       </div>
 
       <div class="scene"><h4>🖊 下課十分鐘｜批改與補交<span class="where">平板或大屏</span></h4>
         <p>拿平板開同一個大屏網址 → 「作業補交」分頁：誰補交了就點那一筆的「完成」，<strong>即時寫回雲端</strong>，教室大屏重新整理就同步。需要訂正的用「作業訂正」分頁登記。</p>
+      
+        <div class="shots"><figure><a href="assets/guide/m05_makeup.webp" target="_blank" rel="noopener"><img src="assets/guide/m05_makeup.webp" alt="大屏「作業補交」：前幾天沒交、還沒訂正完的，補了就點掉" width="1100" height="739" loading="lazy"></a><figcaption>大屏「作業補交」：前幾天沒交、還沒訂正完的，補了就點掉</figcaption></figure></div>
       </div>
 
       <div class="scene"><h4>🚶 走廊上想到一件事<span class="where">手機 LINE</span></h4>
         <p>直接打字或按著麥克風講給 LINE 小幫手聽，AI 自動整理好，回覆下面有［任務］［記事］［不要］按鈕，在 LINE 上按一下就定案；工作台同步時自動建立，不用回電腦再確認。</p>
         <div class="ex">傳「下週三前要交校外教學調查表」→ 小幫手回：任務「繳交校外教學調查表」、到期日自動算好、主軸「行政」。傳錯了打「撤回」即可。</div>
+      
+        <div class="line-mock" aria-label="LINE 對話示意圖"><div class="me">週五前收畢旅同意書回條</div><div class="bot"><span class="avatar">🐑</span><div class="card"><p>已收到：📌 收畢旅同意書回條（📅 11/13）<br>要放進工作台的哪裡？AI 建議：任務。</p><button type="button">✅ 任務（建議）</button><button type="button">📌 記事</button><button type="button">✖ 不要</button></div></div><div class="me">✅ 任務</div><div class="bot"><span class="avatar">🐑</span><div class="bubble">✅ 定為任務，工作台同步時自動建立。</div></div></div>
       </div>
 
       <div class="scene"><h4>📄 收到通知單<span class="where">手機 LINE</span></h4>
         <p>拍照傳給小幫手：AI 讀出重點、自動存進你雲端硬碟的「LINE小幫手備份」並依內容分類命名。接著傳「照片轉聯絡本」，重點直接寫進今天的黑板。</p>
         <div class="ex">之後要找：傳「找檔案 校外教學」→ 附上雲端連結。</div>
+      
+        <div class="shots"><figure><a href="assets/guide/s07_notice.webp" target="_blank" rel="noopener"><img src="assets/guide/s07_notice.webp" alt="① 家長通知單：主旨下有本月活動，內容要點口語寫" width="1100" height="739" loading="lazy"></a><figcaption>① 家長通知單：主旨下有本月活動，內容要點口語寫</figcaption></figure><figure><a href="assets/guide/s05_mask.webp" target="_blank" rel="noopener"><img src="assets/guide/s05_mask.webp" alt="② 要轉給別人前：敏感資料遮蔽，Word／Excel 直接放" width="1100" height="739" loading="lazy"></a><figcaption>② 要轉給別人前：敏感資料遮蔽，Word／Excel 直接放</figcaption></figure><figure><a href="assets/guide/s21_mask_picks.webp" target="_blank" rel="noopener"><img src="assets/guide/s21_mask_picks.webp" alt="③ 勾選要遮的項目（會記住）" width="340" height="999" loading="lazy"></a><figcaption>③ 勾選要遮的項目（會記住）</figcaption></figure></div>
       </div>
 
       <div class="scene"><h4>🌇 放學前｜清點與公告<span class="where">大屏＋手機</span></h4>
         <p>班級工具「✅ 檢核板」清點回條（點過的變藍、按「未點」紅色反查）；要通知家長群時對 LINE 傳「聯絡簿：…」，小幫手回一則排版好的公告，長按轉發。</p>
+      
+        <div class="shots"><figure><a href="assets/guide/g08_homework.webp" target="_blank" rel="noopener"><img src="assets/guide/g08_homework.webp" alt="① 作業統計：每週／整學期" width="1100" height="785" loading="lazy"></a><figcaption>① 作業統計：每週／整學期</figcaption></figure><figure><a href="assets/guide/g15_hw_message.webp" target="_blank" rel="noopener"><img src="assets/guide/g15_hw_message.webp" alt="② 點座號自動寫好家長訊息，全班訊息只有總數" width="1100" height="502" loading="lazy"></a><figcaption>② 點座號自動寫好家長訊息，全班訊息只有總數</figcaption></figure></div>
       </div>
 
       <div class="scene"><h4>📮 週五下午｜家長關懷（全自動）<span class="where">自動＋工作台</span></h4>
         <p>系統統計本週缺交，達門檻（預設 5 次）的學生自動產生<strong>委婉的家長訊息草稿</strong>，同步後存進小綿助記事，並通知你。到工作台把「（老師補充：孩子的優點）」填上，再轉發給家長。</p>
+      
+        <div class="shots"><figure><a href="assets/guide/g06_notes.webp" target="_blank" rel="noopener"><img src="assets/guide/g06_notes.webp" alt="缺交達門檻的家長訊息草稿，同步後存在「小綿助記事」" width="1100" height="382" loading="lazy"></a><figcaption>缺交達門檻的家長訊息草稿，同步後存在「小綿助記事」</figcaption></figure></div>
       </div>
 
       <div class="scene"><h4>🤒 臨時請假<span class="where">手機 LINE</span></h4>
@@ -167,10 +220,14 @@
       <div class="scene"><h4>🐑 電腦前｜桌面小綿助 v2.0 陪你專注<span class="where">Windows 桌面程式</span></h4>
         <p>小綿助在桌面走來走去、探頭、蹭滑鼠；秘書頁填一次 🌐A＋🔑C 後它會<strong>自己每 2 分鐘去拿</strong>工作台快照、LINE 待整理與大屏提示（不用開瀏覽器），新 LINE 訊息會跳起來提醒。開「🍅 專注 25 分」後，滑 YouTube／IG 它會衝到螢幕中間提醒你；秘書頁還能一鍵遙控教室大屏的提示句。</p>
         <div class="ex">它怎麼知道你在滑 IG？只讀「作用中視窗的標題」（例如「Instagram - Chrome」）比對關鍵字，<strong>不截圖、不錄畫面、不上傳、不保存標題</strong>；投影大屏時自動閉嘴，備課用的分頁可按「這是備課用」加白名單。</div>
+      
+        <div class="shots"><figure><a href="assets/guide/g24_set_pet.webp" target="_blank" rel="noopener"><img src="assets/guide/g24_set_pet.webp" alt="工作台「設定 → 小綿助」：下載、角色、提醒" width="920" height="1130" loading="lazy"></a><figcaption>工作台「設定 → 小綿助」：下載、角色、提醒</figcaption></figure></div>
       </div>
 
       <div class="scene"><h4>💻 換電腦或清了瀏覽器資料<span class="where">工作台</span></h4>
         <p>平常用「⚙ 設定 → 備份與還原」的雲端備份（存進你自己的試算表，保留最近 10 份）；新電腦連上後選最新一份還原，任務、進度、記事全部回來。</p>
+      
+        <div class="shots"><figure><a href="assets/guide/g23_set_backup.webp" target="_blank" rel="noopener"><img src="assets/guide/g23_set_backup.webp" alt="「設定 → 備份與還原」：下載 JSON 或雲端備份，換電腦一鍵還原" width="920" height="751" loading="lazy"></a><figcaption>「設定 → 備份與還原」：下載 JSON 或雲端備份，換電腦一鍵還原</figcaption></figure></div>
       </div>
     </section>
 

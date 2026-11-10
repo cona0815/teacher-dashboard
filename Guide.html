@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <title>圖文操作手冊｜教師工作台</title>
+  <meta name="description" content="教師工作台、晨間大屏、教材小工場、LINE 小幫手的一步一步圖文操作說明。">
+  <meta name="color-scheme" content="light dark">
+<style>
+  :root {
+    --board: #1D4636; --board-deep: #143026; --chalk: #EEF2E9;
+    --ink: #16201B; --paper: #F4F6F1; --paper-2: #FFFFFF; --line: #DCE3D8; --muted: #5F6F66;
+    --accent: #D6A231; --accent-soft: #FBF1D9; --brick: #B4503C; --grass: #2E7D5B; --line-green: #06C755;
+    --shadow: 0 1px 2px rgba(22,32,27,.06), 0 8px 24px -12px rgba(22,32,27,.18);
+    --radius: 14px; --maxw: 72rem;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #E7EDE7; --paper: #101713; --paper-2: #17201B; --line: #26332C; --muted: #93A79A;
+      --accent: #E4B54A; --accent-soft: #2C2716; --brick: #D4705B; --grass: #4CA97D;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px -14px rgba(0,0,0,.7);
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 76px; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif; font-size: 16.5px; line-height: 1.75; }
+  a { color: var(--grass); }
+  header.hero { background: var(--board); color: var(--chalk); padding: 34px 16px 30px; }
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 16px; }
+  .hero h1 { margin: 0 0 6px; font-size: clamp(26px, 4vw, 38px); letter-spacing: .02em; }
+  .hero p { margin: 0; max-width: 46rem; color: #CFDACF; }
+  .hero .back { display: inline-block; margin-bottom: 14px; color: var(--chalk); opacity: .85; font-size: 14px; }
+  nav.toc { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--paper) 92%, transparent); backdrop-filter: blur(6px); border-bottom: 1px solid var(--line); }
+  nav.toc .wrap { display: flex; gap: 6px; overflow-x: auto; padding-top: 10px; padding-bottom: 10px; scrollbar-width: thin; }
+  nav.toc a { flex: none; text-decoration: none; color: var(--ink); background: var(--paper-2); border: 1px solid var(--line); border-radius: 999px; padding: 4px 13px; font-size: 14px; font-weight: 700; }
+  nav.toc a:hover { border-color: var(--grass); }
+  main { padding: 24px 0 60px; }
+  .part { margin: 34px 0 10px; display: flex; align-items: baseline; gap: 12px; border-bottom: 3px solid var(--accent); padding-bottom: 6px; }
+  .part h2 { margin: 0; font-size: 26px; }
+  .part span { color: var(--muted); font-size: 15px; }
+  section.step { background: var(--paper-2); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px 22px; margin: 18px 0; }
+  section.step h3 { margin: 0 0 4px; font-size: 21px; }
+  .when { color: var(--muted); margin: 0 0 12px; }
+  .when b { color: var(--ink); }
+  .cols { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 20px; align-items: start; }
+  .cols.wide { grid-template-columns: 1fr; }
+  ol.how { margin: 0; padding-left: 1.4em; }
+  ol.how li { margin: 4px 0; }
+  ol.how li::marker { font-weight: 900; color: var(--grass); }
+  .k { display: inline-block; padding: 0 7px; border: 1.5px solid var(--line); border-radius: 7px; background: var(--paper); font-weight: 800; font-size: 14.5px; white-space: nowrap; }
+  figure { margin: 0; }
+  figure img { display: block; width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--line); background: #fff; }
+  figcaption { font-size: 13.5px; color: var(--muted); margin-top: 6px; }
+  .tip { margin-top: 12px; background: var(--accent-soft); border-left: 4px solid var(--accent); border-radius: 8px; padding: 8px 12px; font-size: 15px; }
+  .warn { margin-top: 12px; background: color-mix(in srgb, var(--brick) 10%, var(--paper-2)); border-left: 4px solid var(--brick); border-radius: 8px; padding: 8px 12px; font-size: 15px; }
+  /* LINE 對話示意（畫出來的，不是截圖） */
+  .line-mock { background: #8CABD9; border-radius: 16px; padding: 14px; max-width: 380px; font-size: 14px; }
+  .line-mock .me { margin: 0 0 10px auto; max-width: 78%; background: #8DE055; color: #111; border-radius: 14px 14px 2px 14px; padding: 7px 11px; width: fit-content; }
+  .line-mock .bot { display: flex; gap: 7px; margin-bottom: 10px; }
+  .line-mock .avatar { flex: none; width: 30px; height: 30px; border-radius: 50%; background: #fff; display: grid; place-items: center; font-size: 17px; }
+  .line-mock .bubble { background: #fff; color: #111; border-radius: 14px 14px 14px 2px; padding: 7px 11px; max-width: 82%; white-space: pre-line; }
+  .line-mock .card { background: #fff; color: #111; border-radius: 14px; overflow: hidden; max-width: 82%; }
+  .line-mock .card p { margin: 0; padding: 9px 12px; }
+  .line-mock .card button { display: block; width: 100%; border: 0; border-top: 1px solid #e5e5e5; background: #fff; color: #2a6bd1; font: inherit; font-weight: 700; padding: 8px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-top: 14px; }
+  .newbie h3 { display: flex; align-items: center; gap: 10px; }
+  .newbie .num { flex: none; display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: #E22626; color: #fff; font-size: 18px; }
+  .newbie-text { margin: 0; font-size: 17.5px; line-height: 1.85; }
+  .faq dt { font-weight: 900; margin-top: 12px; }
+  .faq dd { margin: 2px 0 0 0; color: var(--muted); }
+  footer { color: var(--muted); font-size: 13px; text-align: center; padding: 20px 16px 40px; }
+  @media (max-width: 820px) { .cols { grid-template-columns: 1fr; } section.step { padding: 16px; } }
+  @media print { nav.toc { display: none; } section.step { break-inside: avoid; box-shadow: none; } header.hero { background: none; color: #000; } .hero p { color: #333; } }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <a class="back" href="Index.html">← 回教師工作台</a>
+    <h1>📘 圖文操作手冊</h1>
+    <p>每個功能都配上真實畫面（範例為假資料），照著「什麼時候用」和「一步一步」做就會。還沒安裝的老師，請先看<a href="Install.html" style="color:#F3DFA8">安裝教學</a>。</p>
+  </div>
+</header>
+<nav class="toc" aria-label="目錄"><div class="wrap">
+  <a href="#newbie">🌱 第一次用</a><a href="#overview">工作台總覽</a><a href="#task">新增任務</a><a href="#calendar">任務日曆</a><a href="#contact">聯絡本</a><a href="#today">今日看板</a><a href="#month">本月活動</a>
+  <a href="#ai">AI 行政助理</a><a href="#notes">小綿助記事</a><a href="#line">LINE 小幫手</a><a href="#hw">作業統計</a>
+  <a href="#parent">回覆家長</a><a href="#key">AI 金鑰</a><a href="#settings">其他設定</a><a href="#board">晨間大屏</a><a href="#studio">教材小工場</a><a href="#extra">心智圖／螢幕公告</a><a href="#faq">常見問題</a>
+</div></nav>
+<main class="wrap">
+
+  <div class="part" id="newbie"><h2>🌱 第一次用：照著做 10 步</h2><span>從來沒用過也沒關係，紅框就是要按的地方</span></div>
+  <section class="step newbie">
+    <h3><span class="num">1</span>第一次打開工作台</h3>
+    <div class="cols">
+      <p class="newbie-text">用 Chrome 或 Edge 打開工作台網址（<a href="Install.html">安裝教學</a>第 1 級有網址）。第一次是空的，沒關係。先認得右上角三顆：<b>①⚙ 設定</b>、<b>②＋ 新增任務</b>、<b>③📖 使用說明</b>（忘記怎麼用就按它，這本手冊也在裡面）。</p>
+      <figure><a href="assets/guide/n01_first_open.webp" target="_blank" rel="noopener"><img src="assets/guide/n01_first_open.webp" alt="第一次打開：紅框是最常用的三顆按鈕" width="1100" height="739" loading="lazy"></a><figcaption>第一次打開：紅框是最常用的三顆按鈕</figcaption></figure>
+    </div>
+  </section>
+  <section class="step newbie">
+    <h3><span class="num">2</span>認識畫面的五個區塊</h3>
+    <div class="cols">
+      <p class="newbie-text">由上往下：<b>①上方按鈕</b> → <b>②任務摘要</b>（今天幾件、逾期幾件）→ <b>③教師工具箱</b>（所有工具都在這）→ <b>④本月學校活動</b> → <b>⑤任務清單</b>。</p>
+      <figure><a href="assets/guide/n02_overview_marked.webp" target="_blank" rel="noopener"><img src="assets/guide/n02_overview_marked.webp" alt="工作台五個區塊" width="1100" height="739" loading="lazy"></a><figcaption>工作台五個區塊</figcaption></figure>
+    </div>
+  </section>
+  <section class="step newbie">
+    <h3><span class="num">3</span>填自己的資料</h3>
+    <div class="cols">
+      <p class="newbie-text">按 <span class="k">⚙ 設定</span>：①「教師資料」填職稱、年級、班級；②要用 AI 再到「AI 設定」；③要用 LINE 再到「LINE 小幫手」；最後一定要按 <b>④儲存設定</b>。</p>
+      <figure><a href="assets/guide/n03_settings_marked.webp" target="_blank" rel="noopener"><img src="assets/guide/n03_settings_marked.webp" alt="設定視窗：左邊選頁，改完按儲存" width="1100" height="739" loading="lazy"></a><figcaption>設定視窗：左邊選頁，改完按儲存</figcaption></figure>
+    </div>
+  </section>
+  <section class="step newbie">
+    <h3><span class="num">4</span>（要用 AI 才做）貼上 Gemini 金鑰</h3>
+    <div class="cols">
+      <p class="newbie-text">在「AI 設定」：①勾「開啟 AI 功能」→ ②貼上金鑰 → ③模型選「自動（建議）」→ ④按「✓ 測試金鑰」，看到 ✅ 再儲存。金鑰怎麼申請看<a href="Install.html#level3">安裝教學第 3 級</a>。</p>
+      <figure><a href="assets/guide/n04_api_marked.webp" target="_blank" rel="noopener"><img src="assets/guide/n04_api_marked.webp" alt="AI 設定四步" width="1100" height="1031" loading="lazy"></a><figcaption>AI 設定四步</figcaption></figure>
+    </div>
+  </section>
+  <section class="step newbie">
+    <h3><span class="num">5</span>建立第一件任務</h3>
+    <div class="cols">
+      <p class="newbie-text">按 <span class="k">＋ 新增任務</span>：①打任務名稱（動詞開頭）→ ②選工作主軸 → ③選截止日期 → ④儲存任務。做完後在清單按「完成」。</p>
+      <figure><a href="assets/guide/n05_newtask_marked.webp" target="_blank" rel="noopener"><img src="assets/guide/n05_newtask_marked.webp" alt="新增任務：紅框四格填完就好" width="1100" height="739" loading="lazy"></a><figcaption>新增任務：紅框四格填完就好</figcaption></figure>
+    </div>
+  </section>
+  <section class="step newbie">
+    <h3><span class="num">6</span>打開工具箱</h3>
+    <div class="cols">
+      <p class="newbie-text">教師工具箱的按鈕按一下就打開，再按一次收起：①作業統計、②回覆家長、③教材小工場（另開新分頁）、④收件與 AI（小綿助記事、AI 行政助理）。</p>
+      <figure><a href="assets/guide/n06_toolbox_marked.webp" target="_blank" rel="noopener"><img src="assets/guide/n06_toolbox_marked.webp" alt="教師工具箱" width="1100" height="370" loading="lazy"></a><figcaption>教師工具箱</figcaption></figure>
+    </div>
+  </section>
+  <section class="step newbie">
+    <h3><span class="num">7</span>（要用 AI 才做）讓 AI 整理公文</h3>
+    <div class="cols">
+      <p class="newbie-text">在「📥 收件與 AI」選 ①AI 行政助理 → ②把公文貼進去 → ③按「分析並給建議」，下面就會列出每一件事讓你選任務／記事／不要。</p>
+      <figure><a href="assets/guide/n07_ai_marked.webp" target="_blank" rel="noopener"><img src="assets/guide/n07_ai_marked.webp" alt="AI 行政助理三步" width="1100" height="739" loading="lazy"></a><figcaption>AI 行政助理三步</figcaption></figure>
+    </div>
+  </section>
+  <section class="step newbie">
+    <h3><span class="num">8</span>教室電腦打開晨間大屏</h3>
+    <div class="cols">
+      <p class="newbie-text">教室電腦打開晨間大屏，學生到校點 ①點名；②作業繳交、③作業訂正 收作業；第一次先到 ④設定 填班級和座號數（預設密碼 1234）。</p>
+      <figure><a href="assets/guide/n09_board_marked.webp" target="_blank" rel="noopener"><img src="assets/guide/n09_board_marked.webp" alt="晨間大屏的分頁" width="1100" height="739" loading="lazy"></a><figcaption>晨間大屏的分頁</figcaption></figure>
+    </div>
+  </section>
+  <section class="step newbie">
+    <h3><span class="num">9</span>回到工作台看今日看板</h3>
+    <div class="cols">
+      <p class="newbie-text">工作台按 <span class="k">📊 今日看板</span>：①上排數字、②座位出缺、③每份作業交了幾份；看完按 ④「↩ 回工作台」。</p>
+      <figure><a href="assets/guide/n08_today_marked.webp" target="_blank" rel="noopener"><img src="assets/guide/n08_today_marked.webp" alt="今日看板" width="1100" height="739" loading="lazy"></a><figcaption>今日看板</figcaption></figure>
+    </div>
+  </section>
+  <section class="step newbie">
+    <h3><span class="num">10</span>備課：教材小工場</h3>
+    <div class="cols">
+      <p class="newbie-text">工具箱按 <span class="k">🎨 教材小工場</span>：①上方選工具 → ②打主題（下面有本月學校活動可以點）→ ③要照課本出就放照片／PDF／Word → ④按生成。欄位空著時按 Tab 會帶入範例。</p>
+      <figure><a href="assets/guide/n10_studio_marked.webp" target="_blank" rel="noopener"><img src="assets/guide/n10_studio_marked.webp" alt="教材小工場四步" width="1100" height="1031" loading="lazy"></a><figcaption>教材小工場四步</figcaption></figure>
+    </div>
+  </section>
+  <div class="tip">🎉 做完這 10 步就會用了！接下來想知道某個功能的細節，看下面依功能分的說明。</div>
+
+  <div class="part"><h2>一、教師工作台</h2><span>老師自己的電腦：任務、親師溝通、AI 助理</span></div>
+
+  <section class="step" id="overview">
+    <h3>1. 工作台畫面總覽</h3>
+    <p class="when">打開 <b>教師工作台</b> 就會看到這個畫面，由上往下分成五塊。</p>
+    <div class="cols">
+      <ol class="how">
+        <li><b>最上面按鈕</b>：<span class="k">📖 使用說明</span>、<span class="k">⚙ 設定</span>、<span class="k">📊 今日看板</span>、<span class="k">＋ 新增任務</span>。</li>
+        <li><b>任務摘要</b>：待辦總數、本週重點、今日截止、逾期追蹤，一眼看完。</li>
+        <li><b>教師工具箱</b>：分三組——級務（聯絡本、作業統計、💬 回覆家長）、備課（🎨 教材小工場）、溝通（📥 收件與 AI、📂 雲端資料夾）。按一下打開，再按一次收起。</li>
+        <li><b>📅 本月學校常見活動</b>：這個月學校常有的活動，點一下就變任務。</li>
+        <li><b>任務清單</b>：可切換清單／日曆；拖曳任務可排主任務、子任務。</li>
+      </ol>
+      <figure><img src="assets/guide/g01_overview.webp" alt="教師工作台畫面總覽" width="1100" height="739" loading="lazy"><figcaption>教師工作台首頁（範例資料）</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="step" id="task">
+    <h3>2. 新增一件任務</h3>
+    <p class="when"><b>什麼時候用：</b>主任交辦、要繳的表、要聯絡的事——有期限、要動手做的事。</p>
+    <div class="cols">
+      <ol class="how">
+        <li>按右上角 <span class="k">＋ 新增任務</span>。</li>
+        <li>填 <b>任務名稱</b>（用動詞開頭，例如「收畢旅同意書回條」）。</li>
+        <li>選 <b>工作主軸</b>、<b>優先順序</b>，填 <b>截止日期</b>（時間可不填）。</li>
+        <li>按 <span class="k">儲存任務</span>。完成後在清單按 <span class="k">完成</span>。</li>
+      </ol>
+      <figure><img src="assets/guide/g02_newtask.webp" alt="新增任務視窗" width="920" height="824" loading="lazy"><figcaption>新增任務視窗</figcaption></figure>
+    </div>
+    <div class="tip">💡 一次好幾件事（例如整份公文）不用一件一件打，用下面的 <a href="#ai">AI 行政助理</a> 一次整理。</div>
+  </section>
+
+  <section class="step" id="calendar">
+    <h3>2-1. 任務清單的日曆模式</h3>
+    <p class="when"><b>什麼時候用：</b>想看這週、這個月哪幾天比較忙；要改期直接拖。</p>
+    <div class="cols wide">
+      <ol class="how">
+        <li>任務清單右上按 <span class="k">日曆</span>，任務依截止日排在日曆上（逾期的標紅）。</li>
+        <li>把任務<b>拖到別天</b>就改期；點任務看詳細內容。按 <span class="k">清單</span> 回到列表。</li>
+        <li>接上大屏後，日曆上也會標每天的出缺與缺交（例如「🙋缺2｜✏缺交3」）。</li>
+      </ol>
+      <figure><a href="assets/guide/g12_calendar.webp" target="_blank" rel="noopener"><img src="assets/guide/g12_calendar.webp" alt="任務清單：日曆模式" width="1100" height="869" loading="lazy"></a><figcaption>任務清單：日曆模式</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="step" id="contact">
+    <h3>2-2. 聯絡本（在家寫好，教室黑板自動顯示）</h3>
+    <p class="when"><b>什麼時候用：</b>前一晚或下課空檔寫明天的聯絡本。<b>需要接上 LINE 小幫手（安裝第 2 級）。</b></p>
+    <div class="cols">
+      <ol class="how">
+        <li>工具箱 <span class="k">聯絡本</span>，上方選日期（‹ › 換天）。</li>
+        <li>用下拉選單快速輸入常用項目（作業、考試、攜帶物品），或直接打字；右邊即時顯示黑板的樣子。</li>
+        <li>可調直式／橫式、字距、行距、字型；按 <span class="k">儲存到雲端</span>，教室大屏當天就顯示。</li>
+        <li>按 <span class="k">📅 日曆</span> 一次看整個月，點哪天改哪天；下週的也能先排好。</li>
+      </ol>
+      <figure><a href="assets/guide/g13_contact_edit.webp" target="_blank" rel="noopener"><img src="assets/guide/g13_contact_edit.webp" alt="聯絡本：編輯與黑板預覽" width="1100" height="464" loading="lazy"></a><figcaption>聯絡本：編輯與黑板預覽</figcaption></figure>
+    </div>
+    <div class="grid"><figure><a href="assets/guide/g14_contact_calendar.webp" target="_blank" rel="noopener"><img src="assets/guide/g14_contact_calendar.webp" alt="聯絡本日曆：一次看整個月" width="1100" height="775" loading="lazy"></a><figcaption>聯絡本日曆：一次看整個月</figcaption></figure></div>
+    <div class="tip">💡 在 LINE 傳「聯絡本：數習P.20、帶直笛」也能寫；人在外面也行。</div>
+  </section>
+
+  <section class="step" id="today">
+    <h3>3. 📊 今日看板：今天班上一眼看完</h3>
+    <p class="when"><b>什麼時候用：</b>早上第一節前、下課空檔，想知道誰沒來、誰沒交、誰還沒訂正。</p>
+    <div class="cols">
+      <ol class="how">
+        <li>按最上面的 <span class="k">📊 今日看板</span>，畫面切換成看板。</li>
+        <li>上排四個數字：<b>今天出席、今天缺交、待訂正、前幾天還沒補</b>，紅框＝有狀況。</li>
+        <li>左邊：座位出缺圖（顏色＝到／遲到／病假／事假／未到）、<b>要多關心</b>的座號、今天的聯絡本。</li>
+        <li>右邊：每份作業交了幾份、誰還沒交，以及訂正名單。</li>
+        <li>看完按橘色的 <span class="k">↩ 回工作台</span>（右上角也有）回到原本畫面。</li>
+      </ol>
+      <figure><img src="assets/guide/g03_today.webp" alt="今日看板" width="1100" height="739" loading="lazy"><figcaption>今日看板：資料來自晨間大屏的點名與作業登記</figcaption></figure>
+    </div>
+    <div class="tip">💡 資料來自<a href="#board">晨間大屏</a>；大屏每 5 分鐘自動存到雲端，看板開著也每 5 分鐘自動更新。只用座號，不顯示姓名。</div>
+  </section>
+
+  <section class="step" id="month">
+    <h3>4. 📅 本月學校常見活動</h3>
+    <p class="when"><b>什麼時候用：</b>月初排工作時，提醒自己這個月學校有哪些活動要準備。</p>
+    <div class="cols wide">
+      <ol class="how">
+        <li>任務清單上方會依學校行事曆列出本月活動（評量、學生活動、競賽、健康、家長）；20 號以後順便列下個月。</li>
+        <li><b>點一下活動</b> → 自動打開「新增任務」並帶入名稱，填期限後儲存。</li>
+        <li>任務清單已經有的活動會打 <b>✓</b>。不想看到就按 <span class="k">這個月先收起</span>，下個月會再出現。</li>
+      </ol>
+      <figure><img src="assets/guide/g04_month.webp" alt="本月學校常見活動" width="1100" height="200" loading="lazy"><figcaption>本月學校常見活動小卡</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="step" id="ai">
+    <h3>5. 🤖 AI 行政助理：一份公文整理成任務和記事</h3>
+    <p class="when"><b>什麼時候用：</b>收到學年公告、晨會紀錄、主任的長訊息，不想自己一條一條抄。<b>需要先設定 <a href="#key">AI 金鑰</a>。</b></p>
+    <div class="cols">
+      <div>
+        <ol class="how">
+          <li>工具箱按 <span class="k">📥 收件與 AI</span> → 上方分頁選 <span class="k">AI 行政助理</span>。</li>
+          <li>把公文文字貼進去（或按 📎 附 PDF、照片、Word），按 <span class="k">AI 分析</span>。<b>不要輸入學生姓名</b>，送出前也會自動遮蔽個資。</li>
+          <li>下面出現 <b>📋 整理成任務／記事</b>：每件事左邊有 <span class="k">任務</span><span class="k">記事</span><span class="k">不要</span>，AI 已先選好建議，點一下可以改。</li>
+          <li>任務可直接改日期、時間、優先順序；把一個任務<b>拖到另一個任務上</b>＝變成它的子任務。</li>
+          <li>按 <span class="k">✅ 確認建立</span>：任務進任務清單、記事存進小綿助記事。</li>
+        </ol>
+        <figure style="margin-top:12px"><img src="assets/guide/g05a_ai_input.webp" alt="AI 行政助理輸入區" width="522" height="1217" loading="lazy" style="max-width:340px"><figcaption>貼上公文或附檔</figcaption></figure>
+      </div>
+      <figure><img src="assets/guide/g05_ai_board.webp" alt="整理成任務或記事" width="606" height="703" loading="lazy"><figcaption>整理成任務／記事：每件選任務、記事或不要</figcaption></figure>
+    </div>
+    <div class="grid"><figure><a href="assets/guide/g16_ai_result.webp" target="_blank" rel="noopener"><img src="assets/guide/g16_ai_result.webp" alt="AI 分析與建議（上半部）" width="638" height="1217" loading="lazy"></a><figcaption>AI 分析與建議（上半部）</figcaption></figure><figure><a href="assets/guide/g17_ai_created.webp" target="_blank" rel="noopener"><img src="assets/guide/g17_ai_created.webp" alt="按「確認建立」後：已建立的打 ✅" width="606" height="703" loading="lazy"></a><figcaption>按「確認建立」後：已建立的打 ✅</figcaption></figure><figure><a href="assets/guide/g18_ai_docs.webp" target="_blank" rel="noopener"><img src="assets/guide/g18_ai_docs.webp" alt="行政文書：研習心得選研習名稱" width="1100" height="425" loading="lazy"></a><figcaption>行政文書：研習心得選研習名稱</figcaption></figure></div>
+    <div class="tip">💡 AI 認得學校常見活動的名稱（例如「國家防災日複合式防災演練」），建出來的任務名稱會一致。行政文書（簽呈、研習心得）在同一頁下方的「📝 行政文書」，研習心得可直接選研習名稱，自動寫成「115 學年度 ○○研習」。</div>
+  </section>
+
+  <section class="step" id="notes">
+    <h3>6. 📌 小綿助記事：只要記得、不用做的事</h3>
+    <p class="when"><b>什麼時候用：</b>「下週一視力複檢」「家長日問卷週五收齊」這種提醒。</p>
+    <div class="cols wide">
+      <ol class="how">
+        <li><span class="k">📥 收件與 AI</span> → <span class="k">小綿助記事</span>。</li>
+        <li>上面打字、選提醒日，按 <span class="k">新增記事</span>；有提醒日的會出現在日曆。</li>
+        <li>後來發現要動手做，按記事旁的 <span class="k">轉為任務</span>。桌面上的小綿助也會同步這些記事。</li>
+      </ol>
+      <figure><img src="assets/guide/g06_notes.webp" alt="小綿助記事" width="1100" height="382" loading="lazy"><figcaption>小綿助記事</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="step" id="line">
+    <h3>7. 💬 LINE 小幫手：在 LINE 上丟給它就好</h3>
+    <p class="when"><b>什麼時候用：</b>不在電腦前（開會、走廊、通勤），想到一件事就丟給 LINE。<b>需要先完成安裝教學第 4 級。</b></p>
+    <div class="cols">
+      <ol class="how">
+        <li>在 LINE 傳一句話給小幫手，例如「週五前收畢旅同意書回條」；也可以傳<b>語音、照片、檔案</b>。</li>
+        <li>小幫手回覆整理好的內容，下面有三個按鈕：<span class="k">✅ 任務</span><span class="k">📌 記事</span><span class="k">✖ 不要</span>，AI 建議的那顆會標「（建議）」。</li>
+        <li><b>按一下就定案</b>；沒按的話 10 分鐘後照 AI 建議。</li>
+        <li>工作台開著時每 5 分鐘自動同步，任務自動進任務清單、記事自動進小綿助記事——<b>不用再回電腦確認</b>。</li>
+        <li>傳「撤回」可作廢剛剛那一筆；傳「說明」看全部指令。</li>
+      </ol>
+      <div class="line-mock" aria-label="LINE 對話示意圖">
+        <div class="me">週五前收畢旅同意書回條</div>
+        <div class="bot"><div class="avatar">🐑</div><div class="bubble">已收到：
+📌 收畢旅同意書回條
+📅 到期日：2026-11-13</div></div>
+        <div class="bot"><div class="avatar">🐑</div><div class="card"><p>要放進工作台的哪裡？AI 建議：任務。沒按就照建議。</p><button type="button">✅ 任務（建議）</button><button type="button">📌 記事</button><button type="button">✖ 不要</button></div></div>
+        <div class="me">✅ 任務</div>
+        <div class="bot"><div class="avatar">🐑</div><div class="bubble">✅ 定為任務：「收畢旅同意書回條」
+工作台同步時會自動建立到任務清單。</div></div>
+      </div>
+    </div>
+    <div class="tip">📂 <b>雲端資料夾</b>：LINE 傳來的照片和檔案會自動備份到你雲端硬碟的「LINE小幫手備份」（按月份、分類分好）。工作台工具箱按 <span class="k">📂 雲端資料夾</span> 就打開；在 LINE 傳「雲端資料夾」也會回連結，傳「找檔案 通知單」可搜尋。</div>
+  </section>
+
+  <section class="step" id="hw">
+    <h3>8. 📈 作業統計：每週、整學期的缺交與訂正</h3>
+    <p class="when"><b>什麼時候用：</b>週五想發給家長本週作業狀況、期末想看整學期。</p>
+    <div class="cols">
+      <ol class="how">
+        <li>工具箱 <span class="k">作業統計</span>，選「每週統計」或「本學期累計」，可按 ‹ › 換週。</li>
+        <li>左邊表格是每個座號的還沒交／已補交／待訂正／已訂正。</li>
+        <li>點左邊座號，右邊自動寫好<b>這位家長的訊息</b>；下面還有<b>全班家長訊息</b>（只有總數，不列座號）。按 📋 複製貼到 LINE。</li>
+        <li>要給孩子帶回家：按 <span class="k">🖨 列印聯絡本小紙條</span>（A4 一張 8 格）。</li>
+      </ol>
+      <figure><img src="assets/guide/g08_homework.webp" alt="作業統計" width="1100" height="785" loading="lazy"><figcaption>作業統計與家長訊息</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="step">
+    <h3>8-1. 點座號就寫好給家長的訊息</h3>
+    <div class="cols wide">
+      <p class="when">在作業統計點左邊表格的座號，右邊「個別家長訊息」就換成那位孩子的狀況（列出還沒交、要訂正的作業與日期）；下面「全班家長訊息」只有總數、不列座號，可以放家長群組。</p>
+      <figure><a href="assets/guide/g15_hw_message.webp" target="_blank" rel="noopener"><img src="assets/guide/g15_hw_message.webp" alt="個別家長訊息與全班家長訊息" width="1100" height="502" loading="lazy"></a><figcaption>個別家長訊息與全班家長訊息</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="step" id="parent">
+    <h3>9. 💬 回覆家長：家長的訊息不知道怎麼回</h3>
+    <p class="when"><b>什麼時候用：</b>家長傳來擔心、抱怨或請託，想回得溫和又清楚。</p>
+    <div class="cols">
+      <ol class="how">
+        <li>工具箱 <span class="k">💬 回覆家長</span>。</li>
+        <li>貼上家長的話，再寫幾個你想講的重點（口語就好）。</li>
+        <li>選語氣（溫和親切／正式有禮／簡短明確），按 <span class="k">✍️ 幫我寫回覆</span>。</li>
+        <li>改一改再按複製。有開 AI 會寫得更貼切；沒開 AI 也會用範本幫你組好。</li>
+      </ol>
+      <figure><img src="assets/guide/g09_parent.webp" alt="回覆家長" width="1100" height="498" loading="lazy"><figcaption>回覆家長</figcaption></figure>
+    </div>
+    <div class="warn">⚠️ 回覆會先過用語檢查；請不要放學生全名、病歷或其他孩子的事。</div>
+  </section>
+
+  <section class="step" id="key">
+    <h3>10. 🔑 設定 AI 金鑰（Gemini，免費）</h3>
+    <p class="when"><b>只要設定一次。</b>工作台、教材小工場、LINE 小幫手、小綿助都共用這一把 Gemini 金鑰。</p>
+    <div class="cols">
+      <ol class="how">
+        <li>到 Google AI Studio 申請 Gemini API 金鑰（詳細圖解在<a href="Install.html#level3">安裝教學第 3 級</a>）。</li>
+        <li>工作台 <span class="k">⚙ 設定</span> → <span class="k">AI 設定</span>，勾「開啟 AI 功能」，服務選 Google Gemini。</li>
+        <li>貼上金鑰，模型選 <b>自動（建議）</b>。</li>
+        <li>按 <span class="k">✓ 測試金鑰</span>，看到「✅ 金鑰可以用」再按 <span class="k">儲存設定</span>。</li>
+      </ol>
+      <figure><img src="assets/guide/g07_settings_ai.webp" alt="AI 設定" width="920" height="685" loading="lazy"><figcaption>測試金鑰的結果會寫在按鈕下面</figcaption></figure>
+    </div>
+    <div class="tip">💡 選「自動」最省心：Google 停用舊模型時系統會自動換新的，不用改設定。</div>
+  </section>
+
+  <section class="step" id="settings">
+    <h3>10-1. 其他設定頁一次看</h3>
+    <p class="when"><span class="k">⚙ 設定</span> 左邊每一頁的用途：</p>
+    <ol class="how">
+      <li><b>教師資料</b>：職稱、年級、班級、介面風格（標準／可愛溫暖風）、工作台標題。</li>
+      <li><b>隱私保護</b>：送 AI 前要自動遮蔽的資料（電話、Email、身分證、地址、學生姓名、自訂敏感字）。</li>
+      <li><b>LINE 小幫手</b>：貼 Apps Script 網址和 🔑C 同步金鑰，按「測試連線」→「立即同步」。</li>
+      <li><b>備份與還原</b>：下載 JSON 備份、雲端備份；換電腦一鍵還原。</li>
+      <li><b>小綿助</b>：下載桌面小綿助、選角色與提醒。</li>
+    </ol>
+    <div class="grid"><figure><a href="assets/guide/g20_set_teacher.webp" target="_blank" rel="noopener"><img src="assets/guide/g20_set_teacher.webp" alt="教師資料與介面風格" width="920" height="1089" loading="lazy"></a><figcaption>教師資料與介面風格</figcaption></figure><figure><a href="assets/guide/g21_set_privacy.webp" target="_blank" rel="noopener"><img src="assets/guide/g21_set_privacy.webp" alt="隱私保護" width="920" height="387" loading="lazy"></a><figcaption>隱私保護</figcaption></figure><figure><a href="assets/guide/g22_set_linebot.webp" target="_blank" rel="noopener"><img src="assets/guide/g22_set_linebot.webp" alt="LINE 小幫手連線" width="920" height="1106" loading="lazy"></a><figcaption>LINE 小幫手連線</figcaption></figure><figure><a href="assets/guide/g23_set_backup.webp" target="_blank" rel="noopener"><img src="assets/guide/g23_set_backup.webp" alt="備份與還原" width="920" height="751" loading="lazy"></a><figcaption>備份與還原</figcaption></figure><figure><a href="assets/guide/g24_set_pet.webp" target="_blank" rel="noopener"><img src="assets/guide/g24_set_pet.webp" alt="小綿助" width="920" height="1130" loading="lazy"></a><figcaption>小綿助</figcaption></figure><figure><a href="assets/guide/g11_help.webp" target="_blank" rel="noopener"><img src="assets/guide/g11_help.webp" alt="📖 使用說明：四個說明頁的入口" width="760" height="522" loading="lazy"></a><figcaption>📖 使用說明：四個說明頁的入口</figcaption></figure></div>
+  </section>
+
+  <div class="part" id="board"><h2>二、晨間大屏</h2><span>教室電腦／電子白板：點名、收作業、聯絡本、班級工具</span></div>
+
+  <section class="step">
+    <h3>10-2. 大屏第一次設定</h3>
+    <div class="cols">
+      <ol class="how">
+        <li>大屏上方按 <span class="k">設定</span>（預設密碼 1234，可以改）。</li>
+        <li>填班級名稱、座號數、空號；選今天要收的科目與作業類型。</li>
+        <li>「資料要存在哪裡」：只用這台電腦，或接上雲端（工作台、今日看板、LINE 才看得到）。</li>
+        <li>常用的班級工具可以放到上方選單，一按就開。</li>
+      </ol>
+      <figure><a href="assets/guide/m07_setup.webp" target="_blank" rel="noopener"><img src="assets/guide/m07_setup.webp" alt="大屏設定（各類別分色）" width="1100" height="739" loading="lazy"></a><figcaption>大屏設定（各類別分色）</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="step">
+    <h3>11. 點名與聯絡本</h3>
+    <p class="when"><b>什麼時候用：</b>早自習。學生到校自己點座號，老師不用一個一個唱名。</p>
+    <div class="cols">
+      <ol class="how">
+        <li>教室電腦打開 <b>晨間大屏</b>（第一次要在 <span class="k">設定</span> 填班級、座號數）。</li>
+        <li><b>點名</b>分頁：學生到了按自己的座號變綠色；遲到、病假、事假再點一次切換。08:05 還沒點的會自動變「未到」。</li>
+        <li>右邊黑板是今天的 <b>聯絡本</b>，老師可以在工作台或 LINE 寫好，大屏自動顯示。</li>
+      </ol>
+      <figure><img src="assets/guide/m01_rollcall.webp" alt="晨間大屏點名" width="1100" height="739" loading="lazy"><figcaption>晨間大屏：點名與聯絡本黑板</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="step">
+    <h3>12. 作業繳交與訂正</h3>
+    <div class="cols">
+      <ol class="how">
+        <li><b>作業繳交</b>分頁：新增今天的作業（科目＋作業名稱），交了的座號點一下變色；沒點的就是缺交。</li>
+        <li><b>作業訂正</b>分頁：從已交的名單點出要訂正的座號（紫色），改完再點一次＝訂正完成。</li>
+        <li><b>作業補交</b>分頁：前幾天沒交、還沒訂正完的，學生補了就點掉。</li>
+        <li>這些紀錄每 5 分鐘自動存雲端，工作台的今日看板、作業統計都讀這份。</li>
+      </ol>
+      <figure><img src="assets/guide/m02_homework.webp" alt="作業繳交" width="1100" height="739" loading="lazy"><figcaption>作業繳交</figcaption></figure>
+    </div>
+    <div class="grid"><figure><a href="assets/guide/m05_makeup.webp" target="_blank" rel="noopener"><img src="assets/guide/m05_makeup.webp" alt="作業補交：前幾天沒交、還沒訂正完的" width="1100" height="739" loading="lazy"></a><figcaption>作業補交：前幾天沒交、還沒訂正完的</figcaption></figure></div>
+    <figure style="margin-top:14px"><img src="assets/guide/m03_correct.webp" alt="作業訂正" width="1100" height="739" loading="lazy"><figcaption>作業訂正：依座號看誰還沒訂正完</figcaption></figure>
+  </section>
+
+  <section class="step">
+    <h3>13. 班級工具</h3>
+    <div class="cols">
+      <ol class="how">
+        <li><b>班級工具</b>分頁有：抽籤機、檢核板、計分板、隨機分組、番茄鐘、📣 大屏提示、螢幕公告、心智圖、潔牙點名……</li>
+        <li>常用的可以在設定裡放到上方選單，一按就開。</li>
+        <li>📣 大屏提示：選一句（例如「上課囉！眼睛看老師」）全螢幕顯示，也可以設定時自動跳出。</li>
+      </ol>
+      <figure><img src="assets/guide/m04_tools.webp" alt="班級工具" width="1100" height="739" loading="lazy"><figcaption>班級工具：抽籤機</figcaption></figure>
+    </div>
+    <div class="grid"><figure><a href="assets/guide/m10_check.webp" target="_blank" rel="noopener"><img src="assets/guide/m10_check.webp" alt="檢核板：誰交了、誰還沒" width="1100" height="739" loading="lazy"></a><figcaption>檢核板：誰交了、誰還沒</figcaption></figure><figure><a href="assets/guide/m11_tooth.webp" target="_blank" rel="noopener"><img src="assets/guide/m11_tooth.webp" alt="潔牙點名" width="1100" height="739" loading="lazy"></a><figcaption>潔牙點名</figcaption></figure><figure><a href="assets/guide/m12_score.webp" target="_blank" rel="noopener"><img src="assets/guide/m12_score.webp" alt="小組計分板" width="1100" height="739" loading="lazy"></a><figcaption>小組計分板</figcaption></figure><figure><a href="assets/guide/m13_group.webp" target="_blank" rel="noopener"><img src="assets/guide/m13_group.webp" alt="隨機分組" width="1100" height="739" loading="lazy"></a><figcaption>隨機分組</figcaption></figure><figure><a href="assets/guide/m14_exam.webp" target="_blank" rel="noopener"><img src="assets/guide/m14_exam.webp" alt="定期評量看板" width="1100" height="739" loading="lazy"></a><figcaption>定期評量看板</figcaption></figure><figure><a href="assets/guide/m15_tomato.webp" target="_blank" rel="noopener"><img src="assets/guide/m15_tomato.webp" alt="番茄鐘＋音樂角" width="1100" height="739" loading="lazy"></a><figcaption>番茄鐘＋音樂角</figcaption></figure><figure><a href="assets/guide/m16_prompt.webp" target="_blank" rel="noopener"><img src="assets/guide/m16_prompt.webp" alt="📣 大屏提示" width="1100" height="739" loading="lazy"></a><figcaption>📣 大屏提示</figcaption></figure><figure><a href="assets/guide/m17_screen.webp" target="_blank" rel="noopener"><img src="assets/guide/m17_screen.webp" alt="螢幕公告" width="1100" height="739" loading="lazy"></a><figcaption>螢幕公告</figcaption></figure><figure><a href="assets/guide/m18_mind.webp" target="_blank" rel="noopener"><img src="assets/guide/m18_mind.webp" alt="心智圖" width="1100" height="739" loading="lazy"></a><figcaption>心智圖</figcaption></figure></div>
+  </section>
+
+  <div class="part" id="studio"><h2>三、🎨 教材小工場</h2><span>備課：學習單、出題、作文、通知單、PDF、個資遮蔽</span></div>
+
+  <section class="step">
+    <h3>14. 學習單（可放課本 PDF、Word、照片）</h3>
+    <div class="cols">
+      <ol class="how">
+        <li>工作台工具箱按 <span class="k">🎨 教材小工場</span>，上方選 <span class="k">📝 學習單</span>。</li>
+        <li>選科目、年級，打單元或主題；主題下面有<b>本月學校活動</b>按鈕，點一下就帶入。</li>
+        <li>要照課本出：在「也可以放課本頁面」放<b>拍照、圖片、PDF、Word、PPT</b>都可以。</li>
+        <li>勾題型、題數，按生成。右邊預覽可直接改，再 🖨 列印、⬇ Word 或 ⬇ PDF。</li>
+      </ol>
+      <figure><img src="assets/guide/s01_ws.webp" alt="學習單" width="1100" height="739" loading="lazy"><figcaption>教材小工場：學習單</figcaption></figure>
+    </div>
+    <div class="tip">💡 欄位還空著時按 <span class="k">Tab</span>，會把淡灰色的「例：…」直接帶進去，想快速試用很方便。</div>
+  </section>
+
+  <section class="step">
+    <h3>15. 數學出題（不用 AI，題目都驗算過）</h3>
+    <div class="cols">
+      <ol class="how">
+        <li>選 <span class="k">🔢 數學出題</span>，選年級和題型（照 108 課綱分年級）。</li>
+        <li>按 <span class="k">🎲 產生題目</span>，每按一次換一組數字；最後一頁是答案卷。</li>
+        <li>想照課本出類似題：上傳課本頁面，按「照課本出類似題」（這個用 AI）。</li>
+      </ol>
+      <figure><img src="assets/guide/s02_math.webp" alt="數學出題" width="1100" height="739" loading="lazy"><figcaption>數學出題</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="step">
+    <h3>16. 作文引導單與對照範文</h3>
+    <div class="cols">
+      <ol class="how">
+        <li><span class="k">🧭 作文引導單</span>：填作文主題，再在 <b>內容簡述</b>寫這次的經驗（例如去了哪裡、看到什麼），AI 會照你的經驗設計審題、心智圖、段落鷹架和好詞。</li>
+        <li><span class="k">📗 作文範文庫</span>：填題目，按「生成三篇對照範文」，得到高、中、待加強三篇。</li>
+        <li>每篇下面有 <b>評語</b>，每一點都用 ①②③ 對應文章裡畫底色的那一句，上課可以直接比較好在哪、差在哪。</li>
+      </ol>
+      <figure><img src="assets/guide/s03_guide.webp" alt="作文引導單" width="1100" height="739" loading="lazy"><figcaption>作文引導單</figcaption></figure>
+    </div>
+    <figure style="margin-top:14px;max-width:560px"><img src="assets/guide/s04_library.webp" alt="範文與評語" width="794" height="1124" loading="lazy"><figcaption>對照範文：評語 ①②③ 對應文章中畫底色的句子</figcaption></figure>
+  </section>
+
+  <section class="step">
+    <h3>17. 🛡 敏感資料遮蔽（Word、Excel、PPT、圖片）</h3>
+    <p class="when"><b>什麼時候用：</b>要把帳密表、學生名單、通知單給別人前，先把個資遮掉。<b>全部在你的電腦處理，不會上傳。</b></p>
+    <div class="cols">
+      <ol class="how">
+        <li>選 <span class="k">🛡 敏感資料遮蔽</span>。</li>
+        <li>勾要遮的項目：身分證、手機、市話、Email、生日、地址、帳號密碼、姓名（座位表名單＋你自己填的名字）。</li>
+        <li>放進 Word／Excel／PowerPoint／txt／csv，自動遮好後按 <span class="k">⬇ 下載遮蔽後的檔案</span>（同一種檔案，檔名加「_已遮蔽」）。</li>
+        <li>表格標題寫「密碼」「生日」「電話」「姓名」的那一欄會整欄遮。圖片則在右邊框選要遮的地方。</li>
+      </ol>
+      <figure><img src="assets/guide/s05_mask.webp" alt="敏感資料遮蔽" width="1100" height="739" loading="lazy"><figcaption>放進 Word 檔後的遮蔽結果與抽樣</figcaption></figure>
+    </div>
+    <div class="warn">⚠️ 姓名只會遮你給的名單；下載後請打開檔案逐一確認再分享。舊格式 .doc／.xls 請先「另存新檔」成 .docx／.xlsx。</div>
+  </section>
+
+  <section class="step">
+    <h3>18. 📎 PDF 工具</h3>
+    <div class="cols">
+      <ol class="how">
+        <li>選 <span class="k">📎 PDF 工具</span>，把 PDF 或圖片拖進來，每一頁都會列出來。</li>
+        <li>每頁可以轉向、刪除、拖曳換順序。</li>
+        <li>輸出成 PDF、圖片或 Word；下面「常用加工」還有拆頁、壓縮、一頁多張、加頁碼、浮水印、裁切。</li>
+      </ol>
+      <figure><img src="assets/guide/s06_pdf.webp" alt="PDF 工具" width="1100" height="739" loading="lazy"><figcaption>PDF 工具</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="step">
+    <h3>19. 📄 家長通知單</h3>
+    <div class="cols">
+      <ol class="how">
+        <li>選 <span class="k">📄 家長通知單</span>，填發文單位（會記住）。</li>
+        <li><b>主旨</b>下面有本月學校活動，點「戶外教育」主旨就變「戶外教育活動通知」。</li>
+        <li>內容要點用口語寫（時間、地點、費用、要帶什麼），或放上級來文（照片、PDF、Word）。</li>
+        <li>按生成，AI 寫成正式通知單，附回條；列印或下載 Word。</li>
+      </ol>
+      <figure><img src="assets/guide/s07_notice.webp" alt="家長通知單" width="1100" height="739" loading="lazy"><figcaption>家長通知單</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="step">
+    <h3>20. 教材小工場其他分頁</h3>
+    <ol class="how">
+      <li><b>📖 段考複習講義</b>：選科目、年級，貼範圍或放課本 → 重點整理＋自我檢核題。</li>
+      <li><b>🧠 心智圖</b>：打主題或貼一段課文，AI 整理成心智圖，可直接送到大屏的心智圖打開。</li>
+      <li><b>📒 生詞本</b>：貼一串字，自動查注音、部首、筆畫，做成生詞練習。</li>
+      <li><b>✍️ 作文批改</b>：拍手寫作文或放 PDF，依年段規準批改，附段落修改指引與評語。</li>
+      <li><b>📚 閱讀分級改寫</b>：一鍵找兒童適讀的新聞，做成中文或英文三種難度的閱讀單。</li>
+      <li><b>📋 Google 表單</b>：一句話說要調查什麼，AI 擬題，建好表單。</li>
+      <li><b>📱 LINE 圖文選單</b>、<b>🪑 座位表</b>（貼名單一鍵排、可拖拉換位）。</li>
+    </ol>
+    <div class="grid"><figure><a href="assets/guide/s10_review.webp" target="_blank" rel="noopener"><img src="assets/guide/s10_review.webp" alt="段考複習講義" width="1100" height="739" loading="lazy"></a><figcaption>段考複習講義</figcaption></figure><figure><a href="assets/guide/s11_mindmap.webp" target="_blank" rel="noopener"><img src="assets/guide/s11_mindmap.webp" alt="心智圖" width="1100" height="739" loading="lazy"></a><figcaption>心智圖</figcaption></figure><figure><a href="assets/guide/s12_vocab.webp" target="_blank" rel="noopener"><img src="assets/guide/s12_vocab.webp" alt="生詞本" width="1100" height="739" loading="lazy"></a><figcaption>生詞本</figcaption></figure><figure><a href="assets/guide/s13_essay.webp" target="_blank" rel="noopener"><img src="assets/guide/s13_essay.webp" alt="作文批改" width="1100" height="739" loading="lazy"></a><figcaption>作文批改</figcaption></figure><figure><a href="assets/guide/s14_reading.webp" target="_blank" rel="noopener"><img src="assets/guide/s14_reading.webp" alt="閱讀分級改寫" width="1100" height="739" loading="lazy"></a><figcaption>閱讀分級改寫</figcaption></figure><figure><a href="assets/guide/s15_gform.webp" target="_blank" rel="noopener"><img src="assets/guide/s15_gform.webp" alt="Google 表單" width="1100" height="739" loading="lazy"></a><figcaption>Google 表單</figcaption></figure><figure><a href="assets/guide/s16_richmenu.webp" target="_blank" rel="noopener"><img src="assets/guide/s16_richmenu.webp" alt="LINE 圖文選單" width="1100" height="739" loading="lazy"></a><figcaption>LINE 圖文選單</figcaption></figure><figure><a href="assets/guide/s18_seat_result.webp" target="_blank" rel="noopener"><img src="assets/guide/s18_seat_result.webp" alt="座位表" width="1100" height="739" loading="lazy"></a><figcaption>座位表</figcaption></figure><figure><a href="assets/guide/s20_math_sheet.webp" target="_blank" rel="noopener"><img src="assets/guide/s20_math_sheet.webp" alt="數學卷成品" width="794" height="1124" loading="lazy"></a><figcaption>數學卷成品</figcaption></figure><figure><a href="assets/guide/s22_guide_sheet.webp" target="_blank" rel="noopener"><img src="assets/guide/s22_guide_sheet.webp" alt="作文引導單成品" width="794" height="1124" loading="lazy"></a><figcaption>作文引導單成品</figcaption></figure><figure><a href="assets/guide/s21_mask_picks.webp" target="_blank" rel="noopener"><img src="assets/guide/s21_mask_picks.webp" alt="遮蔽：勾選要遮的項目" width="340" height="999" loading="lazy"></a><figcaption>遮蔽：勾選要遮的項目</figcaption></figure></div>
+  </section>
+
+  <div class="part" id="extra"><h2>四、大屏的獨立頁面</h2><span>心智圖、螢幕公告也能單獨開</span></div>
+  <section class="step">
+    <ol class="how">
+      <li><b>心智圖</b>（MindMap.html）：8 種圖型（心智圖、泡泡圖、樹狀圖…），可存在這台電腦、匯出圖片。</li>
+      <li><b>螢幕公告</b>（Screen.html）：白板式公告，有書籤、QR Code、畫筆、倒數計時。</li>
+    </ol>
+    <div class="grid"><figure><a href="assets/guide/x01_mindmap.webp" target="_blank" rel="noopener"><img src="assets/guide/x01_mindmap.webp" alt="心智圖" width="1100" height="739" loading="lazy"></a><figcaption>心智圖</figcaption></figure><figure><a href="assets/guide/x02_screen.webp" target="_blank" rel="noopener"><img src="assets/guide/x02_screen.webp" alt="螢幕公告" width="1100" height="739" loading="lazy"></a><figcaption>螢幕公告</figcaption></figure></div>
+  </section>
+
+  <div class="part" id="faq"><h2>五、常見問題</h2><span>遇到狀況先看這裡</span></div>
+  <section class="step">
+    <dl class="faq">
+      <dt>AI 回「今天的免費額度用完了」怎麼辦？</dt>
+      <dd>Gemini 免費版每天有次數上限，系統會自動換其他模型；全部用完就明天再試，或在 AI 設定換一把金鑰。</dd>
+      <dt>LINE 傳的事沒有出現在工作台？</dt>
+      <dd>工作台要開著才會同步（每 5 分鐘一次），也可以到 ⚙ 設定 → LINE 小幫手按「立即同步」。沒按按鈕的事要等 10 分鐘才照 AI 建議帶入。</dd>
+      <dt>LINE 回覆沒有［任務］［記事］［不要］按鈕？</dt>
+      <dd>LINE 小幫手程式是舊版。到 Apps Script 貼上新版 LineBot.gs，再按「管理部署 → 新版本」（見<a href="Install.html#level4">安裝教學第 4 級</a>）。對小幫手傳「版本」可看目前版本。</dd>
+      <dt>今日看板顯示「大屏還沒存檔」？</dt>
+      <dd>教室的晨間大屏要開著，並在設定裡接上雲端；大屏每 5 分鐘自動存一次。如果全班到齊、作業全交，雲端也不會有紀錄。</dd>
+      <dt>資料存在哪裡？安全嗎？</dt>
+      <dd>任務和設定存在你自己的瀏覽器；點名、作業、聯絡本存在你自己的 Google 試算表。詳細說明在<a href="About.html">系統使用方法與資安</a>。</dd>
+    </dl>
+  </section>
+</main>
+<footer>教師工作台｜圖文操作手冊｜截圖為範例假資料，畫面會隨版本更新略有不同。</footer>
+<script src="assets/version.js"></script>
+</body>
+</html>

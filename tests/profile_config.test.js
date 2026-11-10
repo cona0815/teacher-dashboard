@@ -1243,3 +1243,12 @@ assert.match(indexHtml, /function schoolEventsHint/, "AI 行政助理應知道�
 assert.match(indexHtml, /id="monthEventsCard"/, "工作台應有本月學校常見活動小卡");
 assert.match(indexHtml, /id="aiDocTraining"/, "研習心得／簽呈應有研習名稱選單");
 assert.match(studioHtml, /addMonthEventChips\('ntSubject'/, "家長通知單應有本月活動按鈕");
+// 2026-11-11 圖文操作手冊 Guide.html：使用說明、安裝教學、說明頁、介紹頁都有入口；圖片都在 assets/guide
+{
+  const guide = fs.readFileSync(path.join(projectRoot, "Guide.html"), "utf8");
+  for (const [name, html] of [["工作台使用說明", indexHtml], ["安裝教學", fs.readFileSync(path.join(projectRoot, "Install.html"), "utf8")], ["系統說明", fs.readFileSync(path.join(projectRoot, "About.html"), "utf8")], ["網頁介紹", fs.readFileSync(path.join(projectRoot, "Intro.html"), "utf8")]]) {
+    assert.match(html, /href="Guide\.html"/, `${name}應有圖文操作手冊入口`);
+  }
+  for (const m of guide.matchAll(/src="(assets\/guide\/[^"]+)"/g)) assert.ok(fs.existsSync(path.join(projectRoot, m[1])), `手冊圖片 ${m[1]} 應存在`);
+  assert.match(guide, /<script src="assets\/version\.js"><\/script>/, "手冊左下角也顯示網站版本");
+}
