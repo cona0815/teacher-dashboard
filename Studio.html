@@ -17,9 +17,38 @@
   try { if (window.top !== window.self && window.top.location.origin !== window.location.origin) throw new Error('framed'); }
   catch (error) { document.documentElement.style.display = 'none'; try { window.top.location.href = window.location.href; } catch (ignored) {} }
 </script>
+  <script>
+    // 介面配色跟工作台同步：讀工作台存在這台電腦的「⚙ 設定 → 教師資訊 → 介面配色」
+    (function () {
+      var THEMES = ['forest', 'apricot', 'lavender', 'tech', 'minimal', 'cozy'];
+      function apply() {
+        var theme = 'forest';
+        try { var s = JSON.parse(localStorage.getItem('grade6AssistantSettings') || 'null'); if (s && s.workspace && THEMES.indexOf(s.workspace.theme) >= 0) theme = s.workspace.theme; } catch (e) {}
+        document.documentElement.setAttribute('data-theme', theme);
+      }
+      apply();
+      // 工作台那一頁改了配色，這一頁馬上跟著換（不用重新整理）
+      window.addEventListener('storage', function (e) { if (!e.key || e.key === 'grade6AssistantSettings') apply(); });
+    })();
+  </script>
   <title>教材小工場｜教師工作台</title>
   <style>
     :root { --bg:#f3f6f4; --surface:#fff; --ink:#1c302d; --muted:#657570; --line:#d5e1dc; --primary:#1f514a; --primary-strong:#173f3a; --soft:#e8f2ee; --gold:#b9852f; --gold-soft:#fff7e6; --danger:#a34339; }
+    /* 介面配色：和工作台同一組顏色（--soft＝工作台的 --primary-soft） */
+    :root[data-theme="forest"] { --bg:#f4efe6; --surface:#fffdf8; --ink:#2f3b37; --muted:#6d7973; --line:#ddd4c6; --primary:#355e59; --primary-strong:#284a46; --soft:#e3ece7; --gold:#b48b3d; --gold-soft:#f5ecd8; --danger:#ad5143; }
+    :root[data-theme="apricot"] { --bg:#fff3e6; --surface:#fffaf3; --ink:#46372f; --muted:#806d62; --line:#ead1ba; --primary:#b96542; --primary-strong:#8e472f; --soft:#f8dfce; --gold:#b9842e; --gold-soft:#fbefcf; --danger:#b74f48; }
+    :root[data-theme="lavender"] { --bg:#f6f0f9; --surface:#fffaff; --ink:#403647; --muted:#776a7e; --line:#dfd1e6; --primary:#765e84; --primary-strong:#584564; --soft:#eee3f2; --gold:#ad873f; --gold-soft:#f7edd8; --danger:#ad5066; }
+    :root[data-theme="tech"] { --bg:#e9f4fa; --surface:#f8fcff; --ink:#173145; --muted:#587487; --line:#bdd5e2; --primary:#08758d; --primary-strong:#123e5c; --soft:#d8f1f5; --gold:#c58e29; --gold-soft:#fff0c9; --danger:#bf4e5d; }
+    :root[data-theme="minimal"] { --bg:#eef1f2; --surface:#ffffff; --ink:#26343a; --muted:#68777d; --line:#d7dfe2; --primary:#4b6570; --primary-strong:#334952; --soft:#e5ecee; --gold:#9a7b42; --gold-soft:#f5f0e5; --danger:#a65d5d; }
+    :root[data-theme="cozy"] { --bg:#fbf5e6; --surface:#fffaf0; --ink:#5b4636; --muted:#8f7b63; --line:#ecdcbc; --primary:#3c7f35; --primary-strong:#2f6a2a; --soft:#eaf5dc; --gold:#b48a4c; --gold-soft:#f6ecd6; --danger:#c8574a; }
+    :root[data-theme="apricot"] body { background-image:radial-gradient(circle at 8% 4%, rgba(220,138,71,.16), transparent 25%), radial-gradient(circle at 92% 10%, rgba(185,101,66,.11), transparent 30%); }
+    :root[data-theme="lavender"] body { background-image:radial-gradient(circle at 8% 5%, rgba(189,112,143,.12), transparent 25%), radial-gradient(circle at 92% 10%, rgba(118,94,132,.14), transparent 30%); }
+    :root[data-theme="tech"] body { background-image:linear-gradient(rgba(8,117,141,.055) 1px, transparent 1px), linear-gradient(90deg, rgba(8,117,141,.055) 1px, transparent 1px); background-size:32px 32px; }
+    @font-face { font-family:'Huninn'; font-display:swap; src:local('Huninn'), local('Huninn Regular'), url('assets/fonts/Huninn-Regular.ttf') format('truetype'); }
+    :root[data-theme="cozy"] body { background-image:radial-gradient(circle at 14px 14px, rgba(108,191,91,.13) 3px, transparent 4px), radial-gradient(circle at 42px 42px, rgba(90,180,229,.10) 3px, transparent 4px); background-size:56px 56px; }
+    :root[data-theme="cozy"] body, :root[data-theme="cozy"] button, :root[data-theme="cozy"] input, :root[data-theme="cozy"] select, :root[data-theme="cozy"] textarea { font-family:'Huninn','Microsoft JhengHei','Noto Sans TC',sans-serif; }
+    :root[data-theme="cozy"] header.app { background:linear-gradient(135deg, #6cbf5b, #3c7f35); }
+    :root[data-theme="cozy"] .go-button, :root[data-theme="cozy"] .tab-button.active { box-shadow:0 4px 0 #2f6a2a; }
     * { box-sizing:border-box; margin:0; padding:0; }
     body { font-family:"Microsoft JhengHei","Noto Sans TC",sans-serif; background:var(--bg); color:var(--ink); line-height:1.8; font-size:15px; }
     header.app { background:var(--primary-strong); color:#fff; padding:16px 20px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
@@ -552,12 +581,13 @@
             <select class="select" id="mmDepth"><option value="2">2 層（主幹＋分支）</option><option value="3" selected>3 層（含細節）</option></select></div>
           <button class="go-button" type="button" id="mmGoButton">✨ 生成心智圖</button>
           <div class="status" id="mmStatus"></div>
-          <div class="hint">生成後左邊會出現<strong>可編輯的大綱</strong>——改任何字，右邊的圖立刻重畫。</div>
+          <div class="hint">生成後左邊會出現<strong>可編輯的大綱</strong>——改任何字，右邊的圖立刻重畫。按「🧠 在大屏心智圖打開」會存進大屏的心智圖（只限<strong>這台電腦</strong>）；大屏如果已經開著，請先按 F5 重新整理再點「🧠 心智圖」。</div>
         </div>
         <div class="panel">
           <div class="preview-bar">
             <button class="mini" type="button" onclick="window.print()">🖨 列印</button>
             <button class="mini" type="button" id="mmDownloadButton">⬇ SVG</button>
+              <button class="mini" type="button" id="mmToBoardButton" title="存進大屏的「🧠 心智圖」（這台電腦），可以在大屏上繼續改、加圖片">🧠 在大屏心智圖打開</button>
             <button class="mini" type="button" onclick="downloadPdfFromHost('mmSvgHost','心智圖',true)">⬇ PDF</button>
             <span class="status" id="mmMeta"></span>
           </div>
@@ -595,6 +625,12 @@
             <div class="check-row" style="margin-top:6px;align-items:center"><label>題數 <select class="select" id="mqWordCount" style="width:auto;margin:0"><option>3</option><option selected>5</option><option>8</option></select></label>
               <button class="mini" type="button" id="mqWordButton">✨ AI 出應用題</button>
               <button class="mini" type="button" id="mqWordClear">清除應用題</button></div></div>
+            <div class="field" style="margin-top:14px"><label>📷 照課本出類似題（選用：上傳或拍照課本、習作的題目，AI 出數字不同的類似題，系統自動驗算）</label>
+              <input class="input" type="file" id="mqImages" accept="image/png,image/jpeg,image/webp,application/pdf" multiple>
+              <input class="input" id="mqSimNote" maxlength="80" placeholder="選填：例如「只出第 2～5 題」「數字小一點」" style="margin-top:6px">
+              <div class="check-row" style="margin-top:6px;align-items:center"><label>每題出 <select class="select" id="mqSimEach" style="width:auto;margin:0"><option>1</option><option selected>2</option><option>3</option></select> 題類似題</label>
+                <button class="mini" type="button" id="mqSimButton">📷 照課本出類似題</button>
+                <button class="mini" type="button" id="mqSimClear">清除類似題</button></div></div>
           <div class="status" id="mqStatus"></div>
           <div class="hint">計算題<strong>不用 AI</strong>：題目與答案都由程式產生並重新驗算，答案一定正確。應用題由 AI 出，AI 必須附上算式，系統會自己再算一次；答案對不上的題目標 ⚠，請修改或刪掉後再勾「老師已核對」。</div>
         </div>
@@ -684,9 +720,14 @@
     <section class="page" id="page-reading">
       <div class="workbench">
         <div class="panel">
+          <div class="field"><label>閱讀語言</label>
+            <div class="check-row">
+              <label><input type="radio" name="rdLang" value="zh" checked> 🇹🇼 中文閱讀</label>
+              <label><input type="radio" name="rdLang" value="en"> 🔤 英文閱讀（English Reading）</label>
+            </div></div>
           <div class="field"><label>班級年級</label>
             <select class="select" id="rdGrade"><option value="一">一年級</option><option value="二">二年級</option><option value="三">三年級</option><option value="四">四年級</option><option value="五" selected>五年級</option><option value="六">六年級</option></select></div>
-          <div class="field"><label>📰 或找最新國際時事（兒童適讀：不含政治、暴力、色情）</label>
+          <div class="field"><label>① 找最新國際時事（兒童適讀：不含政治、暴力、色情）</label>
             <div class="check-row">
               <select class="select" id="rdNewsTopic" style="flex:1;min-width:150px">
                 <option value="科學新知與發明">🔬 科學新知</option>
@@ -701,28 +742,21 @@
               <button class="mini" type="button" id="rdNewsButton">🔍 找 5 則最新</button>
             </div>
             <div id="rdNewsList" style="margin-top:6px"></div></div>
-          <div class="field"><label>原文來源（決定 AI 可以怎麼處理）</label>
-            <select class="select" id="rdSource">
-              <option value="facts" selected>有著作權的文章（新聞、課文、雜誌、書…）→ 只取事實重點，用原創文字重寫</option>
-              <option value="own">我自己寫的，或已取得作者授權 → 可以直接分級改寫</option>
-              <option value="public">公有領域（作者過世超過 50 年）→ 可以直接分級改寫</option>
-              <option value="cc">CC 授權（例如維基百科）→ 可以改寫，要標示出處</option>
-            </select>
-            <input class="input" id="rdCredit" placeholder="出處（網址或書名・作者），會印在每一版最下面" style="margin-top:6px"></div>
-          <div class="field"><label>貼上原文（課文、新聞、故事…）</label>
-            <textarea class="textarea" id="rdText" style="min-height:140px" placeholder="貼上要改寫的文章；也可以拍照，或用上面的「找最新時事」。"></textarea></div>
-          <div class="field"><label>或拍照上傳原文</label>
-            <input class="input" type="file" id="rdImages" accept="image/*,.pdf,application/pdf" multiple></div>
+          <div class="field" id="rdChosenBox" hidden><label>② 已選的新聞</label><div id="rdChosen" class="hint" style="margin:0"></div></div>
+          <div class="field"><label>或拍照上傳文章（課文、講義、雜誌…）</label>
+            <input class="input" type="file" id="rdImages" accept="image/*,.pdf,application/pdf" multiple>
+            <div class="hint" style="margin-top:4px">有上傳照片就用照片的內容；新聞和別人的文章都有著作權，AI 一律只取事實重點、用自己的話重新寫，並自動標出處。</div></div>
           <div class="field"><label>要產出的版本</label>
             <div class="check-row">
-              <label><input type="checkbox" class="rdLevel" value="基礎" checked>🟢 基礎（低年級可讀）</label>
-              <label><input type="checkbox" class="rdLevel" value="標準" checked>🟡 標準（同年級）</label>
-              <label><input type="checkbox" class="rdLevel" value="進階" checked>🔴 進階（延伸挑戰）</label>
+              <label><input type="checkbox" class="rdLevel" value="基礎" checked><span data-zh="🟢 基礎（低年級可讀）" data-en="🟢 基礎 Pre-A1（約 50 字）">🟢 基礎（低年級可讀）</span></label>
+              <label><input type="checkbox" class="rdLevel" value="標準" checked><span data-zh="🟡 標準（同年級）" data-en="🟡 標準 A1（約 100 字）">🟡 標準（同年級）</span></label>
+              <label><input type="checkbox" class="rdLevel" value="進階" checked><span data-zh="🔴 進階（延伸挑戰）" data-en="🔴 進階 A2（約 160 字）">🔴 進階（延伸挑戰）</span></label>
             </div></div>
           <div class="field"><div class="check-row">
             <label><input type="checkbox" id="rdVocab" checked>📒 附詞彙表</label>
             <label><input type="checkbox" id="rdQuiz" checked>❓ 附理解題（每版 3 題）</label>
             <label><input type="checkbox" id="rdAnswer" checked>📎 教師解答頁</label>
+                <label id="rdTranslateRow" hidden><input type="checkbox" id="rdTranslate" checked>🈶 教師頁附中文翻譯</label>
           </div></div>
           <button class="go-button" type="button" id="rdGoButton">📚 生成分級文本</button>
           <div class="status" id="rdStatus"></div>
@@ -1781,6 +1815,7 @@
     attachZone('rvImages', { multiple: true });
     attachZone('rdImages', { multiple: true });
     attachZone('pdfFiles', { multiple: true, onFile: () => window.__pdfAddZoneFiles && window.__pdfAddZoneFiles() });
+    attachZone('mqImages', { multiple: true });
 
     // ---------- 分頁切換 ----------
     document.querySelectorAll('.tab-button').forEach(tab => tab.addEventListener('click', () => {
@@ -1908,7 +1943,7 @@
     // ============================================================
     // 🔢 數學出題小幫手：計算題 MathGen 出題算答案（不用 AI）；應用題 AI 出、MathGen.evaluate 驗算
     // ============================================================
-    const MQ = { seed: Date.now() % 1000000007, picked: new Set(), counts: {}, word: [], wordPicked: new Set(), wordCounts: {} };
+    const MQ = { seed: Date.now() % 1000000007, picked: new Set(), counts: {}, word: [], sim: [], wordPicked: new Set(), wordCounts: {} };
     const MQ_CN = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
     function mqPreset() {
       // 換年級時先勾這個年級的前兩種題型
@@ -1967,7 +2002,7 @@
     function mqRender() {
       const kinds = MathGen.KINDS.filter(k => MQ.picked.has(k.id));
       const wordKinds = MathGen.WORDS.filter(k => MQ.wordPicked.has(k.id));
-      if (!kinds.length && !wordKinds.length && !MQ.word.length) { $('mqPreview').innerHTML = ''; $('mqMeta').textContent = '請先勾至少一種題型。'; return false; }
+      if (!kinds.length && !wordKinds.length && !MQ.word.length && !MQ.sim.length) { $('mqPreview').innerHTML = ''; $('mqMeta').textContent = '請先勾至少一種題型。'; return false; }
       const style = $('mqFracStyle').value, vertical = $('mqVertical').checked, cols = Number($('mqCols').value);
       const grade = $('mqGrade').options[$('mqGrade').selectedIndex].text;
       const title = $('mqTitle').value.trim() || '數學練習';
@@ -2020,6 +2055,23 @@
             return `${startNo + i + 1}. ${MathGen.exprHtml(String(p.expr || ''))} ＝ ${MathGen.textHtml(shown)} ${escapeHtml(String(p.unit || ''))}${check.ok ? '' : '<span class="doc-verify">（⚠ 請核對）</span>'}`;
           });
         }
+        if (MQ.sim.length) {
+          const startNo = no;
+          const items = MQ.sim.map(p => {
+            no += 1;
+            const check = mqSimCheck(p);
+            return `<div class="mq-word"><span class="mq-no">${no}.</span><div style="flex:1">
+              <div class="mq-word-q">${MathGen.textHtml(p.q)}</div>
+              ${p.word ? '<div class="mq-work">算式：</div>' : ''}<div>答：<span class="mq-blank" style="min-width:140px"></span></div>
+              <span class="doc-verify mq-check ${check.ok ? 'ok' : 'bad'}">${escapeHtml(check.msg)}${p.from ? `｜參考：${escapeHtml(p.from)}` : ''}</span></div></div>`;
+          }).join('');
+          sections.push(`<div class="mq-section"><div class="mq-section-head">${MQ_CN[sections.length] || sections.length + 1}、照課本的類似題</div>${items}</div>`);
+          key.sim = MQ.sim.map((p, i) => {
+            const check = mqSimCheck(p);
+            const shown = check.value ? mqFmt(check.value, p.expr) : String(p.answer || '');
+            return `${startNo + i + 1}. ${p.expr ? `${MathGen.exprHtml(String(p.expr))} ＝ ` : ''}${MathGen.textHtml(shown)} ${escapeHtml(String(p.unit || ''))}${check.ok ? '' : '<span class="doc-verify">（⚠ 請核對）</span>'}`;
+          });
+        }
         keys.push(key);
         pages.push(`<div class="sheet mq-sheet${vi ? ' ws-answerpage' : ''}">
           <div class="ws-head"><div class="ws-title">${escapeHtml(title)}${ver ? `（${ver} 卷）` : ''}</div></div>
@@ -2032,15 +2084,18 @@
           ${keys.map(key => `${key.ver ? `<div class="mq-section-head" style="margin-top:14px">${key.ver} 卷</div>` : ''}
             ${key.groups.map((g, gi) => `<div class="mq-section"><div style="font-weight:800">${MQ_CN[gi] || gi + 1}、${escapeHtml(g.title)}</div><div class="mq-key">${g.list.map(a => `<div>${a}</div>`).join('')}</div></div>`).join('')}
             ${key.progWord ? `<div class="mq-section"><div style="font-weight:800">${MQ_CN[key.groups.length] || key.groups.length + 1}、應用題</div><div class="mq-key-word">${key.progWord.map(a => `<div>${a}</div>`).join('')}</div></div>` : ''}
-            ${key.word ? `<div class="mq-section"><div style="font-weight:800">${MQ_CN[key.groups.length + (key.progWord ? 1 : 0)] || ''}、${key.progWord ? '應用題（二）' : '應用題'}</div><div class="mq-key-word">${key.word.map(a => `<div>${a}</div>`).join('')}</div></div>` : ''}`).join('')}
+            ${key.word ? `<div class="mq-section"><div style="font-weight:800">${MQ_CN[key.groups.length + (key.progWord ? 1 : 0)] || ''}、${key.progWord ? '應用題（二）' : '應用題'}</div><div class="mq-key-word">${key.word.map(a => `<div>${a}</div>`).join('')}</div></div>` : ''}
+            ${key.sim ? `<div class="mq-section"><div style="font-weight:800">${MQ_CN[key.groups.length + (key.progWord ? 1 : 0) + (key.word ? 1 : 0)] || ''}、照課本的類似題</div><div class="mq-key-word">${key.sim.map(a => `<div>${a}</div>`).join('')}</div></div>` : ''}`).join('')}
         </div>`);
       }
       $('mqPreview').innerHTML = pages.join('');
       const total = kinds.reduce((sum, k) => sum + (MQ.counts[k.id] || 6), 0) + wordKinds.reduce((sum, k) => sum + (MQ.wordCounts[k.id] || 2), 0);
-      const bad = MQ.word.filter(p => !mqCheck(p).ok).length;
-      $('mqMeta').textContent = `程式出題 ${total} 題（答案由程式算，一定正確）${MQ.word.length ? `＋應用題 ${MQ.word.length} 題（🟡 AI 草稿${bad ? `，⚠ ${bad} 題對不上` : '，已驗算'}，請核對後勾「老師已核對」）` : ''}`;
-      $('mqCheckedLabel').style.display = MQ.word.length ? '' : 'none';
-      if (MQ.word.length) docApplyConfirm('mq');
+      const bad = MQ.word.filter(p => !mqCheck(p).ok).length + MQ.sim.filter(p => !mqSimCheck(p).ok).length;
+      const aiCount = MQ.word.length + MQ.sim.length;
+      const aiParts = [MQ.word.length ? `應用題 ${MQ.word.length} 題` : '', MQ.sim.length ? `類似題 ${MQ.sim.length} 題` : ''].filter(Boolean).join('、');
+      $('mqMeta').textContent = `${total ? `程式出題 ${total} 題（答案由程式算，一定正確）` : ''}${aiCount ? `${total ? '＋' : ''}${aiParts}（🟡 AI 草稿${bad ? `，⚠ ${bad} 題要核對` : '，已驗算'}，請核對後勾「老師已核對」）` : ''}`;
+      $('mqCheckedLabel').style.display = MQ.word.length || MQ.sim.length ? '' : 'none';
+      if (MQ.word.length || MQ.sim.length) docApplyConfirm('mq');
       return true;
     }
     $('mqGoButton').addEventListener('click', () => {
@@ -2084,6 +2139,57 @@
       }
     });
     $('mqWordClear').addEventListener('click', () => { MQ.word = []; $('mqChecked').checked = false; mqRender(); });
+    // 換年級：右邊考卷上的年級也跟著換（不然左邊一年級、考卷還寫六年級）
+    $('mqGrade').addEventListener('change', () => { if ($('mqPreview').innerHTML.trim()) mqRender(); });
+    // 📷 照課本出類似題：AI 看課本／習作照片，出數字不同的類似題；有算式的題目系統自己再算一次
+    function mqSimCheck(p) {
+      if (!String(p.expr || '').trim()) return { ok: false, value: null, msg: '⚠ 這題不能用算式驗算（例如比大小、圖形、概念題），請核對答案' };
+      return mqCheck(p);
+    }
+    $('mqSimButton').dataset.label = $('mqSimButton').textContent;
+    $('mqSimButton').addEventListener('click', async () => {
+      const files = zoneFiles('mqImages');
+      if (!files.length) return showToast('請先上傳或拍照課本、習作的題目。', true);
+      const grade = $('mqGrade').options[$('mqGrade').selectedIndex].text;
+      const each = Number($('mqSimEach').value) || 2;
+      const note = $('mqSimNote').value.trim().slice(0, 80);
+      const prompt = [
+        `你是台灣國小數學老師。附件是課本或習作的題目（照片或 PDF），年級：${grade}。`,
+        `請找出附件裡的數學題目（最多 12 題），每一題出 ${each} 題「類似題」：題型、難度、解法都和原題一樣，但數字或情境要換掉。`,
+        note ? `老師的補充要求：${note}` : '',
+        '規則：',
+        '- 繁體中文、台灣國小用語與單位。人名只用虛構的（例如小明、小美），不要用真實學生姓名。',
+        '- 不要照抄原題；換過的數字要讓答案好算、合理（不要出現奇怪的小數或負數，除非原題就是這樣）。',
+        '- 原題要看圖、作圖、用量角器的，改成只看文字就能作答的版本；做不到就跳過那一題。',
+        '- 每題附「算式」expr：只能用數字、+ - × ÷ 和括號；分數寫成 a/b，帶分數寫成「2又1/3」。系統會用算式自動驗算。',
+        '- 不能用一個算式算出來的題目（比大小、選擇、填概念、單位換算說明等），expr 留空字串，answer 寫正確答案。',
+        '- answer 只寫答案（數字或很短的文字），單位另外寫在 unit。',
+        '- word：應用題填 true，計算題填 false。',
+        '- from：這題是照附件的哪一題出的（例如「第 3 題」或很短的描述）。',
+        '只回 JSON，不要其他文字：{"problems":[{"q":"題目","expr":"算式","answer":"答案","unit":"單位","word":true,"from":"參考的原題"}]}'
+      ].filter(Boolean).join('\n');
+      busy($('mqSimButton'), true);
+      try {
+        const parts = await filesToParts(files, 8);
+        const data = extractJson(await callGemini(prompt, parts, $('mqStatus')));
+        const problems = (data.problems || []).filter(p => p && p.q).slice(0, 36).map(p => ({
+          q: String(p.q).slice(0, 400), expr: String(p.expr || '').slice(0, 120), answer: String(p.answer == null ? '' : p.answer).slice(0, 40),
+          unit: String(p.unit || '').slice(0, 10), word: p.word === true || p.word === 'true', from: String(p.from || '').slice(0, 30)
+        }));
+        if (!problems.length) throw new Error('AI 沒有在照片裡找到題目，請換一張清楚一點的照片再試。');
+        MQ.sim = problems;
+        if ($('mqChecked').checked) $('mqChecked').checked = false;
+        mqRender();
+        const bad = problems.filter(p => !mqSimCheck(p).ok).length;
+        showToast(bad ? `類似題出好了（${problems.length} 題），其中 ${bad} 題要請老師核對（標 ⚠）。` : `類似題出好了（${problems.length} 題），系統驗算都對；請再看一次題意。`, !!bad);
+      } catch (e) {
+        if (e.message !== 'no-key') showToast(e.message || '出題失敗，請再試一次。', true);
+        $('mqStatus').textContent = '';
+      } finally {
+        busy($('mqSimButton'), false);
+      }
+    });
+    $('mqSimClear').addEventListener('click', () => { MQ.sim = []; $('mqChecked').checked = false; mqRender(); });
 
     // ============================================================
     // 📒 生詞本：注音／部首／筆畫查全字庫字表（assets/studio/hanzi-data.js，第一次用才載入）；造詞造句解釋 AI 草稿
@@ -2478,42 +2584,68 @@
           $('rdNewsList').innerHTML = items.map((item, i) => `<div class="cm-row" style="flex-direction:column;align-items:stretch;gap:4px">
             <div style="font-weight:900">${escapeHtml(item.title)} <span class="mask-badge">${escapeHtml(item.date || '')}${item.source ? '・' + escapeHtml(item.source) : ''}</span></div>
             <div style="font-size:13px;color:var(--muted)">${escapeHtml(String(item.summary).slice(0, 80))}…</div>
-            <div class="check-row"><button class="mini" type="button" data-news-use="${i}">📚 用這則做分級文本</button><button class="mini" type="button" data-news-fill="${i}">貼到原文框</button></div>
+            <div class="check-row"><button class="mini" type="button" data-news-use="${i}">📚 用這則做分級閱讀</button></div>
           </div>`).join('');
         }
       } catch (e) { $('rdNewsList').innerHTML = `<div class="status">找時事失敗：${escapeHtml(e.message)}</div>`; }
       $('rdNewsButton').disabled = false;
     }
     $('rdNewsButton').addEventListener('click', findKidSafeNews);
+    let rdChosen = null;
+    function rdChoose(item) {
+      rdChosen = { title: item.title, summary: item.summary, credit: [item.source, item.date, item.url].filter(Boolean).join('，') };
+      $('rdChosenBox').hidden = false;
+      $('rdChosen').innerHTML = `<b>${escapeHtml(item.title)}</b><br>${escapeHtml(rdChosen.credit)}`;
+    }
     $('rdNewsList').addEventListener('click', e => {
-      const use = e.target.closest('[data-news-use]'), fill = e.target.closest('[data-news-fill]');
-      const item = rdNewsItems[Number((use || fill || {}).dataset?.newsUse ?? (fill || {}).dataset?.newsFill)];
+      const use = e.target.closest('[data-news-use]');
+      const item = use && rdNewsItems[Number(use.dataset.newsUse)];
       if (!item) return;
-      $('rdText').value = `${item.title}\n\n${item.summary}`;
-      $('rdSource').value = 'facts';
-      $('rdCredit').value = [item.source, item.date, item.url].filter(Boolean).join('，');
-      showToast('已放入原文框。');
-      if (use) $('rdGoButton').click();
+      rdChoose(item);
+      // 選了新聞就以新聞為準：清掉之前上傳的照片，免得兩個來源混在一起
+      if (zoneFiles('rdImages').length) { $('rdImages').value = ''; if (ATTACH_ZONES.rdImages) { ATTACH_ZONES.rdImages.files = []; renderZoneChips('rdImages'); } }
+      $('rdGoButton').click();
     });
+    // 中文／英文切換：版本名稱、翻譯選項、按鈕字跟著換
+    function rdSyncLang() {
+      const en = document.querySelector('input[name="rdLang"]:checked').value === 'en';
+      document.querySelectorAll('#page-reading [data-zh]').forEach(el => { el.textContent = en ? el.dataset.en : el.dataset.zh; });
+      $('rdTranslateRow').hidden = !en;
+      $('rdGoButton').textContent = $('rdGoButton').dataset.label = en ? '🔤 生成英文分級閱讀' : '📚 生成分級文本';
+    }
+    document.querySelectorAll('input[name="rdLang"]').forEach(r => r.addEventListener('change', rdSyncLang));
 
     // ============================================================
     // 📚 閱讀文本分級改寫（Diffit 式差異化）
     // ============================================================
     $('rdGoButton').dataset.label = $('rdGoButton').textContent;
     $('rdGoButton').addEventListener('click', async () => {
-      const text = $('rdText').value.trim();
       const files = zoneFiles('rdImages');
-      if (!text && !files.length) return showToast('請貼上原文或拍照。', true);
+      const en = document.querySelector('input[name="rdLang"]:checked').value === 'en';
+      if (!rdChosen && !files.length) return showToast('請先按「找 5 則最新」選一則新聞，或拍照上傳文章。', true);
+      const useNews = !files.length;
+      const sourceText = useNews ? `新聞事實重點：\n${rdChosen.title}\n${rdChosen.summary}` : '附件是原文的照片或檔案，請先辨識內容，只取事實重點。';
+      const credit = useNews ? rdChosen.credit : '';
       const levels = [...document.querySelectorAll('.rdLevel:checked')].map(c => c.value);
       if (!levels.length) return showToast('請至少勾一個版本。', true);
       const grade = $('rdGrade').value;
-      const prompt = [
-        `你是臺灣國小閱讀教學專家。班級為${grade}年級。請把下面的文章改寫成 ${levels.join('、')} 版本，做差異化閱讀。`,
-        $('rdSource').value === 'facts'
-          ? '【著作權規定】原文是別人的著作。請先抓出事實與重點，再用你自己的文字「重新寫」成新文章：不得沿用原文的句子、段落安排或特殊說法，不要逐句改寫；可以引用的只有事實、數字、人名地名。'
-          : '原文的作者已同意或屬公有領域／CC 授權，可以直接改寫。',
-        files.length ? '附件是原文的照片，請先辨識全文。' : `原文：\n${text}`,
-        '規則：事實、人物、結論完全不變；「基礎」＝比班級低 2 個年級可讀（短句、常用詞、必要時加一句背景說明，長度約原文 60–70%）；「標準」＝同年級（潤飾通順、長度相近）；「進階」＝高 1–2 個年級（保留原文深度並加 1–2 段延伸資訊或觀點，長度約 120%）。',
+      const prompt = en ? [
+        `You are an English reading teacher for Taiwanese elementary school students (English is a foreign language for them), class grade: ${grade}年級.`,
+        `Using ONLY the facts below, write NEW, original English reading passages in these levels: ${levels.join('、')}. Do not copy or translate sentences from any source; write in your own words.`,
+        '【著作權規定】新聞與別人的文章有著作權：只取事實，用自己的文字重新寫，不得沿用原文句子。',
+        sourceText,
+        'Levels: 「基礎」= Pre-A1, 40–70 words, very short simple sentences, present tense where possible, high-frequency words; 「標準」= A1, 80–120 words; 「進階」= A2, 130–180 words, some linking words (because, so, but, then). Keep facts unchanged. Child-safe content only.',
+        'readingAge: write the CEFR level and word count, e.g. "Pre-A1・約 55 字".',
+        $('rdVocab').checked ? 'vocab: 5–8 words per level that these readers may not know; word = English word plus part of speech like "planet (n.)", meaning = 繁體中文意思.' : '',
+        $('rdQuiz').checked ? 'questions: 3 simple English questions per level (2 multiple choice with 4 options, 1 short answer without options); answer in English.' : '',
+        'zh: 繁體中文翻譯（給老師看，段落用\n分隔）.',
+        'Return JSON only:',
+        '{"title":"English title","levels":[{"level":"基礎","readingAge":"Pre-A1・約 55 字","text":"English passage (paragraphs separated by \\n)","vocab":[{"word":"","meaning":""}],"questions":[{"q":"","options":["","","",""],"answer":""}],"zh":"中文翻譯"}]}'
+      ].filter(Boolean).join('\n') : [
+        `你是臺灣國小閱讀教學專家。班級為${grade}年級。請把下面的內容寫成 ${levels.join('、')} 版本，做差異化閱讀。`,
+        '【著作權規定】內容來自新聞或別人的文章，是別人的著作。請先抓出事實與重點，再用你自己的文字「重新寫」成新文章：不得沿用原文的句子、段落安排或特殊說法，不要逐句改寫。',
+        sourceText,
+        '規則：事實、人物、結論完全不變；「基礎」＝比班級低 2 個年級可讀（短句、常用詞、必要時加一句背景說明，長度約原文 60–70%）；「標準」＝同年級（潤飾通順、長度相近）；「進階」＝高 1–2 個年級（保留原文深度並加 1–2 段延伸資訊或觀點，長度約 120%）。',,
         $('rdVocab').checked ? '每版附 vocab：4–6 個該版本讀者可能不熟的詞（word、meaning 白話解釋）。' : '',
         $('rdQuiz').checked ? '每版附 questions：3 題理解題（1 題找資訊、1 題推論、1 題自己的想法；q、options 四選項或省略、answer）。' : '',
         '繁體中文、臺灣用語。只回傳 JSON：',
@@ -2532,10 +2664,7 @@
         $('rdStatus').textContent = '';
         const LEVEL_ICON = { '基礎': '🟢', '標準': '🟡', '進階': '🔴' };
         const versions = (data.levels || []).filter(v => levels.includes(v.level));
-        const credit = $('rdCredit').value.trim();
-        const creditNote = $('rdSource').value === 'facts'
-          ? `本文依${credit ? `「${credit}」` : '原文'}的事實重點重新撰寫，非原文。`
-          : $('rdSource').value === 'cc' ? `改寫自：${credit || '（請填出處）'}（CC 授權）` : (credit ? `出處：${credit}` : '');
+        const creditNote = `本文依${credit ? `「${credit}」` : '原文'}的事實重點重新撰寫，非原文。`;
         const pages = versions.map((v, i) => `<div class="sheet sw-sheet${i ? ' ws-answerpage' : ''}">
           <div class="ws2-head"><div><div class="ws2-chips"><span class="ws2-chip ws2-chip-dark">${LEVEL_ICON[v.level] || ''} ${escapeHtml(v.level)}版</span><span class="ws2-chip">${escapeHtml(v.readingAge || '')}</span><span class="ws2-chip">${escapeHtml(grade)}年級班</span></div>
             <div class="sw-title" style="text-align:left">${escapeHtml(data.title || '閱讀文本')}</div>
@@ -2545,11 +2674,12 @@
           ${$('rdVocab').checked && (v.vocab || []).length ? `<div class="sw-section"><div class="sw-section-head"><span class="sw-pill">📒 詞彙小幫手</span></div><div class="ws2-box rd-vocab">${v.vocab.map(w => `<div><b>${escapeHtml(w.word)}</b>：${escapeHtml(w.meaning)}</div>`).join('')}</div></div>` : ''}
           ${$('rdQuiz').checked && (v.questions || []).length ? `<div class="sw-section"><div class="sw-section-head"><span class="sw-pill">❓ 讀懂了嗎</span></div><div class="ws2-box">${v.questions.map((q, k) => `<div class="ws2-q"><span class="ws2-no">${k + 1}</span>${q.options ? '<span class="ws2-ans">（　）</span>' : ''}<span>${escapeHtml(q.q)}</span></div>${q.options ? `<div class="ws2-options">${q.options.map((o, j) => `<span class="ws2-opt">(${'ABCD'[j]}) ${escapeHtml(o)}</span>`).join('')}</div>` : '<div class="ws-lines"></div><div class="ws-lines"></div>'}`).join('')}</div></div>` : ''}
         </div>`);
-        if ($('rdAnswer').checked && $('rdQuiz').checked) {
-          pages.push(`<div class="sheet ws-answerpage"><div class="ws-head"><div class="ws-title">${escapeHtml(data.title || '閱讀文本')}｜教師解答</div></div>${versions.map(v => `<div class="ws-section">${escapeHtml(v.level)}版</div><div class="ws-answer-list">${(v.questions || []).map((q, k) => `<div>${k + 1}. ${escapeHtml(String(q.answer == null ? '' : q.answer))}</div>`).join('')}</div>`).join('')}</div>`);
+        const withZh = en && $('rdTranslate').checked && versions.some(v => v.zh);
+        if (($('rdAnswer').checked && $('rdQuiz').checked) || withZh) {
+          pages.push(`<div class="sheet ws-answerpage"><div class="ws-head"><div class="ws-title">${escapeHtml(data.title || '閱讀文本')}｜教師頁</div></div>${versions.map(v => `<div class="ws-section">${escapeHtml(v.level)}版</div>${$('rdAnswer').checked && $('rdQuiz').checked ? `<div class="ws-answer-list">${(v.questions || []).map((q, k) => `<div>${k + 1}. ${escapeHtml(String(q.answer == null ? '' : q.answer))}</div>`).join('')}</div>` : ''}${withZh && v.zh ? `<div class="rd-text" style="font-size:14px">${String(v.zh).split(/\n+/).map(par => `<p>${escapeHtml(par)}</p>`).join('')}</div>` : ''}`).join('')}</div>`);
         }
         $('rdPreview').innerHTML = pages.join('');
-        $('rdMeta').textContent = `共 ${versions.length} 個版本、${pages.length} 頁；同一篇文章、三種難度。`;
+        $('rdMeta').textContent = `共 ${versions.length} 個版本、${pages.length} 頁；${en ? '英文閱讀，' : ''}同一篇內容、不同難度。`;
         showToast('📚 分級文本完成！');
       } catch (e) { if (e.message !== 'no-key') { $('rdStatus').textContent = ''; showToast(e.message, true); } }
       busy($('rdGoButton'), false);
@@ -2582,6 +2712,33 @@
       busy($('mmGoButton'), false);
     });
     $('mmMarkdown').addEventListener('input', renderMindmap);
+    // 存進大屏心智圖（MindMap.html，同一個網站、同一台電腦的瀏覽器資料 mindmapStudio:v1）
+    $('mmToBoardButton').addEventListener('click', () => {
+      const md = $('mmMarkdown').value;
+      if (!md.trim()) return showToast('請先生成心智圖。', true);
+      const outline = parseOutline(md);
+      const COLS = ['teal', 'blue', 'gold', 'coral', 'purple', 'pink'];
+      const stamp = Date.now().toString(36);
+      let n = 0;
+      const convert = (node, depth, color) => ({
+        id: `s${stamp}${(n++).toString(36)}`,
+        text: String(node.text || '').slice(0, 40),
+        color: depth === 1 ? color : '',
+        children: depth >= 10 ? [] : node.children.slice(0, 30).map((child, i) => convert(child, depth + 1, depth === 0 ? COLS[i % COLS.length] : color))
+      });
+      const root = convert(outline, 0, '');
+      const KEY = 'mindmapStudio:v1';
+      let store = null;
+      try { store = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { store = null; }
+      if (!store || typeof store !== 'object' || !Array.isArray(store.works)) store = { cur: '', works: [] };
+      const id = `st${stamp}`;
+      store.works.push({ id, type: 'mind', title: root.text.slice(0, 40) || '我的心智圖', updatedAt: Date.now(), root });
+      store.cur = id;
+      try { localStorage.setItem(KEY, JSON.stringify(store)); }
+      catch (e) { return showToast('這台電腦的瀏覽器空間滿了，存不進去；請先到大屏心智圖刪掉幾張舊的圖。', true); }
+      window.open('MindMap.html', '_blank', 'noopener');
+      showToast('已存進大屏心智圖。大屏「🧠 心智圖」→「📂 我的圖」也找得到（大屏開著的話先按 F5）。');
+    });
     function parseOutline(md) {
       const root = { text: '主題', children: [] };
       const stack = [{ node: root, indent: -1 }];

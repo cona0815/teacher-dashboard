@@ -1135,3 +1135,22 @@ assert.match(indexHtml, /function cbConfirmLeave\(\)/, "換日期前應提醒尚
   const shown = [...tabs.matchAll(/data-page="(\w+)">/g)].map(m => m[1]);
   assert.deepStrictEqual(shown, ['ws', 'math', 'review', 'mm', 'vocab', 'guide', 'essay', 'library', 'reading', 'notice', 'gform', 'richmenu', 'seat', 'mask', 'pdf'], "教材小工場選單只留 15 個");
 }
+
+// 2026-11-10 教材小工場：配色跟工作台同步、數學照課本出類似題、心智圖送大屏、閱讀分級中英文；工作台大屏提示＝大屏清單
+assert.match(studioHtml, /localStorage\.getItem\('grade6AssistantSettings'\)[\s\S]{0,200}workspace\.theme/, "教材小工場應讀工作台的介面配色");
+for (const theme of ["forest", "apricot", "lavender", "tech", "minimal", "cozy"]) {
+  assert.ok(studioHtml.includes(`:root[data-theme="${theme}"] { --bg:`), `教材小工場應有「${theme}」配色`);
+}
+assert.match(studioHtml, /id="mqSimButton"/, "數學出題應能照課本出類似題");
+assert.match(studioHtml, /function mqSimCheck/, "類似題應驗算，不能驗算的要請老師核對");
+assert.match(studioHtml, /attachZone\('mqImages'/, "類似題的檔案輸入應能拍照／貼上");
+assert.match(studioHtml, /id="mmToBoardButton"/, "心智圖應能送到大屏心智圖");
+assert.match(studioHtml, /const KEY = 'mindmapStudio:v1'/, "心智圖應寫進大屏心智圖的存檔");
+assert.doesNotMatch(studioHtml, /id="rdSource"|id="rdText"|id="rdCredit"/, "閱讀分級不再要老師選來源、貼原文");
+assert.match(studioHtml, /name="rdLang" value="en"/, "閱讀分級應能做英文閱讀");
+assert.match(studioHtml, /Pre-A1/, "英文閱讀應依 CEFR 分級");
+{
+  const pick = text => [...text.matchAll(/text: '([^']+)', img: '([^']+)'/g)].map(m => `${m[1]}|${m[2]}`).join('\n');
+  assert.strictEqual(pick(indexHtml.slice(indexHtml.indexOf('const SCREEN_PROMPT_GROUPS'))), pick(morningHtml.slice(morningHtml.indexOf('const PROMPT_GROUPS'))), "工作台的大屏提示清單應與大屏一致");
+  assert.strictEqual(pick(indexHtml.slice(indexHtml.indexOf('const SCREEN_PROMPT_GROUPS'))), pick(lineBotSource.slice(lineBotSource.indexOf('var SCREEN_PROMPTS'))), "工作台的大屏提示清單應與 LINE 小幫手一致");
+}

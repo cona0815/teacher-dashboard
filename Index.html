@@ -9848,7 +9848,8 @@ ${cleanBase}`;
     $('helpOverlay').addEventListener('click', event => { if (event.target === $('helpOverlay')) $('helpOverlay').hidden = true; });
     document.addEventListener('keydown', event => { if (event.key === 'Escape') $('helpOverlay').hidden = true; });
 
-    // 📣 大屏提示遙控（與 LineBot.gs 的 SCREEN_PROMPTS 同步）
+    // 📣 大屏提示遙控
+    // 和晨間大屏的 PROMPT_GROUPS、LINE 小幫手的 SCREEN_PROMPTS 同一份（測試會檢查三邊一致）
     const SCREEN_PROMPT_GROUPS = [
       { label: '🪑 上課秩序', items: [
         { text: '上課囉！眼睛看老師', img: 'class_focus.png' },
@@ -9856,7 +9857,9 @@ ${cleanBase}`;
         { text: '動作快，三秒內坐好', img: 'class_focus.png' },
         { text: '發言請舉手，輪流說', img: 'raise_hand.png' },
         { text: '安靜！音量零級', img: 'quiet_usagi.png' },
-        { text: '輕聲討論，別吵到隔壁組', img: 'quiet_cat.png' }
+        { text: '輕聲討論，別吵到隔壁組', img: 'quiet_cat.png' },
+        { text: '上課鐘響，回教室坐好', img: 'class_focus.png' },
+        { text: '準備下一節的課本和用品', img: 'homework.png' }
       ] },
       { label: '📚 作業與學習', items: [
         { text: '收作業囉，交給小組長', img: 'homework.png' },
@@ -9868,17 +9871,27 @@ ${cleanBase}`;
       ] },
       { label: '🍱 生活作息', items: [
         { text: '下課先喝水、上廁所', img: 'drink_water.png' },
+        { text: '午餐準備：洗手、拿餐具、排隊打菜', img: 'line_up.png' },
         { text: '吃飯不說話，細嚼慢嚥', img: 'quiet_cat.png' },
+        { text: '吃完收好餐具，擦乾淨桌面', img: 'cleaning.png' },
         { text: '午休時間，趴下休息', img: 'nap.png' },
         { text: '打掃時間，責任區掃乾淨', img: 'cleaning.png' },
+        { text: '垃圾分類，做好資源回收', img: 'cleaning.png' },
         { text: '整理書包，檢查抽屜', img: 'cleaning.png' }
+      ] },
+      { label: '🦷 衛生健康', items: [
+        { text: '飯後潔牙，刷牙三分鐘', img: 'drink_water.png' },
+        { text: '吃飯前，先用肥皂洗手', img: 'drink_water.png' },
+        { text: '咳嗽打噴嚏，記得摀住口鼻', img: 'raise_hand.png' },
+        { text: '眼睛休息一下，看看遠方', img: 'reading.png' }
       ] },
       { label: '🚶 集合與移動', items: [
         { text: '排隊囉！快、靜、齊', img: 'line_up.png' },
         { text: '到走廊排隊，不推不擠', img: 'line_up.png' },
         { text: '上下樓梯靠右走、不奔跑', img: 'line_up.png' },
         { text: '專科教室集合，帶課本鉛筆盒', img: 'line_up.png' },
-        { text: '準備放學：桌面清空、帶齊物品', img: 'cleaning.png' }
+        { text: '準備放學：桌面清空、帶齊物品', img: 'cleaning.png' },
+        { text: '放學路隊，跟著路隊長走', img: 'line_up.png' }
       ] }
     ];
     const SCREEN_PROMPT_PRESETS = SCREEN_PROMPT_GROUPS.flatMap(group => group.items);
