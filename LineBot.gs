@@ -495,7 +495,7 @@ function doGet() {
 }
 
 // 程式版本（每次發布都要更新；試算表選單「ℹ️ 程式版本」、LINE 傳「版本」、工作台連線檢查都會顯示）
-var BOT_VERSION = '2026-11-11 15:00';
+var BOT_VERSION = '2026-11-11 07:30';
 
 function lineBotJson_(payload) {
   return ContentService.createTextOutput(JSON.stringify(payload)).setMimeType(ContentService.MimeType.JSON);
@@ -1776,9 +1776,11 @@ function fetchGemini_(apiKey, body) {
       var model = list[i];
       if (!model || tried[model]) continue;
       tried[model] = true;
-      response = UrlFetchApp.fetch(LINE_BOT_CONFIG.GEMINI_ENDPOINT + model + ':generateContent?key=' + encodeURIComponent(apiKey), {
+      // 資安：金鑰放標頭，不放網址（網址會留在紀錄裡）
+      response = UrlFetchApp.fetch(LINE_BOT_CONFIG.GEMINI_ENDPOINT + model + ':generateContent', {
         method: 'post',
         contentType: 'application/json',
+        headers: { 'x-goog-api-key': apiKey },
         muteHttpExceptions: true,
         payload: JSON.stringify(body)
       });
@@ -1801,7 +1803,7 @@ function fetchGemini_(apiKey, body) {
 /** 問 Google 現在有哪些模型，只挑正式版 Flash-Lite／Flash，Flash-Lite 排前面、版本新的排前面。 */
 function discoverGeminiModels_(apiKey) {
   try {
-    var res = UrlFetchApp.fetch(LINE_BOT_CONFIG.GEMINI_ENDPOINT.replace(/\/$/, '') + '?pageSize=200&key=' + encodeURIComponent(apiKey), { muteHttpExceptions: true });
+    var res = UrlFetchApp.fetch(LINE_BOT_CONFIG.GEMINI_ENDPOINT.replace(/\/$/, '') + '?pageSize=200', { headers: { 'x-goog-api-key': apiKey }, muteHttpExceptions: true });
     if (res.getResponseCode() !== 200) return [];
     var models = (JSON.parse(res.getContentText()).models || []).filter(function (m) {
       return (m.supportedGenerationMethods || []).indexOf('generateContent') >= 0;

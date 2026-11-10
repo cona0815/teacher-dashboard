@@ -1229,7 +1229,10 @@ assert.match(studioHtml, /function rdVocabList/, "詞彙小幫手要容錯，空
 // 2026-11-11 AI 讀文件：上傳欄位收 PDF、Word、PPT、Excel；Office 檔本機取文字、PDF 直接給 Gemini；文件文字也做個資檢查
 assert.match(studioHtml, /async function docFileToPart\(file\)/, "教材小工場應能把 Word／PPT／Excel 轉成文字給 AI");
 assert.match(studioHtml, /id="mmImage" accept="image\/\*,\.pdf,application\/pdf,\.docx,\.pptx,\.xlsx/, "心智圖上傳應收 PDF 與 Office 檔");
-assert.match(studioHtml, /aiPrivacyHits\(String\(prompt \|\| ''\) \+ '\\n' \+ attachedText\)/, "文件取出的文字也要做個資檢查");
+assert.match(studioHtml, /async function fetchGemini\(key, body\) \{[\s\S]{0,400}?const privacyHits = aiPrivacyHits\(outgoing\)/, "每一條 AI 路徑都要做個資檢查（含文件取出的文字）");
+assert.doesNotMatch(lineBotSource, /[?&]key=/, "LINE 小幫手的 Gemini 金鑰不放網址");
+assert.match(studioHtml, /function maskPackageLeftovers\(entries, ctx\)/, "文件遮蔽要掃修訂、註解、超連結、樞紐快取、作者");
+assert.match(studioHtml, /id="maskRemember"/, "遮蔽字詞可以選擇不記住");
 // 2026-11-11 📂 雲端資料夾：LINE 存檔的「LINE小幫手備份」一鍵打開（工作台按鈕＋LINE 傳「雲端資料夾」）
 assert.match(indexHtml, /id="driveFolderButton" data-line-only/, "工具箱應有「📂 雲端資料夾」");
 assert.match(lineBotSource, /\(雲端資料夾\|雲端硬碟\|資料夾\|備份資料夾\|雲端\)/, "LINE 傳「雲端資料夾」應回連結");

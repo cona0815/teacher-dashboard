@@ -1259,6 +1259,7 @@
               <label><input type="checkbox" id="maskPick_account" checked>帳號密碼</label>
               <label><input type="checkbox" id="maskPick_name" checked>姓名（座位表名單＋下面填的）</label>
             </div>
+            <label class="hint" style="display:block;margin:6px 0 0"><input type="checkbox" id="maskRemember" checked> 記住勾選與下面的字詞（存在這台電腦；共用電腦請取消勾選）</label>
             <textarea class="textarea" id="maskWords" rows="2" style="min-height:52px;margin-top:6px" placeholder="其他要遮的姓名或字詞（一行一個，也可以用頓號分開）；姓名會留第一和最後一個字，例：王Ｏ明"></textarea></div>
           <div class="field"><label>遮蔽方式</label>
             <div class="check-row">
@@ -1279,7 +1280,7 @@
         <div class="panel">
           <div class="preview-bar"><span class="status" id="maskStatus">選擇檔案（Word、Excel、PowerPoint、圖片）或貼上文字後開始。</span></div>
           <div class="mask-doc-out" id="maskDocOut" hidden>
-            <div id="maskDocSummary" style="font-weight:800"></div>
+            <div id="maskDocSummary" style="font-weight:800;white-space:pre-line"></div>
             <button class="go-button" type="button" id="maskDocDownload" hidden style="margin:10px 0">⬇ 下載遮蔽後的檔案</button>
             <div id="maskDocSamples"></div>
           </div>
@@ -1719,6 +1720,12 @@
     }
 
     async function fetchGemini(key, body) {
+      // 資安／個資：每一次送 AI 都檢查（題目文字＋從 Word／Excel／PPT 取出的文字），發現學生姓名或聯絡方式先問老師
+      const outgoing = ((body && body.contents) || []).flatMap(item => (item && item.parts) || []).filter(part => part && typeof part.text === 'string').map(part => part.text).join('\n');
+      const privacyHits = aiPrivacyHits(outgoing);
+      if (privacyHits.length && !window.confirm(`要送給 AI 的內容裡有：${privacyHits.join('、')}。\n建議先刪掉或改成座號（Word、Excel 可以先用「🛡 敏感資料遮蔽」）。確定還是要送出？`)) {
+        throw new Error('已取消：內容含個資，沒有送出。');
+      }
       return fetchGeminiAuto('https://generativelanguage.googleapis.com/v1beta/models', geminiModels(), key, body);
     }
     function refreshKeyStatus() {
@@ -1883,13 +1890,7 @@
     async function callGemini(prompt, imagePart, statusEl) {
       const key = geminiKey();
       if (!key) { showToast('尚未設定 Gemini 金鑰，請先到工作台 AI 設定填入。', true); throw new Error('no-key'); }
-      // 資安／個資：學生姓名與聯絡方式不送雲端，發現了先問老師（照片請用「個資遮蔽」工具先處理）
-      const attachedText = (Array.isArray(imagePart) ? imagePart : [imagePart]).filter(part => part && part.text).map(part => part.text).join('\n');
-      const privacyHits = aiPrivacyHits(String(prompt || '') + '\n' + attachedText);
-      if (privacyHits.length && !window.confirm(`要送給 AI 的文字裡有：${privacyHits.join('、')}。\n建議先刪掉或改成座號。確定還是要送出？`)) {
-        statusEl.textContent = '';
-        throw new Error('已取消：內容含個資，沒有送出。');
-      }
+      // 資安／個資檢查在 fetchGemini 裡統一做（每一條 AI 路徑都會經過，含 Word／Excel 取出的文字）
       statusEl.textContent = '🤖 AI 生成中（約 10–30 秒）…';
       const parts = [{ text: prompt }];
       if (Array.isArray(imagePart)) parts.push(...imagePart); else if (imagePart) parts.push(imagePart);
@@ -4435,7 +4436,7 @@
       points.forEach((pt, k) => {
         if (!pt.found) return;
         const i = pt.found - 1;
-        marked[i] = marked[i].replace(pt.quoteHtml, `<mark class="lb-mark">${pt.quoteHtml}<sup>${LB_NUM[k]}</sup></mark>`);
+        marked[i] = marked[i].replace(pt.quoteHtml, () => `<mark class="lb-mark">${pt.quoteHtml}<sup>${LB_NUM[k]}</sup></mark>`);
       });
       const paras = marked.map(p => `<p style="font-size:15.5px;line-height:2;text-indent:2em;margin:4px 0">${p}</p>`).join('');
       const review = points.length
@@ -4561,7 +4562,9 @@
         const add = incoming.filter(i => i && /^m[0-9a-z]{1,16}$/.test(String(i.id)) && !have.has(i.id) && LB_SOURCES[i.source] && i.text)
           .map(i => ({ id: String(i.id), ts: Number(i.ts) || Date.now(), source: String(i.source), grade: String(i.grade || '').slice(0, 4),
             genre: String(i.genre || '').slice(0, 20), title: String(i.title || '').slice(0, 40), level: String(i.level || '').slice(0, 20),
-            text: String(i.text).slice(0, 20000), analysis: String(i.analysis || '').slice(0, 3000) }));
+            text: String(i.text).slice(0, 20000), analysis: String(i.analysis || '').slice(0, 3000), summary: String(i.summary || '').slice(0, 300),
+            points: (Array.isArray(i.points) ? i.points : []).filter(x => x && typeof x === 'object' && x.note).slice(0, 5)
+              .map(x => ({ para: Number(x.para) || 0, quote: String(x.quote || '').slice(0, 60), note: String(x.note).slice(0, 200) })) }));
         lbSave(lbItems().concat(add)); lbRender();
         showToast(`匯入 ${add.length} 篇（重複的略過）。`);
       } catch (e) { showToast(e.message || '匯入失敗。', true); }
@@ -5577,14 +5580,18 @@
         return picks;
       }
       function maskSavePicks() {
-        try { localStorage.setItem(MASK_PICK_KEY, JSON.stringify({ picks: maskPicks(), words: $('maskWords').value.slice(0, 4000) })); } catch (e) {}
+        try {
+          if ($('maskRemember').checked) { localStorage.setItem(MASK_PICK_KEY, JSON.stringify({ picks: maskPicks(), words: $('maskWords').value.slice(0, 4000) })); localStorage.removeItem('studioMaskNoRemember'); }
+          else { localStorage.removeItem(MASK_PICK_KEY); localStorage.setItem('studioMaskNoRemember', '1'); }   // 共用電腦：學生姓名不留在這台電腦
+        } catch (e) {}
       }
       try {
+        if (localStorage.getItem('studioMaskNoRemember') === '1') $('maskRemember').checked = false;
         const saved = JSON.parse(localStorage.getItem(MASK_PICK_KEY) || 'null');
         if (saved && saved.picks) MASK_KINDS.forEach(kind => { if ($(`maskPick_${kind}`) && typeof saved.picks[kind] === 'boolean') $(`maskPick_${kind}`).checked = saved.picks[kind]; });
         if (saved && typeof saved.words === 'string') $('maskWords').value = saved.words;
       } catch (e) {}
-      document.querySelectorAll('[id^="maskPick_"], #maskWords').forEach(el => el.addEventListener('change', maskSavePicks));
+      document.querySelectorAll('[id^="maskPick_"], #maskWords, #maskRemember').forEach(el => el.addEventListener('change', maskSavePicks));
 
       function maskNameList() {
         const seat = (($('stNames') || {}).value || '').split('\n');
@@ -5788,6 +5795,43 @@
         xlsx: { mime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
       };
       let maskDocResult = null;
+      /** 補漏：Office 檔裡其他放文字的地方——修訂刪除的字、欄位代碼、註解、頁首頁尾、圖表、樞紐分析表快取、
+          超連結（mailto:／tel:）、作者資訊——全部再掃一遍；內嵌的檔案沒辦法處理，就警告老師。 */
+      function maskPackageLeftovers(entries, ctx) {
+        ctx.warnings = ctx.warnings || new Set();
+        const enc = new TextEncoder(), dec = new TextDecoder();
+        const SKIP = /(^|\/)(styles|stylesWithEffects|theme\d*|settings|fontTable|webSettings|numbering|presProps|viewProps|tableStyles|calcChain)\.xml$|^\[Content_Types\]\.xml$/;
+        entries.forEach(entry => {
+          if (/\/embeddings\//i.test(entry.name)) {
+            if (!/\.(png|jpe?g|gif|emf|wmf|bin)$/i.test(entry.name) || /oleObject/i.test(entry.name)) ctx.warnings.add('檔案裡有「內嵌的檔案」（例如貼進來的 Excel 表、Word 文件），沒辦法自動遮，請打開檔案刪掉或另存後再分享');
+            return;
+          }
+          if (/\/media\//i.test(entry.name)) { ctx.warnings.add('檔案裡有圖片，圖片上的字不會被遮，請自己檢查（必要時用上面的圖片框選）'); return; }
+          if (!/\.(xml|rels)$/i.test(entry.name) || SKIP.test(entry.name)) return;
+          const doc = new DOMParser().parseFromString(dec.decode(entry.data), 'application/xml');
+          if (doc.getElementsByTagName('parsererror').length) return;
+          let changed = false;
+          if (/docProps\/core\.xml$/i.test(entry.name)) {
+            ['creator', 'lastModifiedBy'].forEach(tag => [...doc.getElementsByTagNameNS('*', tag)].forEach(node => { if (node.textContent) { node.textContent = ''; changed = true; } }));
+          }
+          const walker = doc.createTreeWalker(doc.documentElement, NodeFilter.SHOW_TEXT);
+          for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+            const text = node.nodeValue;
+            if (!text || !text.trim()) continue;
+            const masked = maskString(text, ctx.picks, ctx.names, null, ctx.counts);
+            if (masked !== text) { node.nodeValue = masked; changed = true; }
+          }
+          // 屬性：樞紐分析表快取的值（v）、超連結目標（mailto:、tel:）
+          [...doc.getElementsByTagName('*')].forEach(el => [...el.attributes].forEach(attr => {
+            const isLink = attr.localName === 'Target' && /^(mailto|tel):/i.test(attr.value);
+            if (attr.localName !== 'v' && !isLink) return;
+            let masked = maskString(attr.value, ctx.picks, ctx.names, null, ctx.counts);
+            if (isLink && masked === attr.value) masked = attr.value.replace(/^(mailto|tel):.*/i, '$1:＊＊＊');
+            if (masked !== attr.value) { el.setAttribute(attr.name, masked); changed = true; }
+          }));
+          if (changed) entry.data = enc.encode(new XMLSerializer().serializeToString(doc));
+        });
+      }
       async function maskDocument(file) {
         const ext = (file.name.match(/\.([a-z0-9]+)$/i) || [])[1]?.toLowerCase() || '';
         if (['doc', 'xls', 'ppt'].includes(ext)) throw new Error(`.${ext} 是舊格式：請先用 Office 打開，「另存新檔」成 .${ext}x 再放進來。`);
@@ -5803,6 +5847,7 @@
             const enc = new TextEncoder(), dec = new TextDecoder();
             entries.filter(e => OFFICE[ext].parts.test(e.name)).forEach(e => { e.data = enc.encode(maskXmlParagraphs(dec.decode(e.data), ctx, OFFICE[ext].para)); });
           }
+          maskPackageLeftovers(entries, ctx);
           blob = await zipEntries(entries, OFFICE[ext].mime);
         } else if (['txt', 'csv', 'md'].includes(ext)) {
           const bytes = new Uint8Array(await file.arrayBuffer());
@@ -5828,6 +5873,8 @@
           $('maskDocSummary').textContent = total
             ? `「${file.name}」已遮蔽 ${total} 處：${MASK_KINDS.filter(k => counts[k]).map(k => `${MASK_LABEL[k]} ${counts[k]}`).join('、')}。下載後請打開逐一確認再分享。`
             : `「${file.name}」沒有找到勾選的項目。姓名請在「其他要遮的姓名或字詞」填入，或到座位表輸入學生名單。`;
+          const warnings = [...(maskDocResult.ctx.warnings || [])];
+          if (warnings.length) $('maskDocSummary').textContent += `\n⚠️ ${warnings.join('\n⚠️ ')}`;
           $('maskDocSamples').innerHTML = samples.length ? `<div class="hint" style="margin:6px 0 4px">遮蔽後的樣子（抽樣）：</div>${samples.map(s => `<div class="mask-sample">${escapeHtml(s)}</div>`).join('')}` : '';
           $('maskDocDownload').hidden = !total;
           $('maskStatus').textContent = total ? '文件遮蔽完成，請下載檢查。' : '沒有找到要遮的資料。';
