@@ -110,3 +110,31 @@ assert.match(v, /<table class="mv">/);
 assert.match(v, /mv-op">＋/);
 
 console.log(`math_gen.test.js: all checks passed（驗算計算題 ${total} 題、應用題 ${wordTotal} 題）`);
+
+// 2026-11-10 年級對照 108 課綱數學領綱學習內容（條目備註的數字範圍）
+{
+  const g = id => (M.KINDS.find(k => k.id === id) || M.WORDS.find(k => k.id === id)).grade;
+  assert.equal(g("eqBox1"), 2, "N-1-2 備註：一年級不做加數、被加數未知（□ 填空）→ 二年級");
+  assert.equal(g("decAdd1"), 3, "N-3-10：一位小數的加減在三年級");
+  assert.equal(g("fracTimes"), 4, "N-4-5：分數的整數倍在四年級");
+  assert.equal(g("fracMixed"), 4, "N-4-5：帶分數在四年級");
+  assert.equal(g("decMulInt"), 4, "N-4-7：小數的整數倍在四年級");
+  assert.equal(g("wFracMul"), 4, "N-4-5：分數的整數倍應用題在四年級");
+  for (let seed = 1; seed <= 300; seed += 1) {
+    for (const q of M.generate("mul1", 10, seed)) assert.ok(+q.text.split(" × ")[0] <= 999, `N-3-3 被乘數只到三位數：${q.text}`);
+    for (const q of M.generate("div1", 10, seed)) assert.ok(+q.text.split(" ÷ ")[0] <= 999, `N-3-5 被除數只到三位數：${q.text}`);
+    for (const q of M.generate("div1r", 10, seed)) assert.ok(q.check.dividend <= 999, `N-3-5 被除數只到三位數：${q.text}`);
+    for (const q of M.generate("fracSame", 10, seed)) {
+      assert.doesNotMatch(q.answerText, /又/, `N-3-9 三年級不寫帶分數：${q.text} ${q.answerText}`);
+      assert.ok(q.value.n <= 2 * q.value.d, `N-3-9 結果不超過 2：${q.text}`);
+      const d = q.text.match(/\/(\d+)/)[1];
+      if (q.answerText.includes("/")) assert.equal(q.answerText.split("/")[1], d, `三年級還沒學約分，答案照原分母：${q.text} ${q.answerText}`);
+    }
+    for (const q of M.generate("fracMixed", 10, seed)) assert.match(q.text, /又/, `帶分數題目要寫成帶分數：${q.text}`);
+    for (const q of M.generate("fracDiff", 10, seed)) {
+      const [a, b] = q.text.match(/\/(\d+)/g).map(x => +x.slice(1));
+      const ok = (a < 10 && b < 10) || a % b === 0 || b % a === 0 || [2, 3, 4, 5].some(i => [2, 3, 4, 5].some(j => a * i === b * j));
+      assert.ok(ok, `N-5-4 通分數字範圍：${q.text}`);
+    }
+  }
+}

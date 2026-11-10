@@ -153,6 +153,7 @@
     .aw-date { font-size:22px; margin-top:34px; }
     /* 📎 PDF 工具：頁面縮圖 */
     .pg-tools { display:inline-flex; gap:6px; flex-wrap:wrap; }
+    #page-pdf .panel.pg-drop { outline:3px dashed var(--primary); outline-offset:-6px; background:var(--soft); }
     .pg-tools[hidden] { display:none; }
     .pg-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(132px, 1fr)); gap:12px; padding:12px 2px; min-height:120px; }
     .pg-card { border:2px solid var(--line); border-radius:12px; background:var(--surface); padding:6px; display:flex; flex-direction:column; gap:4px; cursor:grab; user-select:none; }
@@ -1282,8 +1283,14 @@
               <select class="select" id="pdfImgDpi" style="width:auto"><option value="110">一般（貼 LINE）</option><option value="150" selected>清楚</option><option value="220">很清楚（列印）</option></select>
             </div>
           </div>
-          <details class="field" id="pdfAdvanced">
-            <summary style="cursor:pointer;font-weight:800">④ 進階（不用也可以）</summary>
+          <details class="field" id="pdfAdvanced" open>
+            <summary style="cursor:pointer;font-weight:800">④ 常用加工（不用就維持「不用」）</summary>
+            <div class="field"><label for="pdfSplit">拆成多份（打包成 ZIP）</label>
+              <div class="check-row"><select class="select" id="pdfSplit" style="width:auto"><option value="0">不拆</option><option value="1">每 1 頁一份（例：成績單一人一張）</option><option value="2">每 2 頁一份</option><option value="custom">每幾頁一份…</option></select>
+                <input class="input" id="pdfSplitN" type="number" min="1" max="200" value="3" style="width:70px" hidden></div></div>
+            <div class="field"><label for="pdfCompress">掃描檔瘦身（只對輸出 PDF 有用）</label>
+              <select class="select" id="pdfCompress"><option value="">不用</option><option value="150">標準（看得清楚）</option><option value="110">最小（貼 LINE、寄信）</option></select>
+              <div class="hint" style="margin-top:4px">會把每頁變成圖片再存，檔案變小，但文字不能再選取；最適合手機拍的或掃描的 PDF。</div></div>
             <div class="field"><label for="pdfNup">多頁合一（省紙列印）</label>
               <select class="select" id="pdfNup"><option value="1">不用</option><option value="2">2 合 1（A4 橫放，左右兩頁）</option><option value="4">4 合 1（A4 直放，田字四頁）</option></select></div>
             <div class="field"><label for="pdfNumPos">加頁碼</label>
@@ -1304,12 +1311,6 @@
                 <label>左 <input class="input" id="cropLeft" type="number" min="0" max="80" value="0" style="width:64px"></label>
                 <label>右 <input class="input" id="cropRight" type="number" min="0" max="80" value="0" style="width:64px"></label>
               </div></div>
-            <div class="field"><label for="pdfSplit">拆成多份（打包成 ZIP）</label>
-              <div class="check-row"><select class="select" id="pdfSplit" style="width:auto"><option value="0">不拆</option><option value="1">每 1 頁一份（例：成績單一人一張）</option><option value="2">每 2 頁一份</option><option value="custom">每幾頁一份…</option></select>
-                <input class="input" id="pdfSplitN" type="number" min="1" max="200" value="3" style="width:70px" hidden></div></div>
-            <div class="field"><label for="pdfCompress">掃描檔瘦身（只對輸出 PDF 有用）</label>
-              <select class="select" id="pdfCompress"><option value="">不用</option><option value="150">標準（看得清楚）</option><option value="110">最小（貼 LINE、寄信）</option></select>
-              <div class="hint" style="margin-top:4px">會把每頁變成圖片再存，檔案變小，但文字不能再選取；最適合手機拍的或掃描的 PDF。</div></div>
           </details>
           <button class="go-button" type="button" id="pdfGoButton">⬇ 下載</button>
           <div class="status" id="pdfStatus"></div>
@@ -1317,7 +1318,7 @@
         </div>
         <div class="panel">
           <div class="preview-bar">
-            <span class="status" id="pdfMeta">還沒有頁面。先在左邊加入 PDF 或照片。</span>
+            <span class="status" id="pdfMeta">還沒有頁面。先在左邊加入 PDF 或照片，或直接把檔案拖到這裡。</span>
             <span class="pg-tools">
               <button class="mini" type="button" id="pgRotateAll">↻ 全部轉向</button>
               <button class="mini" type="button" id="pgUndelete">↩ 復原刪除</button>
@@ -1595,6 +1596,10 @@
     const escapeHtml = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     function showToast(message, isError) {
       const toast = $('toast');
+      // AI 回的格式不對時，程式內部的英文錯誤（Cannot read properties…）老師看不懂：換成白話
+      if (isError && /Cannot read propert|is not a function|is not iterable|undefined|Unexpected token|JSON/i.test(String(message || ''))) {
+        message = 'AI 這次回的內容格式不完整，請再按一次；一直不行的話，換個說法或少放一點內容。';
+      }
       toast.textContent = message;
       toast.classList.toggle('error', !!isError);
       toast.classList.add('show');
@@ -1848,6 +1853,7 @@
       try {
         const image = await fileToPart(zoneFirst('wsImage'));
         const data = extractJson(await callGemini(prompt, image, $('wsStatus')));
+        if (!Array.isArray(data.versions) || !data.versions.length) throw new Error('AI 這次回的學習單內容不完整（沒有題目），請再按一次。');
         let art = '';
         if ($('wsArt').checked) {
           try {
@@ -3977,7 +3983,8 @@
     // ---- 批改單 v2：老師可直接改字；勾「老師已確認」才開放列印、才存進紀錄 ----
     const ES_REC_KEY = 'studio_essay_records_v1';
     let esCurrent = null;
-    function esRecords() { try { const a = JSON.parse(localStorage.getItem(ES_REC_KEY) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+    // 存檔可能被改壞：只留一筆一筆的物件，其他的丟掉
+    function esRecords() { try { const a = JSON.parse(localStorage.getItem(ES_REC_KEY) || '[]'); return Array.isArray(a) ? a.filter(r => r && typeof r === 'object' && !Array.isArray(r)) : []; } catch (e) { return []; } }
     function esSaveRecords(list) { try { localStorage.setItem(ES_REC_KEY, JSON.stringify(list.slice(-300))); } catch (e) { showToast('批改紀錄存不下（這台電腦空間不足）。', true); } }
     function esSetConfirmed(on) {
       $('esConfirm').checked = on;
@@ -4139,7 +4146,7 @@
       student: { label: '學生佳作（已同意）', rights: '學生與家長已簽同意書，同意匿名在教學中使用' },
       public: { label: '公有領域', rights: '作者過世已超過 50 年，屬公有領域' }
     };
-    function lbItems() { try { const a = JSON.parse(localStorage.getItem(LB_KEY) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+    function lbItems() { try { const a = JSON.parse(localStorage.getItem(LB_KEY) || '[]'); return Array.isArray(a) ? a.filter(r => r && typeof r === 'object' && !Array.isArray(r)) : []; } catch (e) { return []; } }
     function lbSave(list) { try { localStorage.setItem(LB_KEY, JSON.stringify(list.slice(-400))); } catch (e) { showToast('範文庫存不下（這台電腦空間不足），請先匯出備份再刪舊的。', true); } }
     function lbSyncSource() {
       const v = $('lbSource').value;
@@ -4724,6 +4731,7 @@
         }
         renderPages();
         renderThumbs();
+        if (pages.length) $('pdfAdvanced').open = true;
       }
       let thumbJob = 0;
       async function renderThumbs() {
@@ -4755,7 +4763,7 @@
         const kept = pages.filter(p => !p.deleted).length;
         $('pdfMeta').textContent = pages.length
           ? `共 ${pages.length} 頁${pages.length - kept ? `，刪掉 ${pages.length - kept} 頁` : ''}，輸出 ${kept} 頁。`
-          : '還沒有頁面。先在左邊加入 PDF 或照片。';
+          : '還沒有頁面。先在左邊加入 PDF 或照片，或直接把檔案拖到這裡。';
         document.querySelector('#page-pdf .pg-tools').hidden = !pages.length;
         let n = 0;
         grid.innerHTML = pages.map(p => {
@@ -4838,6 +4846,17 @@
       });
 
       $('pdfFiles').addEventListener('change', () => { addFiles($('pdfFiles').files); $('pdfFiles').value = ''; });
+      // 從檔案總管直接拖 PDF／照片到右邊（和頁面之間的拖曳排序分開：只有拖「檔案」才算加入）
+      const dropPanel = $('pdfPagesGrid').closest('.panel');
+      const hasFiles = e => [...(e.dataTransfer?.types || [])].includes('Files');
+      dropPanel.addEventListener('dragover', e => { if (!hasFiles(e)) return; e.preventDefault(); dropPanel.classList.add('pg-drop'); });
+      dropPanel.addEventListener('dragleave', e => { if (!dropPanel.contains(e.relatedTarget)) dropPanel.classList.remove('pg-drop'); });
+      dropPanel.addEventListener('drop', e => {
+        if (!hasFiles(e)) return;
+        e.preventDefault(); e.stopPropagation();
+        dropPanel.classList.remove('pg-drop');
+        addFiles(e.dataTransfer.files);
+      });
 
       // ---------- 輸出選項 ----------
       const OUT_HINT = {

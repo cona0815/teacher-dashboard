@@ -1154,3 +1154,11 @@ assert.match(studioHtml, /Pre-A1/, "英文閱讀應依 CEFR 分級");
   assert.strictEqual(pick(indexHtml.slice(indexHtml.indexOf('const SCREEN_PROMPT_GROUPS'))), pick(morningHtml.slice(morningHtml.indexOf('const PROMPT_GROUPS'))), "工作台的大屏提示清單應與大屏一致");
   assert.strictEqual(pick(indexHtml.slice(indexHtml.indexOf('const SCREEN_PROMPT_GROUPS'))), pick(lineBotSource.slice(lineBotSource.indexOf('var SCREEN_PROMPTS'))), "工作台的大屏提示清單應與 LINE 小幫手一致");
 }
+
+// 畫面上的元件 id 不可重複（重複時程式只抓得到第一個，另一個會「按了沒反應」）
+for (const [name, html] of [["工作台", indexHtml], ["教材小工場", studioHtml]]) {
+  const ids = [...html.replace(/<script[\s\S]*?<\/script>/g, "").matchAll(/\sid="([^"$]+)"/g)].map(m => m[1]);
+  const dup = [...new Set(ids.filter((id, i) => ids.indexOf(id) !== i))];
+  assert.deepStrictEqual(dup, [], `${name}有重複的 id：${dup.join("、")}`);
+}
+assert.match(studioHtml, /<details class="field" id="pdfAdvanced" open>/, "PDF 常用加工應預設展開");

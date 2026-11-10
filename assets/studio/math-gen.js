@@ -142,7 +142,9 @@
   function numHtml(q, mode, style) { return mode === 'frac' && !isInt(q) ? fracHtml(q, style) : esc(numText(q, mode, style)); }
 
   // ---------- 題型 ----------
-  // grade：建議年級（依 108 課綱國小數學大致的學習順序，老師可以跨年級勾）
+  // grade：建議年級。2026-11-10 逐條對照 108 課綱數學領綱「學習內容」（N-年級-序號、R-年級-序號）與條目備註，
+  //        並參考康軒、翰林與各校教學計畫的單元安排；數字範圍照條目備註（例如三年級被乘數、被除數只到三位數）。
+  //        老師仍可勾「也顯示其他年級的題型」跨年級出題。
   // gen(r) 回傳 { terms:[有理數…], ops:['+'…], mode:'int'|'frac'|'dec', answer, vertical? } 或特殊題型
   const KINDS = [];
   const kind = (id, grade, label, gen, extra) => KINDS.push(Object.assign({ id, grade, label, gen }, extra || {}));
@@ -158,24 +160,33 @@
   kind('mul99', 2, '九九乘法', r => { const a = r.int(2, 9), b = r.int(1, 9); return two(I(a), '×', I(b), 'int', I(a * b)); });
   kind('add3', 3, '多位數的加法（三、四位數）', r => { const a = r.digits(r.int(3, 4)), b = r.digits(r.int(3, 4)); return two(I(a), '+', I(b), 'int', I(a + b), { vertical: true }); });
   kind('sub3', 3, '多位數的減法（三、四位數）', r => { const a = r.digits(r.int(3, 4)), b = r.int(100, a - 1); return two(I(a), '-', I(b), 'int', I(a - b), { vertical: true }); });
-  kind('mul1', 3, '多位數 × 一位數', r => { const a = r.digits(r.int(2, 4)), b = r.int(2, 9); return two(I(a), '×', I(b), 'int', I(a * b), { vertical: true }); });
-  kind('div1', 3, '÷ 一位數（整除）', r => { const b = r.int(2, 9), q = r.int(10, 999); return two(I(b * q), '÷', I(b), 'int', I(q)); });
+  // N-3-3、N-3-5：三年級被乘數、被除數為二、三位數
+  kind('mul1', 3, '多位數 × 一位數', r => { const a = r.digits(r.int(2, 3)), b = r.int(2, 9); return two(I(a), '×', I(b), 'int', I(a * b), { vertical: true }); });
+  kind('div1', 3, '÷ 一位數（整除）', r => { const b = r.int(2, 9), q = r.int(Math.max(4, Math.ceil(10 / b)), Math.floor(999 / b)); return two(I(b * q), '÷', I(b), 'int', I(q)); });
   kind('div1r', 3, '÷ 一位數（有餘數）', r => {
-    const b = r.int(2, 9), q = r.int(10, 300), rem = r.int(1, b - 1);
+    const b = r.int(2, 9), q = r.int(Math.max(3, Math.ceil(10 / b)), Math.floor((999 - b + 1) / b)), rem = r.int(1, b - 1);
     return { special: 'rem', dividend: b * q + rem, divisor: b, quot: q, rem };
   }, { wide: true });
   kind('fracSame', 3, '同分母分數的加減', r => {
     const d = r.int(3, 12);
-    if (r.next() < 0.5) { const a = r.int(1, d - 1), b = r.int(1, d - 1); return two(Q(a, d), '+', Q(b, d), 'frac', Q(a + b, d), { raw: [[a, d], [b, d]] }); }
+    // N-3-9：結果不超過 2；三年級不教帶分數（N-4-5）、也還沒學約分（N-5-4）→ 答案照原分母寫，例如 15/12
+    if (r.next() < 0.5) { const a = r.int(1, d - 1), b = r.int(1, d - 1); return two(Q(a, d), '+', Q(b, d), 'frac', Q(a + b, d), { raw: [[a, d], [b, d]], answerRaw: [a + b, d] }); }
     const a = r.int(2, d - 1), b = r.int(1, a - 1);
-    return two(Q(a, d), '-', Q(b, d), 'frac', Q(a - b, d), { raw: [[a, d], [b, d]] });
+    return two(Q(a, d), '-', Q(b, d), 'frac', Q(a - b, d), { raw: [[a, d], [b, d]], answerRaw: [a - b, d] });
+  });
+  // N-3-10：三年級一位小數的比較、加減（含直式）
+  kind('decAdd1', 3, '一位小數的加減', r => {
+    const a = realDec(r, 1, 999, 1), b = realDec(r, 1, 999, 1);
+    if (r.next() < 0.5) return two(a, '+', b, 'dec', add(a, b));
+    const [big, small] = a.n * b.d >= b.n * a.d ? [a, b] : [b, a];
+    return eq(big, small) ? two(big, '+', small, 'dec', add(big, small)) : two(big, '-', small, 'dec', sub(big, small));
   });
   kind('mul2', 4, '多位數 × 二位數', r => { const a = r.digits(r.int(2, 3)), b = r.int(11, 99); return two(I(a), '×', I(b), 'int', I(a * b), { vertical: true }); });
   kind('div2', 4, '÷ 二位數', r => {
     const b = r.int(11, 99), q = r.int(2, 99), rem = r.next() < 0.5 ? 0 : r.int(1, b - 1);
     return rem ? { special: 'rem', dividend: b * q + rem, divisor: b, quot: q, rem } : two(I(b * q), '÷', I(b), 'int', I(q));
   }, { wide: true });
-  kind('decAdd', 4, '小數的加減', r => {
+  kind('decAdd', 4, '小數的加減（含二位小數）', r => {
     const pa = r.int(1, 2), pb = r.int(1, 2);
     const a = realDec(r, 10, 99 * 10 ** pa, pa), b = r.next() < 0.3 ? I(r.int(1, 99)) : realDec(r, 10, 99 * 10 ** pb, pb);
     if (r.next() < 0.5) return two(a, '+', b, 'dec', add(a, b));
@@ -194,14 +205,33 @@
       (() => { const x = r.int(1, b * q - 1); return `(${x} + ${b * q - x}) ÷ ${b}`; })()
     ]) };
   }, { wide: true });
+  // N-4-5：同分母分數的整數倍、帶分數的加減（四年級才引入「帶分數」）
+  kind('fracTimes', 4, '分數的整數倍（分數 × 整數）', r => {
+    const d = r.int(2, 9);
+    let m; do { m = r.int(1, 2 * d - 1); } while (m % d === 0);   // 分數本身不能剛好是整數
+    const f = Q(m, d), k = I(r.int(2, 9));
+    return two(f, '×', k, 'frac', mul(f, k));
+  });
+  kind('fracMixed', 4, '同分母帶分數的加減', r => {
+    const d = r.int(3, 9);
+    const a = Q(r.int(1, 5) * d + r.int(1, d - 1), d), b = Q(r.int(1, 4) * d + r.int(1, d - 1), d);
+    if (r.next() < 0.5) return two(a, '+', b, 'frac', add(a, b), { termStyle: 'mixed' });
+    const [big, small] = a.n * b.d >= b.n * a.d ? [a, b] : [b, a];   // 約分後分母可能不同，要交叉相乘比大小
+    return eq(big, small) ? two(big, '+', small, 'frac', add(big, small), { termStyle: 'mixed' }) : two(big, '-', small, 'frac', sub(big, small), { termStyle: 'mixed' });
+  });
   kind('fracDiff', 5, '異分母分數的加減', r => {
     let a, b;
-    do { const d1 = r.int(2, 12), d2 = r.int(2, 12); a = Q(r.int(1, d1 - 1), d1); b = Q(r.int(1, d2 - 1), d2); } while (a.d === b.d);
+    // N-5-4 通分數字限：分母都是一位數，或一個分母是另一個的倍數（例如 4 和 12）
+    do {
+      const d1 = r.int(2, 9), d2 = r.next() < 0.75 ? r.int(2, 9) : d1 * r.int(2, 3);
+      a = Q(r.int(1, d1 - 1), d1); b = Q(r.int(1, d2 - 1), d2);
+    } while (a.d === b.d);
     if (r.next() < 0.5) return two(a, '+', b, 'frac', add(a, b));
     const diff = sub(a, b);
     return diff.n > 0 ? two(a, '-', b, 'frac', diff) : two(b, '-', a, 'frac', sub(b, a));
   });
-  kind('fracMulInt', 5, '分數 × 整數', r => {
+  // N-5-5：整數乘以分數（分數的整數倍是四年級 fracTimes）
+  kind('fracMulInt', 5, '整數 × 分數（含分數 × 整數）', r => {
     const d = r.int(2, 12), f = Q(r.int(1, d - 1), d), k = I(r.int(2, 12));
     return r.next() < 0.5 ? two(f, '×', k, 'frac', mul(f, k)) : two(k, '×', f, 'frac', mul(k, f));
   });
@@ -210,7 +240,8 @@
     const a = Q(r.int(1, d1 - 1), d1), b = Q(r.int(1, d2 - 1), d2);
     return two(a, '×', b, 'frac', mul(a, b));
   });
-  kind('decMulInt', 5, '小數 × 整數', r => { const p = r.int(1, 2), a = realDec(r, 11, 9 * 10 ** p + 9, p), k = I(r.int(2, 30)); return two(a, '×', k, 'dec', mul(a, k)); });
+  // N-4-7：二位小數的整數倍是四年級（整數 × 小數、小數 × 小數才是五年級 N-5-8）
+  kind('decMulInt', 4, '小數的整數倍（小數 × 整數）', r => { const p = r.int(1, 2), a = realDec(r, 11, 9 * 10 ** p + 9, p), k = I(r.int(2, 30)); return two(a, '×', k, 'dec', mul(a, k)); });
   kind('decMul', 5, '小數 × 小數', r => { const a = realDec(r, 11, 99, 1), p = r.int(1, 2), b = realDec(r, 11, 10 ** (p + 1) - 1, p); return two(a, '×', b, 'dec', mul(a, b)); });
   kind('decDivInt', 5, '小數 ÷ 整數（整除）', r => { const k = r.int(2, 19), q = realDec(r, 11, 999, r.int(1, 2)); return two(mul(q, I(k)), '÷', I(k), 'dec', q); });
   kind('gcd', 5, '最大公因數', r => {
@@ -248,7 +279,8 @@
     return [eqItem(`${a} × ${sym}`, `${c}`, I(b), sym), eqItem(`${sym} × ${b}`, `${c}`, I(a), sym),
       eqItem(`${c} ÷ ${sym}`, `${a}`, I(b), sym), eqItem(`${sym} ÷ ${a}`, `${b}`, I(c), sym)];
   }
-  kind('eqBox1', 1, '□ 填空（10 以內加減）', r => { const a = r.int(1, 8), b = r.int(1, 10 - a); return r.pick(boxAddSub(a, b, '□')); });
+  // N-1-2 備註：一年級不做加數、被加數、減數、被減數未知的題型（N-2-3 二年級才做）
+  kind('eqBox1', 2, '□ 填空（10 以內加減）', r => { const a = r.int(1, 8), b = r.int(1, 10 - a); return r.pick(boxAddSub(a, b, '□')); });
   kind('eqBox2', 2, '□ 填空（二位數加減）', r => { const a = r.int(10, 80), b = r.int(5, 99 - a); return r.pick(boxAddSub(a, b, '□')); });
   kind('eqBox3', 3, '□ 填空（乘除）', r => { const a = r.int(2, 9), b = r.int(2, 9); return r.pick(boxMulDiv(a, b, '□')); });
   kind('eqX', 6, '解方程式（整數、小數）', r => {
@@ -334,9 +366,9 @@
     return r.pick([
       { q: `一瓶果汁有 ${ft(a)} 公升，喝掉 ${ft(b)} 公升，還剩多少公升？`, expr: `${ft(a)} - ${ft(b)}`, unit: '公升' },
       { q: `${r.pick(NAMES)}上午看了一本書的 ${ft(b)}，下午又看了 ${ft(sub(a, b))}，一共看了這本書的幾分之幾？`, expr: `${ft(b)} + ${ft(sub(a, b))}`, unit: '' }]); });
-  word('wFracMul', 5, '分數 × 整數', r => { const d = r.int(3, 9), f = Q(r.int(1, d - 1), d), k = r.int(2, 9);
+  word('wFracMul', 4, '分數的整數倍', r => { const d = r.int(3, 9), f = Q(r.int(1, d - 1), d), k = r.int(2, 9);
     return { q: `每個小朋友吃 ${ft(f)} 個蛋糕，${k} 個小朋友一共吃了幾個蛋糕？`, expr: `${ft(f)} × ${k}`, unit: '個' }; });
-  word('wDecMul', 5, '小數 × 整數', r => { const p = r.int(2, 9) * 10, w = realDec(r, 11, 59, 1);
+  word('wDecMul', 5, '整數 × 小數', r => { const p = r.int(2, 9) * 10, w = realDec(r, 11, 59, 1);
     return { q: `一公尺緞帶 ${p} 元，買 ${decText(w)} 公尺要多少元？`, expr: `${p} × ${decText(w)}`, unit: '元' }; });
   word('wGcd', 5, '最大公因數（平分）', r => { const g = r.int(2, 9); let m, n; do { m = r.int(2, 7); n = r.int(2, 7); } while (m === n || gcd(m, n) !== 1);
     return { q: `有 ${g * m} 顆紅球和 ${g * n} 顆藍球，要平分裝成一樣的禮物袋，每袋紅球一樣多、藍球也一樣多，而且都沒有剩，最多可以裝成幾袋？`, special: 'gcd', a: g * m, b: g * n, unit: '袋' }; }, { int: true });
@@ -428,8 +460,9 @@
     }
     const mode = item.mode;
     // 題目裡的分數照「未約分」的原樣出（例如 2/4 不先約成 1/2），答案才約到最簡
-    const termText = (t, k) => (item.raw && item.raw[k] ? `${item.raw[k][0]}/${item.raw[k][1]}` : numText(t, mode, 'improper'));
-    const termHtml = (t, k) => (item.raw && item.raw[k] ? fracHtml({ n: item.raw[k][0], d: item.raw[k][1] }, 'improper') : numHtml(t, mode, 'improper'));
+    const termStyle = item.termStyle || 'improper';   // 帶分數題型的題目要寫成帶分數
+    const termText = (t, k) => (item.raw && item.raw[k] ? `${item.raw[k][0]}/${item.raw[k][1]}` : numText(t, mode, termStyle));
+    const termHtml = (t, k) => (item.raw && item.raw[k] ? fracHtml({ n: item.raw[k][0], d: item.raw[k][1] }, 'improper') : numHtml(t, mode, termStyle));
     let text = termText(item.terms[0], 0), html = termHtml(item.terms[0], 0);
     item.ops.forEach((op, k) => {
       text += ` ${op} ${termText(item.terms[k + 1], k + 1)}`;
@@ -439,6 +472,11 @@
       text: `${text} =`, html: `${html} ＝`,
       answerText: numText(item.answer, mode, style), answerHtml: numHtml(item.answer, mode, style), value: item.answer
     };
+    // 三年級分數：答案照原分母寫、不約分也不寫帶分數；剛好是整數就寫整數
+    if (item.answerRaw && item.answerRaw[0] % item.answerRaw[1] !== 0) {
+      out.answerText = `${item.answerRaw[0]}/${item.answerRaw[1]}`;
+      out.answerHtml = fracHtml({ n: item.answerRaw[0], d: item.answerRaw[1] }, 'improper');
+    }
     if (item.vertical && mode === 'int') out.vertical = { a: item.terms[0].n, b: item.terms[1].n, op: item.ops[0] };
     return out;
   }
