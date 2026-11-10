@@ -1,5 +1,5 @@
 // 教師工作台網站版本（每次發布都要更新；各頁左下角會顯示）
-window.TD_VERSION = '2026-11-07 14:56';
+window.TD_VERSION = '2026-11-10 09:48';
 (function () {
   try {
     var el = document.createElement('div');
