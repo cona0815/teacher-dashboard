@@ -788,6 +788,42 @@
     .cb-board-date { text-align: right; font-size: 13px; font-weight: 800; letter-spacing: 1px; border-bottom: 1px solid rgba(244,241,230,.35); padding-bottom: 6px; margin-bottom: 10px; }
     .cb-board-text { font-size: 17px; font-weight: 700; line-height: 1.85; white-space: pre-wrap; word-break: break-word; min-height: 120px; }
     .cb-board-text .dim { color: rgba(244,241,230,.5); font-size: 14px; }
+    /* 黑板排版：直書／橫書、字距、行距（與大屏同一份設定；字距依字級等比例換算） */
+    .cb-board-text { letter-spacing: calc(.03em + var(--cb-tracking, 0em)); line-height: calc(1.85 + var(--cb-leading, 0)); }
+    .cb-board.cb-vertical .cb-board-text { writing-mode: vertical-rl; text-orientation: upright; height: 340px; min-height: 0; overflow-x: auto; overflow-y: hidden; }
+    .cb-tcy { text-combine-upright: all; }
+    .cb-gap { font-size: 0; letter-spacing: 0; }
+    .cb-dash { text-orientation: sideways; }
+    .cb-preview-tools { display: flex; justify-content: flex-end; gap: 6px; margin-bottom: 6px; }
+    .cb-layout-panel { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface); padding: 8px 10px; margin-bottom: 8px; font-size: 13px; font-weight: 800; color: var(--primary-strong); }
+    .cb-layout-panel[hidden] { display: none; }
+    .cb-layout-panel .cb-seg { display: inline-flex; align-items: center; gap: 4px; }
+    .cb-layout-panel .cb-val { min-width: 28px; text-align: center; font-variant-numeric: tabular-nums; }
+    /* 用 #contactBookSection 提高權重：可愛溫暖風的 .mini-button 樣式與 :hover 都不能蓋掉「選中」 */
+    #contactBookSection .mini-button.on, #contactBookSection .mini-button.on:hover { background: var(--primary-strong); border-color: var(--primary-strong); color: #fff; }
+    /* 聯絡本：編輯／日曆切換 */
+    .cb-mode { display: inline-flex; gap: 4px; flex: 0 0 auto; }
+    .cbcal-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .cbcal-month { min-width: 130px; text-align: center; font-size: 18px; font-weight: 900; color: var(--primary-strong); }
+    .cbcal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; margin-top: 10px; }
+    .cbcal-week { font-size: 13px; font-weight: 900; color: var(--muted); text-align: center; }
+    .cbcal-day { min-width: 0; min-height: 132px; display: flex; flex-direction: column; gap: 3px; text-align: left; border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); padding: 6px 8px; font-family: inherit; cursor: pointer; }
+    .cbcal-day:hover { border-color: var(--primary); }
+    .cbcal-day b { font-size: 14px; font-weight: 900; display: flex; align-items: center; gap: 4px; }
+    .cbcal-day b small { font-size: 11px; font-weight: 800; color: var(--muted); }
+    .cbcal-day .cbcal-text { font-size: 12.5px; font-weight: 700; line-height: 1.5; white-space: pre-wrap; word-break: break-word; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; }
+    .cbcal-day .cbcal-none { font-size: 12px; color: var(--muted); opacity: .6; }
+    .cbcal-day.has { background: #edf6ef; border-color: #8fc1a0; }
+    .cbcal-day.future.has { background: #fff7e3; border-color: #dfc07a; }
+    .cbcal-day.weekend:not(.has) { opacity: .55; }
+    .cbcal-day.today { box-shadow: 0 0 0 2px var(--primary-strong) inset; }
+    .cbcal-day.today b { color: var(--primary-strong); }
+    @media (max-width: 760px) {
+      .cbcal-grid { grid-template-columns: 1fr; }
+      .cbcal-week, .cbcal-blank, .cbcal-day:not(.has):not(.today) { display: none; }
+      .cbcal-day { min-height: 0; }
+      .cbcal-day .cbcal-text { -webkit-line-clamp: unset; }
+    }
     .calendar-rollcall { display: block; width: 100%; margin: 2px 0; padding: 2px 5px; border: 0; border-radius: 7px; background: #fdeee9; color: #8a3d31; font-size: 12px; font-weight: 800; text-align: left; cursor: pointer; }
     .calendar-rollcall.all-clear { background: #e3f6ec; color: #1c6b45; }
     /* 摘要卡改用清楚的 emoji 圖示 */
@@ -1944,8 +1980,24 @@
             <p>在這裡預先輸入每天的聯絡本；晨間大屏開啟時會自動顯示在點名畫面旁的黑板上。同一天以最後儲存者為準。</p>
           </div>
         </div>
+        <div class="cb-mode" role="group" aria-label="聯絡本檢視">
+          <button class="mini-button on" type="button" id="cbModeEditButton" aria-pressed="true">✏️ 編輯</button>
+          <button class="mini-button" type="button" id="cbModeCalendarButton" aria-pressed="false">📅 日曆</button>
+        </div>
       </div>
       <div class="secretary-notes-body">
+        <div id="cbCalendarView" hidden>
+          <div class="cbcal-head">
+            <button class="mini-button" type="button" id="cbcalPrevButton">‹ 上個月</button>
+            <span class="cbcal-month" id="cbcalMonth"></span>
+            <button class="mini-button" type="button" id="cbcalNextButton">下個月 ›</button>
+            <button class="mini-button" type="button" id="cbcalThisButton">這個月</button>
+            <button class="mini-button" type="button" id="cbcalReloadButton">🔄 重新讀取</button>
+            <span class="secretary-note-meta" id="cbcalMeta"></span>
+          </div>
+          <div class="cbcal-grid" id="cbcalGrid"></div>
+        </div>
+        <div id="cbEditView">
         <div class="secretary-note-actions cb-datebar" style="align-items:center;flex-wrap:wrap">
           <button class="mini-button" type="button" id="cbPrevDayButton">‹ 前一天</button>
           <input class="input" id="contactBookDate" type="date" style="max-width:160px">
@@ -1975,11 +2027,19 @@
             <button class="button button-dark" type="button" id="contactBookSaveButton" style="margin-top:10px">💾 儲存到雲端（大屏黑板一分鐘內更新）</button>
           </div>
           <div class="cb-preview">
-            <div class="cb-board"><div class="cb-board-in">
+            <div class="cb-preview-tools"><button class="mini-button" type="button" id="cbLayoutButton" aria-expanded="false" title="直書或橫書、字距、行距">直橫・間距</button></div>
+            <div class="cb-layout-panel" id="cbLayoutPanel" hidden>
+              <span class="cb-seg"><button class="mini-button" type="button" data-cb-dir="h">橫書</button><button class="mini-button" type="button" data-cb-dir="v">直書</button></span>
+              <span class="cb-seg">字距<button class="mini-button" type="button" data-cb-step="tracking:-1" title="字距變小">−</button><span class="cb-val" id="cbTrackingValue"></span><button class="mini-button" type="button" data-cb-step="tracking:1" title="字距變大">＋</button></span>
+              <span class="cb-seg">行距<button class="mini-button" type="button" data-cb-step="leading:-1" title="行距變小">−</button><span class="cb-val" id="cbLeadingValue"></span><button class="mini-button" type="button" data-cb-step="leading:1" title="行距變大">＋</button></span>
+              <button class="mini-button" type="button" id="cbLayoutReset">恢復預設</button>
+            </div>
+            <div class="cb-board" id="cbBoard"><div class="cb-board-in">
               <div class="cb-board-date" id="cbPreviewDate"></div>
               <div class="cb-board-text" id="cbPreviewText"></div>
             </div></div>
             <div class="secretary-note-meta" style="text-align:center;margin-top:6px">👆 存出去後，教室大屏的黑板就是這個樣子</div>
+            <div class="secretary-note-meta" id="cbLayoutNote" style="text-align:center" hidden>直橫、字距、行距只記在這台電腦；同一台電腦的大屏會一起換，教室那台請在大屏「直橫・間距」設一次。</div>
           </div>
         </div>
         <div class="secretary-note-actions" style="align-items:center;flex-wrap:wrap;margin-top:12px">
@@ -1989,6 +2049,7 @@
           <span class="secretary-note-meta" id="contactBookListMeta"></span>
         </div>
         <div class="secretary-note-list" id="contactBookHistoryList"></div>
+        </div>
       </div>
     </section>
 
@@ -4817,11 +4878,164 @@
       if ($('cbPreviewDate')) $('cbPreviewDate').textContent = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 星期${CB_WEEKDAYS[d.getDay()]}`;
       if ($('cbPreviewText')) {
         $('cbPreviewText').innerHTML = lines.length
-          ? lines.map((line, i) => escapeHtml(`${i + 1}. ${line}`)).join('\n')
+          ? cbBoardHtml(lines.map((line, i) => `${i + 1}. ${line}`).join('\n'))
           : '<span class="dim">（黑板目前是空的）</span>';
       }
     }
+    // 直書時跟大屏一樣：一兩位數併成一格、編號的點擠在同一格、中文之間的空格不佔位置
+    const CB_NUMBER_RE = /^[ \t　]*(\d{1,2}[\.、])[ \t　]*(?=[^\d\s]|$)/;
+    function cbBoardHtml(text) {
+      if (!$('cbBoard')?.classList.contains('cb-vertical')) return escapeHtml(text);
+      const hiddenGap = gap => gap ? `<span class="cb-gap">${escapeHtml(gap)}</span>` : '';
+      const asciiRun = run => run.split(/([-~])/).filter(Boolean).map(piece => `<span class="cb-ascii${/^[-~]$/.test(piece) ? ' cb-dash' : ''}">${escapeHtml(piece)}</span>`).join('');
+      const cells = part => {
+        let at = 0;
+        return part.split(/([ \t　]+|\d+|[!-\/:-~]+)/).map((piece, i) => {
+          const start = at;
+          at += piece.length;
+          if (!piece || i % 2 === 0) return escapeHtml(piece);
+          if (/^\s/.test(piece) || piece[0] === '　') {
+            const keep = /[A-Za-z0-9]/.test(part[start - 1] || '') && /[A-Za-z0-9]/.test(part[at] || '');
+            return keep ? escapeHtml(piece) : hiddenGap(piece);
+          }
+          if (/^\d+$/.test(piece)) return piece.length <= 2 ? `<span class="cb-tcy">${piece}</span>` : `<span class="cb-ascii">${piece}</span>`;
+          return asciiRun(piece);
+        }).join('');
+      };
+      return String(text).split('\n').map(line => {
+        const number = line.match(CB_NUMBER_RE);
+        if (!number) return cells(line);
+        const numberAt = number[0].indexOf(number[1]);
+        return `${hiddenGap(number[0].slice(0, numberAt))}<span class="cb-tcy">${number[1]}</span>${hiddenGap(number[0].slice(numberAt + number[1].length))}${cells(line.slice(number[0].length))}`;
+      }).join('\n');
+    }
+
+    // 黑板排版：跟大屏共用同一份設定（morningDisplayScale），同一台電腦兩邊一致；範圍與大屏相同
+    const CB_LAYOUT_KEY = 'morningDisplayScale';
+    const CB_TRACKING_STEP = 2, CB_TRACKING_MAX = 16;
+    const CB_LEADING_STEP = 0.2, CB_LEADING_MIN = -0.4, CB_LEADING_MAX = 1.6;
+    function cbLayoutRaw() {
+      try {
+        const raw = JSON.parse(localStorage.getItem(CB_LAYOUT_KEY) || '{}');
+        return raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+      } catch (error) { return {}; }
+    }
+    function cbLayoutRead() {
+      const raw = cbLayoutRaw();
+      return {
+        vertical: raw.chalkVertical === true,
+        tracking: Math.min(CB_TRACKING_MAX, Math.max(0, Number(raw.chalkTracking) || 0)),
+        leading: Math.min(CB_LEADING_MAX, Math.max(CB_LEADING_MIN, Number(raw.chalkLeading) || 0))
+      };
+    }
+    function cbLayoutApply(layout, save) {
+      if (save) {
+        const raw = cbLayoutRaw();
+        raw.chalkVertical = layout.vertical;
+        raw.chalkTracking = layout.tracking;
+        raw.chalkLeading = layout.leading;
+        try { localStorage.setItem(CB_LAYOUT_KEY, JSON.stringify(raw)); } catch (error) {}
+      }
+      const board = $('cbBoard');
+      if (!board) return;
+      board.classList.toggle('cb-vertical', layout.vertical);
+      // 大屏字級約 32px、字距每格 2px：換成 em，迷你黑板的比例才會和大屏一樣
+      board.style.setProperty('--cb-tracking', `${layout.tracking / 32}em`);
+      board.style.setProperty('--cb-leading', String(layout.leading));
+      const signed = n => (n > 0 ? '+' : '') + n;
+      if ($('cbTrackingValue')) $('cbTrackingValue').textContent = signed(layout.tracking / CB_TRACKING_STEP);
+      if ($('cbLeadingValue')) $('cbLeadingValue').textContent = signed(Math.round(layout.leading / CB_LEADING_STEP));
+      document.querySelectorAll('[data-cb-dir]').forEach(button => button.classList.toggle('on', (button.dataset.cbDir === 'v') === layout.vertical));
+      renderContactVisual();
+    }
+    function cbLayoutClick(event) {
+      const layout = cbLayoutRead();
+      const dir = event.target.closest('[data-cb-dir]');
+      const step = event.target.closest('[data-cb-step]');
+      if (dir) layout.vertical = dir.dataset.cbDir === 'v';
+      else if (step) {
+        const [key, sign] = step.dataset.cbStep.split(':');
+        if (key === 'tracking') layout.tracking = Math.min(CB_TRACKING_MAX, Math.max(0, layout.tracking + Number(sign) * CB_TRACKING_STEP));
+        else layout.leading = Math.min(CB_LEADING_MAX, Math.max(CB_LEADING_MIN, Math.round((layout.leading + Number(sign) * CB_LEADING_STEP) * 10) / 10));
+      } else if (event.target.closest('#cbLayoutReset')) {
+        layout.vertical = false; layout.tracking = 0; layout.leading = 0;
+      } else return;
+      cbLayoutApply(layout, true);
+    }
+
+    // 換日期前確認：這一天改了還沒存，就先問一聲，避免一點日曆就把剛打的字丟掉
+    const cbLoaded = { date: '', text: '' };
+    function cbConfirmLeave() {
+      if ($('contactBookSaveButton')?.disabled) return true;
+      const now = ($('contactBookInput')?.value || '').trim();
+      if (now === cbLoaded.text.trim()) return true;
+      return window.confirm(`${cbLoaded.date || '這一天'} 的聯絡本改了還沒儲存，確定要換到別天嗎？（沒存的內容會不見）`);
+    }
+
+    // ---- 聯絡本日曆：一次看一整個月，點某一天就切回編輯 ----
+    const cbcal = { month: '', cache: {}, loading: false, error: '' };
+    const cbcalPad = n => String(n).padStart(2, '0');
+    function cbcalRender() {
+      const grid = $('cbcalGrid');
+      if (!grid || !cbcal.month) return;
+      const today = calendarDateKey(new Date());
+      const [y, m] = cbcal.month.split('-').map(Number);
+      $('cbcalMonth').textContent = `${y} 年 ${m} 月`;
+      const entries = cbcal.cache[cbcal.month] || {};
+      const count = Object.keys(entries).length;
+      $('cbcalMeta').textContent = cbcal.loading ? '讀取中……'
+        : cbcal.error ? `讀取失敗：${cbcal.error}`
+        : count ? `這個月寫了 ${count} 天。綠色＝已過去或今天，黃色＝預先排好的；點任何一天就能編輯。` : '這個月還沒有聯絡本。點任何一天就能開始寫。';
+      const first = new Date(y, m - 1, 1).getDay();
+      const days = new Date(y, m, 0).getDate();
+      const cells = CB_WEEKDAYS.map(w => `<div class="cbcal-week">${w}</div>`);
+      for (let i = 0; i < first; i += 1) cells.push('<div class="cbcal-blank"></div>');
+      for (let d = 1; d <= days; d += 1) {
+        const date = `${cbcal.month}-${cbcalPad(d)}`;
+        const weekday = new Date(y, m - 1, d).getDay();
+        const entry = entries[date];
+        const text = entry ? String(entry.text || '').trim() : '';
+        const cls = ['cbcal-day', text ? 'has' : '', date > today ? 'future' : '', date === today ? 'today' : '', weekday === 0 || weekday === 6 ? 'weekend' : ''].filter(Boolean).join(' ');
+        const label = date === today ? '<small>今天</small>' : '';
+        cells.push(`<button class="${cls}" type="button" data-cbcal-day="${date}"${text ? ` title="${escapeHtml(text)}"` : ''}><b>${m}/${d}<small>（${CB_WEEKDAYS[weekday]}）</small>${label}</b>${text ? `<span class="cbcal-text">${escapeHtml(text)}</span>` : cbcal.loading ? '' : '<span class="cbcal-none">＋</span>'}</button>`);
+      }
+      grid.innerHTML = cells.join('');
+    }
+    async function cbcalLoad(month, force) {
+      cbcal.month = month;
+      cbcal.error = '';
+      if (cbcal.cache[month] && !force) { cbcal.loading = false; cbcalRender(); return; }
+      cbcal.loading = true;
+      cbcalRender();
+      try {
+        const result = await callLineBridge('contactbook_month', { month });
+        const list = Array.isArray(result.entries) ? result.entries : [];
+        cbcal.cache[month] = Object.fromEntries(list
+          .filter(entry => entry && /^\d{4}-\d{2}-\d{2}$/.test(String(entry.date || '')) && String(entry.text || '').trim())
+          .map(entry => [String(entry.date), { text: String(entry.text).slice(0, 5000), updatedAt: String(entry.updatedAt || ''), source: String(entry.source || '') }]));
+      } catch (error) {
+        if (cbcal.month === month) cbcal.error = error.name === 'AbortError' ? '雲端太久沒回應，請再試一次。' : (error.message || '請再試一次。');
+      }
+      if (cbcal.month === month) { cbcal.loading = false; cbcalRender(); }
+    }
+    function cbcalShift(delta) {
+      const [y, m] = (cbcal.month || calendarDateKey(new Date()).slice(0, 7)).split('-').map(Number);
+      const when = new Date(y, m - 1 + delta, 1);
+      cbcalLoad(`${when.getFullYear()}-${cbcalPad(when.getMonth() + 1)}`);
+    }
+    function cbSetMode(mode) {
+      const calendar = mode === 'calendar';
+      $('cbCalendarView').hidden = !calendar;
+      $('cbEditView').hidden = calendar;
+      $('cbModeEditButton').classList.toggle('on', !calendar);
+      $('cbModeCalendarButton').classList.toggle('on', calendar);
+      $('cbModeEditButton').setAttribute('aria-pressed', String(!calendar));
+      $('cbModeCalendarButton').setAttribute('aria-pressed', String(calendar));
+      if (calendar) cbcalLoad(($('contactBookDate')?.value || calendarDateKey(new Date())).slice(0, 7), true);
+    }
+
     function cbShiftDay(offset) {
+      if (!cbConfirmLeave()) return;
       const input = $('contactBookDate');
       const base = input.value || calendarDateKey(new Date());
       const d = new Date(base + 'T12:00:00');
@@ -4837,6 +5051,8 @@
       try {
         const result = await callLineBridge('contactbook_get', { date });
         $('contactBookInput').value = result.text || '';
+        cbLoaded.date = date;
+        cbLoaded.text = String(result.text || '');
         renderContactVisual();
         const sourceLabel = result.source === 'teacher' ? '工作台' : result.source === 'classroom' ? '教室大屏' : result.source === 'line' ? 'LINE' : '';
         $('contactBookMeta').textContent = result.updatedAt
@@ -4846,6 +5062,8 @@
       } catch (error) {
         // 讀不到這一天：清空並鎖住儲存，避免把前一天的內容存到這一天
         $('contactBookInput').value = '';
+        cbLoaded.date = date;
+        cbLoaded.text = '';
         renderContactVisual();
         $('contactBookSaveButton').disabled = true;
         $('contactBookMeta').textContent = `讀取失敗：${error.message}（為了避免蓋掉資料，暫時不能儲存；請重新整理或換日期再試）`;
@@ -4858,6 +5076,9 @@
       $('contactBookMeta').textContent = '儲存中……';
       try {
         await callLineBridge('contactbook_save', { date, text });
+        cbLoaded.date = date;
+        cbLoaded.text = text;
+        delete cbcal.cache[date.slice(0, 7)];
         $('contactBookMeta').textContent = `已儲存 ${date} 的聯絡本；大屏當天開啟或按重新整理就會顯示。`;
         showToast('聯絡本已儲存到雲端。');
       } catch (error) {
@@ -4935,8 +5156,40 @@
       // 直覺化編輯：日期快切自動讀取、項目列操作、純文字同步預覽
       $('cbPrevDayButton')?.addEventListener('click', () => cbShiftDay(-1));
       $('cbNextDayButton')?.addEventListener('click', () => cbShiftDay(1));
-      $('cbTodayButton')?.addEventListener('click', () => { $('contactBookDate').value = calendarDateKey(new Date()); loadContactBookEntry(); });
-      contactDate?.addEventListener('change', loadContactBookEntry);
+      $('cbTodayButton')?.addEventListener('click', () => {
+        if (!cbConfirmLeave()) return;
+        $('contactBookDate').value = calendarDateKey(new Date());
+        loadContactBookEntry();
+      });
+      contactDate?.addEventListener('change', () => {
+        if (cbLoaded.date && !cbConfirmLeave()) { contactDate.value = cbLoaded.date; return; }
+        loadContactBookEntry();
+      });
+      cbLoaded.date = contactDate?.value || '';
+      // 編輯／日曆切換、黑板排版
+      $('cbModeEditButton')?.addEventListener('click', () => cbSetMode('edit'));
+      $('cbModeCalendarButton')?.addEventListener('click', () => cbSetMode('calendar'));
+      $('cbcalPrevButton')?.addEventListener('click', () => cbcalShift(-1));
+      $('cbcalNextButton')?.addEventListener('click', () => cbcalShift(1));
+      $('cbcalThisButton')?.addEventListener('click', () => cbcalLoad(calendarDateKey(new Date()).slice(0, 7)));
+      $('cbcalReloadButton')?.addEventListener('click', () => cbcalLoad(cbcal.month || calendarDateKey(new Date()).slice(0, 7), true));
+      $('cbcalGrid')?.addEventListener('click', event => {
+        const day = event.target.closest('[data-cbcal-day]');
+        if (!day) return;
+        if (day.dataset.cbcalDay !== cbLoaded.date && !cbConfirmLeave()) return;
+        $('contactBookDate').value = day.dataset.cbcalDay;
+        cbSetMode('edit');
+        loadContactBookEntry();
+        $('contactBookSection')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      });
+      $('cbLayoutButton')?.addEventListener('click', () => {
+        const panel = $('cbLayoutPanel');
+        panel.hidden = !panel.hidden;
+        $('cbLayoutNote').hidden = panel.hidden;
+        $('cbLayoutButton').setAttribute('aria-expanded', String(!panel.hidden));
+      });
+      $('cbLayoutPanel')?.addEventListener('click', cbLayoutClick);
+      cbLayoutApply(cbLayoutRead(), false);
       $('cbAddCustomButton')?.addEventListener('click', () => {
         const lines = cbLines();
         lines.push('新項目');
@@ -4980,6 +5233,7 @@
       $('contactBookHistoryList')?.addEventListener('click', event => {
         const row = event.target.closest('[data-contact-history-date]');
         if (!row) return;
+        if (row.dataset.contactHistoryDate !== cbLoaded.date && !cbConfirmLeave()) return;
         $('contactBookDate').value = row.dataset.contactHistoryDate;
         loadContactBookEntry();
       });

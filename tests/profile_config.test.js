@@ -1104,3 +1104,8 @@ assert.match(studioHtml, /section\('代課教師當日簽認'/, "代課包應有
 assert.match(indexHtml, /\['gemini-3\.5-flash-lite', 'gemini-3\.1-flash-lite', 'gemini-3\.8-flash'\]/, "工作台的 Gemini 自動順序");
 assert.match(indexHtml, /id="homeworkReportSection"/, "工作台應有作業統計");
 assert.doesNotMatch(indexHtml, /data-role="subject"/, "工作台不應再有科任身分");
+
+// 工作台聯絡本：日曆一次看整個月（沿用雲端 contactbook_month，不用改 GAS）；直橫・間距與大屏共用同一份設定
+assert.match(indexHtml, /callLineBridge\('contactbook_month', \{ month \}\)/, "工作台聯絡本日曆應沿用 contactbook_month");
+assert.match(indexHtml, /const CB_LAYOUT_KEY = 'morningDisplayScale'/, "工作台黑板排版應與大屏共用 morningDisplayScale");
+assert.match(indexHtml, /function cbConfirmLeave\(\)/, "換日期前應提醒尚未儲存的聯絡本");
