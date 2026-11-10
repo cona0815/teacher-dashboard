@@ -453,6 +453,17 @@ assert.match(studioHtml, /assets\/vendor\/pdf-lib\.min\.js/, "PDF 工具應載�
 assert.ok(fs.existsSync(path.join(projectRoot, "assets", "vendor", "pdf-lib.min.js")), "pdf-lib 函式庫檔案應存在");
 assert.match(studioHtml, /setCropBox/, "PDF 工具應支援裁切");
 assert.match(noticesText, /pdf-lib/, "第三方聲明應記錄 pdf-lib");
+// 2026-11-10 PDF 工具改成「看每一頁再整理」，可輸出 PDF／圖片／Word（pdf.js 本機載入，不連外）
+assert.match(studioHtml, /id="pdfPagesGrid"/, "PDF 工具應顯示每一頁縮圖");
+assert.match(studioHtml, /<option value="word-image">/, "PDF 工具應能轉成版面一樣的 Word");
+assert.match(studioHtml, /<option value="word-text">/, "PDF 工具應能轉成可編輯的 Word");
+assert.match(studioHtml, /const PDFJS_BASE = 'assets\/vendor\/pdfjs\/'/, "pdf.js 應從本站載入");
+assert.match(studioHtml, /isEvalSupported: false/, "pdf.js 不可用 eval（配合 CSP）");
+assert.match(studioHtml, /data: new Uint8Array\(bytes\.slice\(0\)\)/, "交給 pdf.js 的要是複本，原檔才不會被清空");
+for (const file of ["pdf.min.js", "pdf.worker.min.js", "LICENSE", "cmaps/UniCNS-UTF16-H.bcmap", "standard_fonts/FoxitSerif.pfb"]) {
+  assert.ok(fs.existsSync(path.join(projectRoot, "assets", "vendor", "pdfjs", ...file.split("/"))), `pdf.js 檔案應存在：${file}`);
+}
+assert.match(noticesText, /PDF\.js[\s\S]*Apache License 2\.0/, "第三方聲明應記錄 pdf.js（Apache-2.0）");
 assert.match(morningHtml, /data-tool="tomato"/, "班級工具應含番茄鐘分頁");
 assert.match(morningHtml, /tomatoFullscreenButton/, "番茄鐘應支援全螢幕播放");
 // 2026-10 班級工具動畫大升級：吉祥物內嵌、投影模式、hidden 不被樣式蓋掉
@@ -617,11 +628,11 @@ assert.match(indexHtml, /taskType: kids\.length \? '主任務' : '一般任務'/
 assert.match(indexHtml, /parentTaskId, projectId: parentTaskId, taskType: parentTaskId \? '子任務'/, "子任務應掛在剛建立的主任務底下");
 assert.doesNotMatch(indexHtml, /建立主任務與 \$\{analysis\.children\.length\} 個子任務/, "不得再自動建立主／子任務");
 assert.match(indexHtml, /id="messageHubSection"/, "應有訊息整合站版面");
-assert.match(indexHtml, /data-toolbox-target="messageHubSection"/, "教師工具箱應有訊息整合站入口");
+assert.doesNotMatch(indexHtml, /data-toolbox-target="(?:messageHubSection|teachingProgressPanel)"/, "訊息整合站、教學進度已從工具箱拿掉（2026-11-10 老師指示，程式保留）");
 assert.match(indexHtml, /轉達學生', '轉達家長', '轉達科任', '自己待辦', '略過'/, "訊息整合站應有五種分類");
 
 // 🖼 圖像簡報：先確認大綱→樣張→逐頁生圖（風格錨定）→單一 PDF
-assert.match(studioHtml, /data-page="deck"/, "應有圖像簡報分頁");
+assert.match(studioHtml, /data-page="deck" hidden/, "圖像簡報保留程式、選單先收起（2026-11-10 老師指示）");
 assert.match(studioHtml, /async function dkGenerateSlide/, "應有逐頁生圖流程");
 assert.match(studioHtml, /style-anchor\.png/, "後續頁應以樣張為風格參考");
 assert.match(studioHtml, /ABSOLUTELY NO text, letters, numbers, logos or signs anywhere\. Keep \$\{calm\}/, "疊字模式生圖不得含文字並預留文字區");
@@ -716,7 +727,7 @@ const groupBPage = id => {
   assert.ok(start > 0, `Studio 應有 page-${id}`);
   return studioHtml.slice(start, studioHtml.indexOf("</section>", start));
 };
-assert.match(studioHtml, /<span class="tab-group">🗂 行政文書<\/span>/, "應有行政文書分頁群");
+assert.doesNotMatch(studioHtml, /<span class="tab-group">🗂 行政文書<\/span>/, "行政文書分頁群已從選單收起（2026-11-10 老師指示，程式保留）");
 assert.match(studioHtml, /不得出現任何學生姓名/, "行政文書 AI 規範應禁止學生姓名");
 assert.match(studioHtml, /不要猜任何數字：人次、人數、金額/, "行政文書 AI 不得猜數字");
 assert.match(studioHtml, /AI 協助草擬，內容已由老師核對/, "勾核對後才出現的署名");
@@ -724,7 +735,7 @@ assert.match(studioHtml, /function docApplyConfirm\(prefix\)/, "應有核對切�
 assert.match(studioHtml, /clone\.querySelectorAll\('\[data-export-hide="1"\]'\)/, "Word／Excel 匯出應拿掉畫面專用標記");
 assert.match(studioHtml, /if \(Array\.isArray\(imagePart\)\) parts\.push\(\.\.\.imagePart\)/, "callGemini 應支援多個附件");
 // G1 📑 成果報告
-assert.match(studioHtml, /data-page="report">📑 成果報告/, "應有成果報告分頁");
+assert.match(studioHtml, /data-page="report" hidden>📑 成果報告/, "成果報告分頁保留程式、選單先收起（2026-11-10 老師指示）");
 {
   const page = groupBPage("report");
   for (const id of ["rpName", "rpDate", "rpTarget", "rpUnit", "rpPlan", "rpPlanFiles", "rpExec", "rpPhotos", "rpChecked"]) assert.match(page, new RegExp(`id="${id}"`), `成果報告應有 #${id}`);
@@ -735,7 +746,7 @@ for (const title of ["'依據'", "'目的'", "'辦理情形'", "'參與人次'",
 assert.match(studioHtml, /\[\['學生', ''\], \['教職員', ''\], \['家長及來賓', ''\], \['合計', ''\]\]/, "參與人次欄留空給老師填");
 assert.match(studioHtml, /function docPhotoTable/, "活動照片應以 2×2 表格排版");
 // G2 📋 計畫書
-assert.match(studioHtml, /data-page="plan">📋 計畫書/, "應有計畫書分頁");
+assert.match(studioHtml, /data-page="plan" hidden>📋 計畫書/, "計畫書分頁保留程式、選單先收起（2026-11-10 老師指示）");
 {
   const page = groupBPage("plan");
   for (const t of ["校內活動", "社團", "教師研習", "校外教學", "競賽"]) assert.match(page, new RegExp(`<option value="${t}">`), `計畫書應有「${t}」類型`);
@@ -746,7 +757,7 @@ assert.match(studioHtml, /\[r\.item \|\| '', r\.unit \|\| '', r\.qty \|\| '', ''
 assert.match(studioHtml, /const PL_TRIP_INSURANCE = /, "校外教學應固定加保險段落");
 assert.match(studioHtml, /const PL_TRIP_CONSENT = /, "校外教學應固定加家長同意書提醒");
 // G3 🗒 會議紀錄
-assert.match(studioHtml, /data-page="minutes">🗒 會議紀錄/, "應有會議紀錄分頁");
+assert.match(studioHtml, /data-page="minutes" hidden>🗒 會議紀錄/, "會議紀錄分頁保留程式、選單先收起（2026-11-10 老師指示）");
 {
   const page = groupBPage("minutes");
   for (const id of ["mtName", "mtTime", "mtPlace", "mtChair", "mtAttend", "mtAudio", "mtText", "mtPhotos", "mtTodoCopy", "mtChecked"]) assert.match(page, new RegExp(`id="${id}"`), `會議紀錄應有 #${id}`);
@@ -757,7 +768,7 @@ assert.match(studioHtml, /audio\.size > 15 \* 1024 \* 1024/, "錄音檔應有 15
 assert.match(studioHtml, /\[\{ label: '事項' \}, \{ label: '負責', width: '24%' \}, \{ label: '期限', width: '22%' \}\]/, "待辦表應有事項、負責、期限欄");
 for (const title of ["'主席報告'", "'討論事項'", "'臨時動議'", "'待辦事項'", "'下次會議'"]) assert.ok(studioHtml.includes(title), `會議紀錄應有 ${title}`);
 // G4 📘 教案與觀議課
-assert.match(studioHtml, /data-page="lesson">📘 教案與觀議課/, "應有教案與觀議課分頁");
+assert.match(studioHtml, /data-page="lesson" hidden>📘 教案與觀議課/, "教案與觀議課分頁保留程式、選單先收起（2026-11-10 老師指示）");
 {
   const page = groupBPage("lesson");
   for (const id of ["lpMode", "lpGrade", "lpSubject", "lpUnit", "lpPeriods", "lpImages", "lpFormat", "lpBullets", "lpChecked", "lpCodeHint"]) assert.match(page, new RegExp(`id="${id}"`), `教案頁應有 #${id}`);
@@ -768,7 +779,7 @@ for (const title of ["'單元目標'", "'學習表現'", "'學習內容'", "'核
 assert.match(studioHtml, /strengths 議課的優點恰好 3 項；suggestions 具體可行的建議恰好 2 項。教學者回應不要寫/, "議課紀錄：優點 3、建議 2、教學者回應留白");
 assert.match(studioHtml, /customFields 依序對每個欄位寫內容/, "教案可套學校欄位");
 // G5 📅 教學進度表
-assert.match(studioHtml, /data-page="schedule">📅 教學進度表/, "應有教學進度表分頁");
+assert.match(studioHtml, /data-page="schedule" hidden>📅 教學進度表/, "教學進度表分頁保留程式、選單先收起（2026-11-10 老師指示）");
 {
   const page = groupBPage("schedule");
   for (const id of ["scStart", "scEnd", "scPerWeek", "scWeekList", "scToc", "scTocImage", "scTocAiButton", "scGoButton"]) assert.match(page, new RegExp(`id="${id}"`), `進度表應有 #${id}`);
@@ -919,7 +930,7 @@ assert.match(morningHtml, /id="makeupGoHomework">⚠️ 今天的缺交請到「
 }
 
 // G6 🧳 代課包
-assert.match(studioHtml, /data-page="substitute">🧳 代課包/, "應有代課包分頁");
+assert.match(studioHtml, /data-page="substitute" hidden>🧳 代課包/, "代課包分頁保留程式、選單先收起（2026-11-10 老師指示）");
 {
   const page = groupBPage("substitute");
   for (const id of ["sbMode", "sbDate", "sbRows", "sbAddRow", "sbRule1", "sbRule2", "sbRule3", "sbSeat", "sbContact1", "sbGoButton"]) assert.match(page, new RegExp(`id="${id}"`), `代課包應有 #${id}`);
@@ -1109,3 +1120,18 @@ assert.doesNotMatch(indexHtml, /data-role="subject"/, "工作台不應再有科�
 assert.match(indexHtml, /callLineBridge\('contactbook_month', \{ month \}\)/, "工作台聯絡本日曆應沿用 contactbook_month");
 assert.match(indexHtml, /const CB_LAYOUT_KEY = 'morningDisplayScale'/, "工作台黑板排版應與大屏共用 morningDisplayScale");
 assert.match(indexHtml, /function cbConfirmLeave\(\)/, "換日期前應提醒尚未儲存的聯絡本");
+
+// 2026-11-10 工具箱改成一行四組；大屏提示搬到級務；回覆家長；教材小工場只留 15 個並分四組
+{
+  const groups = [...indexHtml.matchAll(/<div class="toolbox-group"><span class="toolbox-group-label">([^<]+)<\/span>/g)].map(m => m[1]);
+  assert.deepStrictEqual(groups, ['級務', '備課', '溝通', 'AI'], "工具箱分組應為級務、備課、溝通、AI");
+  assert.match(indexHtml, /\.teacher-toolbox-actions \{[^}]*flex-wrap: nowrap/, "工具箱按鈕應保持一行");
+  assert.match(indexHtml, /data-toolbox-target="screenPromptSection"/, "級務應有大屏提示");
+  assert.doesNotMatch(indexHtml.slice(indexHtml.indexOf('id="lineInboxSection"'), indexHtml.indexOf('id="screenPromptSection"')), /id="screenPromptSelect"/, "大屏提示不應再放在 LINE 收件匣裡");
+  assert.match(indexHtml, /<span class="toolbox-group-label">級務<\/span>(?:(?!toolbox-group-label)[\s\S])*data-toolbox-target="parentReplySection"/, "回覆家長應放在級務");
+  assert.match(indexHtml, /const review = reviewParentFacingMessage\(message\)/, "回覆家長草稿要過用語檢查");
+  assert.match(indexHtml, /\['parent-learning', \/[^\n]*作業沒/, "「作業沒寫」應配到學習狀況溝通");
+  const tabs = studioHtml.slice(studioHtml.indexOf('<div class="tabs">'), studioHtml.indexOf('</div>', studioHtml.indexOf('<div class="tabs">')));
+  const shown = [...tabs.matchAll(/data-page="(\w+)">/g)].map(m => m[1]);
+  assert.deepStrictEqual(shown, ['ws', 'math', 'review', 'mm', 'vocab', 'guide', 'essay', 'library', 'reading', 'notice', 'gform', 'richmenu', 'seat', 'mask', 'pdf'], "教材小工場選單只留 15 個");
+}

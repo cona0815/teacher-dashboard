@@ -802,7 +802,9 @@
     /* 用 #contactBookSection 提高權重：可愛溫暖風的 .mini-button 樣式與 :hover 都不能蓋掉「選中」 */
     #contactBookSection .mini-button.on, #contactBookSection .mini-button.on:hover { background: var(--primary-strong); border-color: var(--primary-strong); color: #fff; }
     /* 聯絡本：編輯／日曆切換 */
-    .cb-mode { display: inline-flex; gap: 4px; flex: 0 0 auto; }
+    .cb-mode { display: inline-flex; gap: 4px; flex: 0 0 auto; padding-right: 8px; margin-right: 2px; border-right: 1.5px solid var(--line); }
+    .cb-nav { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .cb-nav[hidden] { display: none; }
     .cbcal-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .cbcal-month { min-width: 130px; text-align: center; font-size: 18px; font-weight: 900; color: var(--primary-strong); }
     .cbcal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; margin-top: 10px; }
@@ -850,13 +852,30 @@
     .teacher-toolbox-copy img { width: 36px; height: 36px; padding: 5px; border-radius: 11px; background: var(--primary-soft); object-fit: contain; }
     .teacher-toolbox-copy h2 { margin: 0; font-size: 16px; }
     .teacher-toolbox-copy p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
-    .teacher-toolbox-actions { display: flex; gap: 7px; flex-wrap: wrap; justify-content: flex-end; }
+    .teacher-toolbox-actions { display: flex; gap: 7px; flex-wrap: nowrap; justify-content: flex-end; min-width: 0; overflow-x: auto; scrollbar-width: thin; padding-bottom: 2px; }
+    .teacher-toolbox-actions .toolbox-group { flex: none; }
+    .teacher-toolbox-actions .toolbox-button { white-space: nowrap; }
+    .teacher-toolbox-copy { flex: 1 1 220px; }
+    @media (max-width: 1180px) {
+      .teacher-toolbox-head { flex-direction: column; align-items: stretch; }
+      .teacher-toolbox-copy { flex: none; }
+      .teacher-toolbox-actions { justify-content: flex-start; }
+    }
     .toolbox-button { min-height: 32px; padding: 5px 11px; border: 1.5px solid var(--line); border-radius: 9px; background: #fffefb; color: var(--primary-strong); font-size: 12.5px; font-weight: 900; }
     .toolbox-button:hover { border-color: var(--primary); background: var(--primary-soft); }
     .toolbox-button.active { border-color: var(--primary); background: var(--primary); color: white; }
     .teacher-toolbox-content { padding: 0 12px 12px; border-top: 1px dashed var(--line); }
     .teacher-toolbox-content[hidden] { display: none; }
     .teacher-toolbox-content > section { margin: 12px 0 0; box-shadow: none; }
+    .pr-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+    @media (max-width: 860px) { .pr-layout { grid-template-columns: 1fr; } }
+    .pr-input, .pr-output { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    .pr-label { font-size: 13px; font-weight: 900; color: var(--primary-strong); }
+    .pr-label small { font-weight: 700; color: var(--muted); }
+    .pr-row { display: flex; gap: 12px; flex-wrap: wrap; font-size: 13px; font-weight: 800; color: var(--primary-strong); }
+    .pr-row label { display: flex; flex-direction: column; gap: 4px; }
+    .pr-row .input { max-width: 140px; }
+    #prGoButton { align-self: flex-start; margin-top: 4px; }
 
     .workspace {
       display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 12px; align-items: stretch;
@@ -1147,7 +1166,6 @@
       .app { padding: 12px; }
       .teacher-toolbox-head { align-items: flex-start; flex-direction: column; }
       .teacher-toolbox-actions { width: 100%; justify-content: flex-start; }
-      .toolbox-group { flex-wrap: wrap; }
       .topbar { align-items: flex-start; flex-direction: column; padding: 18px; }
       .top-actions { width: 100%; justify-content: stretch; }
       .top-actions .button { flex: 1; }
@@ -1512,23 +1530,25 @@
           <img data-cozy-icon="panel_toolbox" src="assets/ipas/owl-toolbox.webp" alt="">
           <div>
             <h2 id="teacherToolboxTitle">教師工具箱</h2>
-            <p>教學進度、AI 協助與小綿助記事都先收在這裡；需要時再展開，不打擾任務清單。</p>
+            <p>級務、備課、溝通與 AI 工具都收在這裡；需要時再展開，不打擾任務清單。</p>
           </div>
         </div>
         <div class="teacher-toolbox-actions" aria-label="教師工具">
-          <div class="toolbox-group"><span class="toolbox-group-label">溝通</span>
+          <div class="toolbox-group"><span class="toolbox-group-label">級務</span>
             <button class="toolbox-button" type="button" data-toolbox-target="contactBookSection" data-line-only data-role-only="homeroom" aria-expanded="false" hidden>聯絡本</button>
             <button class="toolbox-button" type="button" data-toolbox-target="homeworkReportSection" aria-expanded="false">作業統計</button>
+            <button class="toolbox-button" type="button" data-toolbox-target="parentReplySection" aria-expanded="false">💬 回覆家長</button>
+            <button class="toolbox-button" type="button" data-toolbox-target="screenPromptSection" data-line-only aria-expanded="false" hidden>📣 大屏提示</button>
+          </div>
+          <div class="toolbox-group"><span class="toolbox-group-label">備課</span>
+            <a class="toolbox-button" href="Studio.html" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center">🎨 教材小工場</a>
+          </div>
+          <div class="toolbox-group"><span class="toolbox-group-label">溝通</span>
             <button class="toolbox-button" type="button" data-toolbox-target="lineInboxSection" data-line-only aria-expanded="false" hidden>LINE 收件匣<span class="toolbox-badge" id="lineInboxBadge" hidden>0</span></button>
-            <button class="toolbox-button" type="button" data-toolbox-target="messageHubSection" aria-expanded="false">📮 訊息整合站<span class="toolbox-badge" id="messageHubBadge" hidden>0</span></button>
           </div>
           <div class="toolbox-group"><span class="toolbox-group-label">AI</span>
             <button class="toolbox-button" type="button" data-toolbox-target="aiAssistantSection" data-ai-only aria-expanded="false" hidden>AI 行政助理</button>
             <button class="toolbox-button" type="button" data-toolbox-target="secretaryNotesSection" aria-expanded="false">小綿助記事</button>
-          </div>
-          <div class="toolbox-group"><span class="toolbox-group-label">備課</span>
-            <button class="toolbox-button" type="button" data-toolbox-target="teachingProgressPanel" data-role-only="teacher" aria-expanded="false">教學進度</button>
-            <a class="toolbox-button" href="Studio.html" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center">🎨 教材小工場</a>
           </div>
         </div>
       </div>
@@ -1873,16 +1893,74 @@
         </div>
       </div>
       <div class="secretary-notes-body">
-        <div class="secretary-note-actions" style="align-items:center;gap:8px">
-          <span style="font-weight:900;font-size:13px">📣 大屏提示遙控</span>
-          <select class="input" id="screenPromptSelect" style="max-width:220px;padding:6px 8px"></select>
-          <input class="input" id="screenPromptCustom" placeholder="或自訂一句…" style="max-width:180px;padding:6px 8px">
-          <button class="mini-button" type="button" id="screenPromptSendButton">送到大屏</button>
-          <button class="mini-button" type="button" id="screenPromptClearButton">清除</button>
-          <span class="secretary-note-meta">大屏約 20 秒內切換；LINE 傳「提示 排隊」也有同樣效果，「提示」看全部指令。</span>
-        </div>
         <div class="secretary-note-meta" id="lineInboxStatus">尚未同步。</div>
         <div class="secretary-note-list" id="lineInboxList"></div>
+      </div>
+    </section>
+
+    <section class="secretary-notes screen-prompt" id="screenPromptSection" aria-labelledby="screenPromptTitle">
+      <div class="secretary-notes-head">
+        <div class="secretary-notes-title">
+          <img data-cozy-icon="sum_overdue" src="assets/ipas/bell-overdue.webp" alt="">
+          <div>
+            <h2 id="screenPromptTitle">📣 大屏提示</h2>
+            <p>在這裡選一句，教室大屏會跳出大字提示（例如「上課囉！眼睛看老師」）；不用走到電腦前。</p>
+          </div>
+        </div>
+      </div>
+      <div class="secretary-notes-body">
+        <div class="secretary-note-actions" style="align-items:center;gap:8px;flex-wrap:wrap">
+          <select class="input" id="screenPromptSelect" style="max-width:240px;padding:6px 8px"></select>
+          <input class="input" id="screenPromptCustom" maxlength="40" placeholder="或自訂一句…" style="max-width:200px;padding:6px 8px">
+          <button class="mini-button" type="button" id="screenPromptSendButton">送到大屏</button>
+          <button class="mini-button" type="button" id="screenPromptClearButton">清除</button>
+        </div>
+        <div class="secretary-note-meta" style="margin-top:6px">大屏約 20 秒內切換；LINE 傳「提示 排隊」也有同樣效果，「提示」看全部指令。</div>
+      </div>
+    </section>
+
+    <section class="secretary-notes parent-reply" id="parentReplySection" aria-labelledby="parentReplyTitle">
+      <div class="secretary-notes-head">
+        <div class="secretary-notes-title">
+          <img data-cozy-icon="panel_message_hub" src="assets/ipas/mailbox-line.webp" alt="">
+          <div>
+            <h2 id="parentReplyTitle">💬 回覆家長</h2>
+            <p>貼上家長傳來的話（沒有也可以），寫下你想說的重點，就幫你寫成一則有禮貌、可以直接傳的訊息。請用「孩子」或座號稱呼，不要打學生全名。</p>
+          </div>
+        </div>
+      </div>
+      <div class="secretary-notes-body">
+        <div class="pr-layout">
+          <div class="pr-input">
+            <label class="pr-label" for="prParentText">家長說了什麼？<small>（選填，可以直接貼上）</small></label>
+            <textarea class="textarea" id="prParentText" rows="4" maxlength="2000" placeholder="例：老師好，孩子說今天的數學作業不會寫，可以明天再交嗎？"></textarea>
+            <label class="pr-label" for="prPoints">你想回覆的重點</label>
+            <textarea class="textarea" id="prPoints" rows="4" maxlength="1500" placeholder="例：可以明天交；請先把會的寫完，不會的題目圈起來，明天下課我再教他"></textarea>
+            <div class="pr-row">
+              <label>語氣
+                <select class="select" id="prTone">
+                  <option value="warm">溫和親切</option>
+                  <option value="formal">正式有禮</option>
+                  <option value="brief">簡短明確</option>
+                </select>
+              </label>
+              <label>稱呼學生
+                <input class="input" id="prChild" maxlength="10" value="孩子">
+              </label>
+            </div>
+            <button class="button button-dark" type="button" id="prGoButton">✍️ 幫我寫回覆</button>
+            <div class="secretary-note-meta" id="prMeta">有填 AI 金鑰（設定 → ② AI 設定）會依內容寫得更貼切；沒有就先給你範本。送給 AI 前會先遮蔽電話、身分證、Email。</div>
+          </div>
+          <div class="pr-output">
+            <label class="pr-label" for="prOutput">回覆草稿<small>（可以直接改）</small></label>
+            <textarea class="textarea" id="prOutput" rows="11" maxlength="3000" placeholder="按「幫我寫回覆」後，草稿會出現在這裡。"></textarea>
+            <div class="secretary-note-actions" style="margin-top:6px;flex-wrap:wrap">
+              <button class="mini-button" type="button" id="prCopyButton">📋 複製</button>
+              <button class="mini-button" type="button" id="prAgainButton">🔁 換一種寫法</button>
+            </div>
+            <div class="secretary-note-meta">傳出去之前請再看一次，確認內容正確。</div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -1980,33 +2058,35 @@
             <p>在這裡預先輸入每天的聯絡本；晨間大屏開啟時會自動顯示在點名畫面旁的黑板上。同一天以最後儲存者為準。</p>
           </div>
         </div>
-        <div class="cb-mode" role="group" aria-label="聯絡本檢視">
-          <button class="mini-button on" type="button" id="cbModeEditButton" aria-pressed="true">✏️ 編輯</button>
-          <button class="mini-button" type="button" id="cbModeCalendarButton" aria-pressed="false">📅 日曆</button>
-        </div>
       </div>
       <div class="secretary-notes-body">
-        <div id="cbCalendarView" hidden>
-          <div class="cbcal-head">
+        <div class="secretary-note-actions cb-datebar" style="align-items:center;flex-wrap:wrap">
+          <span class="cb-mode" role="group" aria-label="聯絡本檢視">
+            <button class="mini-button on" type="button" id="cbModeEditButton" aria-pressed="true">✏️ 單日</button>
+            <button class="mini-button" type="button" id="cbModeCalendarButton" aria-pressed="false">📅 日曆</button>
+          </span>
+          <span class="cb-nav" id="cbDayNav">
+            <button class="mini-button" type="button" id="cbPrevDayButton">‹ 前一天</button>
+            <input class="input" id="contactBookDate" type="date" style="max-width:160px">
+            <strong id="cbWeekday" style="font-size:13px;color:var(--primary-strong)"></strong>
+            <button class="mini-button" type="button" id="cbNextDayButton">後一天 ›</button>
+            <button class="mini-button" type="button" id="cbTodayButton">回今天</button>
+            <button class="mini-button" type="button" id="contactBookLoadButton">🔄 重新讀取</button>
+            <span class="secretary-note-meta" id="contactBookMeta">切換日期會自動讀取；儲存後大屏一分鐘內自動更新。</span>
+          </span>
+          <span class="cb-nav" id="cbMonthNav" hidden>
             <button class="mini-button" type="button" id="cbcalPrevButton">‹ 上個月</button>
             <span class="cbcal-month" id="cbcalMonth"></span>
             <button class="mini-button" type="button" id="cbcalNextButton">下個月 ›</button>
             <button class="mini-button" type="button" id="cbcalThisButton">這個月</button>
             <button class="mini-button" type="button" id="cbcalReloadButton">🔄 重新讀取</button>
             <span class="secretary-note-meta" id="cbcalMeta"></span>
-          </div>
+          </span>
+        </div>
+        <div id="cbCalendarView" hidden>
           <div class="cbcal-grid" id="cbcalGrid"></div>
         </div>
         <div id="cbEditView">
-        <div class="secretary-note-actions cb-datebar" style="align-items:center;flex-wrap:wrap">
-          <button class="mini-button" type="button" id="cbPrevDayButton">‹ 前一天</button>
-          <input class="input" id="contactBookDate" type="date" style="max-width:160px">
-          <strong id="cbWeekday" style="font-size:13px;color:var(--primary-strong)"></strong>
-          <button class="mini-button" type="button" id="cbNextDayButton">後一天 ›</button>
-          <button class="mini-button" type="button" id="cbTodayButton">回今天</button>
-          <button class="mini-button" type="button" id="contactBookLoadButton">🔄 重新讀取</button>
-          <span class="secretary-note-meta" id="contactBookMeta">切換日期會自動讀取；儲存後大屏一分鐘內自動更新。</span>
-        </div>
         <div class="cb-layout">
           <div class="cb-edit">
             <div class="secretary-note-actions contact-quick-add" style="align-items:center;flex-wrap:wrap">
@@ -4476,8 +4556,8 @@
         badge.hidden = !enabled || !lineBridgeState.inbox.length;
       }
       if (!enabled) {
-        const lineButton = document.querySelector('[data-toolbox-target="lineInboxSection"]');
-        if (lineButton?.classList.contains('active')) setTeacherToolbox('');
+        // 關掉雲端時，開著的雲端專用面板（LINE 收件匣、聯絡本、大屏提示）一起收起來
+        if (document.querySelector('[data-line-only].active')) setTeacherToolbox('');
       }
     }
 
@@ -5027,6 +5107,8 @@
       const calendar = mode === 'calendar';
       $('cbCalendarView').hidden = !calendar;
       $('cbEditView').hidden = calendar;
+      $('cbDayNav').hidden = calendar;
+      $('cbMonthNav').hidden = !calendar;
       $('cbModeEditButton').classList.toggle('on', !calendar);
       $('cbModeCalendarButton').classList.toggle('on', calendar);
       $('cbModeEditButton').setAttribute('aria-pressed', String(!calendar));
@@ -6676,6 +6758,7 @@
       return /(?:建立|製作|設計|產生).{0,12}(?:Google\s*表單|表單|問卷|調查)|(?:幫我|我要|想要).{0,12}(?:表單|問卷)/i.test(value);
     }
 
+    const GENERIC_PROMPT_WORDS = new Set(['學生', '家長', '老師', '教師', '導師', '班級', '學校', '通知', '整理', '溝通', '使用', '一般']);
     function autoMatchPromptTemplate(text) {
       const rules = [
         ['morning-report-personalizer', /晨會報告|朝會報告|行政晨報|處室報告|晨會紀錄/],
@@ -6744,7 +6827,7 @@
         ['parent-injury', /跌倒|跌到|擦傷|撞到|受傷|扭傷|健康中心/],
         ['parent-health', /發燒|頭痛|肚子痛|嘔吐|身體不舒服/],
         ['parent-conflict', /衝突|爭執|吵架|推擠|打架/],
-        ['parent-learning', /分心|作業缺交|成績退步|學習狀況|補救/],
+        ['parent-learning', /分心|作業缺交|作業沒(?:寫|交|帶)|沒(?:寫|交|帶)作業|作業(?:未|忘了)(?:寫|交|帶)|缺交|成績退步|學習狀況|補救/],
         ['parent-behavior', /常規|上課說話|未帶用品|行為狀況|違規/],
         ['urgent-message', /緊急通知|臨時停課|重大事件|緊急聯絡/],
         ['event-runbook', /執行手冊|工作手冊|活動當日|活動流程表/],
@@ -6780,7 +6863,8 @@
         : rules.find(([, pattern]) => pattern.test(text))?.[0] || '';
       if (!matchedId) {
         const scored = aiAssistantState.promptTemplates.map(item => {
-          const nameKeywords = item.name.split(/[、，,／/與和及\s]+/).map(word => word.trim()).filter(word => word.length >= 2);
+          // 「學生」「家長」這類到處都會出現的字不拿來比對，避免「學生作業沒寫」被配到「學生 AI 使用規範」
+          const nameKeywords = item.name.split(/[、，,／/與和及\s]+/).map(word => word.trim()).filter(word => word.length >= 2 && !GENERIC_PROMPT_WORDS.has(word));
           const keywords = [...(Array.isArray(item.keywords) ? item.keywords : []), ...nameKeywords];
           return { item, score: keywords.reduce((score, keyword) => score + (text.includes(keyword) ? keyword.length : 0), 0) };
         }).sort((a, b) => b.score - a.score);
@@ -8390,7 +8474,7 @@ ${cleanBase}`;
     function setTeacherToolbox(targetId) {
       const content = $('teacherToolboxContent');
       const buttons = [...document.querySelectorAll('[data-toolbox-target]')];
-      const panels = ['teachingProgressPanel', 'aiAssistantSection', 'secretaryNotesSection', 'lineInboxSection', 'contactBookSection', 'homeworkReportSection', 'messageHubSection'];
+      const panels = ['teachingProgressPanel', 'aiAssistantSection', 'secretaryNotesSection', 'lineInboxSection', 'contactBookSection', 'homeworkReportSection', 'messageHubSection', 'screenPromptSection', 'parentReplySection'];
       const current = buttons.find(button => button.classList.contains('active'))?.dataset.toolboxTarget || '';
       const shouldCollapse = !targetId || (current === targetId && !content.hidden);
 
@@ -9813,6 +9897,100 @@ ${cleanBase}`;
         $('screenPromptCustom').value = '';
       } catch (error) { showToast(error.message || '送出失敗。', true); }
     });
+    // ---- 💬 回覆家長：家長的話＋老師的重點 → 一則可以直接傳的訊息（有 AI 用 AI，沒有就用範本） ----
+    const PARENT_REPLY_TONES = {
+      warm: { label: '溫和親切', close: ['再麻煩您在家多鼓勵{c}，有任何狀況都歡迎隨時跟我聯繫，謝謝您！', '謝謝您的關心與配合，我們一起陪{c}慢慢進步。', '有需要我協助的地方，請隨時告訴我，謝謝您！'] },
+      formal: { label: '正式有禮', close: ['如需進一步說明，歡迎與我聯繫，謝謝您的配合。', '敬請協助留意，謝謝您。', '若有任何疑問，歡迎隨時與我聯絡，謝謝。'] },
+      brief: { label: '簡短明確', close: ['謝謝您！', '麻煩您了，謝謝！', '謝謝配合！'] }
+    };
+    let parentReplyRound = 0;
+    function parentReplyInputs() {
+      const tone = PARENT_REPLY_TONES[$('prTone').value] ? $('prTone').value : 'warm';
+      const child = ($('prChild').value || '').replace(/[<>]/g, '').trim().slice(0, 10) || '孩子';
+      return { parentText: $('prParentText').value.trim().slice(0, 2000), points: $('prPoints').value.trim().slice(0, 1500), tone, child };
+    }
+    function parentReplyTemplate({ parentText, points, tone, child }, round) {
+      const sentence = text => {
+        const clean = String(text || '').replace(/\s*\n+\s*/g, '，').replace(/[，,、\s]+$/, '').trim();
+        return clean ? (/[。！？!?]$/.test(clean) ? clean : clean + '。') : '';
+      };
+      const lines = ['家長您好：', ''];
+      if (parentText) lines.push(tone === 'brief' ? '收到您的訊息。' : '謝謝您的訊息，我了解您的關心。');
+      if (points) lines.push(sentence(points));
+      else if (parentText) lines.push(`關於${child}的情況，我會再了解清楚，稍後回覆您。`);
+      const closes = PARENT_REPLY_TONES[tone].close;
+      lines.push('', closes[round % closes.length].replace(/\{c\}/g, child));
+      return lines.join('\n');
+    }
+    function parentReplyPrompt({ parentText, points, tone, child }, previous) {
+      return [
+        '你是台灣國小導師，要用 LINE 回覆家長。請寫一則可以直接傳出去的訊息。',
+        '規則：',
+        '- 繁體中文、台灣用語，開頭「家長您好：」，結尾簡短致謝。',
+        `- 語氣：${PARENT_REPLY_TONES[tone].label}。`,
+        `- 稱呼學生一律用「${child}」，不要寫出任何學生全名或其他學生。`,
+        '- 先回應家長提到的事（如果有），再說明老師想表達的重點，最後給一個具體可行的下一步或請家長協助的事。',
+        '- 不責備、不貼標籤、不做醫療或心理診斷，不承諾做不到的事；全文 200 字以內。',
+        '- 只依照下面提供的內容寫，不要自己編造時間、成績或事件。',
+        previous ? `- 這次請換一種不同的寫法，不要和上一版太像。上一版：${previous}` : '',
+        '只回傳 JSON：{"message":"訊息全文（用 \\n 換行）"}',
+        '',
+        `家長傳來的訊息：${parentText || '（沒有，是老師主動聯繫家長）'}`,
+        `老師想回覆的重點：${points || '（老師沒寫，請依家長訊息合宜回覆，並表示會再了解情況）'}`
+      ].filter(Boolean).join('\n');
+    }
+    async function generateParentReply(again) {
+      const input = parentReplyInputs();
+      if (!input.points && !input.parentText) {
+        showToast('請先寫你想回覆的重點（或貼上家長的訊息）。', true);
+        $('prPoints').focus();
+        return;
+      }
+      parentReplyRound = again ? parentReplyRound + 1 : 0;
+      const button = $('prGoButton');
+      const previous = again ? $('prOutput').value.trim().slice(0, 400) : '';
+      const masked = redactSensitiveText(`${input.parentText}\n${input.points}`).count;
+      let message = '';
+      let how = '';
+      if (assistantSettings.api.enabled === true && geminiConfigReady()) {
+        button.disabled = true;
+        $('prMeta').textContent = '寫稿中……';
+        try {
+          const parsed = await callAssistantJson(parentReplyPrompt(input, previous));
+          message = String(parsed?.message || '').replace(/\\n/g, '\n').trim().slice(0, 1500);
+          how = `由 ${providerConfig().label} 起草`;
+        } catch (error) {
+          how = `AI 沒有回應（${String(error.message || error).slice(0, 60)}），先給你範本`;
+        } finally {
+          button.disabled = false;
+        }
+      }
+      if (!message) {
+        message = parentReplyTemplate(input, parentReplyRound);
+        how = how || '範本（到「設定 → ② AI 設定」填金鑰，就能依內容寫得更貼切）';
+      }
+      const review = reviewParentFacingMessage(message);
+      $('prOutput').value = review.message;
+      $('prMeta').textContent = [
+        how,
+        masked ? `送出前已遮蔽 ${masked} 處個資` : '',
+        review.replaced ? `草稿裡有不適合的字詞（${review.findings.join('、')}），已改用保守版本` : ''
+      ].filter(Boolean).join('｜');
+    }
+    $('prGoButton').addEventListener('click', () => generateParentReply(false));
+    $('prAgainButton').addEventListener('click', () => generateParentReply(true));
+    $('prCopyButton').addEventListener('click', async () => {
+      const text = $('prOutput').value.trim();
+      if (!text) return showToast('還沒有草稿可以複製。', true);
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast('已複製，可以貼到 LINE 了。');
+      } catch (error) {
+        $('prOutput').select();
+        showToast('沒辦法自動複製，已幫你選取文字，請按 Ctrl＋C。', true);
+      }
+    });
+
     // ---- 📮 訊息整合站：LINE 河道碎片 → 拆條 → 勾選 → 整合成一則 ----
     const HUB_KEY = 'grade6MessageHubItems';
     const HUB_CATEGORIES = ['轉達學生', '轉達家長', '轉達科任', '自己待辦', '略過'];

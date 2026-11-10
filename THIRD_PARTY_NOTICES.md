@@ -99,8 +99,20 @@ which is within the permitted scope.
 
 `assets/vendor/pdf-lib.min.js` is [pdf-lib](https://github.com/Hopding/pdf-lib)
 v1.17.1, MIT License, vendored unmodified. It powers the local-only PDF tools
-(merge / extract / rotate / crop / images-to-PDF) in Studio.html; all processing
-happens in the user's browser and no file leaves the device.
+(page organizer, merge, rotate, crop, N-up, page numbers, watermark, split,
+images-to-PDF) in Studio.html; all processing happens in the user's browser and
+no file leaves the device.
+
+## PDF.js
+
+`assets/vendor/pdfjs/` contains `pdf.min.js`, `pdf.worker.min.js`, `cmaps/` and
+`standard_fonts/` from [pdfjs-dist](https://github.com/mozilla/pdf.js) v3.11.174
+(Mozilla Foundation), Apache License 2.0, vendored unmodified (npm tarball
+integrity verified). The full license text is in `assets/vendor/pdfjs/LICENSE`;
+the bundled standard fonts keep their own licenses in
+`standard_fonts/LICENSE_FOXIT` and `standard_fonts/LICENSE_LIBERATION` (SIL OFL 1.1).
+Studio.html loads it on demand to draw page thumbnails and to convert pages to
+images / Word and to shrink scanned PDFs, entirely in the browser.
 
 ## html2pdf.js (bundles html2canvas and jsPDF)
 
