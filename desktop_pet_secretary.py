@@ -332,9 +332,9 @@ details summary{cursor:pointer;font-weight:800;color:var(--strong)}
     </div>
     <details id="voiceSetup" style="margin-top:8px"><summary>⚙ 設定（金鑰、快捷鍵、風格）</summary>
       <div class="row"><input id="voGemini" type="password" placeholder="🔑D Gemini 金鑰（與工作台 AI 設定同一把；已存過可留白）" style="flex:1"><button class="light" onclick="clearKey('gemini')">清除</button></div>
-      <div class="row"><input id="voGroq" type="password" placeholder="（選填）Groq 金鑰 gsk_…：辨識更快（1–2 秒）" style="flex:1"><button class="light" onclick="clearKey('groq')">清除</button></div>
-      <div class="row">Gemini 模型 <input id="voModel" placeholder="gemini-2.5-flash" style="max-width:260px"><span class="note-meta">預設 2.5 Flash；可填較新的 Flash 系列試速度（Pro 系列較慢）。速度主要取決於 Flash／Pro 等級，不是版本號。</span></div>
-      <div class="row">辨識服務 <select id="voProvider"><option value="auto">自動（有 Groq 用 Groq，否則 Gemini）</option><option value="gemini">Gemini</option><option value="groq">Groq</option></select>
+      <div class="row"><input id="voGroq" type="password" placeholder="（選填，不填也可以）Groq 金鑰 gsk_…：Gemini 額度用完時當備援" style="flex:1"><button class="light" onclick="clearKey('groq')">清除</button></div>
+      <div class="row">Gemini 模型 <input id="voModel" placeholder="留空＝自動（3.5 Flash-Lite，用完自動換）" style="max-width:260px"><span class="note-meta">留空最好：先用 3.5 Flash-Lite，被停用或今天額度用完會自動換 3.1 Flash-Lite、3.8 Flash。</span></div>
+      <div class="row">辨識服務 <select id="voProvider"><option value="auto">自動（Gemini 優先，Groq 只當備援）</option><option value="gemini">Gemini</option><option value="groq">Groq</option></select>
         　打字快捷鍵 <select id="voHotkey"></select>　說給小綿助 <select id="voPetHotkey"></select></div>
       <div class="row">潤飾風格 <select id="voStyle"></select>　詞庫 <select id="voVocab"></select>　<input id="voCustom" placeholder="自訂常用詞（頓號分隔）" style="flex:1"></div>
       <div class="row"><label><input type="checkbox" id="voOn" checked> 啟用語音輸入</label><button onclick="saveVoice()">儲存</button>
@@ -354,7 +354,7 @@ details summary{cursor:pointer;font-weight:800;color:var(--strong)}
     <div class="row"><button onclick="addNote()">儲存記事</button><span class="note-meta">保存在小綿助本機資料；工作台開啟時會自動帶入。</span></div>
   </section>
 
-  <section class="card"><h2>📱 LINE 待整理</h2><ul id="lineInbox"></ul><div class="note-meta">請到教師工作台的「LINE 收件匣」確認建立。</div></section>
+  <section class="card"><h2>📱 LINE 待整理</h2><ul id="lineInbox"></ul><div class="note-meta">在 LINE 按［任務］［記事］［不要］就定案；教師工作台同步時自動建立。</div></section>
 
   <section class="card" style="grid-column:1/-1"><h2>📝 本機記事（最近 10 則）</h2><ul id="notes"></ul></section>
 
@@ -440,7 +440,7 @@ function renderVoice(v){
   if(!v.hasGeminiKey&&!v.hasGroqKey){html='尚未設定——點下方「⚙ 設定」貼上 🔑D Gemini 金鑰（工作台 AI 設定那一把）就能用。';$('voiceSetup').open=true;}
   else if(!v.enabled){html='已關閉。';}
   else if(st.listener==='error'){html='⚠ 快捷鍵元件無法啟動：'+esc(st.lastError||'');}
-  else{html=`✅ 使用 <b>${v.resolved==='groq'?'Groq（快）':'Gemini'}</b>｜狀態：${st.status==='listening'?'🔴 聆聽中':st.status==='thinking'?'🔵 辨識中':'待命'}`+(st.lastAt?`｜最近 ${st.lastAt}`:'');}
+  else{html=`✅ 使用 <b>${v.resolved==='groq'?'Groq':'Gemini'}</b>｜狀態：${st.status==='listening'?'🔴 聆聽中':st.status==='thinking'?'🔵 辨識中':'待命'}`+(st.lastAt?`｜最近 ${st.lastAt}`:'');}
   if(st.lastText)html+=`<div class="note-meta">最近聽到：${esc(st.lastText)}</div>`;
   if(st.lastError&&st.listener!=='error')html+=`<div class="note-meta">⚠ ${esc(st.lastError)}</div>`;
   $('voiceStatus').innerHTML=html;
@@ -544,7 +544,7 @@ def default_data() -> dict:
             "voice_groq_key": "",
             "voice_hotkey": "ctrl_r",
             "voice_pet_hotkey": "alt_r",
-            "voice_gemini_model": "gemini-2.5-flash",
+            "voice_gemini_model": "",
             "voice_style": "自然口語",
             "voice_vocab": "教學",
             "voice_custom_vocab": "",
@@ -1295,7 +1295,7 @@ class SecretaryPet(DesktopPetPreview):
 
         line_card = self._card(right_col, "📱 LINE 待整理", c["surface"])
         line_card.pack(fill="x", pady=(6, 0))
-        tk.Label(line_card, text="從 LINE 傳給小幫手的訊息；請到教師工作台的「LINE 收件匣」確認後建立。", bg=c["surface"], fg=c["muted"], font=("Microsoft JhengHei", 8)).pack(anchor="w", pady=(0, 4))
+        tk.Label(line_card, text="從 LINE 傳給小幫手、還沒帶進工作台的訊息；在 LINE 按按鈕定案，工作台同步時自動建立。", bg=c["surface"], fg=c["muted"], font=("Microsoft JhengHei", 8)).pack(anchor="w", pady=(0, 4))
         line_list = self._listbox(line_card, height=3)
         self.panel_widgets["line_inbox"] = line_list
 
@@ -1928,7 +1928,7 @@ class SecretaryPet(DesktopPetPreview):
             "hasGroqKey": bool(settings.get("voice_groq_key")),
             "hotkey": str(settings.get("voice_hotkey") or ""),
             "petHotkey": str(settings.get("voice_pet_hotkey") or ""),
-            "geminiModel": str(settings.get("voice_gemini_model") or "gemini-2.5-flash"),
+            "geminiModel": str(settings.get("voice_gemini_model") or ""),
             "style": str(settings.get("voice_style") or "自然口語"),
             "vocab": str(settings.get("voice_vocab") or "教學"),
             "customVocab": str(settings.get("voice_custom_vocab") or ""),
@@ -2140,8 +2140,8 @@ class SecretaryPet(DesktopPetPreview):
                 settings["voice_pet_hotkey"] = pet_hotkey
                 model = str(payload.get("geminiModel") if payload.get("geminiModel") is not None else settings.get("voice_gemini_model") or "").strip()
                 if model and not re.fullmatch(r"[a-z0-9.\-]{5,60}", model):
-                    return {"ok": False, "error": "Gemini 模型名稱只能是小寫英數、點與連字號（例：gemini-2.5-flash）"}
-                settings["voice_gemini_model"] = model or "gemini-2.5-flash"
+                    return {"ok": False, "error": "Gemini 模型名稱只能是小寫英數、點與連字號（例：gemini-3.5-flash-lite）"}
+                settings["voice_gemini_model"] = "" if model in ("gemini-2.5-flash",) else model
                 style = str(payload.get("style") or settings.get("voice_style") or "自然口語")
                 settings["voice_style"] = style if style in POLISH_STYLES else "自然口語"
                 vocab = str(payload.get("vocab") or settings.get("voice_vocab") or "教學")

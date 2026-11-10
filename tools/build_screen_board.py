@@ -324,38 +324,64 @@ rep(r'''<input type="checkbox" id="jb-'+j.id+'"> 開始時響一聲''', r'''<inp
 # ---------- 🔖 書籤（老師 2026-11-07「可以建立書籤」）：常用網站一點就開新分頁 ----------
 # 資料 {title, items:[{id,name,url}]}；網址只收 http(s)（bmHref），名稱一律 textContent
 rep("""'image','draw','qr'];""", """'image','draw','qr','bm'];""")
-rep("""qr:['QR Code','qr-code',.26,.5]""", """qr:['QR Code','qr-code',.26,.5], bm:['書籤','bookmark',.3,.45]""")
+rep("""qr:['QR Code','qr-code',.26,.5]""", """qr:['QR Code','qr-code',.26,.5], bm:['書籤','bookmark',.3,.62]""")
 rep("""draw:'✏️',qr:'🔳'};""", """draw:'✏️',qr:'🔳',bm:'🔖'};""")
 rep("""  qr:()=>({text:'',cap:''})
 };""", """  qr:()=>({text:'',cap:''}),
-  bm:()=>({title:'常用網站',items:[]})
+  bm:()=>({title:'常用網站',items:BM_DEFAULT.map(([name,url])=>({id:uid(),name,url}))})
 };""")
 rep("""if(added.type==='qr')ELS[added.id].b.querySelector('.qrin').focus()""", """if(added.type==='qr'||added.type==='bm')ELS[added.id].b.querySelector('.qrin').focus()""")
 rep("""qr:{
   render(b,W)""", r"""bm:{
   render(b,W){const d=W.d;if(!Array.isArray(d.items))d.items=[];
-    b.innerHTML='<div class="bmw"><div class="ttl"></div><div class="bmlist"></div><input class="qrin bmin" type="text" placeholder="貼上網址，按 Enter 加入書籤" spellcheck="false" autocomplete="off" aria-label="新增書籤的網址"></div>';
+    const shown=d.items.find(it=>it.id===d.qr&&bmHref(it.url));
+    if(shown){const href=bmHref(shown.url);
+      b.innerHTML='<div class="bmw"><div class="qrw"><div class="qrpaper"><canvas class="qrc"></canvas><div class="qrmsg"></div></div><div class="qrcap"></div></div><button type="button" class="bmback">🔖 回書籤</button></div>';
+      qrPaint(b,{text:href,cap:bmLabel(shown,href)});
+      b.querySelector('.bmback').onclick=()=>{d.qr='';bmRestoreBox(W);save();refresh(W)};return}
+    b.innerHTML='<div class="bmw"><div class="ttl"></div><div class="bmlist"></div><input class="qrin bmin" type="text" placeholder="貼上網址按 Enter；要取名就打「名稱 網址」" spellcheck="false" autocomplete="off" aria-label="新增書籤的網址"></div>';
     const ttl=b.querySelector('.ttl');ttl.textContent=d.title||'';ttl.hidden=!d.title;
     const list=b.querySelector('.bmlist');
-    if(!d.items.length){const m=document.createElement('div');m.className='bmmsg';m.textContent='在下面貼上常用網站的網址，按 Enter 就會加進來；點書籤會開新分頁。';list.appendChild(m)}
+    if(!d.items.length){const m=document.createElement('div');m.className='bmmsg';m.textContent='在下面貼上網址，按 Enter 就會加進來；點書籤會開新分頁。';list.appendChild(m)}
     d.items.forEach(it=>{const href=bmHref(it.url),a=document.createElement(href?'a':'span');a.className='bmi'+(href?'':' bad');
       if(href){a.href=href;a.target='_blank';a.rel='noopener noreferrer'}
-      const n=document.createElement('span');n.className='bmn';n.textContent='🔗 '+(it.name||bmHost(href)||'請到「設定」填網址');
-      const h=document.createElement('span');h.className='bmh';h.textContent=href&&it.name?bmHost(href):'';
-      a.append(n,h);list.appendChild(a)});
+      const n=document.createElement('span');n.className='bmn';n.textContent='🔗 '+(bmLabel(it,href)||'請到「設定」填網址');
+      const h=document.createElement('span');h.className='bmh';h.textContent=href&&bmLabel(it,href)!==bmHost(href)?bmHost(href):'';
+      a.append(n,h);const row=document.createElement('div');row.className='bmr';row.dataset.id=it.id;
+      const grip=document.createElement('span');grip.className='bmgrip';grip.textContent='⠿';grip.title='按住拖拉改變順序';grip.onpointerdown=e=>bmDragRow(e,row,list,d);row.append(grip,a);
+      if(href){const q=document.createElement('button');q.type='button';q.className='bmq';q.textContent='QR';q.title='變成 QR Code';q.onclick=()=>{d.qr=it.id;bmGrowForQr(W);save();refresh(W)};row.appendChild(q)}
+      list.appendChild(row)});
     const i=b.querySelector('.bmin');
-    i.onkeydown=e=>{if(e.key!=='Enter'||e.isComposing)return;e.preventDefault();const href=bmHref(i.value);
+    i.onkeydown=e=>{if(e.key!=='Enter'||e.isComposing)return;e.preventDefault();const named=i.value.trim().match(/^(.+?)\s+(\S+)$/),href=bmHref(named?named[2]:i.value);
       if(!href){toast('請貼上網址，例如 www.google.com');return}
-      d.items.push({id:uid(),name:'',url:href});save();refresh(W);ELS[W.id]?.b.querySelector('.bmin')?.focus();toast('已加入書籤；要改名字或順序，按標題列的「設定」')}},
-  settings(f,W,box){f.inp('標題','text',()=>W.d.title,v=>W.d.title=v);bmEditor(box,W);f.note('點書籤會開新分頁。沒有打 https:// 也可以，系統會自動補上。')}
+      d.items.push({id:uid(),name:named?named[1].slice(0,60):'',url:href});save();refresh(W);ELS[W.id]?.b.querySelector('.bmin')?.focus();toast('已加入書籤；要改名字或順序，按標題列的「設定」')}},
+  settings(f,W,box){f.inp('標題','text',()=>W.d.title,v=>W.d.title=v);bmEditor(box,W);f.note('點書籤會開新分頁，按旁邊的 QR 會變成 QR Code，按住 ⠿ 可以拖拉換順序。沒有打 https:// 也可以，系統會自動補上。')}
 },
 qr:{
   render(b,W)""")
 rep("""const INIT={""", r"""// 資安：書籤只收 http(s) 網址（擋 javascript: 之類）；沒打 https:// 的自動補上
 function bmHref(u){try{const x=new URL(qrTarget(u));return /^https?:$/.test(x.protocol)?x.href:''}catch(e){return ''}}
 function bmHost(href){try{return new URL(href).hostname.replace(/^www\./,'')}catch(e){return ''}}
+// 新書籤預設放台灣常用的學習平台；沒取名字的書籤，認得的網站直接顯示中文名稱
+const BM_DEFAULT=[['因材網','https://adl.edu.tw/'],['均一教育平台','https://www.junyiacademy.org/'],['Cool English','https://www.coolenglish.edu.tw/'],['學習吧','https://www.learnmode.net/'],['PaGamO','https://www.pagamo.org/'],['教育雲','https://cloud.edu.tw/'],['布可星球','https://read.tn.edu.tw/']];
+const BM_KNOWN=Object.assign({'dcps.tn.edu.tw':'大橋國小'},...BM_DEFAULT.map(([name,url])=>({[bmHost(url)]:name})));
+function bmLabel(it,href){return it.name||BM_KNOWN[bmHost(href)]||bmHost(href)}
+// 按 QR 時把小工具放大到 QR Code 看得清楚；回書籤時還原
+function bmGrowForQr(W){const d=W.d,R=stage.getBoundingClientRect();d.qrBox={x:W.x,y:W.y,w:W.w,h:W.h};
+  const h=Math.max(W.h,.76),w=Math.max(W.w,Math.min(1,h*R.height/R.width*.92));
+  W.x=clamp(W.x+W.w/2-w/2,0,1-w);W.y=clamp(W.y+W.h/2-h/2,0,1-h);W.w=w;W.h=h;place(ELS[W.id].el,W)}
+function bmRestoreBox(W){const q=W.d.qrBox;delete W.d.qrBox;if(!q)return;Object.assign(W,q);place(ELS[W.id].el,W)}
+// 拖拉把手：按住上下移動換順序（手指、滑鼠都可以）
+function bmDragRow(e,row,list,d){e.preventDefault();e.stopPropagation();row.classList.add('dragging');
+  const move=ev=>{const edge=list.getBoundingClientRect();if(ev.clientY<edge.top+18)list.scrollTop-=12;else if(ev.clientY>edge.bottom-18)list.scrollTop+=12;
+    const over=[...list.children].find(r=>{if(r===row)return false;const b=r.getBoundingClientRect();return ev.clientY>=b.top&&ev.clientY<=b.bottom});
+    if(over){const b=over.getBoundingClientRect();list.insertBefore(row,ev.clientY<b.top+b.height/2?over:over.nextSibling)}};
+  const end=()=>{removeEventListener('pointermove',move);removeEventListener('pointerup',end);removeEventListener('pointercancel',end);row.classList.remove('dragging');
+    const order=[...list.children].map(r=>r.dataset.id);d.items.sort((a,b)=>order.indexOf(a.id)-order.indexOf(b.id));save()};
+  addEventListener('pointermove',move);addEventListener('pointerup',end);addEventListener('pointercancel',end)}
 // 匯入的設定檔可能是別人分享的：書籤逐欄整理
-function bmClean(w){const d=w.d=w.d&&typeof w.d==='object'?w.d:{};d.title=String(d.title||'').slice(0,60);
+function bmClean(w){const d=w.d=w.d&&typeof w.d==='object'?w.d:{};d.title=String(d.title||'').slice(0,60);d.qr=/^[\w-]{1,40}$/.test(String(d.qr))?d.qr:'';
+  const q=d.qrBox;if(q&&!['x','y','w','h'].every(k=>Number.isFinite(q[k])&&q[k]>=0&&q[k]<=1))delete d.qrBox;
   d.items=(Array.isArray(d.items)?d.items:[]).filter(it=>it&&typeof it==='object').slice(0,100).map(it=>({id:/^[\w-]{1,40}$/.test(String(it.id))?it.id:uid(),name:String(it.name||'').slice(0,60),url:bmHref(it.url)}))}
 function bmEditor(box,W){
   const wrap=document.createElement('div');wrap.style.cssText='display:flex;flex-direction:column;gap:6px';
@@ -382,11 +408,215 @@ rep(""".swatches{display:flex;""", """.bmw{height:100%;min-height:0;display:flex
 a.bmi:hover{outline:3px solid var(--accent);outline-offset:-1px}
 .bmi.bad{opacity:.55}
 .bmn{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bmh{margin-left:auto;flex:none;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:400;font-size:.62em;color:var(--muted)}
+.bmh{margin-left:auto;flex:0 1000 auto;min-width:0;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:400;font-size:.62em;color:var(--muted)}
 .bmmsg{padding:10px;color:var(--muted);font-weight:700;text-align:center;font-size:calc(var(--fs)*clamp(13px,5cqw,20px));line-height:1.4}
 .erow.bmrow{grid-template-columns:minmax(0,1fr) minmax(0,1.4fr) auto}
 .swatches{display:flex;""")
 
 assert '比賽' not in s,[m.group(0) for m in re.finditer(r'.{20}比賽.{10}', s)][:6]
+rep(""".bmi.bad{opacity:.55}
+""", """.bmi.bad{opacity:.55}
+.bmr{flex:none;display:flex;gap:6px;align-items:stretch}
+.bmr .bmi{flex:1;min-width:0}
+.bmq,.bmback{flex:none;padding:0 .7em;border-radius:10px;border:1px solid var(--btn-edge);background:var(--field);color:var(--ink);font:inherit;font-weight:800;cursor:pointer;font-size:calc(var(--fs)*clamp(12px,4.4cqw,20px))}
+.bmback{padding:.3em .7em}
+.bmq:hover,.bmback:hover{outline:3px solid var(--accent);outline-offset:-1px}
+.bmw .qrw{flex:1;height:auto}
+.bmgrip{flex:none;display:flex;align-items:center;padding:0 .15em;color:var(--muted);cursor:grab;touch-action:none;user-select:none;font-size:calc(var(--fs)*clamp(16px,5.5cqw,26px))}
+.bmr.dragging{opacity:.65}
+.bmr.dragging .bmgrip{cursor:grabbing}
+""")
+rep("""const ORDER=KEEP;""", """const ORDER=KEEP.filter(t=>t!=='qr');   // QR Code 併進書籤；以前放好的 QR Code 照常顯示""")
+# 老師 2026-11-09：計時器、碼錶、鬧鐘、間隔提醒合成一顆
+rep(r"""  bar.innerHTML=ORDER.map(t=>`<button type="button" class="tb" data-add="${t}"><span class="ic">${TOOL_EMOJI[t]||'▫️'}</span><span>${META[t][0]}</span></button>`).join('')+""", r"""  bar.innerHTML=ORDER.map(t=>TIME_TOOLS.includes(t)?(t===TIME_TOOLS[0]?'<button type="button" class="tb" id="timeTb" aria-haspopup="true"><span class="ic">⏱️</span><span>計時</span></button>':''):`<button type="button" class="tb" data-add="${t}"><span class="ic">${TOOL_EMOJI[t]||'▫️'}</span><span>${META[t][0]}</span></button>`).join('')+""")
+rep(r"""function drawBar(){
+""", r"""// 計時器、碼錶、鬧鐘、間隔提醒收在同一顆按鈕；放上去後還是各自獨立運作
+const TIME_TOOLS=['timer','stopwatch','alarm','interval'];
+function toggleTimePop(btn){const pop=$('#timePop');
+  if(!pop.children.length)pop.innerHTML=TIME_TOOLS.map(t=>`<button type="button" class="tb" data-add="${t}"><span class="ic">${TOOL_EMOJI[t]}</span><span>${META[t][0]}</span></button>`).join('');
+  pop.hidden=!pop.hidden;if(pop.hidden)return;
+  const r=btn.getBoundingClientRect(),half=pop.offsetWidth/2;pop.style.left=clamp(r.left+r.width/2,half+8,innerWidth-half-8)+'px';pop.style.bottom=(innerHeight-r.top+14)+'px'}
+function drawBar(){
+""")
+rep(r"""  else if(b.id==='inkTb')inkToggle();
+""", r"""  else if(b.id==='timeTb')toggleTimePop(b);
+  else if(b.id==='inkTb')inkToggle();
+""")
+rep(r"""$('#barShow').onclick=toggleBar;
+""", r"""$('#barShow').onclick=toggleBar;
+$('#timePop').onclick=e=>{const b=e.target.closest('[data-add]');if(!b)return;$('#timePop').hidden=true;addW(b.dataset.add)};
+""")
+rep(r"""document.addEventListener('pointerdown',e=>{if(!$('#pop').hidden&&""", r"""document.addEventListener('pointerdown',e=>{if(!$('#timePop').hidden&&!e.target.closest('#timePop,#timeTb'))$('#timePop').hidden=true;if(!$('#pop').hidden&&""")
+rep(r"""<nav id="bar" aria-label="小工具列"></nav>
+""", r"""<nav id="bar" aria-label="小工具列"></nav>
+<div class="timepop" id="timePop" role="menu" aria-label="選擇計時工具" hidden></div>
+""")
+rep(r"""#bar{position:fixed;""", r""".timepop{position:fixed;transform:translateX(-50%);z-index:9050;display:flex;gap:2px;background:var(--bar);border:1px solid var(--bar-edge);border-radius:14px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.timepop[hidden]{display:none}
+.timepop .tb{min-width:68px;font-size:.82rem}
+#bar{position:fixed;""")
+# 老師 2026-11-09：拿掉計時器，碼錶、鬧鐘、間隔提醒寫上用法
+rep(r"""stopwatch:['碼錶','watch',.26,.3]""", r"""stopwatch:['碼錶','watch',0.3,0.44]""")
+rep(r"""alarm:['鬧鐘','alarm-clock',.22,.28]""", r"""alarm:['鬧鐘','alarm-clock',0.3,0.6]""")
+rep(r"""interval:['間隔提醒','bell-ring',.28,.3]""", r"""interval:['間隔提醒','bell-ring',0.3,0.5]""")
+rep(r"""const ORDER=KEEP.filter(t=>t!=='qr');""", r"""const ORDER=KEEP.filter(t=>t!=='qr'&&t!=='timer');""")
+rep(r"""// 計時器、碼錶、鬧鐘、間隔提醒收在同一顆按鈕；放上去後還是各自獨立運作
+const TIME_TOOLS=['timer','stopwatch','alarm','interval'];
+""", r"""// 碼錶、鬧鐘、間隔提醒收在同一顆按鈕；放上去後還是各自獨立運作（倒數用大屏右上角的 5 分／10 分）
+const TIME_TOOLS=['stopwatch','alarm','interval'];
+const TIME_HELP={stopwatch:'從 0 往上計時，可以記錄每一筆時間',alarm:'設定幾點幾分，時間到全螢幕響鈴',interval:'每隔幾分鐘提醒一次，例如記得存檔'};
+""")
+rep(r"""  if(!pop.children.length)pop.innerHTML=TIME_TOOLS.map(t=>`<button type="button" class="tb" data-add="${t}"><span class="ic">${TOOL_EMOJI[t]}</span><span>${META[t][0]}</span></button>`).join('');
+""", r"""  if(!pop.children.length)pop.innerHTML=TIME_TOOLS.map(t=>`<button type="button" class="tp" data-add="${t}"><span class="ic">${TOOL_EMOJI[t]}</span><span class="tpt"><b>${META[t][0]}</b><small>${TIME_HELP[t]}</small></span></button>`).join('')+'<div class="tpn">要有聲音，請先按工具列的「🔊」試一次。</div>';
+""")
+rep(r""".timepop{position:fixed;transform:translateX(-50%);z-index:9050;display:flex;gap:2px;background:var(--bar);border:1px solid var(--bar-edge);border-radius:14px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.timepop[hidden]{display:none}
+.timepop .tb{min-width:68px;font-size:.82rem}
+""", r""".timepop{position:fixed;transform:translateX(-50%);z-index:9050;display:flex;flex-direction:column;gap:2px;width:300px;box-sizing:border-box;background:var(--bar);border:1px solid var(--bar-edge);border-radius:14px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.timepop[hidden]{display:none}
+.tp{display:flex;align-items:center;gap:12px;width:100%;padding:8px 10px;border:0;border-radius:10px;background:transparent;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.tp:hover{background:var(--btn-bg)}
+.tp .ic{font-size:24px;line-height:1}
+.tpt{display:flex;flex-direction:column;gap:1px;min-width:0}
+.tpt b{font-size:1rem}
+.tpt small{font-size:.78rem;color:var(--muted);line-height:1.3}
+.tpn{padding:6px 10px 4px;font-size:.76rem;color:var(--muted);border-top:var(--rule);margin-top:2px}
+.usage{flex:none;max-width:100%;color:var(--muted);font-size:clamp(12px,3.7cqw,15px);line-height:1.4;text-align:center}
+.big.wordy{font-size:calc(var(--fs)*clamp(20px,9cqw,40px));white-space:normal}
+.aladd{display:flex;gap:6px;width:100%;box-sizing:border-box;align-items:center}
+.aladd input{min-width:0;box-sizing:border-box;padding:5px 8px;border:1px solid var(--btn-edge);border-radius:8px;background:var(--field);color:var(--ink);font:inherit;font-size:clamp(13px,4cqw,16px)}
+.aladd input[type=time]{flex:none;width:9em}
+.aladd input[type=text]{flex:1}
+.aladd .btn{flex:none;white-space:nowrap}
+.al-list{width:100%;max-height:24cqh;overflow:auto}
+.al-list li{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:2px 6px}
+.aldel{flex:none;border:0;background:transparent;color:var(--muted);cursor:pointer;font:inherit;padding:0 4px}
+""")
+rep(r"""  else if(b.id==='soundTb'){unlock();chime()}
+""", r"""  else if(b.id==='soundTb'){unlock();chime();toast('聽得到鈴聲，鬧鐘和提醒時就會響；聽不到請檢查電腦音量')}
+""")
+rep(r"""<span class="lb">${AC?'測試聲音':'開聲音'}</span>""", r"""<span class="lb" title="按一下試聽鈴聲；鬧鐘和提醒要出聲，瀏覽器規定要先按過一次">${AC?'測試聲音':'開聲音'}</span>""")
+rep(r"""${ACTS.map(([k,t])=>`<option value="${k}"${j.action===k?' selected':''}>${t}</option>`).join('')}""", r"""${ACTS.filter(([k])=>k!=='timer'||j.action==='timer'||allW().some(w=>w.type==='timer')).map(([k,t])=>`<option value="${k}"${j.action===k?' selected':''}>${t}</option>`).join('')}""")
+rep(r"""目前沒有計時器，先從工具列加一個。""", r"""目前沒有計時器，請換一個動作。""")
+rep(r"""render(b,W){b.innerHTML=`<div class="ctr"><div class="big tdg sw"></div><div class="ctl opt-mid"><button type="button" class="btn primary go">開始</button><button type="button" class="btn lp">記錄</button><button type="button" class="btn rs">歸零</button></div><ol class="laps opt-tall"></ol></div>`;""", r"""render(b,W){b.innerHTML=`<div class="ctr"><div class="big tdg swtime"></div><div class="ctl opt-mid"><button type="button" class="btn primary go">開始</button><button type="button" class="btn lp">記錄</button><button type="button" class="btn rs">歸零</button></div><ol class="laps opt-tall"></ol><div class="usage opt-tall">按「開始」計時，「記錄」記下這一筆，「歸零」重新來。</div></div>`;""")
+rep(r"""tick(b,W){const d=W.d;b.querySelector('.sw').textContent=swFmt(swNow(d));""", r"""tick(b,W){const d=W.d;b.querySelector('.swtime').textContent=swFmt(swNow(d));""")
+rep(r"""<div class="ctl opt-mid"><button type="button" class="btn go"></button><button type="button" class="btn ts">試一次</button></div></div>`;
+    b.querySelector('.go').onclick=()=>T.interval.primary(b,W);
+""", r"""<div class="ctl opt-mid"><button type="button" class="btn go"></button><button type="button" class="btn ts">試一次</button><button type="button" class="btn st">設定</button></div><div class="usage opt-tall">每隔一段時間提醒一次。按「設定」改提示文字、間隔和時段，按「試一次」看效果。</div></div>`;
+    b.querySelector('.go').onclick=()=>T.interval.primary(b,W);
+    b.querySelector('.st').onclick=e=>{e.stopPropagation();OPEN.add(W.id);rebuild(W)};
+""")
+rep(r"""g.textContent=!d.on?'已暫停':nx?fmt(left):(d.mode==='now'?'--:--':'今天結束了');
+""", r"""g.textContent=!d.on?'已暫停':nx?fmt(left):(d.mode==='now'?'--:--':'今天的時段結束了');g.classList.toggle('wordy',!nx&&(!d.on||d.mode!=='now'));
+""")
+rep(r"""render(b,W){b.innerHTML='<div class="ctr"><div class="lbl">下一個鬧鐘</div><div class="big tdg nt"></div><div class="ttl nl"></div><div class="lbl nd opt-mid"></div><ul class="al-list opt-tall"></ul></div>';b._k=null},
+""", r"""render(b,W){b.innerHTML='<div class="ctr"><div class="lbl">下一個鬧鐘</div><div class="big tdg nt"></div><div class="ttl nl"></div><div class="lbl nd opt-mid"></div><div class="aladd opt-mid"><input type="time" class="alt" aria-label="鬧鐘時間"><input type="text" class="all" maxlength="30" placeholder="要提醒的事" aria-label="要提醒的事"><button type="button" class="btn primary ala">＋ 加入</button></div><ul class="al-list opt-tall"></ul><div class="usage opt-tall">選時間、打要提醒的事，按「加入」；時間到會全螢幕響鈴。</div></div>';b._k=null;
+    const t=b.querySelector('.alt'),l=b.querySelector('.all');
+    const add=()=>{if(!t.value){toast('請先選鬧鐘時間');t.focus();return}W.d.list.push({id:uid(),time:t.value,label:l.value.trim().slice(0,30),on:true,fired:''});t.value='';l.value='';save();b._k=null};
+    b.querySelector('.ala').onclick=add;l.onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();add()}};
+    b.querySelector('.al-list').onclick=e=>{const x=e.target.closest('.aldel');if(!x)return;W.d.list=W.d.list.filter(a=>a.id!==x.dataset.id);save();b._k=null}},
+""")
+rep(r"""b.querySelector('.nl').textContent=nx?(nx.label||'鬧鐘'):'今天沒有了';""", r"""b.querySelector('.nl').textContent=nx?(nx.label||'鬧鐘'):(L.length?'今天的鬧鐘都響完了':'還沒有鬧鐘，在下面加一個');""")
+rep(r"""b.querySelector('.al-list').innerHTML=L.filter(a=>a!==nx).map(a=>`<li class="${a.on&&a.fired!==tk?'':'off'}">${esc(a.time)}　${esc(a.label||'鬧鐘')}</li>`).join('')},""", r"""b.querySelector('.al-list').innerHTML=L.map(a=>`<li class="${a.on&&a.fired!==tk?'':'off'}"><span>${esc(a.time)}　${esc(a.label||'鬧鐘')}</span><button type="button" class="aldel" data-id="${esc(a.id)}" title="刪除這個鬧鐘" aria-label="刪除這個鬧鐘">✕</button></li>`).join('')},""")
+rep(r"""  alarm:()=>({list:[{id:uid(),time:'11:55',label:'收拾桌面',on:true,fired:''}]}),""", r"""  alarm:()=>({list:[]}),""")
+# 老師 2026-11-09：工具列不要測試聲音、定時
+rep(r"""<button type="button" class="tb" id="schedTb"><span class="ic">📅</span><span>定時${S.jobs.filter(j=>j.on).length?' '+S.jobs.filter(j=>j.on).length:''}</span></button>""", r"""""")
+rep(r"""  <button type="button" class="tb ${AC?'':'warn'}" id="soundTb"><span class="ic">🔊</span><span class="lb" title="按一下試聽鈴聲；鬧鐘和提醒要出聲，瀏覽器規定要先按過一次">${AC?'測試聲音':'開聲音'}</span></button>
+""", r"""""")
+rep(r"""  else if(b.id==='schedTb'){$('#pop').hidden=true;$('#screens').hidden=true;$('#sched').hidden=!$('#sched').hidden;drawJobs()}
+""", r"""""")
+rep(r"""  else if(b.id==='soundTb'){unlock();chime();toast('聽得到鈴聲，鬧鐘和提醒時就會響；聽不到請檢查電腦音量')}
+""", r"""""")
+rep(r"""  S.jobs.forEach(j=>{if(j.on&&j.time===hm&&j.fired!==tk){j.fired=tk;save();runJob(j)}});
+""", r"""""")
+rep(r"""+'<div class="tpn">要有聲音，請先按工具列的「🔊」試一次。</div>';""", r""";""")
+rep(r"""時間到會全螢幕顯示說明文字並響鈴（記得先開聲音）。""", r"""時間到會全螢幕顯示說明文字並響鈴。""")
+# 老師 2026-11-10：review 修正；定時與自動輪播整段移除
+rep(r"""function chime(){beep(988""", r"""function chime(){unlock();beep(988""")
+rep(r"""if(!q)return;Object.assign(W,q);place(ELS[W.id].el,W)}""", r"""if(!q)return;W.x=q.x;W.y=q.y;W.w=q.w;W.h=q.h;place(ELS[W.id].el,W)}""")
+rep(r"""const move=ev=>{const edge=list.getBoundingClientRect();""", r"""const move=ev=>{if(!ev.buttons){end();return}const edge=list.getBoundingClientRect();""")
+rep(r""".job{display:grid;grid-template-columns:auto auto 1fr auto;gap:6px;align-items:center;padding:8px;border:1px solid var(--btn-edge);border-radius:8px}
+.job.off{opacity:.5}
+.job .pm{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.job input[type="time"],.job select,.job input[type="text"]{padding:5px 7px;border-radius:6px;border:1px solid var(--btn-edge);background:var(--field);min-width:0}
+.job input[type="text"]{flex:1}
+.job .btn{padding:4px 9px;font-size:.8rem}
+""", r"""""")
+rep(r"""<div class="pop" id="sched" hidden>
+  <h3>定時</h3>
+  <div class="pnote">到了設定的時間會自動執行，每天重複。網頁要保持開著才會執行。</div>
+  <div id="jobs" style="display:flex;flex-direction:column;gap:8px"></div>
+  <div class="frow"><button type="button" class="btn primary" id="jobAdd">＋ 新增定時</button></div>
+  <h3>自動輪播畫面</h3>
+  <div class="frow"><label><input type="checkbox" id="rotOn"> 開啟</label>每<input type="number" id="rotSec" min="5" max="3600" style="max-width:5em">秒換下一個畫面</div>
+  <div class="pnote">有人點畫面或按鍵時，會暫停 20 秒再繼續輪播。</div>
+</div>
+""", r"""""")
+rep(r"""S.rotate=S.rotate||{on:false,sec:30};S.jobs=S.jobs||[];""", r"""S.jobs=[];""")
+rep(r"""S.jobs=(Array.isArray(S.jobs)?S.jobs:[]).filter(j=>j&&SAFE_ID.test(String(j.id)));""", r"""S.jobs=[];""")
+rep(r"""S.jobs=S.jobs||[];S.rotate=S.rotate||{on:false,sec:30};S.bg=""", r"""S.jobs=[];S.bg=""")
+rep(r"""function goScr(i){lastRot=Date.now();S.cur=""", r"""function goScr(i){S.cur=""")
+rep(r"""if(!$('#sched').hidden&&!e.target.closest('#sched,#schedTb'))$('#sched').hidden=true;""", r"""""")
+rep(r"""/* ---------- 定時 ---------- */
+let lastRot=Date.now(),lastUser=0;
+['pointerdown','keydown'].forEach(t=>document.addEventListener(t,()=>lastUser=Date.now()));
+const ACTS=[['screen','切換畫面'],['notice','跳出公告'],['timer','開始計時器']];
+function drawJobs(){
+  const box=$('#jobs');box.innerHTML='';
+  if(!S.jobs.length)box.innerHTML='<div class="pnote">還沒有定時。按「新增定時」，例如 9:00 自動切到「考試中」畫面。</div>';
+  S.jobs.slice().sort((a,b)=>(a.time||'99').localeCompare(b.time||'99')).forEach(j=>{
+    const r=document.createElement('div');r.className='job'+(j.on?'':' off');
+    r.innerHTML=`<button type="button" class="btn ${j.on?'primary':''}" data-a="on">${j.on?'開':'關'}</button><input type="time" id="jt-${esc(j.id)}" aria-label="時間"><select id="ja-${esc(j.id)}" aria-label="動作">${ACTS.filter(([k])=>k!=='timer'||j.action==='timer'||allW().some(w=>w.type==='timer')).map(([k,t])=>`<option value="${k}"${j.action===k?' selected':''}>${t}</option>`).join('')}</select><button type="button" class="btn danger" data-a="del">刪除</button><div class="pm"></div>`;
+    r.querySelector('input[type=time]').value=j.time||'';
+    r.querySelector('input[type=time]').onchange=e=>{j.time=e.target.value;j.fired='';save()};
+    r.querySelector('select').onchange=e=>{j.action=e.target.value;j.fired='';save();drawJobs()};
+    r.querySelector('[data-a=on]').onclick=()=>{j.on=!j.on;j.fired='';save();drawJobs();drawBar();icons()};
+    r.querySelector('[data-a=del]').onclick=()=>{S.jobs.splice(S.jobs.indexOf(j),1);save();drawJobs();drawBar();icons()};
+    const pm=r.querySelector('.pm');
+    if(j.action==='screen'){
+      if(!S.screens.some(x=>x.id===j.screen))j.screen=S.screens[0].id;
+      pm.innerHTML='到 <select id="js-'+esc(j.id)+'">'+S.screens.map(x=>`<option value="${esc(x.id)}"${x.id===j.screen?' selected':''}>${esc(x.name)}</option>`).join('')+'</select>';
+      pm.querySelector('select').onchange=e=>{j.screen=e.target.value;save()};
+    }else if(j.action==='notice'){
+      pm.innerHTML=`<input type="text" id="jx-${esc(j.id)}" placeholder="要跳出的公告文字"><label><input type="checkbox" id="jb-${esc(j.id)}"> 響鈴</label>`;
+      const t=pm.querySelector('input[type=text]');t.value=j.text||'';t.oninput=()=>{j.text=t.value;save()};
+      const c=pm.querySelector('input[type=checkbox]');c.checked=!!j.sound;c.onchange=()=>{j.sound=c.checked;save()};
+    }else{
+      const tm=[];S.screens.forEach(x=>x.widgets.forEach(w=>{if(w.type==='timer')tm.push([w.id,x.name+'・'+(w.d.label||'計時器')+'（'+fmt(w.d.total)+'）'])}));
+      if(!tm.length){pm.innerHTML='<span class="pnote">目前沒有計時器，請換一個動作。</span>'}
+      else{if(!tm.some(x=>x[0]===j.timer))j.timer=tm[0][0];
+        pm.innerHTML='<select id="jw-'+esc(j.id)+'">'+tm.map(([id,t])=>`<option value="${esc(id)}"${id===j.timer?' selected':''}>${esc(t)}</option>`).join('')+'</select><label><input type="checkbox" id="jb-'+esc(j.id)+'"> 開始時響一聲</label>';
+        pm.querySelector('select').onchange=e=>{j.timer=e.target.value;save()};
+        const c=pm.querySelector('input[type=checkbox]');c.checked=!!j.sound;c.onchange=()=>{j.sound=c.checked;save()}}
+    }
+    box.appendChild(r)});
+  $('#rotOn').checked=S.rotate.on;$('#rotSec').value=S.rotate.sec;
+}
+$('#jobAdd').onclick=()=>{const n=new Date();n.setMinutes(n.getMinutes()+5);S.jobs.push({id:uid(),on:true,time:pad(n.getHours())+':'+pad(n.getMinutes()),action:'screen',screen:scr().id,text:'',sound:true,fired:''});save();drawJobs();drawBar();icons()};
+$('#rotOn').onchange=e=>{S.rotate.on=e.target.checked;lastRot=Date.now();save()};
+$('#rotSec').onchange=e=>{S.rotate.sec=clamp(+e.target.value||30,5,3600);e.target.value=S.rotate.sec;save()};
+""", r"""""")
+rep(r"""function runJob(j){
+  if(j.action==='screen'){const i=S.screens.findIndex(x=>x.id===j.screen);if(i>=0)goScr(i)}
+  else if(j.action==='notice')notice(j.text||'公告',j.sound);
+  else if(j.action==='timer'){S.screens.forEach((x,si)=>{const W=x.widgets.find(w=>w.id===j.timer);if(!W)return;if(si!==S.cur)goScr(si);
+    const d=W.d;d.remain=d.total;d.endAt=Date.now()+d.total*1000;d.running=true;save();if(j.sound)chime();toast('定時開始：'+(d.label||'計時器')+' '+fmt(d.total))})}
+}
+""", r"""""")
+rep(r"""  if(S.rotate.on&&S.screens.length>1&&$('#ring').hidden&&!OPEN.size&&$('#pop').hidden&&$('#sched').hidden&&$('#screens').hidden&&now-lastUser>20000&&now-lastRot>S.rotate.sec*1000)goScr(S.cur+1);
+""", r"""""")
+s = s.replace("$('#sched').hidden=true;", "")
+# 老師 2026-11-10：改完馬上關掉或切走時，不等延遲存檔，免得最後一筆沒存到
+rep("""let saveT,imgT;
+function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}},250)}
+function saveImgs(){clearTimeout(imgT);imgT=setTimeout(()=>{try{localStorage.setItem(IMGKEY,JSON.stringify(IMG))}catch(e){toast('圖片太多，瀏覽器存不下；這次仍可使用，重新整理後可能消失')}},400)}""", """let saveT=0,imgT=0;
+function flushSave(){clearTimeout(saveT);saveT=0;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function save(){clearTimeout(saveT);saveT=setTimeout(flushSave,250)}
+function flushImgs(){clearTimeout(imgT);imgT=0;try{localStorage.setItem(IMGKEY,JSON.stringify(IMG))}catch(e){toast('圖片太多，瀏覽器存不下；這次仍可使用，重新整理後可能消失')}}
+function saveImgs(){clearTimeout(imgT);imgT=setTimeout(flushImgs,400)}
+// 改完馬上關掉或切走時，不等延遲存檔，免得最後一筆沒存到
+function flushAll(){if(saveT)flushSave();if(imgT)flushImgs()}
+['pagehide','beforeunload'].forEach(t=>addEventListener(t,flushAll));
+document.addEventListener('visibilitychange',()=>{if(document.hidden)flushAll()});""")
 (root / 'Screen.html').write_text(s, encoding='utf-8')
 print('Screen.html', len(s) // 1024, 'KB')

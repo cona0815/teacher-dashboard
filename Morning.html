@@ -32,12 +32,6 @@
     body { font-family: "Microsoft JhengHei", "Noto Sans TC", sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; }
     header { background: var(--surface); border-bottom: 2px solid var(--line); padding: 5px 18px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; position: sticky; top: 0; z-index: 20; }
     .brand { font-size: 20px; font-weight: 900; color: var(--primary-strong); }
-    /* G10 多班模式：班級切換鈕（只有設定兩班以上才出現） */
-    .class-switch { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-    .class-switch[hidden] { display: none; }
-    .class-pill { border: 2px solid var(--line); background: var(--surface); color: var(--primary-strong); border-radius: 999px; padding: 3px 14px; font-size: 16px; font-weight: 900; cursor: pointer; font-family: inherit; }
-    .class-pill.active { background: var(--primary); border-color: var(--primary); color: #fff; }
-    .class-switch-note { font-size: 13px; font-weight: 700; color: var(--muted); }
     .today-label { font-size: 16px; font-weight: 700; color: var(--muted); }
     .clock { font-size: 30px; font-weight: 900; font-variant-numeric: tabular-nums; color: var(--primary-strong); margin-left: auto; }
     .countdown-box { display: flex; align-items: center; gap: 7px; background: var(--ok-soft); border: 2px solid var(--line); border-radius: 12px; padding: 3px 10px; }
@@ -45,10 +39,12 @@
     .countdown-box.running .countdown-display { color: var(--primary-strong); }
     .countdown-box.warning { background: #ffe9e5; border-color: var(--missing); }
     .countdown-box.warning .countdown-display { color: var(--missing); }
-    .tabs { display: flex; gap: 8px; padding: 8px 18px 0; flex-wrap: wrap; }
-    .tab-button { border: 2px solid var(--line); background: var(--surface); color: var(--primary-strong); border-radius: 12px 12px 0 0; padding: 8px 18px; font-size: 17px; font-weight: 900; cursor: pointer; }
+    /* 上方選單固定一行：--tab-scale 由 fitTopTabs() 依寬度算出來；留白縮得比字快，字才不會太小 */
+    .tabs { display: flex; gap: calc(8px * var(--tab-scale, 1) * var(--tab-scale, 1)); padding: 8px calc(18px * var(--tab-scale, 1) * var(--tab-scale, 1)) 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab-button { flex: none; white-space: nowrap; border: 2px solid var(--line); background: var(--surface); color: var(--primary-strong); border-radius: 12px 12px 0 0; padding: calc(8px * var(--tab-scale, 1)) calc(18px * var(--tab-scale, 1) * var(--tab-scale, 1)); font-size: calc(17px * var(--tab-scale, 1)); font-weight: 900; cursor: pointer; }
     .tab-button.active { background: var(--primary); border-color: var(--primary); color: #fff; }
-    .tab-icon { width: 22px; height: 22px; border-radius: 6px; vertical-align: -5px; margin-right: 5px; }
+    .tab-icon { width: calc(22px * var(--tab-scale, 1)); height: calc(22px * var(--tab-scale, 1)); border-radius: 6px; vertical-align: -5px; margin-right: calc(5px * var(--tab-scale, 1)); }
     /* 聯絡本字體：全部是開源可商用（SIL OFL 1.1 / CC-BY 4.0），從專案 assets 載入。
        單檔攜出（分享包那份）沒有 assets 資料夾，會自動退回系統字體，不會壞掉。
        字型檔較大，第一次切換要等它下載，之後瀏覽器會快取。 */
@@ -60,6 +56,13 @@
     @font-face { font-family: 'BpmfHuninn'; font-display: swap;
       src: local('Bpmf Huninn'), local('Bpmf Huninn Regular'), local('BpmfHuninn-Regular'),
            url('assets/fonts/BpmfHuninn-Regular.ttf') format('truetype'); }
+    /* 注音字型的英數字在直書會橫躺：直書時英數字交給下一個字型（同一個檔，不會多下載） */
+    @font-face { font-family: 'BpmfIansuiCJK'; font-display: swap; unicode-range: U+80-10FFFF;
+      src: local('Bpmf Iansui'), local('Bpmf Iansui Regular'), local('BpmfIansui-Regular'),
+           url('assets/fonts/BpmfIansui-Regular.ttf') format('truetype'); }
+    @font-face { font-family: 'BpmfHuninnCJK'; font-display: swap; unicode-range: U+80-10FFFF;
+      src: local('Bpmf Huninn'), local('Bpmf Huninn Regular'), local('BpmfHuninn-Regular'),
+           url('assets/fonts/BpmfHuninn-Regular.ttf') format('truetype'); }
     @font-face { font-family: 'Huninn'; font-display: swap;
       src: local('Huninn'), local('Huninn Regular'),
            url('assets/fonts/Huninn-Regular.ttf') format('truetype'); }
@@ -67,10 +70,10 @@
       src: local('Iansui'), local('Iansui Regular'),
            url('assets/fonts/Iansui-Regular.ttf') format('truetype'); }
     /* 注音體行距要拉開，注音符號才不會擠到上一行 */
-    .chalk-bpmf .chalk-content,     .chalk-bpmf .chalk-textarea     { font-family: 'BpmfIansui', 'Microsoft JhengHei', 'Noto Sans TC', sans-serif; line-height: 2.3; }
-    .chalk-bpmfhuninn .chalk-content, .chalk-bpmfhuninn .chalk-textarea { font-family: 'BpmfHuninn', 'Microsoft JhengHei', 'Noto Sans TC', sans-serif; line-height: 2.3; }
-    .chalk-huninn .chalk-content,   .chalk-huninn .chalk-textarea   { font-family: 'Huninn', 'Microsoft JhengHei', 'Noto Sans TC', sans-serif; line-height: 1.9; }
-    .chalk-iansui .chalk-content,   .chalk-iansui .chalk-textarea   { font-family: 'Iansui', 'DFKai-SB', 'Microsoft JhengHei', sans-serif; line-height: 1.95; }
+    .chalk-bpmf .chalk-content,     .chalk-bpmf .chalk-textarea     { font-family: 'BpmfIansui', 'Microsoft JhengHei', 'Noto Sans TC', sans-serif; line-height: calc(2.3 + var(--chalk-leading, 0)); }
+    .chalk-bpmfhuninn .chalk-content, .chalk-bpmfhuninn .chalk-textarea { font-family: 'BpmfHuninn', 'Microsoft JhengHei', 'Noto Sans TC', sans-serif; line-height: calc(2.3 + var(--chalk-leading, 0)); }
+    .chalk-huninn .chalk-content,   .chalk-huninn .chalk-textarea   { font-family: 'Huninn', 'Microsoft JhengHei', 'Noto Sans TC', sans-serif; line-height: calc(1.9 + var(--chalk-leading, 0)); }
+    .chalk-iansui .chalk-content,   .chalk-iansui .chalk-textarea   { font-family: 'Iansui', 'DFKai-SB', 'Microsoft JhengHei', sans-serif; line-height: calc(1.95 + var(--chalk-leading, 0)); }
     main { padding: 10px 18px 24px; }
     .page { display: none; }
     .page.active { display: block; }
@@ -179,18 +182,50 @@
     .chalkboard { background: linear-gradient(145deg, #96683c, #7c5330); border-radius: 16px; padding: 13px; box-shadow: 0 3px 8px rgba(40,30,15,.3); display: flex; }
     .chalkboard-inner { background: #2e4a3d; border-radius: 9px; min-height: max(340px, calc(100vh - 320px)); padding: 14px 22px 20px; color: #f4f1e6; box-shadow: inset 0 0 24px rgba(0,0,0,.28); flex: 1; }
     .chalk-date { text-align: right; font-size: 17px; font-weight: 800; letter-spacing: 1px; border-bottom: 1px solid rgba(244,241,230,.35); padding-bottom: 6px; margin-bottom: 12px; }
-    .chalk-content { font-size: clamp(24px, 3.4vh, 32px); font-weight: 800; line-height: 2; white-space: pre-wrap; word-break: break-word; letter-spacing: 1px; }
+    .chalk-content { font-size: clamp(24px, 3.4vh, 32px); font-weight: 800; line-height: calc(2 + var(--chalk-leading, 0)); white-space: pre-wrap; word-break: break-word; letter-spacing: calc(1px + var(--chalk-tracking, 0px)); }
     .chalk-empty { color: rgba(244,241,230,.55); font-size: 20px; font-weight: 700; }
-    .chalk-textarea { width: 100%; min-height: max(360px, calc(100vh - 400px)); background: rgba(0,0,0,.18); border: 1.5px dashed rgba(244,241,230,.5); border-radius: 8px; color: #f4f1e6; font-family: inherit; font-size: 28px; font-weight: 700; line-height: 1.9; padding: 14px; resize: vertical; }
+    .chalk-textarea { width: 100%; min-height: max(360px, calc(100vh - 400px)); background: rgba(0,0,0,.18); border: 1.5px dashed rgba(244,241,230,.5); border-radius: 8px; color: #f4f1e6; font-family: inherit; font-size: 28px; font-weight: 700; line-height: calc(1.9 + var(--chalk-leading, 0)); letter-spacing: var(--chalk-tracking, 0px); padding: 14px; resize: vertical; }
     .chalk-textarea:focus { outline: 2px solid rgba(244,241,230,.6); }
+    .contact-quick { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+    .contact-quick[hidden] { display: none; }
+    .contact-quick select, .contact-quick input { background: #fffefb; color: var(--ink); }
+    .contact-quick input { flex: 1 1 150px; min-width: 0; }
+    .contact-quick:not([hidden]) ~ .chalk-textarea { min-height: max(300px, calc(100vh - 460px)); }
+    /* 聯絡本直書：由右往左一行一行寫，放不下時左右捲動 */
+    .chalk-vertical .chalk-content { writing-mode: vertical-rl; text-orientation: upright; }
+    .rollcall-layout > div, .chalkboard-inner { min-width: 0; }
+    .chalk-vertical .chalk-content { width: 100%; height: max(280px, calc(100vh - 385px)); overflow-x: auto; }
+    /* 直書編輯：直接在黑板上打字，同一時間只有一種方向 */
+    .chalk-vertical.chalk-editing { display: flex; flex-direction: column; }
+    .chalk-vertical.chalk-editing .chalk-date { order: -2; }
+    .chalk-vertical.chalk-editing .contact-quick { order: -1; }
+    .chalk-vertical.chalk-editing .chalk-content { flex: none; box-sizing: border-box; height: max(260px, calc(100vh - 460px)); padding: 12px; background: rgba(0,0,0,.18); border: 1.5px dashed rgba(244,241,230,.5); border-radius: 8px; outline: none; cursor: text; }
+    .chalk-vertical.chalk-editing .chalk-content:focus { border-color: rgba(244,241,230,.9); }
+    .chalk-vertical.chalk-editing .chalk-content:empty::before { content: '直接在這裡打字，或用上面的下拉加入'; color: rgba(244,241,230,.5); font-size: 20px; }
+    body.projection .chalk-vertical .chalk-content { height: calc(100vh - 240px); }
+    .chalk-tcy { text-combine-upright: all; }
+    .chalk-gap { font-size: 0; letter-spacing: 0; }
+    .chalk-dash { text-orientation: sideways; }
+    /* 注音字型的國字靠左、右邊留給注音：英數字往左移，才會和國字在同一條線上 */
+    .chalk-vertical.chalk-bpmf, .chalk-vertical.chalk-bpmfhuninn { --chalk-tcy-x: -.44em; --chalk-ascii-x: -.36em; --chalk-dash-x: -.24em; }
+    .chalk-vertical .chalk-tcy { position: relative; left: var(--chalk-tcy-x, 0); }
+    .chalk-vertical .chalk-ascii { position: relative; left: var(--chalk-ascii-x, 0); }
+    .chalk-vertical .chalk-ascii.chalk-dash { left: var(--chalk-dash-x, 0); }
+    .chalk-vertical.chalk-bpmf .chalk-content { font-family: 'BpmfIansuiCJK', 'Microsoft JhengHei', 'Noto Sans TC', sans-serif; }
+    .chalk-vertical.chalk-bpmfhuninn .chalk-content { font-family: 'BpmfHuninnCJK', 'Microsoft JhengHei', 'Noto Sans TC', sans-serif; }
+    .chalk-layout { display: flex; gap: 6px 14px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; font-size: 15px; font-weight: 800; color: var(--primary-strong); }
+    .chalk-layout[hidden] { display: none; }
+    .chalk-layout .scale-btns { margin-left: 4px; align-items: center; }
+    .chalk-layout button.on { background: var(--primary-strong); color: #fff; }
+    .chalk-layout-value { min-width: 28px; text-align: center; }
     @media (max-width: 1100px) { .rollcall-layout { grid-template-columns: 1fr; } }
     /* 投影模式：只留黑板，字放大，學生抄聯絡簿最清楚 */
     body.projection .tabs, body.projection .submit-bar, body.projection .countdown-box,
     body.projection .rollcall-layout > div:first-child,
-    body.projection #contactRefreshButton, body.projection #contactCopyButton, body.projection #contactEditButton { display: none !important; }
+    body.projection #contactRefreshButton, body.projection #contactCopyButton, body.projection #contactEditButton, body.projection .contact-quick { display: none !important; }
     body.projection .rollcall-layout { grid-template-columns: 1fr; }
     body.projection .chalkboard-inner { min-height: calc(100vh - 150px); }
-    body.projection .chalk-content { font-size: 48px; line-height: 2.1; }
+    body.projection .chalk-content { font-size: 48px; line-height: calc(2.1 + var(--chalk-leading, 0)); }
     body.projection .chalk-date { font-size: 24px; }
     body.projection main { padding-bottom: 20px; }
     .toast { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); background: var(--primary-strong); color: #fff; border-radius: 12px; padding: 12px 22px; font-size: 17px; font-weight: 800; z-index: 50; opacity: 0; pointer-events: none; transition: opacity .25s; }
@@ -223,6 +258,22 @@
     .level-box summary { cursor: pointer; font-size: 17px; font-weight: 800; color: var(--primary-strong); }
     .level-box[open] summary { margin-bottom: 12px; }
     .level-box .note { margin-top: 12px; }
+    /* 設定頁：一個類別一種顏色，兩種大屏風格共用 */
+    .sb-class { --sb-bg: #eef4fd; --sb-edge: #bcd3f2; --sb-ink: #1f5fa8; }
+    .sb-look { --sb-bg: #f6effc; --sb-edge: #d7c2ee; --sb-ink: #6b3fa0; }
+    .sb-menu { --sb-bg: #e6f6f4; --sb-edge: #aadfd9; --sb-ink: #0f7068; }
+    .sb-homework { --sb-bg: #edf7e8; --sb-edge: #bfe0ad; --sb-ink: #2f6a2a; }
+    .sb-time { --sb-bg: #fff3e3; --sb-edge: #f4d3a3; --sb-ink: #96540a; }
+    .sb-safe { --sb-bg: #fbeeee; --sb-edge: #efc6c2; --sb-ink: #a83a30; }
+    .sb-storage { --sb-bg: #fff9dc; --sb-edge: #ecdc94; --sb-ink: #6f5a00; }
+    .sb-cloud { --sb-bg: #eceffc; --sb-edge: #c2caf0; --sb-ink: #3848a0; }
+    .sb-line { --sb-bg: #fdeee6; --sb-edge: #f2c9b0; --sb-ink: #9a471a; }
+    .setup-block, #page-setup .storage-choice, #page-setup .level-box { max-width: none; background: var(--sb-bg); border: 2px solid var(--sb-edge); border-radius: 14px; }
+    .setup-block { margin-bottom: 14px; padding: 12px 16px 16px; }
+    .setup-block-title { margin: 0 0 10px; font-size: 19px; font-weight: 900; color: var(--sb-ink); }
+    .setup-block .form-grid { max-width: none; }
+    #page-setup .setup-block label, #page-setup .top-tool-options, #page-setup .storage-choice legend, #page-setup .level-box summary, #page-setup .level-box label { color: var(--sb-ink); }
+    #page-setup .setup-block .status-text, #page-setup .sb-storage .status-text, #page-setup .level-box .note { color: #5c5a52; }
     /* ===== 聯絡本日曆 ===== */
     .contact-title { border: 0; background: none; font: inherit; font-size: 18px; font-weight: 900; color: var(--primary-strong); display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px 3px 2px; border-radius: 10px; cursor: pointer; }
     .contact-title:hover { background: var(--ok-soft); }
@@ -306,20 +357,20 @@
     html[data-board-style="cozy"] header { background: var(--surface); border-bottom: 0; box-shadow: 0 4px 0 var(--cozy-wood), 0 10px 18px -12px rgba(91,70,54,.4); }
     html[data-board-style="cozy"] .brand, html[data-board-style="cozy"] .clock { color: #6b4f37; }
     html[data-board-style="cozy"] .countdown-box { background: #eef7e2; border: 3px solid #cfe5b5; border-radius: 999px; }
-    html[data-board-style="cozy"] .tabs { gap: 10px; padding-top: 12px; }
+    html[data-board-style="cozy"] .tabs { gap: calc(10px * var(--tab-scale, 1) * var(--tab-scale, 1)); padding-top: 12px; }
     html[data-board-style="cozy"] .tab-button { border: 3px solid var(--cozy-wood); border-bottom: 0; border-radius: 22px 22px 0 0; background: var(--cozy-paper); color: #7a5c3e; box-shadow: inset 0 -4px 0 rgba(201,166,107,.22); }
     html[data-board-style="cozy"] .tab-button.active { background: var(--cozy-leaf); border-color: var(--cozy-leaf-deep); color: #fff; text-shadow: 0 1px 0 rgba(47,107,44,.45); box-shadow: inset 0 -5px 0 var(--cozy-leaf-deep); }
-    html[data-board-style="cozy"] .tab-icon { width: 28px; height: 28px; vertical-align: -8px; border-radius: 0; object-fit: contain; }   /* 溫暖風圖示自帶白貼紙邊 */
+    html[data-board-style="cozy"] .tab-icon { width: calc(28px * var(--tab-scale, 1)); height: calc(28px * var(--tab-scale, 1)); vertical-align: calc(-8px * var(--tab-scale, 1)); border-radius: 0; object-fit: contain; }   /* 溫暖風圖示自帶白貼紙邊 */
     html[data-board-style="cozy"] .panel { border: 3px solid var(--cozy-wood); border-radius: 0 28px 28px 28px; box-shadow: 0 5px 0 var(--cozy-wood), 0 16px 26px -16px rgba(91,70,54,.4); }
-    html[data-board-style="cozy"] .ghost-button, html[data-board-style="cozy"] .mode-button, html[data-board-style="cozy"] .class-pill {
+    html[data-board-style="cozy"] .ghost-button, html[data-board-style="cozy"] .mode-button {
       border: 3px solid var(--cozy-wood); border-radius: 999px; background: var(--cozy-paper); color: #6b4f37; box-shadow: 0 4px 0 var(--cozy-wood); }
-    html[data-board-style="cozy"] .mode-button.active, html[data-board-style="cozy"] .class-pill.active {
+    html[data-board-style="cozy"] .mode-button.active {
       background: var(--cozy-sky); border-color: var(--cozy-sky-deep); color: #fff; box-shadow: 0 4px 0 var(--cozy-sky-deep); }
     html[data-board-style="cozy"] .primary-button { border-radius: 999px; background: var(--cozy-leaf); color: #fff; text-shadow: 0 1px 0 rgba(47,107,44,.45); box-shadow: 0 5px 0 var(--cozy-leaf-deep); }
     html[data-board-style="cozy"] .tool-tab { border-width: 3px; border-radius: 24px; box-shadow: 0 5px 0 var(--cozy-wood); }   /* 底色沿用各工具的分類色 */
     html[data-board-style="cozy"] .tool-tab.active { box-shadow: 0 5px 0 rgba(91,70,54,.28), 0 12px 20px -10px var(--tc); }
     html[data-board-style="cozy"] .tt-img { width: 40px; height: 40px; display: block; }
-    html[data-board-style="cozy"] .mascot { display: none !important; }   /* 老師 2026-11-02：溫暖風不放小綿羊（抽籤、安靜偵測、番茄鐘） */
+    html[data-board-style="cozy"] .mascot { display: none !important; }   /* 老師 2026-11-02：溫暖風不放小綿羊（抽籤、番茄鐘） */
     html[data-board-style="cozy"] .ghost-button:active, html[data-board-style="cozy"] .mode-button:active,
     html[data-board-style="cozy"] .primary-button:active, html[data-board-style="cozy"] .tool-tab:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--cozy-wood); }
     html[data-board-style="cozy"] .seat { border-radius: 22px; box-shadow: inset 0 -6px 0 rgba(0,0,0,.12), 0 3px 0 rgba(91,70,54,.16); }
@@ -334,7 +385,6 @@
 <body>
   <header>
     <div class="brand" id="classNameLabel">晨間大屏</div>
-    <div class="class-switch" id="classSwitch" hidden></div>
     <div class="today-label" id="todayLabel"></div>
     <button class="cloud-chip" type="button" id="cloudChip" hidden title="資料會自動存到雲端；按一下立刻存一次">☁️ 自動存雲端</button>
     <div class="clock" id="bigClock">--:--:--</div>
@@ -424,6 +474,12 @@
               <div class="chalkboard-inner">
                 <div class="chalk-date" id="contactDate"></div>
                 <div class="chalk-content" id="contactContent"></div>
+                <div class="contact-quick" id="contactQuick" hidden>
+                  <select class="inline-select" id="contactCategorySelect" aria-label="聯絡本項目分類"></select>
+                  <select class="inline-select" id="contactPresetSelect" aria-label="聯絡本常用項目"></select>
+                  <input class="inline-select" id="contactExtraInput" maxlength="60" placeholder="補充（頁數、範圍…）" aria-label="補充內容">
+                  <button class="ghost-button" type="button" id="contactAddLineButton">＋ 加入</button>
+                </div>
                 <textarea id="contactTextarea" class="chalk-textarea" maxlength="5000" hidden placeholder="今日聯絡本：&#10;1. 數習 p.20&#10;2. 帶直笛&#10;3. 明天校外教學穿運動服"></textarea>
               </div>
             </div>
@@ -589,12 +645,6 @@
         .group-card h4 { margin: 0 0 8px; font-size: 17px; color: var(--primary-strong); }
         .group-card .members { display: flex; flex-wrap: wrap; gap: 6px; }
         .group-card .members span { background: var(--soft, #e8f2ee); color: var(--primary-strong); border-radius: 9px; padding: 6px 12px; font-size: 18px; font-weight: 900; }
-        /* 安靜偵測 */
-        .quiet-meter { height: 42px; border: 2px solid var(--line); border-radius: 12px; background: var(--surface); position: relative; overflow: hidden; margin: 14px 0; }
-        .quiet-bar { position: absolute; inset: 0 auto 0 0; width: 0%; background: linear-gradient(90deg, #1d9e5f, #f2b53c 65%, #cf4433 90%); transition: width .12s linear; }
-        .quiet-line { position: absolute; top: 0; bottom: 0; width: 3px; background: var(--danger, #cf4433); }
-        .quiet-face { text-align: center; font-size: 46px; font-weight: 900; margin: 8px 0; color: var(--primary-strong); }
-        .quiet-overlay { position: fixed; inset: 0; background: rgba(207, 68, 51, .92); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 90px; font-weight: 900; z-index: 90; animation: lotPop .4s ease; }
         @media (prefers-reduced-motion: reduce) { .lot-wheel-disc, .lot-gacha.shaking .lot-gacha-globe, .lot-result.reveal, .group-card { animation: none; transition: none; opacity: 1; transform: none; } }
         /* 顯示縮放（聯絡本字級與座號大小，由班級工具腳本控制） */
         .chalk-content { font-size: calc(24px * var(--chalk-scale, 1)) !important; }
@@ -605,17 +655,16 @@
         .scale-btns button { border: 1.5px solid var(--line); background: var(--surface); border-radius: 8px; padding: 3px 11px; font-size: 14px; font-weight: 900; cursor: pointer; font-family: inherit; color: var(--primary-strong); }
         /* 定評小幫手 */
         .exam-board { text-align: center; padding: 8px 0 4px; }
-        .exam-clock { font-size: clamp(80px, 16vw, 190px); font-weight: 900; line-height: 1.05; font-variant-numeric: tabular-nums; letter-spacing: .02em;
-          background: linear-gradient(90deg, #2457e6, #7b2ff7, #a832e0); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .exam-clock { font-size: clamp(80px, 16vw, 190px); font-weight: 900; line-height: 1.05; font-variant-numeric: tabular-nums; letter-spacing: .02em; color: var(--primary-strong); }
         .exam-date { font-size: 22px; font-weight: 700; color: var(--muted); margin: 2px 0 20px; }
         .exam-cards { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 14px; }
         .exam-card { background: var(--surface); border: 2px solid var(--line); border-radius: 16px; padding: 16px 22px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 8px rgba(40,60,50,.08); }
         .exam-label { font-size: 22px; font-weight: 900; color: var(--primary-strong); }
-        .exam-num { width: 110px; border: 2px solid var(--line); border-radius: 12px; font-size: 44px; font-weight: 900; text-align: center; padding: 4px 6px; font-family: inherit; font-variant-numeric: tabular-nums; color: var(--ink); background: #f8fbf9; }
+        .exam-num { width: 110px; border: 2px solid var(--line); border-radius: 12px; font-size: 44px; font-weight: 900; text-align: center; padding: 4px 6px; font-family: inherit; font-variant-numeric: tabular-nums; color: var(--ink); background: var(--bg); }
         .exam-absent-card { max-width: 560px; flex-wrap: wrap; }
         .exam-absent { font-size: 30px; font-weight: 900; color: var(--missing, #cf4433); display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
         .exam-absent .ok-all { color: var(--ok, #1d9e5f); }
-        .exam-board:is(:fullscreen, .fake-fs) { background: var(--bg); display: flex; flex-direction: column; justify-content: center; padding: 4vh 4vw; overflow: auto; }
+        .exam-board:is(:fullscreen, .fake-fs) { background: var(--surface); display: flex; flex-direction: column; justify-content: center; padding: 4vh 4vw; overflow: auto; }
         .exam-board:is(:fullscreen, .fake-fs) .exam-clock { font-size: clamp(120px, 24vw, 340px); }
         .exam-board:is(:fullscreen, .fake-fs) .exam-date { font-size: 34px; }
         .exam-board:is(:fullscreen, .fake-fs) .exam-label { font-size: 32px; }
@@ -649,17 +698,7 @@
         .tomato-playlist { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; max-height: 150px; overflow: auto; }
         .tomato-track { text-align: left; border: 1.5px solid #e5dcc3; background: #fffdf6; border-radius: 9px; padding: 6px 10px; font-size: 13px; font-weight: 700; color: #5e5244; cursor: pointer; font-family: inherit; }
         .tomato-track.active { border-color: #b9852f; background: #fff3d6; }
-        /* 安靜偵測：いらすとや角色互動 */
-        .quiet-stage { text-align: center; padding: 6px 0 2px; }
-        .quiet-img { max-height: 230px; max-width: 90%; transition: transform .35s ease, filter .35s ease; }
-        .quiet-img.is-calm { animation: quietFloat 3s ease-in-out infinite; }
-        .quiet-img.is-warn { transform: rotate(-4deg) scale(1.03); }
-        .quiet-img.is-loud { animation: quietShake .3s linear infinite; filter: drop-shadow(0 0 18px rgba(207,68,51,.55)); }
         @keyframes quietFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        @keyframes quietShake { 0%,100% { transform: translateX(0) rotate(0); } 25% { transform: translateX(-8px) rotate(-2deg); } 75% { transform: translateX(8px) rotate(2deg); } }
-        .quiet-streak { font-size: 22px; font-weight: 900; color: #1d9e5f; margin-top: 6px; }
-        .quiet-streak b { font-size: 30px; font-variant-numeric: tabular-nums; }
-        .quiet-stars { font-size: 34px; letter-spacing: .12em; min-height: 44px; }
         /* 📣 大屏提示 */
         .prompt-board { text-align: center; padding: 8px 0 4px; }
         .prompt-clock { font-size: clamp(64px, 12vw, 150px); font-weight: 900; line-height: 1.05; font-variant-numeric: tabular-nums;
@@ -720,10 +759,13 @@
         .tool-tab[data-tool="check"] { --tc: #2273c9; --tc-soft: #e6f0fb; }
         .tool-tab[data-tool="score"] { --tc: #b07d12; --tc-soft: #fbf1da; }
         .tool-tab[data-tool="group"] { --tc: #7b4fb8; --tc-soft: #f1eafa; }
-        .tool-tab[data-tool="quiet"] { --tc: #1d9e5f; --tc-soft: #e3f6ec; }
         .tool-tab[data-tool="exam"] { --tc: #2457e6; --tc-soft: #e7edfc; }
         .tool-tab[data-tool="tomato"] { --tc: #e0523f; --tc-soft: #fdebe6; }
         .tool-tab[data-tool="prompt"] { --tc: #1f514a; --tc-soft: #e8f2ee; }
+        .tool-tab[data-tool="tooth"] { --tc: #17908a; --tc-soft: #e0f4f2; }
+        .top-tool-options { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 16px; font-weight: 800; color: var(--primary-strong); }
+        .top-tool-options label { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; margin: 0; }
+        .top-tool-options input { width: auto; }
         .tool-tab[data-tool="screen"] { --tc: #0f7d8c; --tc-soft: #e2f3f5; }
         .tool-tab[data-tool="mind"] { --tc: #c2477a; --tc-soft: #fbe6ef; }
         .screen-board { height: max(420px, calc(100vh - 430px)); margin-top: 8px; }   /* 要留給上方工具列，內嵌的工具列才不會被蓋住 */
@@ -793,6 +835,15 @@
         @keyframes missPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(207,68,51,0); transform: scale(1); } 50% { box-shadow: 0 0 0 6px rgba(207,68,51,.25); transform: scale(1.06); } }
         .check-complete { font-weight: 900; color: #1d9e5f; animation: chipIn .5s cubic-bezier(.3,1.6,.5,1) both; }
         .tool-panel:is(:fullscreen, .fake-fs) .check-seat { font-size: 24px; padding: 14px 2px; }
+        .tooth-title { font-size: 24px; font-weight: 900; color: var(--primary-strong); flex: 1; }
+        .tooth-grid { grid-template-columns: repeat(auto-fill, minmax(calc(112px * var(--tooth-size, 1)), 1fr)); gap: var(--tooth-gap, 18px); }
+        .tooth-grid .check-seat { font-size: calc(38px * var(--tooth-size, 1)); padding: calc(26px * var(--tooth-size, 1)) 2px; }
+        .tooth-grid .check-seat.done { background: var(--ok); border-color: var(--ok); }
+        .tool-panel:is(:fullscreen, .fake-fs) .tooth-grid { grid-template-columns: repeat(auto-fill, minmax(calc(150px * var(--tooth-size, 1)), 1fr)); }
+        .tool-panel:is(:fullscreen, .fake-fs) .tooth-grid .check-seat { font-size: calc(54px * var(--tooth-size, 1)); padding: calc(34px * var(--tooth-size, 1)) 2px; }
+        .tooth-adjust { display: inline-flex; align-items: center; gap: 4px; }
+        .tooth-adjust .scale-btns { margin-left: 2px; align-items: center; }
+        .tooth-adjust b { min-width: 44px; text-align: center; font-variant-numeric: tabular-nums; }
 
         /* 🏆 計分板：隊伍色、名次、皇冠、長條、飄字 */
         .score-wall { gap: 22px; padding-top: 24px; }
@@ -825,30 +876,15 @@
         .tool-panel:is(:fullscreen, .fake-fs) .group-card .members span { font-size: 26px; padding: 8px 16px; }
 
         /* 🔇 安靜：半圓儀表、波紋、星星飛入 */
-        .quiet-meter { display: none; }
-        .quiet-top { display: flex; align-items: flex-end; justify-content: center; gap: 18px; flex-wrap: wrap; margin: 8px 0 4px; }
-        .quiet-gauge { position: relative; width: 300px; }
-        .quiet-gauge svg { width: 100%; display: block; overflow: visible; }
-        .quiet-level { position: absolute; left: 0; right: 0; bottom: 2px; text-align: center; font-size: 30px; font-weight: 900; color: var(--ink); font-variant-numeric: tabular-nums; }
-        #quietNeedle { transition: transform .12s linear; }
-        .quiet-stage { position: relative; }
-        .quiet-rings { position: absolute; left: 50%; top: 115px; width: 0; height: 0; pointer-events: none; --lv: 0; }
-        .quiet-rings i { position: absolute; left: -110px; top: -110px; width: 220px; height: 220px; border-radius: 50%; border: 6px solid #1d9e5f; opacity: 0; animation: ringOut 2.4s ease-out infinite; }
-        .quiet-rings i:nth-child(2) { animation-delay: .8s; } .quiet-rings i:nth-child(3) { animation-delay: 1.6s; }
-        .quiet-rings[data-mood="warn"] i { border-color: #f2b53c; }
-        .quiet-rings[data-mood="loud"] i { border-color: #cf4433; animation-duration: .9s; }
-        .quiet-rings[data-mood="off"] i { display: none; }
         @keyframes ringOut { from { transform: scale(calc(.45 + var(--lv) * .5)); opacity: .55; } to { transform: scale(calc(.9 + var(--lv) * 1.8)); opacity: 0; } }
-        .quiet-img { position: relative; z-index: 1; }
-        .quiet-star-fly { position: fixed; z-index: 96; font-size: 46px; pointer-events: none; }
 
         /* 📝 定評 */
-        .exam-board { background: radial-gradient(120% 90% at 50% 0%, #eef2ff, #fff 62%); border-radius: 26px; padding: 22px 12px 16px; box-shadow: inset 0 0 0 2px #e1e7fb; }
-        .exam-badge { display: inline-flex; align-items: center; gap: 8px; background: #2457e6; color: #fff; font-weight: 900; border-radius: 999px; padding: 6px 20px; font-size: 18px; letter-spacing: .12em; animation: examPulse 2.4s ease-in-out infinite; }
-        @keyframes examPulse { 50% { box-shadow: 0 0 0 10px rgba(36,87,230,.12); } }
-        .exam-sec { width: min(520px, 80%); height: 8px; margin: 4px auto 6px; background: #e1e7fb; border-radius: 999px; overflow: hidden; }
-        .exam-sec i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #2457e6, #a832e0); border-radius: 999px; transition: width 1s linear; }
-        .exam-card { border: 0; border-radius: 20px; box-shadow: 0 10px 24px -18px rgba(36,87,230,.6), inset 0 0 0 2px #e1e7fb; }
+        .exam-board { background: var(--surface); border: 2px solid var(--line); border-radius: 16px; padding: 22px 12px 16px; }
+        .exam-badge { display: inline-flex; align-items: center; gap: 8px; background: var(--primary); color: #fff; font-weight: 900; border-radius: 999px; padding: 6px 20px; font-size: 18px; letter-spacing: .12em; animation: examPulse 2.4s ease-in-out infinite; }
+        @keyframes examPulse { 50% { box-shadow: 0 0 0 10px var(--ok-soft); } }
+        .exam-sec { width: min(520px, 80%); height: 8px; margin: 4px auto 6px; background: var(--line); border-radius: 999px; overflow: hidden; }
+        .exam-sec i { display: block; height: 100%; width: 0; background: var(--primary); border-radius: 999px; transition: width 1s linear; }
+        .exam-card { background: var(--bg); border-radius: 14px; box-shadow: none; }
 
         /* 🍅 番茄鐘：進度環、模式色、吉祥物 */
         .tomato-face-wrap { position: relative; width: fit-content; margin: 0 auto 16px; }
@@ -877,8 +913,64 @@
         .prompt-img.swap { animation: promptImgIn .75s cubic-bezier(.3,1.6,.5,1), quietFloat 3.4s ease-in-out .75s infinite; }
         @keyframes promptImgIn { from { opacity: 0; transform: scale(.4) rotate(-10deg); } to { opacity: 1; transform: none; } }
         @media (prefers-reduced-motion: reduce) {
-          .tool-tab, .tool-tab .tt-ico, .tool-panel, .mascot, .lot-bulbs i, .lot-rays, .lot-chip, .check-seat, .score-crown, .score-float, .group-pool span, .quiet-rings i, .exam-badge, .prompt-message, .prompt-img { animation: none !important; transition: none !important; }
+          .tool-tab, .tool-tab .tt-ico, .tool-panel, .mascot, .lot-bulbs i, .lot-rays, .lot-chip, .check-seat, .score-crown, .score-float, .group-pool span, .exam-badge, .prompt-message, .prompt-img { animation: none !important; transition: none !important; }
         }
+
+        /* 📝 定評小幫手：考試日總覽 */
+        .xd-switch { display: flex; gap: 8px; justify-content: center; margin-bottom: 12px; }
+        .xd-switch button.on { background: var(--primary-strong); color: #fff; }
+        .xd-wrap[hidden] { display: none; }
+        .xd-board { color: var(--ink); background: var(--surface); border: 2px solid var(--line); border-radius: 16px; padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; }
+        .xd-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding-bottom: 12px; border-bottom: 2px solid var(--line); }
+        .xd-title { font-size: clamp(26px, 3vw, 38px); font-weight: 900; color: var(--primary-strong); }
+        .xd-date { font-size: 16px; font-weight: 700; color: var(--muted); margin-top: 2px; }
+        .xd-clock { display: flex; align-items: baseline; gap: 10px; font-size: clamp(38px, 4.6vw, 62px); font-weight: 900; color: var(--primary-strong); font-variant-numeric: tabular-nums; }
+        .xd-clock small { font-size: .42em; color: var(--muted); }
+        .xd-cards { display: grid; grid-template-columns: repeat(var(--xd-cols, 3), minmax(0, 1fr)); gap: 12px; }
+        .xd-card { background: var(--bg); border: 2px solid var(--line); border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+        .xd-card.running { border-color: var(--primary); background: var(--ok-soft); }
+        .xd-card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+        .xd-period { font-size: 18px; font-weight: 900; border-radius: 999px; padding: 3px 14px; background: var(--primary); color: #fff; font-variant-numeric: tabular-nums; }
+        .xd-card.done .xd-period { background: var(--muted); }
+        .xd-pill { font-size: 15px; font-weight: 900; color: var(--muted); }
+        .xd-card.running .xd-pill { color: var(--primary-strong); }
+        .xd-card.done .xd-pill { color: var(--ok); }
+        .xd-card.bad .xd-pill { color: var(--missing, #cf4433); }
+        .xd-subject { font-size: clamp(34px, 4vw, 52px); font-weight: 900; line-height: 1.15; color: var(--primary-strong); }
+        .xd-card.done .xd-subject { color: var(--muted); }
+        .xd-bar { height: 12px; border-radius: 999px; overflow: hidden; background: var(--line); }
+        .xd-bar i { display: block; height: 100%; border-radius: 999px; background: var(--primary); }
+        .xd-card.done .xd-bar i { background: var(--ok); }
+        .xd-note { display: flex; justify-content: space-between; font-size: 15px; font-weight: 800; color: var(--muted); }
+        .xd-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+        .xd-stat { display: flex; align-items: baseline; justify-content: center; gap: 12px; flex-wrap: wrap; border-radius: 14px; padding: 8px 12px; background: var(--bg); border: 2px solid var(--line); }
+        .xd-stat:nth-child(2) { background: var(--ok-soft); }
+        .xd-stat span { font-size: 20px; font-weight: 900; }
+        .xd-stat b { font-size: clamp(42px, 5vw, 66px); font-weight: 900; line-height: 1.15; color: var(--primary-strong); font-variant-numeric: tabular-nums; }
+        .xd-stat b small { font-size: .36em; margin-left: 3px; }
+        .xd-stat.has-absent b { color: var(--missing, #cf4433); }
+        .xd-empty { border: 2px dashed var(--line); border-radius: 14px; padding: 30px; text-align: center; font-size: 20px; font-weight: 800; color: var(--muted); }
+        .xd-board:is(:fullscreen, .fake-fs) { box-sizing: border-box; width: 100vw; height: 100vh; border: 0; border-radius: 0; padding: 7vh 3vw 3vh; gap: 2.4vh; background: var(--surface); overflow: auto; }
+        .xd-board:is(:fullscreen, .fake-fs) #xdSchedule { flex: 1; min-height: 0; display: flex; }
+        .xd-board:is(:fullscreen, .fake-fs) .xd-cards { flex: 1; grid-auto-rows: 1fr; }
+        .xd-board:is(:fullscreen, .fake-fs) .xd-head { padding-bottom: 2.4vh; }
+        .xd-board:is(:fullscreen, .fake-fs) .xd-title { font-size: clamp(46px, 9vh, 110px); }
+        .xd-board:is(:fullscreen, .fake-fs) .xd-date { font-size: clamp(22px, 3.4vh, 40px); }
+        .xd-board:is(:fullscreen, .fake-fs) .xd-clock { font-size: clamp(76px, 15vh, 180px); }
+        .xd-board:is(:fullscreen, .fake-fs) .xd-period { font-size: clamp(20px, 3vh, 32px); padding: 4px 20px; }
+        .xd-board:is(:fullscreen, .fake-fs) .xd-pill { font-size: clamp(18px, 2.6vh, 28px); }
+        .xd-board:is(:fullscreen, .fake-fs) .xd-subject { font-size: clamp(44px, 10vh, 120px); }
+        .xd-board:is(:fullscreen, .fake-fs) .xd-bar { height: 20px; }
+        .xd-board:is(:fullscreen, .fake-fs) .xd-note { font-size: clamp(16px, 2.3vh, 24px); }
+        .xd-board:is(:fullscreen, .fake-fs) .xd-stat span { font-size: clamp(22px, 3vh, 32px); }
+        .xd-board:is(:fullscreen, .fake-fs) .xd-stat b { font-size: clamp(56px, 9vh, 100px); }
+        .xd-board.many:is(:fullscreen, .fake-fs) .xd-subject { font-size: clamp(32px, 5vh, 56px); }
+        .xd-editor { border: 2px solid var(--line); border-radius: 14px; padding: 12px 14px; }
+        .xd-editor-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; font-weight: 800; }
+        .xd-editor-row input { min-width: 0; }
+        .xd-editor-row input[data-xd-field="subject"] { width: 120px; }
+        .xd-editor-name { width: min(320px, 100%); box-sizing: border-box; }
+        @media (max-width: 900px) { .xd-cards { grid-template-columns: minmax(0, 1fr); } .xd-stats { gap: 6px; } }
 
         /* ===== 班級工具遊戲化（Arcade 第二版）：深色太空舞台＋畫布特效 ===== */
         .arcade { position: relative; overflow: hidden; border-radius: 22px; color: #fff;
@@ -921,9 +1013,9 @@
         <div class="tool-tabs" id="toolTabs">
           <button class="tool-tab active" type="button" data-tool="lottery"><span class="tt-ico">🎡</span><span>抽籤機</span></button>
           <button class="tool-tab" type="button" data-tool="check"><span class="tt-ico">✅</span><span>檢核板</span></button>
+          <button class="tool-tab" type="button" data-tool="tooth"><span class="tt-ico">🦷</span><span>潔牙點名</span></button>
           <button class="tool-tab" type="button" data-tool="score"><span class="tt-ico">🏆</span><span>計分板</span></button>
           <button class="tool-tab" type="button" data-tool="group"><span class="tt-ico">👥</span><span>隨機分組</span></button>
-          <button class="tool-tab" type="button" data-tool="quiet"><span class="tt-ico">🔇</span><span>安靜偵測</span></button>
           <button class="tool-tab" type="button" data-tool="exam"><span class="tt-ico">📝</span><span>定評小幫手</span></button>
           <button class="tool-tab" type="button" data-tool="tomato"><span class="tt-ico">🍅</span><span>番茄鐘</span></button>
           <button class="tool-tab" type="button" data-tool="prompt"><span class="tt-ico">📣</span><span>大屏提示</span></button>
@@ -991,6 +1083,17 @@
           <div class="check-wall" id="checkWall"></div>
         </div>
 
+        <div class="tool-panel" data-tool-panel="tooth" hidden>
+          <div class="tool-opts">
+            <button class="ghost-button" type="button" data-fs-panel="tooth">⛶ 投影模式</button>
+            <span class="tooth-adjust">格子大小<span class="scale-btns"><button type="button" data-tooth-adjust="toothSize:-1" title="格子變小">−</button><b id="toothSizeValue"></b><button type="button" data-tooth-adjust="toothSize:1" title="格子變大">＋</button></span></span>
+            <span class="tooth-adjust">間距<span class="scale-btns"><button type="button" data-tooth-adjust="toothGap:-1" title="間距變小">−</button><b id="toothGapValue"></b><button type="button" data-tooth-adjust="toothGap:1" title="間距變大">＋</button></span></span>
+            <span class="scale-btns"><button type="button" id="toothLayoutReset">恢復預設</button></span>
+            <span class="status-text">刷完牙點自己的座號，點錯再點一次取消；今天請假的同學自動排除，隔天自動歸零。</span>
+          </div>
+          <div id="toothWall"></div>
+        </div>
+
         <div class="tool-panel" data-tool-panel="score" hidden>
           <div class="tool-opts">
             <label>組數
@@ -1015,36 +1118,12 @@
           <div class="group-wall" id="groupWall"></div>
         </div>
 
-        <div class="tool-panel" data-tool-panel="quiet" hidden>
-          <div class="tool-opts">
-            <button class="primary-button" type="button" id="quietStartButton" style="font-size:19px;padding:10px 26px">🎙 開始偵測</button>
-            <label>警戒值 <input type="range" id="quietThreshold" min="20" max="95" value="60" style="width:180px"> <span id="quietThresholdValue">60</span></label>
-            <button class="ghost-button" type="button" data-fs-panel="quiet">⛶ 投影模式</button>
-            <span class="status-text">需要允許使用麥克風；聲音只在這台電腦即時分析，不錄音、不上傳。</span>
-          </div>
-          <div class="quiet-top">
-            <img class="mascot" id="quietMascot" alt="">
-            <div class="quiet-gauge"><svg viewBox="0 0 220 132" role="img" aria-label="音量儀表">
-              <defs><linearGradient id="quietGrad" x1="0" x2="1"><stop offset="0" stop-color="#1d9e5f"/><stop offset=".6" stop-color="#f2b53c"/><stop offset="1" stop-color="#cf4433"/></linearGradient></defs>
-              <path d="M20 115 A90 90 0 0 1 200 115" fill="none" stroke="#e8efeb" stroke-width="22" stroke-linecap="round"/>
-              <path id="quietArc" d="M20 115 A90 90 0 0 1 200 115" fill="none" stroke="url(#quietGrad)" stroke-width="22" stroke-linecap="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/>
-              <line id="quietTh" x1="110" y1="115" x2="110" y2="10" stroke="#cf4433" stroke-width="3" stroke-dasharray="5 4"/>
-              <g id="quietNeedle"><line x1="110" y1="115" x2="110" y2="34" stroke="#1c302d" stroke-width="5" stroke-linecap="round"/><circle cx="110" cy="115" r="10" fill="#1c302d"/></g>
-            </svg><div class="quiet-level" id="quietLevel">0</div></div>
-          </div>
-          <div class="quiet-meter"><div class="quiet-bar" id="quietBar"></div><div class="quiet-line" id="quietLine" style="left:60%"></div></div>
-          <div class="quiet-stage" id="quietStage">
-            <div class="quiet-rings" id="quietRings" data-mood="off"><i></i><i></i><i></i></div>
-            <img class="quiet-img" id="quietImg" src="assets/irasutoya/quiet_usagi.png" alt="安靜小衛兵" hidden>
-            <div class="quiet-face" id="quietFace">😴 尚未開始偵測</div>
-            <div class="quiet-streak" id="quietStreak" hidden>🌟 連續安靜 <b id="quietStreakSeconds">0</b> 秒</div>
-            <div class="quiet-stars" id="quietStars" title="每連續安靜 30 秒獲得一顆星"></div>
-          </div>
-          <div class="status-text" id="quietCredit" style="text-align:center;display:block">安靜就換可愛動物站崗、太吵會換成吵翻天的教室；連續安靜 30 秒集一顆 ⭐。插圖：<a href="https://www.irasutoya.com/" target="_blank" rel="noopener">いらすとや</a></div>
-        </div>
-
         <div class="tool-panel" data-tool-panel="exam" hidden>
-          <div class="exam-board">
+          <div class="xd-switch" role="group" aria-label="定評小幫手版面">
+            <button class="ghost-button" type="button" data-exam-layout="day">🗓 考試日總覽</button>
+            <button class="ghost-button" type="button" data-exam-layout="single">🕒 單節時鐘</button>
+          </div>
+          <div class="exam-board" id="examSingleBoard">
             <span class="exam-badge">📝 考試中・請保持安靜</span>
             <div class="exam-clock" id="examClock">--:--:--</div>
             <div class="exam-sec"><i id="examSec"></i></div>
@@ -1057,6 +1136,9 @@
                   <option value="第二節">第二節</option>
                   <option value="第三節">第三節</option>
                   <option value="第四節">第四節</option>
+                  <option value="第五節">第五節</option>
+                  <option value="第六節">第六節</option>
+                  <option value="第七節">第七節</option>
                 </select>
               </div>
               <div class="exam-card">
@@ -1078,6 +1160,27 @@
               <button class="ghost-button" type="button" id="examSyncButton">🔄 從點名帶入（應到／實到／未到）</button>
               <button class="ghost-button" type="button" id="examFullscreenButton">⛶ 全螢幕播放</button>
               <span class="status-text">帶入後仍可手動修改數字；全螢幕時按 Esc 或再按一次按鈕離開。</span>
+            </div>
+          </div>
+          <div class="xd-wrap" id="examDayWrap" hidden>
+            <div class="xd-board" id="examDayBoard">
+              <div class="xd-head">
+                <div><div class="xd-title" id="xdTitle"></div><div class="xd-date" id="xdDate"></div></div>
+                <div class="xd-clock"><small id="xdAmpm"></small><span id="xdClock"></span></div>
+              </div>
+              <div id="xdSchedule"></div>
+              <div class="xd-stats" id="xdAttendance"></div>
+            </div>
+            <div class="tool-opts" style="justify-content:center">
+              <button class="ghost-button" type="button" id="examDayFullscreenButton">⛶ 全螢幕播放</button>
+              <span class="status-text">進度跟著時間自動走；人數來自「點名」。選節次會帶入時間，時間可以再改；不照節次的選「自訂」。</span>
+            </div>
+            <div class="xd-editor">
+              <label class="exam-label" for="xdName" style="font-size:17px">考試名稱</label>
+              <input class="inline-select xd-editor-name" id="xdName" maxlength="20">
+              <div id="xdRows"></div>
+              <datalist id="xdSubjects"></datalist>
+              <div class="tool-opts" style="margin-bottom:0"><button class="ghost-button" type="button" id="xdAddRow">＋ 新增一科</button></div>
             </div>
           </div>
         </div>
@@ -1164,7 +1267,7 @@
           <div class="tool-opts">
             <button class="ghost-button" type="button" id="screenFullscreenButton">⛶ 全螢幕播放</button>
             <a class="ghost-button" href="Screen.html" target="_blank" rel="noopener" style="text-decoration:none">↗ 開新分頁</a>
-            <span class="status-text">自由擺放文字、時程表、時鐘、計時器、圖片、畫板，也能設定時跳提醒。設定只存在這台電腦；定時提醒要網頁開著才會跳。</span>
+            <span class="status-text">自由擺放文字、時程表、時鐘、碼錶、鬧鐘、圖片、畫板、書籤。設定只存在這台電腦；鬧鐘和提醒要網頁開著才會響。</span>
           </div>
           <div class="screen-board" id="screenBoard"><iframe id="screenFrame" title="螢幕公告" allow="fullscreen; autoplay; screen-wake-lock"></iframe></div>
         </div>
@@ -1200,13 +1303,17 @@
 
     <section class="page" id="page-setup">
       <div class="panel">
-        <div class="form-grid">
-          <div class="field"><label>設定頁密碼（預設 1234，請改成只有您知道的）</label>
-            <input id="setupPin" type="password" maxlength="12" autocomplete="new-password">
-            <div class="status-text" style="margin-top:4px">留空＝不上鎖。這是防止學生隨手亂改的門檻，不是加密保護——真正的機密請不要只靠它。</div></div>
+        <section class="setup-block sb-class">
+          <h3 class="setup-block-title">🏫 班級資料</h3>
+          <div class="form-grid">
           <div class="field"><label>班級名稱（例：601）</label><input id="setupClassName" maxlength="20" placeholder="601"></div>
-          <div class="field"><label>我教的班級（科任多班用，例：601、602、603）</label><input id="setupClasses" maxlength="160" placeholder="留空＝只有上面這一班">
-            <div class="status-text" style="margin-top:4px">用頓號或逗號分隔。第一個班＝上面的「班級名稱」，點名、聯絡本、自動推播都只屬於它。設兩班以上時，左上角會出現班級切換鈕；計分板、檢核板、抽籤已抽名單、分組結果與作業繳交版面每班各一份，切班不互蓋。座號範圍與空號各班共用下方的設定。</div></div>
+          <div class="field"><label>班級最大座號（1～N）</label><input id="setupSeatCount" type="number" min="1" max="60" value="26"></div>
+          <div class="field"><label>空號（沒有人的座號，以、或逗號分隔）</label><input id="setupEmptySeats" placeholder="例：4、13"></div>
+          </div>
+        </section>
+        <section class="setup-block sb-look">
+          <h3 class="setup-block-title">🎨 大屏外觀</h3>
+          <div class="form-grid">
           <div class="field"><label>大屏標題（顯示在左上角，可自訂）</label><input id="setupBoardTitle" maxlength="20" placeholder="晨間大屏"></div>
           <div class="field"><label>聯絡本字體（低年級可選注音體）</label><select id="setupContactFont">
             <optgroup label="一般字體">
@@ -1218,7 +1325,7 @@
               <option value="bpmf">注音芫荽（手寫感）</option>
               <option value="bpmfhuninn">注音粉圓（圓潤，低年級首選）</option>
             </optgroup>
-          </select><div class="status-text" style="margin-top:4px">全部為開源可商用字型（SIL OFL 1.1）。第一次切換要等字型下載（約 4–9 MB），之後瀏覽器會快取。<br>教室電腦要常用的話，建議直接把字型<strong>安裝到 Windows</strong>——裝好之後完全不用下載，開啟也快很多：<a href="https://github.com/ButTaiwan/bpmfvs/releases" target="_blank" rel="noopener">注音字型</a>、<a href="https://github.com/justfont/Huninn/releases" target="_blank" rel="noopener">粉圓 Huninn</a>、<a href="https://github.com/ButTaiwan/iansui/releases" target="_blank" rel="noopener">芫荽 Iansui</a>（下載後點兩下字型檔 → 按「安裝」）。</div></div>
+          </select><div class="status-text" id="contactFontStatus" style="margin-top:4px">選了就自動設定好，不用安裝，也不用按儲存；第一次要等幾秒。</div><div class="status-text">全部為開源可商用字型（SIL OFL 1.1）。</div></div>
           <div class="field"><label>大屏風格</label><select id="setupBoardStyle">
             <option value="standard">標準（現在的樣子，提示插圖用溫暖繪本）</option>
             <option value="cozy">可愛溫暖風（介面與提示插圖一起換）</option>
@@ -1231,8 +1338,21 @@
             <option value="purple">紫色</option>
             <option value="orange">橘紅</option>
           </select></div>
-          <div class="field"><label>班級最大座號（1～N）</label><input id="setupSeatCount" type="number" min="1" max="60" value="26"></div>
-          <div class="field"><label>空號（沒有人的座號，以、或逗號分隔）</label><input id="setupEmptySeats" placeholder="例：4、13"></div>
+          </div>
+        </section>
+        <section class="setup-block sb-menu">
+          <h3 class="setup-block-title">🧭 上方選單</h3>
+          <div class="form-grid">
+          <div class="field" style="grid-column:1/-1">
+            <label>上方選單要放哪些班級工具</label>
+            <div class="top-tool-options" id="topToolPicker"></div>
+            <div class="status-text" style="margin-top:4px">勾了馬上生效，不用按儲存；取消勾選只是不放在上面，工具都還在「班級工具」裡。</div>
+          </div>
+          </div>
+        </section>
+        <section class="setup-block sb-homework">
+          <h3 class="setup-block-title">📚 科目與作業</h3>
+          <div class="form-grid">
           <div class="field"><label>每一科都要出現的作業（以、分隔，可留空）</label><input id="setupAssignmentTypes" placeholder="例：小日記、晨讀單">
             <div class="status-text" style="margin-top:4px">只放每一科都用得到的。各科各自的項目，在下面的「作業項目」選。</div></div>
           <div class="field" style="grid-column:1/-1">
@@ -1248,11 +1368,25 @@
             <div id="homeworkManager"></div>
             <button class="ghost-button" type="button" id="homeworkResetButton" style="margin-top:8px">↺ 恢復常用</button>
           </div>
+          </div>
+        </section>
+        <section class="setup-block sb-time">
+          <h3 class="setup-block-title">⏰ 點名與補交</h3>
+          <div class="form-grid">
           <div class="field"><label>遲到界線（此時間後點到校＝記遲到）</label><input id="setupLateTime" type="time" value="08:00"></div>
           <div class="field"><label>自動缺席（未填自動轉未到）</label><input id="setupAutoAbsentTime" type="time" value="08:05"></div>
           <div class="field"><label>補交回溯天數（接雲端最多 60）</label><input id="setupLookbackDays" type="number" min="1" max="180" value="30"></div>
-        </div>
-        <fieldset class="storage-choice" id="storageChoice">
+          </div>
+        </section>
+        <section class="setup-block sb-safe">
+          <h3 class="setup-block-title">🔒 設定頁密碼</h3>
+          <div class="form-grid">
+          <div class="field"><label>設定頁密碼（預設 1234，請改成只有您知道的）</label>
+            <input id="setupPin" type="password" maxlength="12" autocomplete="new-password">
+            <div class="status-text" style="margin-top:4px">留空＝不上鎖。這是防止學生隨手亂改的門檻，不是加密保護——真正的機密請不要只靠它。</div></div>
+          </div>
+        </section>
+        <fieldset class="storage-choice sb-storage" id="storageChoice">
           <legend>💾 資料要存在哪裡？</legend>
           <label class="storage-card">
             <input type="radio" name="storageMode" value="local">
@@ -1271,11 +1405,11 @@
           </label>
           <div class="status-text" id="storageHint"></div>
         </fieldset>
-        <details class="level-box" id="setupLevel2">
+        <details class="level-box sb-cloud" id="setupLevel2">
           <summary>🔵 第 2 級：連上工作台（要在家寫聯絡本、看查詢統計才填）</summary>
           <div class="form-grid">
-          <div class="field" style="grid-column:1/-1"><label>🌐A Apps Script 部署網址（/exec 結尾，與 LINE 小幫手同一份）＝教學裡的「🌐A 機器人網址」　<a href="Install.html#level2" target="_blank" rel="noopener" style="font-weight:700">還沒有？看申請教學 📖</a></label><input id="setupGasUrl" type="url" placeholder="貼上 🌐A 機器人網址：https://script.google.com/macros/s/……/exec"></div>
-          <div class="field" style="grid-column:1/-1"><label>🔑B 教室大屏金鑰＝教學裡的「教室大屏金鑰」（執行 setupLineBot 後取得的 CLASSROOM_TOKEN）　<a href="Install.html#level2" target="_blank" rel="noopener" style="font-weight:700">如何取得？📖</a></label><input id="setupClassroomToken" type="password" autocomplete="off" placeholder="貼上 🔑B（教室只放這把；老師金鑰 🔑C 不要貼這裡）"></div>
+          <div class="field" style="grid-column:1/-1"><label>🌐A Apps Script 部署網址（/exec 結尾）＝教學裡的「🌐A 機器人網址」　<a href="Install.html#level2" target="_blank" rel="noopener" style="font-weight:700">還沒有？看申請教學 📖</a></label><input id="setupGasUrl" type="url" placeholder="貼上 🌐A 機器人網址：https://script.google.com/macros/s/……/exec"></div>
+          <div class="field" style="grid-column:1/-1"><label>🔑B 教室大屏金鑰＝教學裡的「教室大屏金鑰」（這一步不用申請 LINE）　<a href="Install.html#level2" target="_blank" rel="noopener" style="font-weight:700">如何取得？📖</a></label><input id="setupClassroomToken" type="password" autocomplete="off" placeholder="貼上 🔑B（教室只放這把；老師金鑰 🔑C 不要貼這裡）"></div>
           <div class="field" style="grid-column:1/-1"><label>🔑C 老師查詢金鑰（選填；填了才能用「查詢」分頁看歷史統計。⚠️ 教室公用電腦建議不要填）</label><input id="setupTeacherToken" type="password" autocomplete="off" placeholder="貼上 🔑C 工作台同步金鑰（老師自己的電腦才填）"></div>
           </div>
           <p class="note">
@@ -1284,7 +1418,7 @@
             ・遲到只有老師在 LINE 與查詢統計看得到。
           </p>
         </details>
-        <details class="level-box" id="setupLevel4">
+        <details class="level-box sb-line" id="setupLevel4">
           <summary>🟠 第 4 級：LINE 推播時間（接上 LINE 才有作用）</summary>
           <div class="form-grid">
           <div class="field"><label>① 點名推播（出缺＋今日任務／記事／逾期）</label><input id="setupAutoNotifyTime" type="time" value="08:08"></div>
@@ -1327,21 +1461,21 @@
     const DEFAULT_ENABLED = ['國語', '數學', '英語', '自然', '社會', '聯絡簿', '通知單'];
     // 各科內建的作業項目（版面名稱上限 20 字，要留給補充的頁數，所以每項都短）
     const HOMEWORK_ITEMS = {
-      '國語': ['習作（國習）', '作業簿（國作）', '生字簿（甲本）', '語詞簿（乙本）', '生字練習', '圈詞', '語詞解釋', '造句', '照樣造句', '成語', '四字語詞', '修辭練習', '查字典', '注音練習', '聽寫', '朗讀課文', '背誦', '預習單', '課文大意', '閱讀測驗', '閱讀心得', '看圖寫話', '短文寫作', '作文', '作文草稿', '日記', '週記'],
-      '數學': ['習作（數習）', '課本（數課）', '練習本（數練）', '計算練習', '直式計算', '九九乘法', '心算練習', '應用題', '重點整理'],
-      '英語': ['習作', '作業本', '字母書寫', '單字抄寫', '背單字', '自然發音', '句型練習', '對話練習', '課文朗讀', '跟讀音檔', '聽力練習', '口說錄音', '單字小考'],
-      '自然': ['習作', '實驗紀錄', '觀察紀錄', '種植紀錄', '天氣紀錄', '查資料', '重點整理', '帶實驗材料'],
-      '社會': ['習作', '重點整理', '查資料', '地圖練習', '訪問家人', '社區踏查', '時事剪報', '小組報告'],
-      '生活': ['習作', '觀察紀錄', '種植紀錄', '家事紀錄', '美勞作品', '唱遊練習', '帶材料'],
-      '健康與體育': ['健康習作', '運動紀錄', '跳繩練習', '潔牙紀錄', '視力保健紀錄', '飲食紀錄', '健康檢查單'],
-      '音樂': ['直笛練習', '歌曲練習', '節奏練習', '音樂欣賞單', '帶直笛'],
-      '視覺藝術': ['美勞作品', '素描練習', '帶美術用具', '帶材料'],
-      '綜合': ['家事紀錄', '服務學習紀錄', '活動省思單', '小組報告', '活動企劃'],
-      '本土語': ['課文朗讀', '語詞練習', '錄音作業', '認證練習'],
-      '聯絡簿': ['聯絡簿抄寫', '家長簽名', '聯絡簿訂正'],
-      '通知單': ['回條', '家長同意書', '調查表', '報名表', '繳費單', '健康資料表']
+      '國語': ['習作（國習）', '作業簿（國作）', '生字簿（甲本）', '語詞簿（乙本）', '生字練習', '圈詞', '語詞解釋', '造句', '照樣造句', '成語', '四字語詞', '修辭練習', '查字典', '注音練習', '聽寫', '朗讀課文', '背誦', '預習單', '課文大意', '閱讀測驗', '閱讀心得', '看圖寫話', '短文寫作', '作文', '作文草稿', '日記', '週記', '生字半行', '筆順練習', '部首練習', '改錯字', '標點符號', '句型練習', '仿寫', '背成語', '唐詩背誦', '讀報心得'],
+      '數學': ['習作（數習）', '課本（數課）', '練習本（數練）', '計算練習', '直式計算', '九九乘法', '心算練習', '應用題', '重點整理', '單位換算', '分數練習', '小數練習', '估算練習', '幾何作圖', '畫圖解題', '錯題重算', '數學日記'],
+      '英語': ['習作', '作業本', '字母書寫', '單字抄寫', '背單字', '自然發音', '句型練習', '對話練習', '課文朗讀', '跟讀音檔', '聽力練習', '口說錄音', '單字小考', '單字造句', '單字卡製作', '句型抄寫', '課文抄寫', '課文背誦', '英語繪本', '英語日記', '酷英網'],
+      '自然': ['習作', '實驗紀錄', '觀察紀錄', '種植紀錄', '天氣紀錄', '查資料', '重點整理', '帶實驗材料', '作業簿（自簿）', '觀察日記', '實驗報告', '圖表整理', '月相紀錄', '太陽觀測', '科學閱讀'],
+      '社會': ['習作', '重點整理', '查資料', '地圖練習', '訪問家人', '社區踏查', '時事剪報', '小組報告', '作業簿（社簿）', '訪問紀錄', '地圖標註', '家鄉調查', '年表整理', '概念圖', '口頭報告', '古蹟踏查', '在地文化單'],
+      '生活': ['習作', '觀察紀錄', '種植紀錄', '家事紀錄', '美勞作品', '唱遊練習', '帶材料', '觀察日記', '訪問家人', '好習慣紀錄', '自己動手做'],
+      '健康與體育': ['健康習作', '運動紀錄', '跳繩練習', '潔牙紀錄', '視力保健紀錄', '飲食紀錄', '健康檢查單', '體適能紀錄', '睡眠紀錄', '生活習慣打卡', '游泳練習', '球類練習', '帶運動用品'],
+      '音樂': ['直笛練習', '歌曲練習', '節奏練習', '音樂欣賞單', '帶直笛', '樂器練習', '樂譜抄寫', '歌詞背誦', '音樂學習單', '帶樂器'],
+      '視覺藝術': ['美勞作品', '素描練習', '帶美術用具', '帶材料', '創作日誌', '作品說明卡', '欣賞心得', '色彩練習', '藝術學習單'],
+      '綜合': ['家事紀錄', '服務學習紀錄', '活動省思單', '小組報告', '活動企劃', '家庭訪談', '社區觀察', '生涯探索單', '環保紀錄', '感恩卡', '小組討論紀錄'],
+      '本土語': ['課文朗讀', '語詞練習', '錄音作業', '認證練習', '俗諺背誦', '唸歌練習', '單字抄寫', '句型練習', '親子對話', '羅馬拼音', '台語查詞'],
+      '聯絡簿': ['聯絡簿抄寫', '家長簽名', '聯絡簿訂正', '聯絡簿補抄', '家長回覆'],
+      '通知單': ['回條', '家長同意書', '調查表', '報名表', '繳費單', '健康資料表', '校外教學單', '社團報名表', '課後班調查', '午餐調查表', '學校日回條']
     };
-    const HOMEWORK_COMMON = ['學習單', '考卷', '作業訂正', '考卷訂正', '考卷家長簽名', '小考訂正', '預習', '複習', '閱讀紀錄', '親子共讀', '線上學習作業', '小組作業', '假期作業', '補寫作業', '其他'];
+    const HOMEWORK_COMMON = ['學習單', '考卷', '作業訂正', '考卷訂正', '考卷家長簽名', '小考訂正', '預習', '複習', '閱讀紀錄', '親子共讀', '線上學習作業', '小組作業', '假期作業', '補寫作業', '閱讀護照', '布可星球', '閱讀分享單', '圖書館學習單', '因材網', '均一', '學習吧', '做家事', '錯題整理', '專題報告', '成果發表', '其他'];
     // 預設只亮常用的，其他到設定頁點亮
     const HOMEWORK_COMMON_GROUP = '通用';
     const HOMEWORK_DEFAULT_ON = {
@@ -1367,7 +1501,7 @@
     const BOARD_STYLES = ['standard', 'cozy'];   // 大屏風格：標準（提示插圖＝溫暖繪本）／可愛溫暖風（介面＋插圖）
     const state = {
       settings: {
-        className: '', classes: [], boardTitle: '晨間大屏', contactFont: 'default', boardStyle: 'standard', correctColor: 'brown', seatCount: 26, emptySeats: [],
+        className: '', boardTitle: '晨間大屏', contactFont: 'default', boardStyle: 'standard', correctColor: 'brown', seatCount: 26, emptySeats: [],
         setupPin: '1234',
         subjects: [], assignmentTypes: [], homeworkPicks: {}, homeworkExtra: {},
         gasUrl: '', classroomToken: '', teacherToken: '', storageMode: '',
@@ -1383,7 +1517,6 @@
       countdown: { remaining: 0, running: false, total: 0 },   // total：這一輪的總秒數（大時鐘進度圈用）
       submitting: false,
       dirty: false,          // 有未存到雲端的異動；每 5 分鐘與離開頁面時自動存檔
-      dirtyFirst: false,     // 多班模式：在別班畫面改到第一個班的點名，也要存回第一個班
       lastCloudSaveAt: ''
     };
     const $ = id => document.getElementById(id);
@@ -1423,34 +1556,11 @@
       return state.settings.subjects.filter(item => item.enabled).map(item => item.name);
     }
 
-    // ---------- 多班模式（G10）：第一個班＝className、沿用舊 key；其他班的 key 後面加「:班級」 ----------
-    const CURRENT_CLASS_KEY = 'morningCurrentClass';
-    /** 把「601、602」整理成不重複的班級陣列，第一個固定是 className；不到兩班就回傳 []（單班＝舊行為）。 */
-    function normalizeClassList(className, list) {
-      const items = (Array.isArray(list) ? list : String(list || '').split(/[、,，;；\s]+/))
-        .map(value => String(value || '').trim().slice(0, 20)).filter(Boolean);
-      const out = [];
-      [String(className || '').trim(), ...items].forEach(name => { if (name && !out.includes(name)) out.push(name); });
-      return out.length >= 2 ? out.slice(0, 12) : [];
-    }
-    function isMultiClass() { return state.settings.classes.length >= 2; }
-    function teachingClasses() { return isMultiClass() ? state.settings.classes : [state.settings.className]; }
-    function firstClass() { return teachingClasses()[0]; }
-    function currentClass() {
-      if (!isMultiClass()) return state.settings.className;
-      let saved = '';
-      try { saved = localStorage.getItem(CURRENT_CLASS_KEY) || ''; } catch (error) {}
-      return state.settings.classes.includes(saved) ? saved : state.settings.classes[0];
-    }
-    function isFirstClass() { return currentClass() === firstClass(); }
-    /** 第一個班（或單班）回傳 ''＝舊 key；其他班回傳「:602」。 */
+    function currentClass() { return state.settings.className; }
     // 設定頁選「存到雲端」、而且第 2 級的網址和大屏金鑰都填了，才算接上雲端；其他情況都只存這台電腦
     // storageMode 是 2026-11-07 加的：舊設定沒有這欄（''）時照舊看有沒有填金鑰
     const hasCloud = () => state.settings.storageMode !== 'local' && !!(state.settings.gasUrl && state.settings.classroomToken);
     const storageModeShown = () => state.settings.storageMode || (state.settings.gasUrl && state.settings.classroomToken ? 'cloud' : 'local');
-    function classKeySuffix(cls = currentClass()) {
-      return !isMultiClass() || cls === state.settings.classes[0] ? '' : ':' + cls;
-    }
 
     // ---------- 設定（含 v1 → v2 遷移） ----------
     function loadSettings() {
@@ -1459,8 +1569,6 @@
         if (saved && typeof saved === 'object') {
           const s = state.settings;
           s.className = String(saved.className || '');
-          s.classes = normalizeClassList(s.className, saved.classes);
-          if (!s.className && s.classes.length) s.className = s.classes[0];
           s.boardTitle = String(saved.boardTitle || '').trim().slice(0, 20) || '晨間大屏';
           s.contactFont = CONTACT_FONTS.includes(saved.contactFont) ? saved.contactFont : 'default';
           s.boardStyle = BOARD_STYLES.includes(saved.boardStyle) ? saved.boardStyle : 'standard';
@@ -1548,26 +1656,11 @@
           };
         }
       } catch (error) {}
-      // 多班模式且目前不是第一個班：點名與旗標照舊讀第一個班，作業繳交版面改讀本班的「:班級」key
-      if (classKeySuffix()) state.boards = loadClassBoards(classKeySuffix());
       for (let index = localStorage.length - 1; index >= 0; index -= 1) {
         const key = localStorage.key(index);
         if (key && key.startsWith(STATE_PREFIX) && key.slice(STATE_PREFIX.length) < shiftDate(todayKey(), -LOCAL_KEEP_DAYS)) localStorage.removeItem(key);
         if (key && key.startsWith(CONTACT_LOCAL_PREFIX) && key.slice(CONTACT_LOCAL_PREFIX.length) < shiftDate(todayKey(), -LOCAL_KEEP_DAYS)) localStorage.removeItem(key);
       }
-    }
-    /** 讀某一班今天的作業繳交版面（suffix ''＝第一個班的舊 key）。 */
-    function loadClassBoards(suffix) {
-      try {
-        const saved = JSON.parse(localStorage.getItem(STATE_PREFIX + todayKey() + suffix) || 'null');
-        const boards = saved && Array.isArray(saved.boards) ? saved.boards.filter(board => board && board.subject) : [];
-        const seenIds = new Set();
-        boards.forEach(board => {
-          if (!board.id || seenIds.has(board.id)) board.id = `b${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-          seenIds.add(board.id);
-        });
-        return boards;
-      } catch (error) { return []; }
     }
     /** 找出最舊的一天（今天不算），把那天的點名、作業、聯絡本都清掉。 */
     function clearOldestLocalDay() {
@@ -1603,18 +1696,7 @@
     }
     function saveTodayState() {
       state.dirty = true;   // 有異動就標記；autoCloudSaveTick 會在 5 分鐘內存到雲端（不推播）
-      const suffix = classKeySuffix();
-      if (!suffix) {
-        setLocalRecord(STATE_PREFIX + todayKey(), JSON.stringify({ attendance: state.attendance, boards: state.boards, flags: state.flags }));
-        return;
-      }
-      // 別班畫面：點名、旗標仍寫回第一個班的舊 key（保留第一個班的版面），本班版面寫到「:班級」key
-      let saved = null;
-      try { saved = JSON.parse(localStorage.getItem(STATE_PREFIX + todayKey()) || 'null'); } catch (error) {}
-      const firstBoards = saved && Array.isArray(saved.boards) ? saved.boards : [];
-      if (JSON.stringify((saved && saved.attendance) || {}) !== JSON.stringify(state.attendance)) state.dirtyFirst = true;
-      setLocalRecord(STATE_PREFIX + todayKey(), JSON.stringify({ attendance: state.attendance, boards: firstBoards, flags: state.flags }));
-      setLocalRecord(STATE_PREFIX + todayKey() + suffix, JSON.stringify({ boards: state.boards }));
+          setLocalRecord(STATE_PREFIX + todayKey(), JSON.stringify({ attendance: state.attendance, boards: state.boards, flags: state.flags }));
     }
 
     // ---------- 頁面內的輸入／確認視窗 ----------
@@ -1753,6 +1835,7 @@
         oscillator.start(); oscillator.stop(context.currentTime + 0.7);
       } catch (error) {}
     }
+    let autoPushRetryAt = 0, autoPushTries = 0;
     const BOOT_HHMM = nowHhmm();   // 這次打開大屏的時間（判斷是不是晨間時段之後才開）
     function automationTick() {
       const now = nowHhmm();
@@ -1784,22 +1867,27 @@
         showToast(`已到 ${state.settings.autoAbsentTime}，未填座號自動轉「未到」。`);
       }
       // 兩段式推播：第一段只報點名（老師最急著知道誰沒到），第二段補上作業繳交情況。
-      if (!state.flags.autoNotifyDone && now >= state.settings.autoNotifyTime && !state.flags.autoHomeworkNotifyDone && now >= state.settings.autoHomeworkNotifyTime) {
+      // 推播失敗（雲端暫時掛掉、或剛好正在自動存檔）時，過 1 分鐘重試，最多 4 次；中午前才試。
+      const pushReady = Date.now() >= autoPushRetryAt;
+      const autoPush = (push, flagKeys) => {
+        flagKeys.forEach(key => { state.flags[key] = true; });
+        changed = true;
+        Promise.resolve(submitReport({ auto: true, push })).then(ok => {
+          if (ok || !hasCloud() || ++autoPushTries > 4) return;
+          flagKeys.forEach(key => { state.flags[key] = false; });
+          autoPushRetryAt = Date.now() + 60000;
+          saveTodayState();
+        });
+      };
+      if (pushReady && !state.flags.autoNotifyDone && now >= state.settings.autoNotifyTime && !state.flags.autoHomeworkNotifyDone && now >= state.settings.autoHomeworkNotifyTime) {
         // 兩段都到期（例如中間電腦睡著）：只送一次完整版，避免第二次因「送出中」被略過
-        state.flags.autoNotifyDone = true;
-        state.flags.autoHomeworkNotifyDone = true;
-        changed = true;
-        submitReport({ auto: true, push: 'full' });
+        autoPush('full', ['autoNotifyDone', 'autoHomeworkNotifyDone']);
       }
-      if (!state.flags.autoNotifyDone && now >= state.settings.autoNotifyTime) {
-        state.flags.autoNotifyDone = true;
-        changed = true;
-        submitReport({ auto: true, push: 'attendance' });
+      if (pushReady && !state.flags.autoNotifyDone && now >= state.settings.autoNotifyTime) {
+        autoPush('attendance', ['autoNotifyDone']);
       }
-      if (!state.flags.autoHomeworkNotifyDone && now >= state.settings.autoHomeworkNotifyTime) {
-        state.flags.autoHomeworkNotifyDone = true;
-        changed = true;
-        submitReport({ auto: true, push: 'full' });
+      if (pushReady && !state.flags.autoHomeworkNotifyDone && now >= state.settings.autoHomeworkNotifyTime) {
+        autoPush('full', ['autoHomeworkNotifyDone']);
       }
       if (changed) { saveTodayState(); renderRollcall(); }
       $('autoStatus').textContent = !hasCloud() ? `自動化：${state.settings.lateTime} 後點到校記遲到（大屏不顯示）｜${state.settings.autoAbsentTime} 未填轉未到${state.flags.autoAbsentDone ? '（已執行）' : ''}` : `自動化：${state.settings.lateTime} 後點到校記遲到（大屏不顯示）｜${state.settings.autoAbsentTime} 未填轉未到${state.flags.autoAbsentDone ? '（已執行）' : ''}｜${state.settings.autoNotifyTime} 推播點名${state.flags.autoNotifyDone ? '（已執行）' : ''}｜${state.settings.autoHomeworkNotifyTime} 推播點名＋作業${state.flags.autoHomeworkNotifyDone ? '（已執行）' : ''}`;
@@ -1839,20 +1927,123 @@
     function renderContactBook() {
       const now = new Date();
       $('contactDate').textContent = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 星期${weekdays[now.getDay()]}`;
-      $('contactContent').hidden = state.contact.editing;
-      $('contactTextarea').hidden = !state.contact.editing;
+      document.querySelector('.chalkboard-inner').classList.toggle('chalk-editing', state.contact.editing);
+      const boardEditing = state.contact.editing && contactIsVertical();
+      $('contactContent').hidden = state.contact.editing && !boardEditing;
+      if (boardEditing) $('contactContent').setAttribute('contenteditable', 'plaintext-only');
+      else $('contactContent').removeAttribute('contenteditable');
+      renderContactPreview();
+      $('contactTextarea').hidden = !state.contact.editing || boardEditing;
+      $('contactQuick').hidden = !state.contact.editing;
       $('contactEditButton').textContent = state.contact.editing ? '💾 儲存' : '✏️ 編輯';
       if (!state.contact.editing) {
         $('contactContent').innerHTML = state.contact.text
-          ? escapeHtml(state.contact.text)
+          ? contactBoardHtml(state.contact.text)
           : `<span class="chalk-empty">今天還沒有聯絡本內容。<br>${hasCloud() ? '老師可在教師工作台預先輸入，或按「✏️ 編輯」直接在這裡寫。' : '按「✏️ 編輯」直接在這裡寫。'}</span>`;
       }
       const sourceLabel = state.contact.source === 'teacher' ? '（工作台輸入）' : state.contact.source === 'classroom' ? '（教室輸入）' : state.contact.source === 'local' ? '（存在這台電腦）' : state.contact.source === 'line' ? '（LINE 輸入）' : '';
       const time = state.contact.updatedAt ? new Date(state.contact.updatedAt).toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit' }) : '';
       $('contactMeta').textContent = state.contact.updatedAt ? `${time} 更新${sourceLabel}` : '';
     }
+    // 直書：編號（含點）擠在一格、後面不留空，每一行的內容才會從同一個高度開始
+    const contactIsVertical = () => !!document.querySelector('.chalkboard-inner.chalk-vertical');
+    const CONTACT_NUMBER_RE = /^[ \t　]*(\d{1,2}[\.、])[ \t　]*(?=[^\d\s]|$)/;
+    function contactBoardHtml(text) {
+      if (!contactIsVertical()) return escapeHtml(text);
+      // 每個字都留著（編輯時游標位置才對得上），只是空格縮成零寬、一兩位數併成一格
+      const hiddenGap = gap => gap ? `<span class="chalk-gap">${escapeHtml(gap)}</span>` : '';
+      const asciiRun = run => run.split(/([-~])/).filter(Boolean).map(piece => `<span class="chalk-ascii${/^[-~]$/.test(piece) ? ' chalk-dash' : ''}">${escapeHtml(piece)}</span>`).join('');
+      const cells = part => {
+        let at = 0;
+        return part.split(/([ \t　]+|\d+|[!-\/:-~]+)/).map((piece, i) => {
+          const start = at;
+          at += piece.length;
+          if (!piece || i % 2 === 0) return escapeHtml(piece);
+          if (/^\s/.test(piece) || piece[0] === '　') {
+            // 只有英數字之間的空格留著，「good job」「12 34」才不會黏在一起
+            const keep = /[A-Za-z0-9]/.test(part[start - 1] || '') && /[A-Za-z0-9]/.test(part[at] || '');
+            return keep ? escapeHtml(piece) : hiddenGap(piece);
+          }
+          if (/^\d+$/.test(piece)) return piece.length <= 2 ? `<span class="chalk-tcy">${piece}</span>` : `<span class="chalk-ascii">${piece}</span>`;
+          return asciiRun(piece);
+        }).join('');
+      };
+      return String(text).split('\n').map(line => {
+        const number = line.match(CONTACT_NUMBER_RE);
+        if (!number) return cells(line);
+        const numberAt = number[0].indexOf(number[1]);
+        return `${hiddenGap(number[0].slice(0, numberAt))}<span class="chalk-tcy">${number[1]}</span>${hiddenGap(number[0].slice(numberAt + number[1].length))}${cells(line.slice(number[0].length))}`;
+      }).join('\n');
+    }
+    function contactCaretOffset(board) {
+      const selection = window.getSelection();
+      if (!selection.rangeCount || !board.contains(selection.focusNode)) return null;
+      const range = document.createRange();
+      range.selectNodeContents(board);
+      range.setEnd(selection.focusNode, selection.focusOffset);
+      return range.toString().length;
+    }
+    function contactSetCaret(board, offset) {
+      const selection = window.getSelection();
+      const walker = document.createTreeWalker(board, NodeFilter.SHOW_TEXT);
+      for (let node = walker.nextNode(), left = offset; node; node = walker.nextNode()) {
+        if (left <= node.length) { selection.collapse(node, left); return; }
+        left -= node.length;
+      }
+      selection.selectAllChildren(board);
+      selection.collapseToEnd();
+    }
+    function renderContactPreview() {
+      if (!state.contact.editing || !contactIsVertical()) return;
+      const board = $('contactContent');
+      const text = $('contactTextarea').value;
+      const caret = document.activeElement === board ? contactCaretOffset(board) : null;
+      // 最後是換行時要多一個 <br>，游標才會跑到新的一行
+      board.innerHTML = text ? contactBoardHtml(text) + (text.endsWith('\n') ? '<br>' : '') : '';
+      if (caret !== null) contactSetCaret(board, caret);
+    }
+    // 黑板每打一字就重排，瀏覽器的復原會失效，所以自己記
+    const contactHistory = { past: [], future: [] };
+    function rememberContactText(text) {
+      if (contactHistory.past[contactHistory.past.length - 1] !== text) contactHistory.past.push(text);
+      if (contactHistory.past.length > 200) contactHistory.past.shift();
+      contactHistory.future.length = 0;
+    }
+    function syncContactBoard() {
+      if (!state.contact.editing || !contactIsVertical()) return;
+      const area = $('contactTextarea'), text = $('contactContent').textContent;
+      if (text !== area.value) rememberContactText(area.value);
+      area.value = text;
+      renderContactPreview();
+    }
+    function undoContactBoard(event) {
+      if (!(event.ctrlKey || event.metaKey) || event.isComposing || !state.contact.editing || !contactIsVertical()) return;
+      const key = event.key.toLowerCase(), redo = key === 'y' || (key === 'z' && event.shiftKey);
+      if (key !== 'z' && key !== 'y') return;
+      event.preventDefault();
+      const from = redo ? contactHistory.future : contactHistory.past, to = redo ? contactHistory.past : contactHistory.future;
+      if (!from.length) return;
+      const area = $('contactTextarea'), before = area.value, text = from.pop();
+      to.push(before);
+      area.value = text;
+      renderContactPreview();
+      let same = 0;
+      while (same < before.length && same < text.length && before[before.length - 1 - same] === text[text.length - 1 - same]) same += 1;
+      contactSetCaret($('contactContent'), text.length - same);
+    }
+    function insertContactNewline(event) {
+      if (event.key !== 'Enter' || event.isComposing || !state.contact.editing || !contactIsVertical()) return;
+      event.preventDefault();
+      const board = $('contactContent');
+      const caret = contactCaretOffset(board) ?? board.textContent.length;
+      const text = board.textContent;
+      rememberContactText(text);
+      $('contactTextarea').value = `${text.slice(0, caret)}\n${text.slice(caret)}`;
+      renderContactPreview();
+      contactSetCaret(board, caret + 1);
+    }
     function contactLocalGet(date) {
-      try { return JSON.parse(localStorage.getItem(CONTACT_LOCAL_PREFIX + date + classKeySuffix()) || 'null'); } catch (error) { return null; }
+      try { return JSON.parse(localStorage.getItem(CONTACT_LOCAL_PREFIX + date) || 'null'); } catch (error) { return null; }
     }
     async function loadContactBook({ silent = true } = {}) {
       if (!hasCloud()) {
@@ -1998,18 +2189,70 @@
       ccalLoad(today.slice(0, 7), true);
     }
 
+    // 快速輸入下拉：預設內容與工作台相同；同一個瀏覽器在工作台改過的常用項目這裡也會用
+    const CONTACT_BOOK_PRESETS = {
+      '作業': ['國習', '數習', '甲本', '乙本', '圈詞一遍', '造句', '寫作文', '閱讀 20 分鐘', '預習課文', '訂正考卷', '學習單一張', '數學卷一張', '英語唸讀'],
+      '考試': ['明天國語聽寫', '明天數學小考', '明天英語考試', '明天社會小考', '明天自然小考', '考卷訂正並請家長簽名'],
+      '攜帶物品': ['帶直笛', '帶水壺', '帶彩色筆', '帶美勞用品', '穿體育服裝', '帶抹布、衛生紙', '帶圖書館借書歸還', '帶健保卡'],
+      '通知': ['回條請家長簽名', '繳交費用', '校外教學通知請詳閱', '明天朝會請準時到校', '天氣變化請添加衣物', '請檢查並修剪指甲'],
+      '其他': []
+    };
+    const CONTACT_PRESETS_KEY = 'grade6ContactBookPresets';
+    function getContactPresets() {
+      let custom = {};
+      try { custom = JSON.parse(localStorage.getItem(CONTACT_PRESETS_KEY) || '{}') || {}; } catch (error) { custom = {}; }
+      const merged = {};
+      Object.keys(CONTACT_BOOK_PRESETS).forEach(category => {
+        const items = Array.isArray(custom[category]) ? custom[category].map(String).map(item => item.trim()).filter(Boolean) : null;
+        merged[category] = items && items.length ? items.slice(0, 40) : CONTACT_BOOK_PRESETS[category];
+      });
+      return merged;
+    }
+    function renderContactPresetOptions() {
+      const categorySelect = $('contactCategorySelect');
+      const presetsByCategory = getContactPresets();
+      if (!categorySelect.options.length) {
+        categorySelect.innerHTML = Object.keys(presetsByCategory).map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');
+      }
+      $('contactPresetSelect').innerHTML = [
+        ...(presetsByCategory[categorySelect.value] || []).map(text => `<option value="${escapeHtml(text)}">${escapeHtml(text)}</option>`),
+        '<option value="__custom__">✏️ 自行輸入…</option>'
+      ].join('');
+    }
+    function appendContactLine() {
+      const presetValue = $('contactPresetSelect').value;
+      // 「自行輸入」不會出現在成品，成品只有補充欄打的文字。
+      const preset = presetValue === '__custom__' ? '' : presetValue;
+      const extra = $('contactExtraInput').value.trim();
+      const text = (preset + (extra ? (preset.endsWith('P.') ? '' : preset ? ' ' : '') + extra : '')).trim();
+      if (!text) return showToast('請在補充欄輸入內容。', true);
+      const input = $('contactTextarea');
+      const lines = input.value.split('\n').filter(line => line.trim());
+      // 只數有編號的行，開頭的「今日聯絡本：」這種標題不佔號碼
+      lines.push(`${lines.filter(line => CONTACT_NUMBER_RE.test(line)).length + 1}. ${text}`);
+      rememberContactText(input.value);
+      input.value = lines.join('\n');
+      input.scrollTop = input.scrollHeight;
+      renderContactPreview();
+      $('contactContent').scrollLeft = -$('contactContent').scrollWidth;   // 直書的最新一行在最左邊
+      $('contactExtraInput').value = '';
+    }
+
     async function toggleContactEdit() {
       if (!state.contact.editing) {
         state.contact.editing = true;
         $('contactTextarea').value = state.contact.text;
+        contactHistory.past.length = 0;
+        contactHistory.future.length = 0;
         renderContactBook();
-        $('contactTextarea').focus();
+        if (contactIsVertical()) { $('contactContent').focus(); contactSetCaret($('contactContent'), $('contactContent').textContent.length); }
+        else $('contactTextarea').focus();
         return;
       }
       const text = $('contactTextarea').value.trim().slice(0, 5000);
       if (!hasCloud()) {
         const updatedAt = new Date().toISOString();
-        if (!setLocalRecord(CONTACT_LOCAL_PREFIX + todayKey() + classKeySuffix(), JSON.stringify({ text, updatedAt }))) return;
+        if (!setLocalRecord(CONTACT_LOCAL_PREFIX + todayKey(), JSON.stringify({ text, updatedAt }))) return;
         state.contact.text = text;
         state.contact.updatedAt = updatedAt;
         state.contact.source = 'local';
@@ -2295,7 +2538,7 @@
         state.correct.loaded = true;
         $('correctStatus').textContent = `近 ${cloudDays()} 天：待訂正 ${state.correct.items.length} 筆`
           + (state.correct.doneCount ? `（另有 ${state.correct.doneCount} 筆已完成，不列出）` : '')
-          + `｜${result.from} ～ ${result.to}`
+          + (result.from && result.to ? `｜${result.from} ～ ${result.to}` : '')
           + (Array.isArray(result.corrections) ? '' : '　⚠ 雲端程式為舊版，請更新後才有訂正統計');
         renderCorrectStats();
       } catch (error) {
@@ -2513,16 +2756,13 @@
     }
 
     // ---------- 送出回報 ----------
-    function buildSubmitPayload(push = 'none', cls = currentClass()) {
-      const seatsNow = new Set(activeSeats());
-      // 多班模式：點名只屬於第一個班；作業版面用指定那一班的
-      const isFirst = cls === firstClass();
-      const boards = cls === currentClass() ? state.boards : loadClassBoards(classKeySuffix(cls));
-      const attendance = (isFirst ? Object.entries(state.attendance) : [])
+    function buildSubmitPayload(push = 'none') {
+          const seatsNow = new Set(activeSeats());
+          const attendance = Object.entries(state.attendance)
         .filter(([seat]) => seatsNow.has(Number(seat)))
         .filter(([, status]) => ['病假', '事假', '遲到', '未到'].includes(status))
         .map(([seat, status]) => ({ seat: Number(seat), status }));
-      const homework = boards.map(board => {
+          const homework = state.boards.map(board => {
         const missing = [];
         const resubmitted = [];
         const correcting = [];
@@ -2536,7 +2776,7 @@
         });
         return { subject: board.subject, assignment: board.assignment, missing, resubmitted, correcting, corrected };
       });
-      return { action: 'rollcall_submit', token: state.settings.classroomToken, date: todayKey(), className: cls, attendance, homework, push };
+      return { action: 'rollcall_submit', token: state.settings.classroomToken, date: todayKey(), className: currentClass(), attendance, homework, push };
     }
     async function callGas(payload) {
       const gasUrl = state.settings.gasUrl.trim();
@@ -2559,34 +2799,32 @@
      * 送出到雲端。push 決定要不要推播老師 LINE：
      * 'none'（預設）＝只存資料；'attendance'＝點名推播；'full'＝點名＋作業推播。
      */
-    async function submitReport({ auto = false, push = 'none', silent = false, cls = '' } = {}) {
-      if (state.submitting) return;
+    async function submitReport({ auto = false, push = 'none', silent = false } = {}) {
+      if (state.submitting) return false;
       if (!state.settings.className) return auto || silent ? undefined : showToast('請先在「設定」填入班級名稱。', true);
       if (!state.settings.classroomToken) return auto || silent ? undefined : showToast('請先在「設定」填入教室大屏金鑰。', true);
-      // 多班模式：推播（點名／點名＋作業）只送第一個班；一般存檔送目前畫面上的班
-      const target = cls || (push !== 'none' ? firstClass() : currentClass());
-      const classTag = isMultiClass() ? `【${target}】` : '';
-      const blanks = target === firstClass() ? activeSeats().filter(seat => !state.attendance[seat]).length : 0;
+          const blanks = activeSeats().filter(seat => !state.attendance[seat]).length;
       if (!auto && !silent && blanks > 0 && !(await askDialog({ message: `還有 ${blanks} 個座號未填（不會列入缺席）。確定存到雲端？` }))) return;
       state.submitting = true;
       $('submitButton').disabled = true;
       if (!silent) $('submitStatus').textContent = auto ? '自動回報中……' : '存到雲端中……';
       try {
-        const result = await callGas(buildSubmitPayload(push, target));
+                const result = await callGas(buildSubmitPayload(push));
         const time = new Date().toLocaleTimeString('zh-TW', { hour12: false });
-        if (target === currentClass()) state.dirty = false;
-        if (target === firstClass()) state.dirtyFirst = false;
+            state.dirty = false;
         state.lastCloudSaveAt = time;
         const pushedNote = result.pushed
           ? `，並推播到老師 LINE（${push === 'attendance' ? '點名' : '點名＋作業'}）`
           : '';
-        $('submitStatus').textContent = classTag + (silent
+        $('submitStatus').textContent = (silent
           ? `已自動存到雲端（${time}）。`
           : `已存到雲端（${time}${auto ? '・自動' : ''}）${pushedNote}。同一天重存會覆蓋更新。`);
         if (!silent) showToast(auto ? '⏰ 已自動回報並推播老師 LINE。' : '✅ 已存到雲端（不會打擾 LINE）。');
+        return true;
       } catch (error) {
         $('submitStatus').textContent = `${silent ? '自動存檔' : '存到雲端'}失敗：${error.message}`;
         if (!auto && !silent) showToast(error.message || '存到雲端失敗', true);
+        return false;
       } finally {
         state.submitting = false;
         $('submitButton').disabled = false;
@@ -2599,36 +2837,30 @@
 
     /** 每 5 分鐘自動存檔一次；只有真的有異動才連線，不推播 LINE。 */
     async function autoCloudSaveTick() {
-      if ((!state.dirty && !state.dirtyFirst) || state.submitting) return;
+          if (!state.dirty || state.submitting) return;
       if (!state.settings.className || !state.settings.classroomToken || !state.settings.gasUrl) return;
-      if (state.dirty) await submitReport({ silent: true, push: 'none' });
-      // 多班模式：在別班畫面改過第一個班的點名，也補存第一個班
-      if (state.dirtyFirst && !isFirstClass()) await submitReport({ silent: true, push: 'none', cls: firstClass() });
+          await submitReport({ silent: true, push: 'none' });
     }
 
     /** 關閉分頁或切走時保底存一次；用 keepalive 讓請求在頁面卸載後仍能送達。 */
     function flushCloudSaveOnExit() {
-      if ((!state.dirty && !state.dirtyFirst) || !state.settings.className || !state.settings.classroomToken) return;
+          if (!state.dirty || !state.settings.className || !state.settings.classroomToken) return;
       const gasUrl = state.settings.gasUrl.trim();
       if (!/^https:\/\/script\.google\.com\/macros\//.test(gasUrl)) return;
-      const targets = [];
-      if (state.dirty) targets.push(currentClass());
-      if (state.dirtyFirst && !targets.includes(firstClass())) targets.push(firstClass());
       try {
-        targets.forEach(cls => fetch(gasUrl, {
-          method: 'POST', keepalive: true, redirect: 'follow', cache: 'no-store',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify(buildSubmitPayload('none', cls))
-        }).catch(() => {}));
+            fetch(gasUrl, {
+              method: 'POST', keepalive: true, redirect: 'follow', cache: 'no-store',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify(buildSubmitPayload('none'))
+            }).catch(() => {});
         state.dirty = false;
-        state.dirtyFirst = false;
       } catch (error) {}
     }
 
     // ---------- 第 1 級：前幾天的作業從這台電腦讀 ----------
     const localDays = () => Math.min(state.settings.lookbackDays, LOCAL_KEEP_DAYS);
     const cloudDays = () => Math.min(state.settings.lookbackDays, CLOUD_MAX_DAYS);
-    function localDayKey(date) { return STATE_PREFIX + date + classKeySuffix(); }
+    function localDayKey(date) { return STATE_PREFIX + date; }
     function localDayBoards(date) {
       try {
         const saved = JSON.parse(localStorage.getItem(localDayKey(date)) || 'null');
@@ -2694,7 +2926,8 @@
         const correctingCount = state.makeup.items.length - missingCount;
         $('makeupStatus').textContent = `近 ${cloudDays()} 天：缺交 ${missingCount} 筆`
           + (correctingCount ? `、待訂正 ${correctingCount} 筆` : '')
-          + `（${result.from} ～ ${result.to}）。學生補交或訂正完成後按「完成」。`;
+          + (result.from && result.to ? `（${result.from} ～ ${result.to}）` : '')
+          + '。學生補交或訂正完成後按「完成」。';
         renderMakeup();
       } catch (error) {
         $('makeupStatus').textContent = `載入失敗：${error.message}`;
@@ -2975,42 +3208,6 @@
       renderHomeworkManager();
       renderAssignmentOptions();
     }
-    function renderClassSwitch() {
-      const s = state.settings;
-      const shown = currentClass();
-      $('classNameLabel').textContent = shown ? `${shown}｜${s.boardTitle}` : s.boardTitle;
-      const host = $('classSwitch');
-      if (!isMultiClass()) { host.hidden = true; host.innerHTML = ''; return; }
-      host.hidden = false;
-      host.innerHTML = s.classes.map(cls => `<button class="class-pill${cls === shown ? ' active' : ''}" type="button" data-class-pill="${escapeHtml(cls)}" title="切換到 ${escapeHtml(cls)}">${escapeHtml(cls)}</button>`).join('')
-        + (shown !== s.classes[0] ? `<span class="class-switch-note">點名、聯絡本仍是 ${escapeHtml(s.classes[0])}</span>` : '');
-    }
-    /** 切班後重新載入這一班的作業版面，並通知班級工具換資料。 */
-    function reloadClassData() {
-      state.boards = loadClassBoards(classKeySuffix());
-      state.makeup.items = []; state.makeup.loaded = false;
-      state.correct.items = []; state.correct.loaded = false; state.correct.doneCount = 0;
-      state.correct.sticky = []; state.correct.showSettled = false;
-      renderClassSwitch();
-      renderBoards();
-      renderMakeup();
-      renderCorrectStats();
-      if ($('page-makeup').classList.contains('active')) loadMakeup();
-      if ($('page-correct').classList.contains('active')) loadCorrectStats();
-      document.dispatchEvent(new CustomEvent('morning:classchange', { detail: { className: currentClass(), suffix: classKeySuffix() } }));
-    }
-    function switchClass(cls) {
-      if (!isMultiClass() || !state.settings.classes.includes(cls) || cls === currentClass()) return;
-      // 抽籤動畫跑到一半不能切（結果會記到另一班）
-      if (!document.dispatchEvent(new CustomEvent('morning:beforeclasschange', { cancelable: true }))) {
-        showToast('抽籤進行中，抽完再切換班級。', true);
-        return;
-      }
-      flushCloudSaveOnExit();   // 離開前把這班未存的異動送到雲端（不推播）
-      try { localStorage.setItem(CURRENT_CLASS_KEY, cls); } catch (error) {}
-      reloadClassData();
-      showToast(`已切換到 ${cls}。`);
-    }
     // 切換第 1 級／第 2 級：沒接雲端就收起要雲端的分頁與按鈕，接上後全部回來
     const SUBMIT_STATUS_DEFAULT = '尚未存到雲端（每 5 分鐘與離開頁面時會自動存；LINE 只在設定的推播時間通知）。';
     let levelLocal = null;
@@ -3043,21 +3240,17 @@
     function applySettingsToUi() {
       const s = state.settings;
       applyLevelUi();
-      renderClassSwitch();
+          $('classNameLabel').textContent = s.className ? `${s.className}｜${s.boardTitle}` : s.boardTitle;
       document.title = `${s.boardTitle}｜點名與作業繳交`;
       $('setupPin').value = s.setupPin;
       $('setupClassName').value = s.className;
-      $('setupClasses').value = s.classes.join('、');
       $('setupBoardTitle').value = s.boardTitle;
       $('setupContactFont').value = s.contactFont;
       $('setupBoardStyle').value = s.boardStyle;
       applyBoardStyle();
       $('setupCorrectColor').value = s.correctColor;
       applyCorrectColor();
-      const chalkboard = document.querySelector('.chalkboard-inner');
-      if (chalkboard) {
-        CONTACT_FONTS.forEach(name => chalkboard.classList.toggle('chalk-' + name, s.contactFont === name));
-      }
+      applyContactFont();
       $('setupSeatCount').value = s.seatCount;
       $('setupEmptySeats').value = s.emptySeats.join('、');
       $('setupAssignmentTypes').value = s.assignmentTypes.join('、');
@@ -3076,15 +3269,36 @@
       renderRollcall();
       renderBoards();
     }
+    function applyContactFont() {
+      const chalkboard = document.querySelector('.chalkboard-inner');
+      if (chalkboard) {
+        CONTACT_FONTS.forEach(name => chalkboard.classList.toggle('chalk-' + name, state.settings.contactFont === name));
+      }
+    }
+    // 字型一選就存好並開始抓，老師不用安裝、也不用按儲存；其他還沒存的欄位不受影響
+    const CONTACT_FONT_FAMILY = { huninn: 'Huninn', iansui: 'Iansui', bpmf: 'BpmfIansui', bpmfhuninn: 'BpmfHuninn' };
+    let contactFontRequest = 0;
+    async function chooseContactFont() {
+      const font = CONTACT_FONTS.includes($('setupContactFont').value) ? $('setupContactFont').value : 'default';
+      state.settings.contactFont = font;
+      saveSettings();
+      applyContactFont();
+      const request = ++contactFontRequest;
+      const status = $('contactFontStatus');
+      if (font === 'default') { status.textContent = '✅ 已設定好：標準字體。'; return; }
+      status.textContent = '⏳ 字型準備中，第一次要等幾秒…';
+      let ready = false;
+      try {
+        const faces = await document.fonts.load(`32px "${CONTACT_FONT_FAMILY[font]}"`, '聯絡本');
+        ready = faces.length > 0 && faces.every(face => face.status === 'loaded');
+      } catch (error) {}
+      if (request !== contactFontRequest) return;
+      status.textContent = ready ? '✅ 已設定好，黑板已換成這個字型。' : '⚠️ 字型暫時抓不下來，先用標準字體顯示；網路正常後重新整理就會換上。';
+    }
     function saveSetupFromForm() {
       const s = state.settings;
-      const classBefore = currentClass();
-      const suffixBefore = classKeySuffix();
       s.setupPin = $('setupPin').value.trim().slice(0, 12);
       s.className = $('setupClassName').value.trim().slice(0, 20);
-      const classItems = $('setupClasses').value.split(/[、,，;；\s]+/).map(value => value.trim().slice(0, 20)).filter(Boolean);
-      if (!s.className && classItems.length) s.className = classItems[0];
-      s.classes = normalizeClassList(s.className, classItems);
       s.boardTitle = $('setupBoardTitle').value.trim().slice(0, 20) || '晨間大屏';
       s.contactFont = CONTACT_FONTS.includes($('setupContactFont').value) ? $('setupContactFont').value : 'default';
       s.boardStyle = BOARD_STYLES.includes($('setupBoardStyle').value) ? $('setupBoardStyle').value : 'standard';
@@ -3105,9 +3319,7 @@
       const mode = document.querySelector('input[name="storageMode"]:checked');
       s.storageMode = mode && ['local', 'cloud'].includes(mode.value) ? mode.value : '';
       saveSettings();
-      const classChanged = currentClass() !== classBefore || classKeySuffix() !== suffixBefore;
       applySettingsToUi();
-      if (classChanged) reloadClassData();
       showToast('設定已儲存。');
     }
 
@@ -3278,10 +3490,6 @@
     }).observe($('submitStatus'), { childList: true, characterData: true, subtree: true });
     document.querySelectorAll('input[name="storageMode"]').forEach(r => r.addEventListener('change', renderStorageHint));
     ['setupGasUrl', 'setupClassroomToken'].forEach(id => $(id).addEventListener('input', renderStorageHint));
-    $('classSwitch').addEventListener('click', event => {
-      const pill = event.target.closest('[data-class-pill]');
-      if (pill) switchClass(pill.dataset.classPill);
-    });
     // 5分／10分：直接開始倒數並跳出大時鐘
     document.querySelectorAll('[data-countdown]').forEach(button => button.addEventListener('click', () => startCountdown(Number(button.dataset.countdown))));
     // 自訂時間：打分鐘（8、1.5）或分:秒（2:30）；打不懂就再問一次
@@ -3365,6 +3573,15 @@
       showToast(copied ? '已複製這一天的聯絡本。' : '複製失敗，請手動選取內容複製。', !copied);
     });
     $('contactEditButton').addEventListener('click', toggleContactEdit);
+    renderContactPresetOptions();
+    $('contactCategorySelect').addEventListener('change', renderContactPresetOptions);
+    $('contactAddLineButton').addEventListener('click', appendContactLine);
+    // 注音輸入選字時不能重排，選好字才更新
+    $('contactContent').addEventListener('input', event => { if (!event.isComposing) syncContactBoard(); });
+    $('contactContent').addEventListener('compositionend', syncContactBoard);
+    $('contactContent').addEventListener('keydown', insertContactNewline);
+    $('contactContent').addEventListener('keydown', undoContactBoard);
+    $('contactExtraInput').addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); appendContactLine(); } });
     function toggleProjection(force) {
       const on = force !== undefined ? force : !document.body.classList.contains('projection');
       document.body.classList.toggle('projection', on);
@@ -3374,6 +3591,7 @@
     $('projectionButton').addEventListener('click', () => toggleProjection());
     document.addEventListener('keydown', event => { if (event.key === 'Escape') toggleProjection(false); });
     $('saveSetupButton').addEventListener('click', saveSetupFromForm);
+    $('setupContactFont').addEventListener('change', chooseContactFont);
     $('subjectManager').addEventListener('click', event => {
       const toggle = event.target.closest('[data-subject-index]');
       if (!toggle) return;
@@ -3479,48 +3697,13 @@
   // 抽籤可能用好幾個星期：已抽名單跨天保留，按「重新開始」才清空；舊版存在當日鍵的名單搬過來一次
   config.drawn = Array.isArray(config.drawn) ? config.drawn : (Array.isArray(day.drawn) ? day.drawn.slice() : []);
   cleanupOldDays();
-  // G10 多班模式：這些欄位每班一份。第一個班（或單班）沿用舊 key；其他班寫到「key:班級」。
-  const CLASS_CONFIG_FIELDS = ['scores', 'teamNames', 'teamCount', 'drawn'];
-  const CLASS_DAY_FIELDS = ['boards', 'groups'];
-  if (toolsClassSuffix()) loadClassSlice();
 
   function loadJson(key, fallback) {
     try { const v = JSON.parse(localStorage.getItem(key) || 'null'); return v && typeof v === 'object' ? v : fallback; }
     catch (e) { return fallback; }
   }
-  function toolsClassSuffix() { return typeof classKeySuffix === 'function' ? classKeySuffix() : ''; }
-  /** 把「共用欄位寫舊 key、本班欄位寫 :班級 key」拆開存；第一個班整包照舊存。 */
-  function saveSplit(baseKey, obj, fields) {
-    const suffix = toolsClassSuffix();
-    if (!suffix) { localStorage.setItem(baseKey, JSON.stringify(obj)); return; }
-    const stored = loadJson(baseKey, {});
-    const shared = Object.assign({}, obj);
-    const mine = {};
-    fields.forEach(field => {
-      mine[field] = obj[field];
-      if (field in stored) shared[field] = stored[field]; else delete shared[field];
-    });
-    localStorage.setItem(baseKey, JSON.stringify(shared));
-    localStorage.setItem(baseKey + suffix, JSON.stringify(mine));
-  }
-  function saveConfig() { try { saveSplit(CONFIG_KEY, config, CLASS_CONFIG_FIELDS); } catch (e) {} }
-  function saveDay() { try { saveSplit(DAY_PREFIX + todayKey(), day, CLASS_DAY_FIELDS); } catch (e) {} }
-  /** 切班（或開頁時目前不是第一個班）：重新讀這一班的計分板、檢核板、已抽名單、分組結果。 */
-  function loadClassSlice() {
-    const suffix = toolsClassSuffix();
-    const mainDay = loadJson(DAY_PREFIX + todayKey(), {});
-    const c = loadJson(CONFIG_KEY + suffix, {});
-    const d = suffix ? loadJson(DAY_PREFIX + todayKey() + suffix, {}) : mainDay;
-    CLASS_CONFIG_FIELDS.forEach(field => { if (field in c) config[field] = c[field]; else delete config[field]; });
-    CLASS_DAY_FIELDS.forEach(field => { if (field in d) day[field] = d[field]; else delete day[field]; });
-    config.teamNames = Array.isArray(config.teamNames) ? config.teamNames : [];
-    // 第一個班沿用舊版「分數存在當日鍵」的搬移規則
-    config.scores = Array.isArray(config.scores) ? config.scores
-      : (!suffix && Array.isArray(mainDay.scores) && mainDay.scores.length ? mainDay.scores.slice() : []);
-    config.drawn = Array.isArray(config.drawn) ? config.drawn : (Array.isArray(d.drawn) ? d.drawn.slice() : []);
-    day.boards = Array.isArray(day.boards) ? day.boards : [{ name: config.checkNames[0], done: {}, showMiss: false }];
-    day.groups = Array.isArray(day.groups) ? day.groups : [];
-  }
+  function saveConfig() { try { localStorage.setItem(CONFIG_KEY, JSON.stringify(config)); } catch (e) {} }
+  function saveDay() { try { localStorage.setItem(DAY_PREFIX + todayKey(), JSON.stringify(day)); } catch (e) {} }
   function cleanupOldDays() {
     for (let i = localStorage.length - 1; i >= 0; i -= 1) {
       const key = localStorage.key(i);
@@ -3824,8 +4007,10 @@
   }
   applyToolsTabIcon();
   document.addEventListener('boardstylechange', applyToolsTabIcon);
-  // 檢核板、螢幕公告常用，上面選單也各放一顆：開的是班級工具裡同一個面板（資料共用），只是把工具列收起來
-  const SOLO_TOOLS = [['check', '✅', '檢核板'], ['screen', '📺', '螢幕公告'], ['mind', '🧠', '心智圖']];
+  // 班級工具可以放到上面選單（老師自己勾）：開的是班級工具裡同一個面板（資料共用），只是把工具列收起來
+  const SOLO_TOOLS = [['lottery', '🎡', '抽籤機'], ['check', '✅', '檢核板'], ['tooth', '🦷', '潔牙點名'], ['score', '🏆', '計分板'], ['group', '👥', '隨機分組'], ['exam', '📝', '定評小幫手'], ['tomato', '🍅', '番茄鐘'], ['prompt', '📣', '大屏提示'], ['screen', '📺', '螢幕公告'], ['mind', '🧠', '心智圖']];
+  const TOP_TOOLS_DEFAULT = ['check', 'tooth', 'screen', 'mind'];
+  const topTools = () => (Array.isArray(config.topTools) ? config.topTools : TOP_TOOLS_DEFAULT).filter(tool => SOLO_TOOLS.some(([id]) => id === tool));
   const soloTabs = {};
   SOLO_TOOLS.forEach(([tool, emoji, label]) => {
     const btn = document.createElement('button');
@@ -3843,6 +4028,41 @@
   applySoloTabIcons();
   document.addEventListener('boardstylechange', applySoloTabIcons);
   if (setupTab) setupTab.parentNode.insertBefore(toolsTab, setupTab);
+  function applyTopTools() {
+    const shown = topTools();
+    Object.entries(soloTabs).forEach(([tool, { btn }]) => { btn.hidden = !shown.includes(tool); });
+    fitTopTabs();
+  }
+  $('topToolPicker').innerHTML = SOLO_TOOLS.map(([tool, , label]) => `<label><input type="checkbox" data-top-tool="${tool}"${topTools().includes(tool) ? ' checked' : ''}>${label}</label>`).join('');
+  $('topToolPicker').addEventListener('change', event => {
+    const box = event.target.closest('[data-top-tool]');
+    if (!box) return;
+    const shown = topTools().filter(tool => tool !== box.dataset.topTool);
+    if (box.checked) shown.push(box.dataset.topTool);
+    config.topTools = SOLO_TOOLS.map(([tool]) => tool).filter(tool => shown.includes(tool));
+    saveConfig();
+    applyTopTools();
+  });
+  // 上方選單維持一行：放不下就等比例縮小字和間距（太窄時縮到下限，改左右滑動）
+  const TAB_SCALE_MIN = 0.6;
+  function fitTopTabs() {
+    const bar = document.querySelector('.tabs');
+    if (!bar || !bar.clientWidth) return;
+    bar.style.setProperty('--tab-scale', '1');
+    let scale = 1;
+    if (bar.scrollWidth > bar.clientWidth) {
+      scale = Math.max(TAB_SCALE_MIN, Math.floor(bar.clientWidth / bar.scrollWidth * 100) / 100);
+      bar.style.setProperty('--tab-scale', String(scale));
+      while (bar.scrollWidth > bar.clientWidth && scale > TAB_SCALE_MIN) {
+        scale = Math.max(TAB_SCALE_MIN, Math.round((scale - 0.02) * 100) / 100);
+        bar.style.setProperty('--tab-scale', String(scale));
+      }
+    }
+  }
+  applyTopTools();
+  new ResizeObserver(fitTopTabs).observe(document.querySelector('.tabs'));
+  document.addEventListener('boardstylechange', () => requestAnimationFrame(fitTopTabs));
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitTopTabs);
   let toolsLastTool = 'lottery';   // 回到「班級工具」時接著顯示原本那個工具
   function showToolsPage(tabButton, tool) {
     setupUnlocked = false;   // 資安：離開設定頁就重新上鎖（這幾顆是後來注入的，沒掛到原本分頁的處理）
@@ -3851,17 +4071,14 @@
     $('page-tools').classList.toggle('solo-tool', tabButton !== toolsTab);
     const tile = document.querySelector(`#toolTabs .tool-tab[data-tool="${tool}"]`);
     if (tile && !tile.classList.contains('active')) tile.click();
-    if (tool !== 'quiet') stopQuiet();
-    renderCheckWall(); renderScoreWall(); updateLotStatus();
+    renderCheckWall(); renderToothWall(); renderScoreWall(); updateLotStatus();
   }
   toolsTab.addEventListener('click', () => showToolsPage(toolsTab, toolsLastTool));
   document.querySelectorAll('#toolTabs .tool-tab').forEach(tab => tab.addEventListener('click', () => {
     if (!$('page-tools').classList.contains('solo-tool')) toolsLastTool = tab.dataset.tool;
     document.querySelectorAll('#toolTabs .tool-tab').forEach(item => item.classList.toggle('active', item === tab));
     document.querySelectorAll('.tool-panel').forEach(panel => { panel.hidden = panel.dataset.toolPanel !== tab.dataset.tool; });
-    if (tab.dataset.tool !== 'quiet') stopQuiet();
   }));
-  document.querySelectorAll('.tab-button').forEach(btn => btn.addEventListener('click', () => { if (btn.dataset.page !== 'tools') stopQuiet(); }));
   // 📺 螢幕公告：第一次點才載入（裡面有定時，載入後切到別的分頁也繼續跑）
   const screenTile = document.querySelector('.tool-tab[data-tool="screen"]');
   screenTile.addEventListener('click', () => { if (!$('screenFrame').getAttribute('src')) $('screenFrame').src = 'Screen.html'; });
@@ -3898,12 +4115,10 @@
   // 自動缺席時間（預設 08:05）一到，未填座號會自動轉「未到」；老師沒點名或只點請假的人時，
   // 全班都會變「未到」——這時不能把「未到」當缺席，否則抽籤、分組只剩少數號碼（2026-11-01 老師回報）。
   function rollcallTaken() {
-    if (toolsClassSuffix()) return false;   // 多班模式：點名只屬第一個班
     return activeSeats().some(seat => ['到', '遲到'].includes(state.attendance[seat] || ''));
   }
   function absentSeatSet() {
     const absent = new Set();
-    if (toolsClassSuffix()) return absent;   // 多班模式：別班沒有點名資料，不排除任何人
     const countMissing = rollcallTaken();
     activeSeats().forEach(seat => {
       const status = state.attendance[seat] || '';
@@ -3916,7 +4131,6 @@
     const s = state.settings;
     const empties = s.emptySeats.filter(n => n <= s.seatCount);
     let note = `座號 1～${s.seatCount}` + (empties.length ? `（空號 ${empties.join('、')}）` : '');
-    if (excludeAbsent && toolsClassSuffix()) return note + `・${currentClass()} 沒有點名資料，不排除缺席`;
     if (excludeAbsent) {
       const absent = [...absentSeatSet()].sort((a, b) => a - b);
       if (absent.length) note += `・排除今日缺席 ${absent.length} 人：${absent.join('、')}`;
@@ -4517,6 +4731,70 @@
       `<option value="__custom__">✏️ 自訂輸入…</option>`].join('');
   }
   let checkPopKey = '';
+  // 🦷 潔牙點名：一天一份，只用座號
+  function toothDone() {
+    if (!day.tooth || typeof day.tooth !== 'object') day.tooth = {};
+    return day.tooth;
+  }
+  const TOOTH_SIZE = { def: 1, min: 0.7, max: 1.8, step: 0.1 }, TOOTH_GAP = { def: 18, min: 6, max: 46, step: 4 };
+  const toothClamp = (value, range) => Math.min(range.max, Math.max(range.min, Number.isFinite(value) ? Math.round(value * 10) / 10 : range.def));
+  function applyToothLayout() {
+    config.toothSize = toothClamp(Number(config.toothSize ?? TOOTH_SIZE.def), TOOTH_SIZE);
+    config.toothGap = toothClamp(Number(config.toothGap ?? TOOTH_GAP.def), TOOTH_GAP);
+    const wall = $('toothWall');
+    wall.style.setProperty('--tooth-size', config.toothSize);
+    wall.style.setProperty('--tooth-gap', config.toothGap + 'px');
+    $('toothSizeValue').textContent = Math.round(config.toothSize * 100) + '%';
+    $('toothGapValue').textContent = config.toothGap;
+  }
+  document.querySelector('[data-tool-panel="tooth"]').addEventListener('click', event => {
+    const adjust = event.target.closest('[data-tooth-adjust]');
+    if (adjust) {
+      const [key, sign] = adjust.dataset.toothAdjust.split(':');
+      const range = key === 'toothSize' ? TOOTH_SIZE : TOOTH_GAP;
+      config[key] = toothClamp(config[key] + Number(sign) * range.step, range);
+    } else if (event.target.closest('#toothLayoutReset')) {
+      config.toothSize = TOOTH_SIZE.def;
+      config.toothGap = TOOTH_GAP.def;
+    } else return;
+    saveConfig();
+    applyToothLayout();
+  });
+  function renderToothWall() {
+    const wall = $('toothWall');
+    if (!wall) return;
+    const done = toothDone(), absentSet = absentSeatSet();
+    const seats = activeSeats().filter(seat => !absentSet.has(seat));
+    const doneCount = seats.filter(seat => done[seat]).length;
+    const complete = seats.length > 0 && doneCount === seats.length;
+    const ratio = seats.length ? doneCount / seats.length : 0;
+    const cells = activeSeats().map(seat => absentSet.has(seat)
+      ? `<button class="check-seat absent" type="button" disabled title="今日缺席">${seat}<small>缺</small></button>`
+      : `<button class="check-seat${done[seat] ? ' done' : ''}" type="button" data-tooth-seat="${seat}">${seat}</button>`).join('');
+    const waiting = seats.filter(seat => !done[seat]);
+    wall.innerHTML = `<div class="check-card${complete ? ' complete' : ''}">
+      <div class="check-head">
+        <div class="check-ring" title="已潔牙 ${doneCount}／${seats.length}"><svg viewBox="0 0 54 54"><circle class="bg" cx="27" cy="27" r="22"/><circle class="fg" cx="27" cy="27" r="22" stroke-dasharray="138.2" stroke-dashoffset="${(138.2 * (1 - ratio)).toFixed(1)}"/></svg><b>${Math.round(ratio * 100)}%</b></div>
+        <div class="tooth-title">🦷 今天的潔牙</div>
+      </div>
+      <div class="check-grid tooth-grid">${cells}</div>
+      <div class="check-actions">
+        <button class="ghost-button" type="button" id="toothResetButton" style="padding:6px 14px;font-size:13.5px">重設</button>
+        ${complete ? '<span class="check-complete">🎉 全班都刷好牙了！</span>' : `<span class="status-text">已潔牙 ${doneCount}／${seats.length}${waiting.length ? `　還沒：${waiting.join('、')} 號` : ''}</span>`}
+      </div>
+    </div>`;
+  }
+  $('toothWall').addEventListener('click', event => {
+    if (event.target.closest('#toothResetButton')) { day.tooth = {}; saveDay(); renderToothWall(); return; }
+    const button = event.target.closest('[data-tooth-seat]');
+    if (!button) return;
+    const done = toothDone(), seat = button.dataset.toothSeat;
+    if (done[seat]) delete done[seat]; else done[seat] = true;
+    saveDay();
+    renderToothWall();
+  });
+  document.querySelector('.tool-tab[data-tool="tooth"]').addEventListener('click', renderToothWall);
+  applyToothLayout();
   function renderCheckWall() {
     const wall = $('checkWall');
     if (!wall) return;
@@ -4766,177 +5044,6 @@
     setTimeout(renderGroups, 800);
   });
 
-  /** 切班或重新整理時，把這一班上次的分組結果畫回來（不重播動畫）。 */
-  function renderSavedGroups() {
-    const wall = $('groupWall');
-    if (!wall) return;
-    wall.innerHTML = (day.groups || []).map((members, i) => {
-      const [g, soft, line] = TEAM_COLORS[i % TEAM_COLORS.length];
-      return `<div class="group-card" style="--g:${g};--g-soft:${soft};--g-line:${line}">
-          <h4>第 ${i + 1} 組（${members.length} 人）</h4>
-          <div class="members">${members.map(m => `<span>${escapeHtml(m)}</span>`).join('')}</div>
-        </div>`;
-    }).join('');
-  }
-
-  // ================================================================
-  // 🔇 安靜偵測
-  // ================================================================
-  let quietStream = null, quietCtx = null, quietRaf = 0, overSince = 0, overlayCooldown = 0;
-  let quietCalmSince = 0, quietStarCount = 0;
-  $('quietThreshold').value = String(config.quietThreshold || 60);
-  $('quietThresholdValue').textContent = $('quietThreshold').value;
-  $('quietLine').style.left = $('quietThreshold').value + '%';
-  $('quietThreshold').addEventListener('input', () => {
-    config.quietThreshold = Number($('quietThreshold').value); saveConfig();
-    $('quietThresholdValue').textContent = $('quietThreshold').value;
-    $('quietLine').style.left = $('quietThreshold').value + '%';
-    placeQuietThreshold();
-  });
-  // 半圓儀表：0～100 對應 -90°～90°；警戒線跟著拉桿
-  let quietSmooth = 0;
-  function placeQuietThreshold() { $('quietTh').setAttribute('transform', `rotate(${-90 + Number($('quietThreshold').value) * 1.8} 110 115)`); }
-  function updateQuietFx(level, threshold) {
-    quietSmooth = quietSmooth * .75 + level * .25;
-    const v = Math.round(quietSmooth);
-    $('quietArc').setAttribute('stroke-dashoffset', String(100 - v));
-    $('quietNeedle').setAttribute('transform', `rotate(${-90 + v * 1.8} 110 115)`);
-    $('quietLevel').textContent = v;
-    const rings = $('quietRings');
-    rings.style.setProperty('--lv', (v / 100).toFixed(2));
-    const mood = level < threshold - 12 ? 'calm' : level < threshold ? 'warn' : 'loud';
-    rings.dataset.mood = mood;
-    setMascot($('quietMascot'), mood === 'calm' ? 'sleep' : mood === 'warn' ? 'idle' : 'warning');
-  }
-  function resetQuietFx() {
-    quietSmooth = 0;
-    $('quietArc').setAttribute('stroke-dashoffset', '100');
-    $('quietNeedle').setAttribute('transform', 'rotate(-90 110 115)');
-    $('quietLevel').textContent = '0';
-    $('quietRings').dataset.mood = 'off';
-    setMascot($('quietMascot'), 'idle');
-  }
-  // 集到星星時，星星從角色飛進星星盤
-  function flyStar() {
-    if (REDUCED_MOTION_ALL || !document.body.animate) return;
-    const from = $('quietImg').getBoundingClientRect(), to = $('quietStars').getBoundingClientRect();
-    const star = document.createElement('span');
-    star.className = 'quiet-star-fly'; star.textContent = '⭐';
-    (fsCurrent() || document.body).appendChild(star);
-    const sx = from.left + from.width / 2 - 23, sy = from.top + from.height / 3;
-    const ex = to.left + to.width / 2 - 23, ey = to.top;
-    star.style.left = '0px'; star.style.top = '0px';
-    star.animate([
-      { transform: `translate(${sx}px, ${sy}px) scale(.3)`, opacity: 0 },
-      { transform: `translate(${(sx + ex) / 2}px, ${Math.min(sy, ey) - 120}px) scale(1.6)`, opacity: 1, offset: .5 },
-      { transform: `translate(${ex}px, ${ey}px) scale(1)`, opacity: 1 }
-    ], { duration: 950, easing: 'cubic-bezier(.3,.7,.4,1)' }).onfinish = () => star.remove();
-  }
-  placeQuietThreshold();
-  resetQuietFx();
-  async function startQuiet() {
-    try {
-      quietStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    } catch (e) {
-      showToast('無法使用麥克風：請在瀏覽器網址列允許麥克風權限。', true);
-      return;
-    }
-    quietCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const source = quietCtx.createMediaStreamSource(quietStream);
-    const analyser = quietCtx.createAnalyser();
-    analyser.fftSize = 1024;
-    source.connect(analyser);
-    const data = new Uint8Array(analyser.fftSize);
-    $('quietStartButton').textContent = '⏹ 停止偵測';
-    const tick = () => {
-      analyser.getByteTimeDomainData(data);
-      let sum = 0;
-      for (let i = 0; i < data.length; i += 1) { const v = (data[i] - 128) / 128; sum += v * v; }
-      const level = Math.min(100, Math.round(Math.sqrt(sum / data.length) * 320));
-      $('quietBar').style.width = level + '%';
-      const threshold = Number($('quietThreshold').value);
-      updateQuietFx(level, threshold);
-      const face = $('quietFace');
-      const img = $('quietImg');
-      img.hidden = false;
-      // 溫暖風改用原創學生插圖（assets/art/cozy/quiet/）；標準維持いらすとや動物
-      const cozy = state.settings.boardStyle === 'cozy';
-      const setCharacter = (src, cozyId, cls) => {
-        const want = cozy ? 'assets/art/cozy/quiet/' + cozyId + '.webp' : 'assets/irasutoya/' + src;
-        if (img.getAttribute('src') !== want) img.src = want;
-        img.className = 'quiet-img ' + cls;
-      };
-      if (level < threshold - 25) { setCharacter('quiet_usagi.png', 'quiet_super', 'is-calm'); face.textContent = cozy ? '😊 超安靜！大家好棒' : '😊 超安靜！兔兔為你們驕傲'; }
-      else if (level < threshold - 12) { setCharacter('quiet_cat.png', 'quiet_good', 'is-calm'); face.textContent = cozy ? '🤫 噓——保持這個音量' : '🐱 噓——保持這個音量'; }
-      else if (level < threshold) { setCharacter('quiet_kuma.png', 'quiet_warn', 'is-warn'); face.textContent = cozy ? '😟 有點聲音囉，小心！' : '🐻 有點聲音囉，小心！'; }
-      else { setCharacter('too_noisy.png', 'quiet_loud', 'is-loud'); face.textContent = '😫 太吵了！教室要翻掉啦！'; }
-      const now = Date.now();
-      // 連續安靜集星星：低於警戒就累積，破表歸零
-      if (level < threshold) {
-        if (!quietCalmSince) quietCalmSince = now;
-        const seconds = Math.floor((now - quietCalmSince) / 1000);
-        $('quietStreak').hidden = false;
-        $('quietStreakSeconds').textContent = seconds;
-        const stars = Math.min(10, Math.floor(seconds / 30));
-        if (stars !== quietStarCount) {
-          quietStarCount = stars;
-          $('quietStars').textContent = '⭐'.repeat(stars);
-          if (stars > 0) { beep(880, .18, 'sine', .08); flyStar(); }
-        }
-      }
-      if (level >= threshold) {
-        quietCalmSince = 0;
-        if (quietStarCount || $('quietStreak').hidden === false) {
-          $('quietStreakSeconds').textContent = '0';
-        }
-        if (!overSince) overSince = now;
-        if (now - overSince > 700 && now > overlayCooldown) {
-          overlayCooldown = now + 3200;
-          const overlay = document.createElement('div');
-          overlay.className = 'quiet-overlay';
-          overlay.textContent = '🤫 太吵囉！';
-          document.body.appendChild(overlay);
-          setTimeout(() => overlay.remove(), 1500);
-          beep(196, .5, 'sawtooth', .1);
-        }
-      } else {
-        overSince = 0;
-      }
-      quietRaf = requestAnimationFrame(tick);
-    };
-    tick();
-  }
-  function stopQuiet() {
-    if (quietRaf) cancelAnimationFrame(quietRaf); quietRaf = 0;
-    if (quietStream) { quietStream.getTracks().forEach(t => t.stop()); quietStream = null; }
-    if (quietCtx) { try { quietCtx.close(); } catch (e) {} quietCtx = null; }
-    const btn = $('quietStartButton');
-    if (btn) btn.textContent = '🎙 開始偵測';
-    const face = $('quietFace');
-    if (face && !quietStream) face.textContent = '😴 尚未開始偵測';
-    const bar = $('quietBar');
-    if (bar) bar.style.width = '0%';
-    const img = $('quietImg');
-    if (img) { img.hidden = true; img.className = 'quiet-img'; }
-    const streak = $('quietStreak');
-    if (streak) streak.hidden = true;
-    const stars = $('quietStars');
-    if (stars) stars.textContent = '';
-    quietCalmSince = 0; quietStarCount = 0;
-    overSince = 0;
-    if ($('quietArc')) resetQuietFx();
-  }
-  $('quietStartButton').addEventListener('click', () => { quietStream ? stopQuiet() : startQuiet(); });
-  // 溫暖風的安靜偵測是原創插圖，說明與出處跟著換
-  const quietCreditHtml = $('quietCredit').innerHTML;
-  function updateQuietCredit() {
-    $('quietCredit').innerHTML = state.settings.boardStyle === 'cozy'
-      ? '安靜就換同學比「噓」、太吵會換成摀耳朵的同學；連續安靜 30 秒集一顆 ⭐。插圖：本系統原創'
-      : quietCreditHtml;
-  }
-  updateQuietCredit();
-  document.addEventListener('boardstylechange', updateQuietCredit);
-
   // ================================================================
   // 📝 定評小幫手
   // ================================================================
@@ -4950,6 +5057,147 @@
     if (config.examPeriod) $('examPeriod').value = config.examPeriod;
     $('examPeriod').addEventListener('change', () => { config.examPeriod = $('examPeriod').value; saveConfig(); });
     const weekdayLabels = ['日', '一', '二', '三', '四', '五', '六'];
+
+    // ---- 考試日總覽：一天全部科目的進度＋到考情況 ----
+    const XD_MAX_ROWS = 8;
+    const xdTimeOk = value => /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(String(value || ''));
+    const xdMinutes = value => Number(value.slice(0, 2)) * 60 + Number(value.slice(3));
+    const xdHhmm = minutes => `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
+    const XD_CUSTOM = '自訂';
+    const XD_PERIODS = [['第一節', '08:40', '09:20'], ['第二節', '09:30', '10:10'], ['第三節', '10:30', '11:10'], ['第四節', '11:20', '12:00'], ['第五節', '13:30', '14:10'], ['第六節', '14:20', '15:00'], ['第七節', '15:20', '16:00']];
+    const xdCleanRow = row => ({
+      period: XD_PERIODS.some(([name]) => name === (row && row.period)) ? row.period : XD_CUSTOM,
+      subject: String((row && row.subject) || '').slice(0, 12), start: String((row && row.start) || ''), end: String((row && row.end) || '')
+    });
+    const xdSaved = config.examOverview && typeof config.examOverview === 'object' ? config.examOverview : {};
+    const xdPeriodRow = (index, subject) => ({ period: XD_PERIODS[index][0], subject, start: XD_PERIODS[index][1], end: XD_PERIODS[index][2] });
+    const examDay = {
+      layout: xdSaved.layout === 'single' ? 'single' : 'day',
+      name: typeof xdSaved.name === 'string' ? xdSaved.name.slice(0, 20) : '第一次定期評量',
+      rows: Array.isArray(xdSaved.rows) ? xdSaved.rows.slice(0, XD_MAX_ROWS).map(xdCleanRow) : [xdPeriodRow(0, '國語'), xdPeriodRow(1, '英語'), xdPeriodRow(2, '自然')]
+    };
+    config.examOverview = examDay;
+    let xdLastSchedule = null, xdLastAttendance = null;
+    function xdRowState(row, nowSeconds) {
+      if (!xdTimeOk(row.start) || !xdTimeOk(row.end) || xdMinutes(row.end) <= xdMinutes(row.start)) return { cls: 'bad', pill: '時間待確認', pct: 0, note: '請到下方修正時間' };
+      const start = xdMinutes(row.start) * 60, end = xdMinutes(row.end) * 60;
+      if (nowSeconds < start) return { cls: 'waiting', pill: '未開始', pct: 0, note: `${row.start} 開始` };
+      if (nowSeconds >= end) return { cls: 'done', pill: '已完成', pct: 100, note: '本科考試已結束' };
+      return { cls: 'running', pill: '進行中', pct: Math.floor((nowSeconds - start) / (end - start) * 100), note: `還有 ${Math.ceil((end - nowSeconds) / 60)} 分鐘` };
+    }
+    function renderExamDay() {
+      if ($('examDayWrap').hidden) return;
+      const now = new Date();
+      const hours = now.getHours();
+      $('xdTitle').textContent = `${now.getMonth() + 1}/${String(now.getDate()).padStart(2, '0')} ${examDay.name}`.trim();
+      $('xdDate').textContent = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日　星期${weekdayLabels[now.getDay()]}`;
+      $('xdAmpm').textContent = hours < 12 ? '上午' : '下午';
+      $('xdClock').textContent = [hours % 12 || 12, now.getMinutes(), now.getSeconds()].map(n => String(n).padStart(2, '0')).join(':');
+      const nowSeconds = hours * 3600 + now.getMinutes() * 60 + now.getSeconds();
+      const ordered = examDay.rows.map(row => ({ row, state: xdRowState(row, nowSeconds) }))
+        .sort((a, b) => (a.state.cls === 'bad') - (b.state.cls === 'bad') || a.row.start.localeCompare(b.row.start));
+      $('examDayBoard').classList.toggle('many', ordered.length > 4);
+      const schedule = ordered.length
+        ? `<div class="xd-cards" style="--xd-cols:${Math.min(ordered.length, 4)}">${ordered.map(({ row, state: rowState }) => `
+            <div class="xd-card ${rowState.cls}">
+              <div class="xd-card-top"><span class="xd-period">${row.period === XD_CUSTOM ? `${escapeHtml(row.start)} ～ ${escapeHtml(row.end)}` : escapeHtml(row.period)}</span><span class="xd-pill">${rowState.pill}</span></div>
+              <div class="xd-subject">${escapeHtml(row.subject || '未填科目')}</div>
+              <div class="xd-bar"><i style="width:${rowState.pct}%"></i></div>
+              <div class="xd-note"><span>${rowState.note}</span><span>${rowState.pct}%</span></div>
+            </div>`).join('')}</div>`
+        : '<div class="xd-empty">還沒有排考試科目，請在下方新增。</div>';
+      if (schedule !== xdLastSchedule) { $('xdSchedule').innerHTML = schedule; xdLastSchedule = schedule; }
+      const seats = activeSeats();
+      const absentSet = absentSeatSet();
+      const absent = seats.filter(seat => absentSet.has(seat));
+      const attendance = `
+        <div class="xd-stat"><span>應到人數</span><b>${seats.length}<small>人</small></b></div>
+        <div class="xd-stat"><span>實到人數</span><b>${seats.length - absent.length}<small>人</small></b></div>
+        <div class="xd-stat${absent.length ? ' has-absent' : ''}"><span>缺考人數</span><b>${absent.length}<small>人</small></b></div>`;
+      if (attendance !== xdLastAttendance) { $('xdAttendance').innerHTML = attendance; xdLastAttendance = attendance; }
+    }
+    // 考試日總覽是來源：單節時鐘的節次、科目跟著「現在這一科」走；還沒換科前老師手動改的不會被蓋掉
+    let xdSyncedKey = null;
+    function setExamOption(id, value) {
+      const select = $(id);
+      [...select.options].filter(option => option.dataset.synced && option.value !== value).forEach(option => option.remove());
+      if (![...select.options].some(option => option.value === value)) {
+        const option = new Option(value, value);
+        option.dataset.synced = '1';
+        select.add(option);
+      }
+      select.value = value;
+    }
+    function syncSingleFromDay() {
+      const now = new Date();
+      const nowSeconds = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+      const valid = examDay.rows.filter(row => xdRowState(row, nowSeconds).cls !== 'bad').sort((a, b) => a.start.localeCompare(b.start));
+      const current = valid.find(row => xdMinutes(row.end) * 60 > nowSeconds) || valid[valid.length - 1];
+      if (!current) return;
+      const period = current.period === XD_CUSTOM ? `${current.start}～${current.end}` : current.period;
+      const key = `${period}|${current.subject}`;
+      if (key === xdSyncedKey) return;
+      xdSyncedKey = key;
+      setExamOption('examPeriod', period);
+      if (current.subject) setExamOption('examSubject', current.subject);
+    }
+    function renderExamDayEditor() {
+      const periodOptions = selected => [...XD_PERIODS.map(([name]) => name), XD_CUSTOM].map(name => `<option value="${name}"${name === selected ? ' selected' : ''}>${name}</option>`).join('');
+      $('xdRows').innerHTML = examDay.rows.map((row, index) => `<div class="xd-editor-row" data-xd-row="${index}">
+          <select class="inline-select" data-xd-field="period" aria-label="第 ${index + 1} 科節次">${periodOptions(row.period)}</select>
+          <input class="inline-select" data-xd-field="subject" list="xdSubjects" maxlength="12" value="${escapeHtml(row.subject)}" placeholder="科目" aria-label="第 ${index + 1} 科科目">
+          <input class="inline-select" data-xd-field="start" type="time" value="${escapeHtml(row.start)}" aria-label="第 ${index + 1} 科開始時間">
+          <span>～</span>
+          <input class="inline-select" data-xd-field="end" type="time" value="${escapeHtml(row.end)}" aria-label="第 ${index + 1} 科結束時間">
+          <button class="ghost-button" type="button" data-xd-remove style="padding:6px 12px" title="刪除這一科">✕</button>
+        </div>`).join('');
+      $('xdAddRow').disabled = examDay.rows.length >= XD_MAX_ROWS;
+    }
+    function setExamLayout(layout) {
+      examDay.layout = layout;
+      saveConfig();
+      $('examSingleBoard').hidden = layout === 'day';
+      $('examDayWrap').hidden = layout !== 'day';
+      document.querySelectorAll('[data-exam-layout]').forEach(button => button.classList.toggle('on', button.dataset.examLayout === layout));
+      renderExamDay();
+    }
+    $('xdSubjects').innerHTML = subjects.map(name => `<option value="${escapeHtml(name)}">`).join('');
+    $('xdName').value = examDay.name;
+    $('xdName').addEventListener('input', () => { examDay.name = $('xdName').value.slice(0, 20); saveConfig(); renderExamDay(); });
+    $('xdRows').addEventListener('input', event => {
+      const field = event.target.dataset.xdField;
+      const holder = event.target.closest('[data-xd-row]');
+      if (!field || !holder) return;
+      const row = examDay.rows[Number(holder.dataset.xdRow)];
+      row[field] = event.target.value;
+      const preset = field === 'period' && XD_PERIODS.find(([name]) => name === row.period);
+      if (preset) { [, row.start, row.end] = preset; renderExamDayEditor(); }
+      saveConfig();
+      renderExamDay();
+    });
+    $('xdRows').addEventListener('click', event => {
+      const holder = event.target.closest('[data-xd-remove]') && event.target.closest('[data-xd-row]');
+      if (!holder) return;
+      examDay.rows.splice(Number(holder.dataset.xdRow), 1);
+      saveConfig();
+      renderExamDayEditor();
+      renderExamDay();
+    });
+    $('xdAddRow').addEventListener('click', () => {
+      if (examDay.rows.length >= XD_MAX_ROWS) return;
+      const last = examDay.rows[examDay.rows.length - 1];
+      const nextPeriod = last ? XD_PERIODS.findIndex(([name]) => name === last.period) + 1 : 0;
+      if ((!last || nextPeriod > 0) && nextPeriod < XD_PERIODS.length) examDay.rows.push(xdPeriodRow(nextPeriod, ''));
+      else {
+        const start = last && xdTimeOk(last.end) ? Math.min(xdMinutes(last.end) + 10, 23 * 60) : 8 * 60 + 40;
+        examDay.rows.push({ period: XD_CUSTOM, subject: '', start: xdHhmm(start), end: xdHhmm(start + 40) });
+      }
+      saveConfig();
+      renderExamDayEditor();
+      renderExamDay();
+    });
+    document.querySelectorAll('[data-exam-layout]').forEach(button => button.addEventListener('click', () => setExamLayout(button.dataset.examLayout)));
+
     const tickExam = () => {
       const now = new Date();
       $('examClock').textContent = now.toLocaleTimeString('zh-TW', { hour12: false });
@@ -4957,7 +5205,11 @@
       secBar.style.transition = now.getSeconds() === 0 ? 'none' : '';
       secBar.style.width = `${Math.round(now.getSeconds() / 59 * 100)}%`;
       $('examDate').textContent = `${now.getMonth() + 1}月 ${now.getDate()}日　星期${weekdayLabels[now.getDay()]}`;
+      syncSingleFromDay();
+      renderExamDay();
     };
+    renderExamDayEditor();
+    setExamLayout(examDay.layout);
     tickExam();
     window.setInterval(tickExam, 1000);
     const syncExam = () => {
@@ -4981,8 +5233,10 @@
     $('examFullscreenButton').addEventListener('click', () => {
       fsToggle(examBoard);
     });
+    $('examDayFullscreenButton').addEventListener('click', () => fsToggle($('examDayBoard')));
     document.addEventListener('fullscreenchange', () => {
       $('examFullscreenButton').textContent = fsCurrent() ? '⛶ 離開全螢幕' : '⛶ 全螢幕播放';
+      $('examDayFullscreenButton').textContent = fsCurrent() ? '⛶ 離開全螢幕' : '⛶ 全螢幕播放';
     });
   })();
 
@@ -5011,6 +5265,56 @@
   const rollcallHint = $('rollcallHint');
   if (rollcallHint) rollcallHint.parentNode.appendChild(makeScaleButtons('號', 'seat'));
   applyScale();
+
+  // 聯絡本排版：直書／橫書、字距、行距（只存在這台電腦）
+  const CHALK_TRACKING_STEP = 2, CHALK_TRACKING_MAX = 16;
+  const CHALK_LEADING_STEP = 0.2, CHALK_LEADING_MIN = -0.4, CHALK_LEADING_MAX = 1.6;
+  scale.chalkVertical = scale.chalkVertical === true;
+  scale.chalkTracking = Math.min(CHALK_TRACKING_MAX, Math.max(0, Number(scale.chalkTracking) || 0));
+  scale.chalkLeading = Math.min(CHALK_LEADING_MAX, Math.max(CHALK_LEADING_MIN, Number(scale.chalkLeading) || 0));
+  const chalkLayout = document.createElement('div');
+  chalkLayout.className = 'chalk-layout';
+  chalkLayout.id = 'chalkLayout';
+  chalkLayout.hidden = true;
+  chalkLayout.innerHTML = `<span class="scale-btns"><button type="button" data-chalk-dir="h">橫書</button><button type="button" data-chalk-dir="v">直書</button></span>
+    <span>字距<span class="scale-btns"><button type="button" data-chalk-step="chalkTracking:-1" title="字距變小">−</button><span class="chalk-layout-value" id="chalkTrackingValue"></span><button type="button" data-chalk-step="chalkTracking:1" title="字距變大">＋</button></span></span>
+    <span>行距<span class="scale-btns"><button type="button" data-chalk-step="chalkLeading:-1" title="行距變小">−</button><span class="chalk-layout-value" id="chalkLeadingValue"></span><button type="button" data-chalk-step="chalkLeading:1" title="行距變大">＋</button></span></span>
+    <span class="scale-btns"><button type="button" id="chalkLayoutReset">恢復預設</button></span>`;
+  function applyChalkLayout() {
+    const root = document.documentElement.style;
+    root.setProperty('--chalk-tracking', scale.chalkTracking + 'px');
+    root.setProperty('--chalk-leading', scale.chalkLeading);
+    document.querySelector('.chalkboard-inner').classList.toggle('chalk-vertical', scale.chalkVertical);
+    chalkLayout.querySelectorAll('[data-chalk-dir]').forEach(button => button.classList.toggle('on', (button.dataset.chalkDir === 'v') === scale.chalkVertical));
+    const signed = n => (n > 0 ? '+' : '') + n;
+    $('chalkTrackingValue').textContent = signed(scale.chalkTracking / CHALK_TRACKING_STEP);
+    $('chalkLeadingValue').textContent = signed(Math.round(scale.chalkLeading / CHALK_LEADING_STEP));
+    try { localStorage.setItem(SCALE_KEY, JSON.stringify(scale)); } catch (e) {}
+    renderContactBook();
+  }
+  chalkLayout.addEventListener('click', event => {
+    const dir = event.target.closest('[data-chalk-dir]');
+    const step = event.target.closest('[data-chalk-step]');
+    if (dir) scale.chalkVertical = dir.dataset.chalkDir === 'v';
+    else if (step) {
+      const [key, sign] = step.dataset.chalkStep.split(':');
+      if (key === 'chalkTracking') scale.chalkTracking = Math.min(CHALK_TRACKING_MAX, Math.max(0, scale.chalkTracking + Number(sign) * CHALK_TRACKING_STEP));
+      else scale.chalkLeading = Math.min(CHALK_LEADING_MAX, Math.max(CHALK_LEADING_MIN, Math.round((scale.chalkLeading + Number(sign) * CHALK_LEADING_STEP) * 10) / 10));
+    } else if (event.target.id === 'chalkLayoutReset') {
+      scale.chalkVertical = false; scale.chalkTracking = 0; scale.chalkLeading = 0;
+    } else return;
+    applyChalkLayout();
+  });
+  const chalkToolbar = document.querySelector('.chalk-toolbar');
+  if (chalkToolbar && contactRefresh) {
+    chalkToolbar.insertAdjacentElement('afterend', chalkLayout);
+    const layoutToggle = document.createElement('span');
+    layoutToggle.className = 'scale-btns';
+    layoutToggle.innerHTML = '<button type="button" id="chalkLayoutButton" title="直書或橫書、字距、行距">直橫・間距</button>';
+    layoutToggle.firstChild.addEventListener('click', () => { chalkLayout.hidden = !chalkLayout.hidden; });
+    contactRefresh.parentNode.insertBefore(layoutToggle, contactRefresh);
+    applyChalkLayout();
+  }
 
   // ================================================================
   // 🍅 專注番茄鐘（移植自使用者的「讀書進度檢核」，純本機）
@@ -5509,22 +5813,6 @@
   updateLotStatus();
   renderCheckWall();
   renderScoreWall();
-  // G10 多班模式：只有設定兩班以上才把上次分組畫回來（單班維持舊行為）
-  if (typeof isMultiClass === 'function' && isMultiClass()) renderSavedGroups();
-  document.addEventListener('morning:beforeclasschange', event => { if (lotteryBusy) event.preventDefault(); });
-  document.addEventListener('morning:classchange', () => {
-    loadClassSlice();
-    $('lotResult').textContent = '？';
-    $('lotResult').classList.remove('reveal');
-    $('lotWheelHub').textContent = '🎯';
-    lotStage.classList.remove('revealed', 'spinning');
-    gacha.prize = null; gacha.key = '';
-    wheelFx.win = -1; wheelFx.pool = null;
-    updateLotStatus();
-    renderCheckWall();
-    renderScoreWall();
-    renderSavedGroups();
-  });
 })();
 </script>
   <script src="assets/version.js"></script>

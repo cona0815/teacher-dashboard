@@ -434,6 +434,18 @@
       .page.active { display:block !important; }
       .workbench { display:block; }
     }
+    .mask-picks label { white-space: nowrap; }
+    .month-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 6px; }
+    .month-chips-label { font-size: 12px; font-weight: 800; color: var(--muted); }
+    .month-chip { border: 1.5px solid var(--line); border-radius: 999px; background: #fffefb; color: var(--primary-strong); font-size: 12px; font-weight: 800; padding: 2px 9px; cursor: pointer; }
+    .month-chip:hover { border-color: var(--primary); }
+    .mask-doc-out { border: 1.5px solid var(--line); border-radius: 12px; padding: 12px 14px; background: #fffdf8; margin-bottom: 10px; }
+    .mask-sample { font-size: 13px; padding: 3px 8px; border-bottom: 1px dashed #e4dccb; white-space: pre-wrap; word-break: break-all; }
+    .lb-mark { background: #fff1b8; padding: 0 2px; border-radius: 3px; }
+    .lb-mark sup { color: #b4541c; font-weight: 900; font-size: 11px; margin-left: 1px; }
+    .lb-review { background: #f3f8f5; border-radius: 8px; padding: 8px 12px; font-size: 13.5px; margin-top: 6px; line-height: 1.7; }
+    .lb-review ol { margin: 4px 0 2px; padding-left: 0; list-style: none; }
+    .lb-num { color: #b4541c; font-weight: 900; margin-right: 4px; }
   </style>
 </head>
 <body>
@@ -488,8 +500,8 @@
             <select class="select" id="wsGrade"><option value="一">一年級</option><option value="二">二年級</option><option value="三">三年級</option><option value="四">四年級</option><option value="五" selected>五年級</option><option value="六">六年級</option></select></div>
           <div class="field"><label>單元／主題（或貼上課文重點）</label>
             <textarea class="textarea" id="wsTopic" placeholder="例：康軒五上 第三單元 台灣的地形&#10;重點：五大地形、山脈走向、平原分布…"></textarea></div>
-          <div class="field"><label>也可以拍課本頁面（選用，AI 會讀圖出題）</label>
-            <input class="input" type="file" id="wsImage" accept="image/*"></div>
+          <div class="field"><label>也可以放課本頁面（選用：拍照、圖片、PDF、Word、PPT 都可以，AI 會讀內容出題）</label>
+            <input class="input" type="file" id="wsImage" accept="image/*,.pdf,application/pdf,.docx,.pptx,.xlsx,.txt,.csv,.doc,.ppt,.xls"></div>
           <div class="field"><label>題型（可複選）</label>
             <div class="check-row">
               <label><input type="checkbox" class="wsType" value="選擇題" checked>選擇</label>
@@ -532,8 +544,8 @@
             <input class="input" id="ntSubject" placeholder="例：校外教學活動通知"></div>
           <div class="field"><label>內容要點（口語描述即可，AI 會寫成正式通知）</label>
             <textarea class="textarea" id="ntBody" placeholder="例：下週三 9/10 校外教學去科工館，費用 250 元，早上 8 點校門口集合，下午 4 點回來，要穿運動服帶水壺，9/5 前交回條和費用"></textarea></div>
-          <div class="field"><label>或拍上級來文／公文（AI 讀圖轉寫成家長版）</label>
-            <input class="input" type="file" id="ntImage" accept="image/*"></div>
+          <div class="field"><label>或放上級來文／公文（拍照、PDF、Word 都可以，AI 轉寫成家長版）</label>
+            <input class="input" type="file" id="ntImage" accept="image/*,.pdf,application/pdf,.docx,.pptx,.xlsx,.txt,.csv,.doc,.ppt,.xls"></div>
           <div class="field"><div class="check-row">
             <label><input type="checkbox" id="ntSlip" checked>✂ 附裁切回條（家長簽名）</label>
             <label><input type="checkbox" id="ntArt" checked>🎨 附 AI 插圖橫幅</label>
@@ -576,8 +588,8 @@
         <div class="panel">
           <div class="field"><label>主題（或貼課文段落）</label>
             <textarea class="textarea" id="mmTopic" placeholder="例：水的三態變化&#10;或直接貼一段課文，AI 會整理成心智圖"></textarea></div>
-          <div class="field"><label>也可以拍課本頁面（選用）</label>
-            <input class="input" type="file" id="mmImage" accept="image/*"></div>
+          <div class="field"><label>也可以放課本頁面（選用：拍照、圖片、PDF、Word、PPT 都可以）</label>
+            <input class="input" type="file" id="mmImage" accept="image/*,.pdf,application/pdf,.docx,.pptx,.xlsx,.txt,.csv,.doc,.ppt,.xls"></div>
           <div class="field"><label>層數</label>
             <select class="select" id="mmDepth"><option value="2">2 層（主幹＋分支）</option><option value="3" selected>3 層（含細節）</option></select></div>
           <button class="go-button" type="button" id="mmGoButton">✨ 生成心智圖</button>
@@ -627,7 +639,7 @@
               <button class="mini" type="button" id="mqWordButton">✨ AI 出應用題</button>
               <button class="mini" type="button" id="mqWordClear">清除應用題</button></div></div>
             <div class="field" style="margin-top:14px"><label>📷 照課本出類似題（選用：上傳或拍照課本、習作的題目，AI 出數字不同的類似題，系統自動驗算）</label>
-              <input class="input" type="file" id="mqImages" accept="image/png,image/jpeg,image/webp,application/pdf" multiple>
+              <input class="input" type="file" id="mqImages" accept="image/*,.pdf,application/pdf,.docx,.pptx,.xlsx,.txt,.csv,.doc,.ppt,.xls" multiple>
               <input class="input" id="mqSimNote" maxlength="80" placeholder="選填：例如「只出第 2～5 題」「數字小一點」" style="margin-top:6px">
               <div class="check-row" style="margin-top:6px;align-items:center"><label>每題出 <select class="select" id="mqSimEach" style="width:auto;margin:0"><option>1</option><option selected>2</option><option>3</option></select> 題類似題</label>
                 <button class="mini" type="button" id="mqSimButton">📷 照課本出類似題</button>
@@ -690,8 +702,8 @@
             <select class="select" id="rvGrade"><option value="一">一年級</option><option value="二">二年級</option><option value="三">三年級</option><option value="四">四年級</option><option value="五" selected>五年級</option><option value="六">六年級</option></select></div>
           <div class="field"><label>單元範圍（或貼上課本重點）</label>
             <textarea class="textarea" id="rvScope" placeholder="例：康軒五上數學 第 3～4 單元：因數與倍數、分數的加減"></textarea></div>
-          <div class="field"><label>拍課本／習作頁面（可多頁，AI 以圖中內容為準）</label>
-            <input class="input" type="file" id="rvImages" accept="image/*,.pdf,application/pdf" multiple></div>
+          <div class="field"><label>課本／習作頁面（可多頁：拍照、PDF、Word、PPT 都可以，AI 以內容為準）</label>
+            <input class="input" type="file" id="rvImages" accept="image/*,.pdf,application/pdf,.docx,.pptx,.xlsx,.txt,.csv,.doc,.ppt,.xls" multiple></div>
           <div class="field"><label>要包含的部分</label>
             <div class="check-row">
               <label><input type="checkbox" id="rvMindmap" checked>單元心智圖</label>
@@ -745,7 +757,7 @@
             <div id="rdNewsList" style="margin-top:6px"></div></div>
           <div class="field" id="rdChosenBox" hidden><label>② 已選的新聞</label><div id="rdChosen" class="hint" style="margin:0"></div></div>
           <div class="field"><label>或拍照上傳文章（課文、講義、雜誌…）</label>
-            <input class="input" type="file" id="rdImages" accept="image/*,.pdf,application/pdf" multiple>
+            <input class="input" type="file" id="rdImages" accept="image/*,.pdf,application/pdf,.docx,.pptx,.xlsx,.txt,.csv,.doc,.ppt,.xls" multiple>
             <div class="hint" style="margin-top:4px">有上傳照片就用照片的內容；新聞和別人的文章都有著作權，AI 一律只取事實重點、用自己的話重新寫，並自動標出處。</div></div>
           <div class="field"><label>要產出的版本</label>
             <div class="check-row">
@@ -792,7 +804,7 @@
             </div></div>
           <div class="field"><label>內容來源（貼大綱、課文、講稿；留空則授權 AI 提架構）</label>
             <textarea class="textarea" id="dkSource" style="min-height:110px" placeholder="可以貼課本段落、你的講稿、或條列想講的重點。也可以拍課本頁面。"></textarea>
-            <input type="file" id="dkImage" accept="image/*"></div>
+            <input type="file" id="dkImage" accept="image/*,.pdf,application/pdf,.docx,.pptx,.xlsx,.txt,.csv,.doc,.ppt,.xls"></div>
           <div class="field"><label>頁數（精確）與版面比例</label>
             <div class="check-row">
               <input class="input" type="number" id="dkCount" value="6" min="3" max="16" style="width:90px">頁
@@ -960,6 +972,8 @@
             <select class="select" id="gdGrade"><option value="一">一年級</option><option value="二">二年級</option><option value="三">三年級</option><option value="四">四年級</option><option value="五" selected>五年級</option><option value="六">六年級</option></select></div>
           <div class="field"><label>作文主題</label>
             <input class="input" id="gdTopic" placeholder="例：中秋節／難忘的運動會／我的家人／如果我有一雙翅膀"></div>
+          <div class="field"><label>內容簡述（選填：這篇要寫的經驗或重點，AI 會照這個設計）</label>
+            <textarea class="textarea" id="gdBrief" rows="3" maxlength="400" placeholder="例：上週全班到台南孔廟戶外教學，看了大成殿、摸了古老的石碑，中午在大樹下吃便當，最難忘的是解說員講的「泮池」故事"></textarea></div>
           <div class="field"><label>版型</label>
             <select class="select" id="gdFormat">
               <option value="guide" selected>🧭 引導單（審題→心智圖→段落鷹架→佳句→四格漫畫）</option>
@@ -1002,8 +1016,8 @@
             <input class="input" id="esTopic" placeholder="例：我的家人／難忘的校外教學"></div>
           <div class="field"><label>座號（選填，只存在這台電腦；做全班統計用，不要填姓名）</label>
             <input class="input" id="esSeat" inputmode="numeric" placeholder="例：12"></div>
-          <div class="field"><label>作文檔案（圖片或 PDF，<strong>不限張數</strong>，跨頁全部丟進來；也可以拍照或貼上截圖）</label>
-            <input class="input" type="file" id="esImages" accept="image/*,.pdf,application/pdf" multiple>
+          <div class="field"><label>作文檔案（圖片、PDF 或 Word，<strong>不限張數</strong>，跨頁全部丟進來；也可以拍照或貼上截圖）</label>
+            <input class="input" type="file" id="esImages" accept="image/*,.pdf,application/pdf,.docx,.pptx,.xlsx,.txt,.csv,.doc,.ppt,.xls" multiple>
 </div>
           <div class="field"><label>或直接貼上作文文字</label>
             <textarea class="textarea" id="esText" placeholder="拍照或貼文字擇一即可"></textarea></div>
@@ -1091,7 +1105,7 @@
             <select class="select" id="lbGenre"><option>記敘文</option><option>寫人</option><option>寫景</option><option>抒情文</option><option>說明文</option><option>想像文</option><option>看圖寫話</option></select></div>
           <button class="go-button" type="button" id="lbGoButton">🤖 生成三篇對照範文</button>
           <div class="status" id="lbStatus"></div>
-          <div class="hint">AI 依「作文批改」同一份年段規準，寫出高、中、待加強三種程度的原創範文，每篇附「為什麼是這個程度」。適合上課比較：哪一篇好在哪裡、另一篇差在哪裡。</div>
+          <div class="hint">AI 依「作文批改」同一份年段規準，寫出高、中、待加強三種程度的原創範文，每篇附「評語」：評語的每一點都在文章裡用 ①②③ 標出對應的句子。適合上課比較：哪一篇好在哪裡、另一篇差在哪裡。</div>
 
           <div class="es-records">
             <h4>➕ 加入我自己的範文</h4>
@@ -1231,8 +1245,21 @@
     <section class="page" id="page-mask">
       <div class="workbench">
         <div class="panel">
-          <div class="field"><label>🖼 圖片遮蔽<span class="mask-badge">100% 本機處理，不會上傳</span></label>
-            <input class="input" type="file" id="maskImageInput" accept="image/*"></div>
+          <div class="field"><label>📄 檔案遮蔽<span class="mask-badge">100% 本機處理，不會上傳</span></label>
+            <input class="input" type="file" id="maskImageInput" accept=".docx,.xlsx,.pptx,.txt,.csv,image/*,.doc,.xls,.ppt,.pdf">
+            <div class="hint" style="margin:4px 0 0">Word（.docx）、Excel（.xlsx）、PowerPoint（.pptx）、文字檔（.txt、.csv）：照下面勾的項目<strong>自動遮好、下載同一種檔案</strong>；表格標題寫「密碼」「生日」「電話」「姓名」…的那一欄會整欄遮。圖片：在右邊框選要遮的地方。</div></div>
+          <div class="field"><label>要遮蔽的項目（檔案和貼上的文字都照這個）</label>
+            <div class="check-row mask-picks">
+              <label><input type="checkbox" id="maskPick_id" checked>身分證字號</label>
+              <label><input type="checkbox" id="maskPick_mobile" checked>手機</label>
+              <label><input type="checkbox" id="maskPick_phone" checked>市話</label>
+              <label><input type="checkbox" id="maskPick_email" checked>Email</label>
+              <label><input type="checkbox" id="maskPick_birthday" checked>生日</label>
+              <label><input type="checkbox" id="maskPick_address" checked>地址門牌</label>
+              <label><input type="checkbox" id="maskPick_account" checked>帳號密碼</label>
+              <label><input type="checkbox" id="maskPick_name" checked>姓名（座位表名單＋下面填的）</label>
+            </div>
+            <textarea class="textarea" id="maskWords" rows="2" style="min-height:52px;margin-top:6px" placeholder="其他要遮的姓名或字詞（一行一個，也可以用頓號分開）；姓名會留第一和最後一個字，例：王Ｏ明"></textarea></div>
           <div class="field"><label>遮蔽方式</label>
             <div class="check-row">
               <label><input type="radio" name="maskMode" value="mosaic" checked>▦ 馬賽克</label>
@@ -1242,15 +1269,20 @@
             <button class="mini" type="button" id="maskUndoButton">↩ 復原</button>
             <button class="mini" type="button" id="maskDownloadButton">⬇ 下載遮蔽後圖片</button>
           </div>
-          <div class="hint">在右邊的圖片上<strong>按住拖曳框選</strong>要遮的區域（姓名、電話、身分證…），放開就打上遮蔽。可框很多處，做完再下載。</div>
+          <div class="hint">圖片：在右邊的圖片上<strong>按住拖曳框選</strong>要遮的區域（姓名、電話、身分證…），放開就打上遮蔽。可框很多處，做完再下載。</div>
           <hr style="border:none;border-top:1.5px solid var(--line);margin:16px 0">
           <div class="field"><label>📃 文字自動遮蔽（貼上文字，常見個資自動打碼）</label>
-            <textarea class="textarea" id="maskTextInput" placeholder="貼上要分享的文字，身分證、手機、市話、Email、出生年月日會自動變成＊號"></textarea></div>
+            <textarea class="textarea" id="maskTextInput" placeholder="貼上要分享的文字，上面勾的項目會自動變成＊號"></textarea></div>
           <button class="go-button" type="button" id="maskTextButton">🛡 一鍵遮蔽文字</button>
-          <div class="warn">姓名無法自動判斷，請自行檢查；遮蔽後仍建議<strong>逐字確認</strong>再分享。整個分頁不呼叫任何雲端服務。</div>
+          <div class="warn">姓名只會遮「座位表名單」和上面填的字詞，其他人名請自己加；遮蔽後仍建議<strong>打開檔案逐一確認</strong>再分享。整個分頁不呼叫任何雲端服務。</div>
         </div>
         <div class="panel">
-          <div class="preview-bar"><span class="status" id="maskStatus">選擇圖片或貼上文字後開始。</span></div>
+          <div class="preview-bar"><span class="status" id="maskStatus">選擇檔案（Word、Excel、PowerPoint、圖片）或貼上文字後開始。</span></div>
+          <div class="mask-doc-out" id="maskDocOut" hidden>
+            <div id="maskDocSummary" style="font-weight:800"></div>
+            <button class="go-button" type="button" id="maskDocDownload" hidden style="margin:10px 0">⬇ 下載遮蔽後的檔案</button>
+            <div id="maskDocSamples"></div>
+          </div>
           <div class="mask-canvas-wrap"><canvas id="maskCanvas" hidden></canvas></div>
           <div class="mask-out" id="maskTextOut" hidden></div>
           <div class="check-row" style="margin-top:8px"><button class="mini" type="button" id="maskCopyButton" hidden>📋 複製遮蔽後文字</button></div>
@@ -1346,7 +1378,7 @@
             <input class="input" id="rpUnit" placeholder="例：教務處設備組"></div>
           <div class="field"><label>活動計畫（貼文字，或上傳計畫檔照片／PDF）</label>
             <textarea class="textarea" id="rpPlan" placeholder="貼上計畫的依據、目的、流程都可以"></textarea>
-            <input class="input" type="file" id="rpPlanFiles" accept="image/*,.pdf,application/pdf" multiple style="margin-top:6px"></div>
+            <input class="input" type="file" id="rpPlanFiles" accept="image/*,.pdf,application/pdf,.docx,.pptx,.xlsx,.txt,.csv,.doc,.ppt,.xls" multiple style="margin-top:6px"></div>
           <div class="field"><label>執行狀況（幾句話就好）</label>
             <textarea class="textarea" id="rpExec" placeholder="例：分三個關卡進行，學生反應熱烈；下雨改到禮堂，動線有點擠。"></textarea></div>
           <div class="field"><label>活動照片（可多張，4 張剛好排滿 2×2；請避開學生正臉與名牌）</label>
@@ -1477,8 +1509,8 @@
               <input class="input" id="lpPeriods" type="number" min="1" max="8" value="2"></div>
             <div class="field"><label>教學重點或想法（選填）</label>
               <textarea class="textarea" id="lpIdea" placeholder="例：想用分組操作分數條，最後讓學生上台解題。"></textarea></div>
-            <div class="field"><label>課本頁面照片（選填，可多張）</label>
-              <input class="input" type="file" id="lpImages" accept="image/*,.pdf,application/pdf" multiple></div>
+            <div class="field"><label>課本頁面（選填，可多個：照片、PDF、Word、PPT）</label>
+              <input class="input" type="file" id="lpImages" accept="image/*,.pdf,application/pdf,.docx,.pptx,.xlsx,.txt,.csv,.doc,.ppt,.xls" multiple></div>
             <div class="field"><label>學校教案格式（選填：貼上學校教案的欄位名稱，一行一個，AI 照這些欄位填）</label>
               <textarea class="textarea" id="lpFormat" placeholder="例：&#10;單元名稱&#10;教材來源&#10;學生學習經驗分析&#10;教學目標&#10;教學資源"></textarea></div>
           </div>
@@ -1522,8 +1554,8 @@
             <div class="sc-weeks" id="scWeekList"></div></div>
           <div class="field"><label>課本目錄：單元清單（一行一個；要指定節數就寫「單元名｜節數」）</label>
             <textarea class="textarea" id="scToc" style="min-height:140px" placeholder="例：&#10;一、分數的加減｜10&#10;二、小數的乘法&#10;三、長方體與正方體"></textarea></div>
-          <div class="field"><label>或拍目錄照片，讓 AI 抓單元（選用）</label>
-            <input class="input" type="file" id="scTocImage" accept="image/*">
+          <div class="field"><label>或放目錄照片／PDF，讓 AI 抓單元（選用）</label>
+            <input class="input" type="file" id="scTocImage" accept="image/*,.pdf,application/pdf,.docx,.pptx,.xlsx,.txt,.csv,.doc,.ppt,.xls">
             <button class="mini" type="button" id="scTocAiButton" style="margin-top:6px">📷 AI 從目錄照片抓單元</button></div>
           <button class="go-button" type="button" id="scGoButton">📅 產生進度表</button>
           <div class="status" id="scStatus"></div>
@@ -1590,11 +1622,13 @@
   <script src="assets/studio/math-gen.js"></script>
   <script src="assets/vendor/html2pdf.bundle.min.js"></script>
 
+  <script src="assets/school-events.js"></script>
   <script>
     'use strict';
     const $ = id => document.getElementById(id);
     const escapeHtml = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     function showToast(message, isError) {
+      if (isError && /HTTP 429/.test(String(message || ''))) message = 'AI 今天的免費額度用完了（或短時間內用太多次）。等一下再試，或到工作台「⚙ 設定 → ② AI 設定」把模型改成「自動」。';
       const toast = $('toast');
       // AI 回的格式不對時，程式內部的英文錯誤（Cannot read properties…）老師看不懂：換成白話
       if (isError && /Cannot read propert|is not a function|is not iterable|undefined|Unexpected token|JSON/i.test(String(message || ''))) {
@@ -1620,15 +1654,72 @@
       } catch (e) {}
       return GEMINI_AUTO_MODELS;
     }
-    async function fetchGemini(key, body) {
-      let response;
-      for (const model of geminiModels()) {
-        response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key }, body: JSON.stringify(body)
-        });
-        if (response.status !== 404) break;
-      }
+
+    // ===== Gemini 模型自動跟上 Google（2026-11-10）=====
+    // Google 會陸續停用舊模型，寫死名字遲早會壞。做法：
+    // ① 記住上一次成功的模型，下次先用它；② 也試 Google 的「最新版」別名（永遠指向最新的 Flash-Lite／Flash）；
+    // ③ 全部都被停用（404）或額度用完（429）時，直接問 Google 現在有哪些模型，挑最新的 Flash-Lite／Flash 再試，並記下來。
+    const GEMINI_LATEST_ALIASES = ['gemini-flash-lite-latest', 'gemini-flash-latest'];
+    const GEMINI_LAST_GOOD_KEY = 'grade6GeminiLastGood';
+    function geminiLastGood() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(GEMINI_LAST_GOOD_KEY) || 'null');
+        if (saved && /^[a-z0-9.\-]{3,60}$/.test(String(saved.model || '')) && Date.now() - Number(saved.at || 0) < 30 * 86400000) return saved.model;
+      } catch (error) {}
+      return '';
+    }
+    function rememberGeminiModel(model) {
+      try { localStorage.setItem(GEMINI_LAST_GOOD_KEY, JSON.stringify({ model, at: Date.now() })); } catch (error) {}
+    }
+    // 只挑正式版的 Flash-Lite／Flash（不挑 preview、exp、圖片、語音），Flash-Lite 免費額度多排前面，版本新的排前面
+    function rankGeminiModels(ids) {
+      const score = id => {
+        const m = /^gemini-(\d+(?:\.\d+)?)-flash(-lite)?$/.exec(id);
+        return m ? (m[2] ? 1000 : 0) + Number(m[1]) * 10 : null;
+      };
+      return [...new Set(ids)].map(id => [id, score(id)]).filter(item => item[1] !== null).sort((a, b) => b[1] - a[1]).map(item => item[0]).slice(0, 4);
+    }
+    async function discoverGeminiModels(listEndpoint, key) {
+      try {
+        const response = await fetch(`${listEndpoint}?pageSize=200`, { headers: { 'x-goog-api-key': key } });
+        if (!response.ok) return [];
+        const data = await response.json();
+        return rankGeminiModels((data.models || [])
+          .filter(model => (model.supportedGenerationMethods || []).includes('generateContent'))
+          .map(model => String(model.name || '').replace(/^models\//, '')));
+      } catch (error) { return []; }
+    }
+    // models 只有一個＝老師指定的模型：被停用（404）就改用自動；額度用完（429）尊重老師的選擇，直接回報
+    async function fetchGeminiAuto(listEndpoint, models, key, body, onModel) {
+      const auto = models.length !== 1;
+      const tried = new Set();
+      let response = null;
+      const attempt = async (list, stopOn429) => {
+        for (const model of list) {
+          if (!model || tried.has(model)) continue;
+          tried.add(model);
+          response = await fetch(`${listEndpoint}/${model}:generateContent`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key }, body: JSON.stringify(body)
+          });
+          if (onModel) onModel(model);
+          // 404＝模型被停用、429＝這個模型今天的額度用完：換下一個
+          if (response.status !== 404 && response.status !== 429) {
+            if (response.ok && (auto || model !== models[0])) rememberGeminiModel(model);
+            return true;
+          }
+          if (response.status === 429 && stopOn429) return true;
+        }
+        return false;
+      };
+      const autoList = [geminiLastGood(), ...GEMINI_LATEST_ALIASES, ...GEMINI_AUTO_MODELS];
+      if (await attempt(auto ? autoList : models, !auto)) return response;
+      if (!auto && await attempt(autoList, false)) return response;
+      await attempt(await discoverGeminiModels(listEndpoint, key), false);
       return response;
+    }
+
+    async function fetchGemini(key, body) {
+      return fetchGeminiAuto('https://generativelanguage.googleapis.com/v1beta/models', geminiModels(), key, body);
     }
     function refreshKeyStatus() {
       $('keyStatus').innerHTML = geminiKey()
@@ -1637,17 +1728,146 @@
     }
     refreshKeyStatus();
 
+    // 📅 本月學校活動：主題欄位下面列出這個月學校常有的活動，點一下就帶入（清單來自老師提供的行事曆）
+    function addMonthEventChips(fieldId, options = {}) {
+      const field = $(fieldId);
+      if (!field || !window.SCHOOL_EVENTS) return;
+      const month = new Date().getMonth() + 1;
+      const list = SCHOOL_EVENTS.list(month, options.forStudents !== false).filter(name => !options.skip || !options.skip.test(name)).slice(0, 14);
+      if (!list.length) return;
+      const row = document.createElement('div');
+      row.className = 'month-chips';
+      row.innerHTML = `<span class="month-chips-label">${month} 月學校活動：</span>` + list.map(name => `<button type="button" class="month-chip" tabindex="-1" data-month-chip="${escapeHtml(name)}">${escapeHtml(name)}</button>`).join('');
+      field.insertAdjacentElement('afterend', row);
+      row.addEventListener('click', event => {
+        const button = event.target.closest('[data-month-chip]');
+        if (!button) return;
+        const text = (options.format || (name => name))(button.dataset.monthChip.replace(/（.*?）/g, ''));
+        field.value = field.tagName === 'TEXTAREA' && field.value.trim() ? `${text}\n${field.value}` : text;
+        field.dispatchEvent(new Event('input', { bubbles: true }));
+        field.focus();
+      });
+    }
+    addMonthEventChips('ntSubject', { forStudents: false, skip: /研習|會議|大會|授證|榮退|校隊訓練|小志工/, format: name => `${name}活動通知` });
+    addMonthEventChips('wsTopic');
+    addMonthEventChips('gdTopic');
+    addMonthEventChips('esTopic');
+    addMonthEventChips('lbTopic');
+
+    // 快速試用：欄位還空著時按 Tab，把淡灰色的「例：…」直接帶進去（單行欄位有「／」的只取第一個）
+    document.addEventListener('keydown', event => {
+      if (event.key !== 'Tab' || event.shiftKey || event.ctrlKey || event.altKey || event.metaKey || event.isComposing) return;
+      const el = event.target;
+      if (!el || !el.matches || !el.matches('input[placeholder], textarea[placeholder]') || el.readOnly || el.disabled || el.value.trim()) return;
+      if (el.tagName === 'INPUT' && !['text', 'search'].includes(el.type)) return;
+      const matched = /^\s*例[：:]\s*([\s\S]+)$/.exec(el.placeholder || '');
+      if (!matched) return;
+      let text = matched[1].trim();
+      if (el.tagName === 'INPUT' && text.includes('／')) text = text.split('／')[0].trim();
+      event.preventDefault();
+      el.value = text;
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    async function unzipEntries(buffer) {
+      const view = new DataView(buffer);
+      let end = -1;
+      for (let i = buffer.byteLength - 22; i >= Math.max(0, buffer.byteLength - 66000); i--) {
+        if (view.getUint32(i, true) === 0x06054b50) { end = i; break; }
+      }
+      if (end < 0) throw new Error('這個檔案打不開（不是 Word／Excel／PowerPoint 新格式）。');
+      const count = view.getUint16(end + 10, true);
+      let p = view.getUint32(end + 16, true);
+      const dec = new TextDecoder();
+      const entries = [];
+      for (let n = 0; n < count; n++) {
+        if (view.getUint32(p, true) !== 0x02014b50) throw new Error('檔案格式不完整。');
+        const method = view.getUint16(p + 10, true);
+        const size = view.getUint32(p + 20, true);
+        const nameLen = view.getUint16(p + 28, true), extraLen = view.getUint16(p + 30, true), commentLen = view.getUint16(p + 32, true);
+        const local = view.getUint32(p + 42, true);
+        const name = dec.decode(new Uint8Array(buffer, p + 46, nameLen));
+        const dataStart = local + 30 + view.getUint16(local + 26, true) + view.getUint16(local + 28, true);
+        const raw = new Uint8Array(buffer, dataStart, size);
+        let data;
+        if (method === 0) data = raw.slice();
+        else if (method === 8) data = new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
+        else throw new Error('這個檔案用了不支援的壓縮方式。');
+        entries.push({ name, data });
+        p += 46 + nameLen + extraLen + commentLen;
+      }
+      return entries;
+    }
+    // ---- 讓 AI 讀文件：PDF 直接交給 Gemini；Word／PowerPoint／Excel／文字檔先在這台電腦取出文字再送 ----
+    const AI_DOC_EXT = /\.(docx|pptx|xlsx|txt|csv|md)$/i;
+    const AI_OLD_EXT = /\.(doc|ppt|xls)$/i;
+    const xmlDoc = bytes => new DOMParser().parseFromString(new TextDecoder().decode(bytes), 'application/xml');
+    const nodeTexts = (el, para) => [...el.getElementsByTagNameNS('*', para)].map(p => [...p.getElementsByTagNameNS('*', 't')].map(t => t.textContent).join('')).filter(t => t.trim());
+    async function officeFileToText(file) {
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (['txt', 'csv', 'md'].includes(ext)) {
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        try { return new TextDecoder('utf-8', { fatal: true }).decode(bytes).replace(/^\uFEFF/, ''); } catch (e) { return new TextDecoder('big5').decode(bytes); }
+      }
+      const entries = await unzipEntries(await file.arrayBuffer());
+      const byName = name => entries.find(e => e.name === name);
+      const num = name => Number((name.match(/(\d+)\.xml$/) || [])[1] || 0);
+      if (ext === 'docx') {
+        const doc = xmlDoc(byName('word/document.xml').data);
+        // 表格一列一行（格子用｜分開），其餘照段落
+        const out = [];
+        const body = doc.getElementsByTagNameNS('*', 'body')[0] || doc.documentElement;
+        [...body.children].forEach(el => {
+          if (el.localName === 'tbl') [...el.getElementsByTagNameNS('*', 'tr')].forEach(tr => out.push([...tr.children].filter(c => c.localName === 'tc').map(tc => nodeTexts(tc, 'p').join(' ')).join('｜')));
+          else if (el.localName === 'p') out.push([...el.getElementsByTagNameNS('*', 't')].map(t => t.textContent).join(''));
+          else out.push(...nodeTexts(el, 'p'));
+        });
+        return out.filter(Boolean).join('\n');
+      }
+      if (ext === 'pptx') {
+        return entries.filter(e => /^ppt\/slides\/slide\d+\.xml$/.test(e.name)).sort((a, b) => num(a.name) - num(b.name))
+          .map((e, i) => `【第 ${i + 1} 張投影片】\n` + nodeTexts(xmlDoc(e.data), 'p').join('\n')).join('\n\n');
+      }
+      if (ext === 'xlsx') {
+        const shared = byName('xl/sharedStrings.xml');
+        const strings = shared ? [...xmlDoc(shared.data).getElementsByTagNameNS('*', 'si')].map(si => si.textContent) : [];
+        return entries.filter(e => /^xl\/worksheets\/sheet\d+\.xml$/.test(e.name)).sort((a, b) => num(a.name) - num(b.name)).map((e, i) => {
+          const rows = [...xmlDoc(e.data).getElementsByTagNameNS('*', 'row')].slice(0, 2000).map(row => [...row.children].filter(c => c.localName === 'c').map(c => {
+            const v = [...c.children].find(x => x.localName === 'v');
+            if (c.getAttribute('t') === 's') return strings[Number(v && v.textContent)] || '';
+            if (c.getAttribute('t') === 'inlineStr') return c.textContent;
+            return v ? v.textContent : '';
+          }).join('｜')).filter(line => line.replace(/｜/g, '').trim());
+          return `【工作表 ${i + 1}】\n` + rows.join('\n');
+        }).join('\n\n');
+      }
+      return '';
+    }
+    /** 文件附件 → 給 AI 的一段文字；不是文件就回 null（交給原本的圖片／PDF 流程）。 */
+    async function docFileToPart(file) {
+      if (AI_OLD_EXT.test(file.name)) throw new Error(`「${file.name}」是舊格式：請先用 Office 打開「另存新檔」成 .docx／.pptx／.xlsx，或存成 PDF。`);
+      if (!AI_DOC_EXT.test(file.name)) return null;
+      let text;
+      try { text = (await officeFileToText(file)).trim(); }
+      catch (e) { throw new Error(`「${file.name}」打不開：${e.message}`); }
+      if (!text) throw new Error(`「${file.name}」裡面沒有文字（可能都是圖片）；請改存成 PDF 再上傳。`);
+      return { text: `【附件「${file.name}」的文字內容】\n${text.slice(0, 60000)}` };
+    }
     async function fileToPart(input) {
       const file = input instanceof File ? input : (input && input.files && input.files[0]);
       if (!file) return null;
-      if (file.size > 8 * 1024 * 1024) throw new Error('圖片超過 8MB，請縮小後再試。');
+      const docPart = await docFileToPart(file);
+      if (docPart) return docPart;
+      const isPdf = /pdf$/i.test(file.type) || /\.pdf$/i.test(file.name);
+      if (file.size > (isPdf ? 15 : 8) * 1024 * 1024) throw new Error(isPdf ? 'PDF 超過 15MB，請只留需要的頁面（可用「📎 PDF 工具」拆頁）。' : '圖片超過 8MB，請縮小後再試。');
       const b64 = await new Promise((resolve, reject) => {
         const r = new FileReader();
         r.onload = () => resolve(String(r.result).split(',')[1]);
         r.onerror = () => reject(new Error('圖片讀取失敗'));
         r.readAsDataURL(file);
       });
-      return { inline_data: { mime_type: file.type || 'image/jpeg', data: b64 } };
+      return { inline_data: { mime_type: isPdf ? 'application/pdf' : (file.type || 'image/jpeg'), data: b64 } };
     }
     /** 資安／個資：送 AI 前找出身分證、手機、Email，以及「座位表」裡填的學生姓名。 */
     function aiPrivacyHits(text) {
@@ -1664,7 +1884,8 @@
       const key = geminiKey();
       if (!key) { showToast('尚未設定 Gemini 金鑰，請先到工作台 AI 設定填入。', true); throw new Error('no-key'); }
       // 資安／個資：學生姓名與聯絡方式不送雲端，發現了先問老師（照片請用「個資遮蔽」工具先處理）
-      const privacyHits = aiPrivacyHits(String(prompt || ''));
+      const attachedText = (Array.isArray(imagePart) ? imagePart : [imagePart]).filter(part => part && part.text).map(part => part.text).join('\n');
+      const privacyHits = aiPrivacyHits(String(prompt || '') + '\n' + attachedText);
       if (privacyHits.length && !window.confirm(`要送給 AI 的文字裡有：${privacyHits.join('、')}。\n建議先刪掉或改成座號。確定還是要送出？`)) {
         statusEl.textContent = '';
         throw new Error('已取消：內容含個資，沒有送出。');
@@ -2624,6 +2845,19 @@
     // ============================================================
     // 📚 閱讀文本分級改寫（Diffit 式差異化）
     // ============================================================
+    /** 詞彙小幫手：AI 有時回字串（「行星：planet」）或用別的欄位名；統一成 {word, meaning}，空的丟掉。 */
+    function rdVocabList(list) {
+      return (Array.isArray(list) ? list : []).map(item => {
+        if (typeof item === 'string') {
+          const [word, ...rest] = item.split(/[：:＝=]/);
+          return { word: word.trim(), meaning: rest.join('：').trim() };
+        }
+        if (!item || typeof item !== 'object') return { word: '', meaning: '' };
+        const word = item.word || item.term || item.vocab || item.詞 || item.詞語 || item.english || '';
+        const meaning = item.meaning || item.definition || item.explanation || item.zh || item.chinese || item.解釋 || item.意思 || '';
+        return { word: String(word).trim(), meaning: String(meaning).trim() };
+      }).filter(w => w.word);
+    }
     $('rdGoButton').dataset.label = $('rdGoButton').textContent;
     $('rdGoButton').addEventListener('click', async () => {
       const files = zoneFiles('rdImages');
@@ -2652,7 +2886,7 @@
         '【著作權規定】內容來自新聞或別人的文章，是別人的著作。請先抓出事實與重點，再用你自己的文字「重新寫」成新文章：不得沿用原文的句子、段落安排或特殊說法，不要逐句改寫。',
         sourceText,
         '規則：事實、人物、結論完全不變；「基礎」＝比班級低 2 個年級可讀（短句、常用詞、必要時加一句背景說明，長度約原文 60–70%）；「標準」＝同年級（潤飾通順、長度相近）；「進階」＝高 1–2 個年級（保留原文深度並加 1–2 段延伸資訊或觀點，長度約 120%）。',,
-        $('rdVocab').checked ? '每版附 vocab：4–6 個該版本讀者可能不熟的詞（word、meaning 白話解釋）。' : '',
+        $('rdVocab').checked ? '每版附 vocab：4–6 個該版本讀者可能不熟的詞，每個都要填 word（文中出現的詞）和 meaning（白話解釋），不可留空。' : '',
         $('rdQuiz').checked ? '每版附 questions：3 題理解題（1 題找資訊、1 題推論、1 題自己的想法；q、options 四選項或省略、answer）。' : '',
         '繁體中文、臺灣用語。只回傳 JSON：',
         '{"title":"文章標題","levels":[{"level":"基礎","readingAge":"約三年級","text":"改寫全文（段落用\\n分隔）","vocab":[{"word":"","meaning":""}],"questions":[{"q":"","options":["","","",""],"answer":""}]}]}'
@@ -2677,7 +2911,7 @@
             <div class="ws2-name"><span>座號 <i></i></span><span>姓名 <i style="min-width:110px"></i></span></div></div></div>
           <div class="rd-text">${String(v.text || '').split(/\n+/).map(par => `<p>${escapeHtml(par)}</p>`).join('')}</div>
           ${creditNote ? `<p style="font-size:11.5px;color:#666;margin:4px 0 0">${escapeHtml(creditNote)}</p>` : ''}
-          ${$('rdVocab').checked && (v.vocab || []).length ? `<div class="sw-section"><div class="sw-section-head"><span class="sw-pill">📒 詞彙小幫手</span></div><div class="ws2-box rd-vocab">${v.vocab.map(w => `<div><b>${escapeHtml(w.word)}</b>：${escapeHtml(w.meaning)}</div>`).join('')}</div></div>` : ''}
+          ${$('rdVocab').checked && rdVocabList(v.vocab).length ? `<div class="sw-section"><div class="sw-section-head"><span class="sw-pill">📒 詞彙小幫手</span></div><div class="ws2-box rd-vocab">${rdVocabList(v.vocab).map(w => `<div><b>${escapeHtml(w.word)}</b>${w.meaning ? `：${escapeHtml(w.meaning)}` : ''}</div>`).join('')}</div></div>` : ''}
           ${$('rdQuiz').checked && (v.questions || []).length ? `<div class="sw-section"><div class="sw-section-head"><span class="sw-pill">❓ 讀懂了嗎</span></div><div class="ws2-box">${v.questions.map((q, k) => `<div class="ws2-q"><span class="ws2-no">${k + 1}</span>${q.options ? '<span class="ws2-ans">（　）</span>' : ''}<span>${escapeHtml(q.q)}</span></div>${q.options ? `<div class="ws2-options">${q.options.map((o, j) => `<span class="ws2-opt">(${'ABCD'[j]}) ${escapeHtml(o)}</span>`).join('')}</div>` : '<div class="ws-lines"></div><div class="ws-lines"></div>'}`).join('')}</div></div>` : ''}
         </div>`);
         const withZh = en && $('rdTranslate').checked && versions.some(v => v.zh);
@@ -2881,31 +3115,46 @@
     const PO_RATIO_SIZE = { '3:4': [794, 1059], '4:3': [1059, 794], '1:1': [900, 900], '16:9': [1120, 630], '9:16': [630, 1120] };
     let poLast = null;   // { copy, imageDataUrl, mode, ratio }
 
-    // 生圖模型：用老師自己的金鑰自動偵測（快取），找不到就依序試常見名稱
-    async function pickImageModel(key) {
-      const cached = localStorage.getItem('studioImageModel');
-      if (cached) return cached;
-      const fallbacks = ['gemini-2.5-flash-image', 'gemini-2.5-flash-image-preview', 'gemini-3-flash-image', 'gemini-2.0-flash-preview-image-generation'];
+    // 生圖模型自動跟上 Google（2026-11-10）：不寫死名字。
+    // ① 先用上次成功的生圖模型；② 沒有或被停用（404）／額度用完（429）→ 問 Google 現有模型，挑最新的 Flash 生圖模型；
+    // ③ 問不到清單才試幾個常見名字。
+    const IMAGE_MODEL_KEY = 'studioImageModel';
+    const IMAGE_FALLBACK_MODELS = ['gemini-2.5-flash-image'];
+    function rankImageModels(ids) {
+      const score = id => {
+        const m = /^gemini-(\d+(?:\.\d+)?)-(flash|pro)-image(-preview)?$/.exec(id);
+        if (!m) return null;
+        return (m[2] === 'flash' ? 1000 : 0) + (m[3] ? 0 : 500) + Number(m[1]) * 10;   // Flash（免費額度）優先、正式版優先、版本新的優先
+      };
+      return [...new Set(ids)].map(id => [id, score(id)]).filter(item => item[1] !== null).sort((a, b) => b[1] - a[1]).map(item => item[0]).slice(0, 4);
+    }
+    async function discoverImageModels(key) {
       try {
         const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200', { headers: { 'x-goog-api-key': key } });
-        if (res.ok) {
-          const data = await res.json();
-          const names = (data.models || []).map(m => String(m.name || '').replace(/^models\//, ''))
-            .filter(n => /image/i.test(n) && !/imagen|embedding|veo/i.test(n));
-          const preferred = names.find(n => /flash-image$/.test(n)) || names.find(n => /flash-image/.test(n)) || names[0];
-          if (preferred) { localStorage.setItem('studioImageModel', preferred); return preferred; }
-        }
-      } catch (e) {}
-      return fallbacks[0];
+        if (!res.ok) return [];
+        const data = await res.json();
+        return rankImageModels((data.models || [])
+          .filter(m => (m.supportedGenerationMethods || []).includes('generateContent'))
+          .map(m => String(m.name || '').replace(/^models\//, '')));
+      } catch (e) { return []; }
     }
     async function generateImage(prompt, referenceFile, aspectRatio, statusEl) {
       const key = geminiKey();
       if (!key) { showToast('尚未設定 Gemini 金鑰。', true); throw new Error('no-key'); }
       const parts = [{ text: prompt }];
       if (referenceFile) parts.push(await fileToPart(referenceFile));
-      const candidates = [await pickImageModel(key), 'gemini-2.5-flash-image', 'gemini-2.5-flash-image-preview'];
+      const cached = String(localStorage.getItem(IMAGE_MODEL_KEY) || '');
+      const tried = new Set();
       let lastError = '';
-      for (const model of [...new Set(candidates)]) {
+      let discovered = false;
+      const queue = /^[a-z0-9.\-]{3,60}$/.test(cached) ? [cached] : [];
+      while (true) {
+        let model = queue.shift();
+        if (!model && !discovered) { discovered = true; queue.push(...await discoverImageModels(key), ...IMAGE_FALLBACK_MODELS); continue; }
+        if (!model) break;
+        if (tried.has(model)) continue;
+        tried.add(model);
+        let next = false;
         for (const withRatio of [true, false]) {
           statusEl.textContent = `🎨 生圖中（${model}）… 約 10–30 秒`;
           const generationConfig = withRatio
@@ -2917,11 +3166,16 @@
           });
           if (!res.ok) {
             lastError = `HTTP ${res.status}`;
-            if (res.status === 404) break;          // 模型不存在 → 換下一個
             if (res.status === 400 && withRatio) continue;  // 不支援 imageConfig → 不帶比例再試
+            // 404＝模型被停用、429＝這個模型今天額度用完、400＝這個模型不會生圖 → 換下一個模型
+            if (res.status === 404 || res.status === 429 || res.status === 400) {
+              if (model === cached && res.status !== 429) localStorage.removeItem(IMAGE_MODEL_KEY);
+              next = true;
+              break;
+            }
             const body = await res.text().catch(() => '');
             lastError += ' ' + body.slice(0, 160);
-            break;
+            break;   // 金鑰錯誤、伺服器錯誤：換模型也沒用，直接回報
           }
           const data = await res.json();
           const partsOut = (((data.candidates || [])[0] || {}).content || {}).parts || [];
@@ -2931,14 +3185,15 @@
             const mime = blob.mimeType || blob.mime_type || 'image/png';
             // 資安：圖片網址會放進 HTML 與 CSS，只收真正的圖片格式與 base64 字元
             if (!/^image\/(png|jpeg|webp)$/.test(mime) || !/^[A-Za-z0-9+/=]+$/.test(String(blob.data || ''))) { lastError = '模型回傳的圖片格式不正確'; break; }
-            localStorage.setItem('studioImageModel', model);
+            localStorage.setItem(IMAGE_MODEL_KEY, model);
             return `data:${mime};base64,${blob.data}`;
           }
           lastError = '模型沒有回傳圖片（可能被安全政策擋下），請換個說法或風格';
           break;
         }
+        if (!next) break;
       }
-      localStorage.removeItem('studioImageModel');
+      if (/^HTTP 429/.test(lastError)) lastError = '今天的免費生圖額度用完了（HTTP 429），明天再試或換一把金鑰';
       throw new Error(`生圖失敗：${lastError || '找不到可用的生圖模型'}。請確認金鑰有開啟 Gemini 生圖（AI Studio 金鑰預設可用）。`);
     }
     async function loadCharacterReference(charKey, pose) {
@@ -3373,9 +3628,14 @@
     $('gdGoButton').dataset.label = $('gdGoButton').textContent;
     $('gdFormat').addEventListener('change', () => { $('gdSenseOpts').hidden = $('gdFormat').value !== 'sense'; });
     // ---- 🍊 感官觀察四頁組（看→摸→聞嚐→聽想→寫；仿「從吃柚子學寫作」版式）----
+    function gdBriefLine() {
+      const brief = $('gdBrief').value.trim();
+      return brief ? `【老師提供的內容簡述】${brief}\n所有問題、心智圖、段落提示、句型與漫畫分鏡都要貼合這段經驗裡的人、事、時、地、物，不要寫成泛泛的通用內容。` : '';
+    }
     async function runSenseWorksheet(topic, grade) {
       const prompt = [
         `你是資深臺灣國小${grade}年級國語老師，要為主題「${topic}」設計一套四頁的「感官觀察作文學習單」，讓孩子先把眼前的人事物看細、摸清楚，再慢慢寫出來。主題可能是物品，也可能是節慶或活動（例：中秋節）；若是節慶活動，「看一看」寫場景與人、「摸一摸」可改為「做一做（動手體驗：剝柚子、烤肉、做月餅）」、「聞一聞／嚐一嚐」寫食物氣味與滋味、「聽一聽」寫聲音與對話。`,
+        gdBriefLine(),
         '格式固定四頁：第1頁「一、看一看」＋「二、摸一摸」；第2頁「三、聞一聞」＋「四、嚐一嚐」（若主題不能嚐，改成「四、聽一聽」）；第3頁「五、想一想（它讓我想到…）」＋「六、心情與感受」；第4頁「七、我可以這樣寫」（把前面觀察組成段落）。',
         '每一區塊（section）有 lead 一句引導語、3 個小格（blocks），每格有標題（4字內，例：先看整體／再看細節／看看周圍）與 3–4 個給孩子勾選作答的具體問題（問句結尾留空讓孩子填，用語符合年級，貼合這個主題）。',
         '每頁有 starters：4 句「我可以先這樣說」的句型起手式（用＿＿＿留空），以及 motto：一句給孩子的寫作金句。',
@@ -3436,6 +3696,7 @@
       const prompt = [
         `你是資深臺灣國小${grade}年級國語老師，為${genre}「${topic}」設計一份作文教學引導材料，解決孩子「空白稿紙焦慮」。`,
         '設計原則：審題用六何法、取材用心智圖、每段給句型鷹架、好詞佳句要貼合主題與年級、感官摹寫提示具體。',
+        gdBriefLine(),
         '只回傳 JSON：{',
         '"questions":["審題引導問題×4（六何法，口語、能勾起回憶）"],',
         `"mindmap":"- ${topic}\\n  - 分支（3層心智圖 Markdown，4-5個分支、每分支2-3個關鍵詞，每節點12字內）",`,
@@ -3636,10 +3897,12 @@
     }
     async function filesToParts(files, max) {
       const list = max ? [...files].slice(0, max) : [...files];
-      const total = list.reduce((sum, file) => sum + (file.type.startsWith('image/') ? Math.min(file.size, 700 * 1024) : file.size), 0);
+      const total = list.reduce((sum, file) => sum + (file.type.startsWith('image/') ? Math.min(file.size, 700 * 1024) : AI_DOC_EXT.test(file.name) ? 0 : file.size), 0);
       if (total > 20 * 1024 * 1024) throw new Error(`檔案合計約 ${Math.round(total / 1048576)}MB（照片已自動縮圖估算），超過 20MB 上限；請分兩批批改。`);
       const parts = [];
       for (const file of list) {
+        const docPart = await docFileToPart(file);
+        if (docPart) { parts.push(docPart); continue; }
         if (file.size > 15 * 1024 * 1024) throw new Error(`「${file.name}」超過 15MB，請縮小後再試。`);
         const shrunk = await shrinkImageForAi(file);
         if (shrunk) { parts.push({ inline_data: shrunk }); continue; }
@@ -3649,7 +3912,7 @@
           reader.onerror = () => reject(new Error('檔案讀取失敗'));
           reader.readAsDataURL(file);
         });
-        parts.push({ inline_data: { mime_type: file.type || 'image/jpeg', data: b64 } });
+        parts.push({ inline_data: { mime_type: /\.pdf$/i.test(file.name) ? 'application/pdf' : (file.type || 'image/jpeg'), data: b64 } });
       }
       return parts;
     }
@@ -4156,9 +4419,28 @@
     }
     $('lbSource').addEventListener('change', lbSyncSource);
     lbSyncSource();
+    const LB_NUM = '①②③④⑤⑥';
     function lbSheetHtml(item) {
       const tag = LB_SOURCES[item.source] || LB_SOURCES.teacher;
-      const paras = String(item.text || '').split(/\n+/).filter(Boolean).map(p => `<p style="font-size:15.5px;line-height:2;text-indent:2em;margin:4px 0">${escapeHtml(p)}</p>`).join('');
+      const rawParas = String(item.text || '').split(/\n+/).filter(Boolean);
+      const marked = rawParas.map(p => escapeHtml(p));
+      // 評語引用的句子：先找出在第幾段、第幾個字，照文章順序編 ①②③（找不到的排最後）
+      const points = (Array.isArray(item.points) ? item.points.filter(x => x && x.note) : []).map(pt => {
+        const quote = escapeHtml(String(pt.quote || '').trim());
+        const order = [pt.para - 1, ...marked.keys()].filter(i => i >= 0 && i < marked.length);
+        const at = quote.length < 2 ? undefined : order.find(i => marked[i].includes(quote));
+        return { ...pt, quoteHtml: quote, found: at === undefined ? 0 : at + 1, pos: at === undefined ? Infinity : at * 100000 + marked[at].indexOf(quote) };
+      }).sort((x, y) => x.pos - y.pos);
+      // 在文章裡畫底色＋標號，下面的評語用同一個號碼對應
+      points.forEach((pt, k) => {
+        if (!pt.found) return;
+        const i = pt.found - 1;
+        marked[i] = marked[i].replace(pt.quoteHtml, `<mark class="lb-mark">${pt.quoteHtml}<sup>${LB_NUM[k]}</sup></mark>`);
+      });
+      const paras = marked.map(p => `<p style="font-size:15.5px;line-height:2;text-indent:2em;margin:4px 0">${p}</p>`).join('');
+      const review = points.length
+        ? `<div class="lb-review"><b>評語</b><ol>${points.map((pt, k) => `<li><span class="lb-num">${LB_NUM[k]}</span>${pt.found ? `第 ${pt.found} 段` : ''}${pt.quote ? `「${escapeHtml(pt.quote)}」` : ''}：${escapeHtml(pt.note)}</li>`).join('')}</ol>${item.summary ? `<div>總評：${escapeHtml(item.summary)}</div>` : ''}</div>`
+        : (item.summary || item.analysis) ? `<div class="lb-review"><b>評語</b><div>${escapeHtml(item.summary || item.analysis)}</div></div>` : '';
       return `<div style="margin-bottom:18px">
         <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
           <div style="font-size:19px;font-weight:900">${escapeHtml(item.title || '（無題）')}${item.level ? `<span style="font-size:13px;color:#a33;margin-left:8px">${escapeHtml(item.level)}</span>` : ''}</div>
@@ -4166,7 +4448,7 @@
         </div>
         ${item.source === 'ai' ? `<div style="font-size:12px;color:#a33;border:1px dashed #d99;border-radius:6px;padding:2px 8px;display:inline-block;margin:4px 0">${LB_AI_MARK}</div>` : ''}
         ${paras}
-        ${item.analysis ? `<div style="background:#f3f8f5;border-radius:8px;padding:8px 12px;font-size:13.5px;margin-top:6px"><b>為什麼是這個程度：</b>${escapeHtml(item.analysis)}</div>` : ''}
+        ${review}
       </div>`;
     }
     function lbShow(items, heading) {
@@ -4200,15 +4482,19 @@
         '【著作權規定】三篇都必須是你自己全新創作的文字：不得引用、改寫或模仿任何已出版的作文、課文、書籍、網路文章或名人作品；不要放名言佳句；人物用一般稱呼（我、媽媽、同學），不要用真實人名或學校名。',
         `【評分規準（${r.label}）】\n${esRubricPrompt(band)}`,
         `每篇的程度要符合上面的規準描述；字數符合${grade}年級（低年級約 80～150 字、中年級 250～400 字、高年級 400～600 字），待加強那篇可以短一點。`,
-        'analysis 用 2～3 句，對照規準說明這篇為什麼是這個程度、最明顯的優點或問題在哪一句。',
-        '只回傳 JSON：{"essays":[{"level":"' + levels[0] + '","title":"","text":"段落之間用\\n分隔","analysis":""}, …三篇，依程度由高到低]}'
+        'points：每篇 3～4 點評語，每一點都要對應文章裡的一句話：para＝第幾段（從 1 算），quote＝從那一段原文一字不差地複製 6～20 個字，note＝這句好在哪裡或問題在哪裡（對照規準，一句話，給學生看得懂）。高分那篇以優點為主，待加強那篇以問題和怎麼改為主。',
+        'summary：一句總評。',
+        '只回傳 JSON：{"essays":[{"level":"' + levels[0] + '","title":"","text":"段落之間用\\n分隔","points":[{"para":1,"quote":"","note":""}],"summary":""}, …三篇，依程度由高到低]}'
       ].join('\n');
       busy($('lbGoButton'), true);
       try {
         const data = extractJson(await callGemini(prompt, null, $('lbStatus')));
         const now = Date.now();
         const items = (data.essays || []).slice(0, 3).map((e, i) => ({ id: 'm' + (now + i).toString(36), ts: now, source: 'ai', grade, genre: $('lbGenre').value,
-          title: String(e.title || topic).slice(0, 40), level: String(e.level || levels[i] || ''), text: String(e.text || ''), analysis: String(e.analysis || '') })).filter(e => e.text);
+          title: String(e.title || topic).slice(0, 40), level: String(e.level || levels[i] || ''), text: String(e.text || ''),
+          points: (Array.isArray(e.points) ? e.points : []).filter(x => x && typeof x === 'object' && x.note).slice(0, 5)
+            .map(x => ({ para: Number(x.para) || 0, quote: String(x.quote || '').slice(0, 60), note: String(x.note).slice(0, 200) })),
+          summary: String(e.summary || e.analysis || '').slice(0, 300) })).filter(e => e.text);
         if (!items.length) throw new Error('AI 沒有寫出範文，請再試一次。');
         lbSave(lbItems().concat(items));
         lbRender();
@@ -5217,8 +5503,8 @@
         };
         img.src = URL.createObjectURL(file);
       }
-      $('maskImageInput').addEventListener('change', () => loadMaskImage($('maskImageInput').files[0]));
-      attachZone('maskImageInput', { onFile: loadMaskImage });
+      $('maskImageInput').addEventListener('change', () => handleMaskFile($('maskImageInput').files[0]));
+      attachZone('maskImageInput', { onFile: file => handleMaskFile(file) });
       const canvasPoint = e => {
         const rect = canvas.getBoundingClientRect();
         return {
@@ -5268,29 +5554,318 @@
         a.click();
         showToast('已下載遮蔽後的圖片。');
       });
-      // 文字自動遮蔽
-      const maskDigits = value => value.replace(/\d/g, '＊');
-      const TEXT_RULES = [
-        { name: '身分證', re: /[A-Z][12]\d{8}/g, sub: m => m[0] + m[1] + '＊'.repeat(8) },
-        { name: 'Email', re: /[\w.+-]+@[\w-]+(\.[\w-]+)+/g, sub: m => m[0] + '＊＊＊@' + m.split('@')[1] },
-        { name: '手機', re: /09\d{2}[- ]?\d{3}[- ]?\d{3}/g, sub: m => m.slice(0, 4) + '＊＊＊＊＊＊' },
-        { name: '市話', re: /\(?0\d{1,2}\)?[- ]?\d{3,4}[- ]?\d{4}/g, sub: m => maskDigits(m).replace(/^＊/, '0') },
-        { name: '出生年月日', re: /(民國)?\s?\d{2,3}\s?年\s?\d{1,2}\s?月\s?\d{1,2}\s?日/g, sub: () => '＊＊年＊＊月＊＊日' },
-        { name: '西元生日', re: /(19|20)\d{2}[\/\-.]\d{1,2}[\/\-.]\d{1,2}/g, sub: () => '＊＊＊＊/＊＊/＊＊' }
+      // ============================================================
+      // 📄 文件遮蔽（Word／Excel／PowerPoint／文字檔）＋可勾選要遮的項目（2026-11-10）
+      // 全部在瀏覽器裡處理：解開 .docx／.xlsx／.pptx（本來就是 zip），只改文字，再包回同一種檔案。
+      // ============================================================
+      const MASK_PICK_KEY = 'studioMaskPicks';
+      const MASK_KINDS = ['id', 'mobile', 'phone', 'email', 'birthday', 'address', 'account', 'name'];
+      const MASK_LABEL = { id: '身分證字號', mobile: '手機', phone: '市話', email: 'Email', birthday: '生日', address: '地址', account: '帳號密碼', name: '姓名／自訂字詞' };
+      // 表格的標題列有這些字，整欄都遮（例如「密碼」那一欄全部打碼）
+      const MASK_HEADERS = [
+        ['account', /帳號|帳户|帳戶|密碼|帳密|account|password|passwd|pwd/i],
+        ['id', /身分證|身份證/],
+        ['birthday', /生日|出生/],
+        ['mobile', /手機|電話|聯絡方式|行動/],
+        ['address', /地址|住址|戶籍/],
+        ['email', /e-?mail|信箱|電子郵件/i],
+        ['name', /姓名|名字|監護人/]
       ];
+      function maskPicks() {
+        const picks = {};
+        MASK_KINDS.forEach(kind => { picks[kind] = !!$(`maskPick_${kind}`)?.checked; });
+        return picks;
+      }
+      function maskSavePicks() {
+        try { localStorage.setItem(MASK_PICK_KEY, JSON.stringify({ picks: maskPicks(), words: $('maskWords').value.slice(0, 4000) })); } catch (e) {}
+      }
+      try {
+        const saved = JSON.parse(localStorage.getItem(MASK_PICK_KEY) || 'null');
+        if (saved && saved.picks) MASK_KINDS.forEach(kind => { if ($(`maskPick_${kind}`) && typeof saved.picks[kind] === 'boolean') $(`maskPick_${kind}`).checked = saved.picks[kind]; });
+        if (saved && typeof saved.words === 'string') $('maskWords').value = saved.words;
+      } catch (e) {}
+      document.querySelectorAll('[id^="maskPick_"], #maskWords').forEach(el => el.addEventListener('change', maskSavePicks));
+
+      function maskNameList() {
+        const seat = (($('stNames') || {}).value || '').split('\n');
+        const own = $('maskWords').value.split(/[\n,，、]/);
+        return [...new Set([...seat, ...own].map(s => s.trim()).filter(s => s.length >= 2))].sort((a, b) => b.length - a.length);
+      }
+      const DIGIT = /[0-9０-９]/;
+      // 把字串裡要遮的字換成 ＊（姓名換成 Ｏ），長度不變（Word 一句話常被拆成好幾段，長度不變才能放回原位）
+      function maskString(text, picks, names, forced, counts) {
+        const hit = new Uint8Array(text.length);   // 1＝＊，2＝Ｏ
+        const mark = (from, to, kind, filter) => {
+          let any = false;
+          for (let i = from; i < to; i++) {
+            const ch = text[i];
+            if (/\s/.test(ch)) continue;
+            if (filter && !filter(ch, i - from)) continue;
+            if (!hit[i]) any = true;
+            hit[i] = kind === 'name' ? 2 : 1;
+          }
+          if (any) counts[kind] = (counts[kind] || 0) + 1;
+        };
+        const each = (re, fn) => { re.lastIndex = 0; let m; while ((m = re.exec(text))) { fn(m); if (!m[0].length) re.lastIndex++; } };
+        if (forced) {
+          // 整格都是這一欄的資料：姓名留第一個字，其餘全部遮
+          if (forced === 'name') {
+            const start = text.search(/\S/), stop = text.trimEnd().length, len = stop - start;
+            if (start >= 0 && len >= 2) mark(start + 1, stop - (len >= 3 ? 1 : 0), 'name');
+          } else if (text.trim()) mark(0, text.length, forced, forced === 'address' || forced === 'mobile' || forced === 'birthday' ? ch => DIGIT.test(ch) : null);
+        }
+        if (picks.id) each(/[A-Z][12]\d{8}/g, m => mark(m.index + 2, m.index + m[0].length, 'id'));
+        if (picks.mobile) each(/09\d{2}[- ]?\d{3}[- ]?\d{3}/g, m => mark(m.index + 4, m.index + m[0].length, 'mobile', ch => DIGIT.test(ch)));
+        if (picks.phone) each(/\(?0\d{1,2}\)?[- ]?\d{3,4}[- ]?\d{4}(#\d+)?/g, m => {
+          if (/^09/.test(m[0])) return;
+          const area = /^\(?0\d{1,2}\)?[- ]?/.exec(m[0])[0].length;
+          mark(m.index + area, m.index + m[0].length, 'phone', ch => DIGIT.test(ch));
+        });
+        if (picks.email) each(/[\w.+-]+@[\w-]+(\.[\w-]+)+/g, m => mark(m.index + 1, m.index + m[0].indexOf('@'), 'email'));
+        if (picks.birthday) {
+          // 只遮「生日、出生」後面的日期，不會把活動日期也遮掉（表格的生日欄整欄遮）
+          each(/(生日|出生(年月日|日期)?)\s*[:：]?\s*((民國)?\s?\d{2,4}\s?[年\/\-.]\s?\d{1,2}\s?[月\/\-.]\s?\d{1,2}\s?日?)/g,
+            m => { const start = m.index + m[0].length - m[3].length; mark(start, m.index + m[0].length, 'birthday', ch => DIGIT.test(ch)); });
+        }
+        if (picks.address) {
+          each(/[一-龥]{1,8}(路|街|大道)\s*([一二三四五六七八九十\d]+\s*段)?\s*(\d+\s*巷)?\s*(\d+\s*弄)?\s*\d+\s*(之\s*\d+)?\s*號\s*(\d+\s*樓)?(之\s*\d+)?/g,
+            m => { const road = m[0].search(/(路|街|大道)/); mark(m.index + road + 1, m.index + m[0].length, 'address', ch => DIGIT.test(ch) || /[一二三四五六七八九十]/.test(ch)); });
+        }
+        if (picks.account) {
+          each(/(帳號|帳户|帳戶|密碼|帳密|學生代號|account|user(name)?|password|passwd|pwd|PW)\s*[:：=]\s*([^\s，,；;、。]+)/gi,
+            m => mark(m.index + m[0].length - m[m.length - 1].length, m.index + m[0].length, 'account'));
+        }
+        if (picks.name) {
+          names.forEach(name => {
+            let at = text.indexOf(name);
+            while (at >= 0) {
+              const keepLast = name.length >= 3;
+              mark(at + 1, at + name.length - (keepLast ? 1 : 0), 'name');
+              at = text.indexOf(name, at + name.length);
+            }
+          });
+        }
+        let out = '';
+        for (let i = 0; i < text.length; i++) out += hit[i] === 1 ? '＊' : hit[i] === 2 ? 'Ｏ' : text[i];
+        return out;
+      }
+
+      // ---- zip 讀寫（Office 檔就是 zip；用瀏覽器內建的解壓縮）----
+      const MASK_CRC = (() => {
+        const t = new Uint32Array(256);
+        for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; }
+        return t;
+      })();
+      function maskCrc(data) { let c = 0xFFFFFFFF; for (let i = 0; i < data.length; i++) c = MASK_CRC[(c ^ data[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+      async function zipEntries(entries, mime) {
+        const enc = new TextEncoder();
+        const parts = [], central = [];
+        let offset = 0;
+        for (const entry of entries) {
+          const name = enc.encode(entry.name);
+          const crc = maskCrc(entry.data);
+          const packed = new Uint8Array(await new Response(new Blob([entry.data]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer());
+          const local = new DataView(new ArrayBuffer(30));
+          local.setUint32(0, 0x04034b50, true); local.setUint16(4, 20, true); local.setUint16(6, 0x0800, true); local.setUint16(8, 8, true);
+          local.setUint32(14, crc, true); local.setUint32(18, packed.length, true); local.setUint32(22, entry.data.length, true); local.setUint16(26, name.length, true);
+          parts.push(local.buffer, name, packed);
+          const cd = new DataView(new ArrayBuffer(46));
+          cd.setUint32(0, 0x02014b50, true); cd.setUint16(4, 20, true); cd.setUint16(6, 20, true); cd.setUint16(8, 0x0800, true); cd.setUint16(10, 8, true);
+          cd.setUint32(16, crc, true); cd.setUint32(20, packed.length, true); cd.setUint32(24, entry.data.length, true); cd.setUint16(28, name.length, true); cd.setUint32(42, offset, true);
+          central.push(cd.buffer, name);
+          offset += 30 + name.length + packed.length;
+        }
+        const cdSize = central.reduce((n, part) => n + part.byteLength, 0);
+        const end = new DataView(new ArrayBuffer(22));
+        end.setUint32(0, 0x06054b50, true); end.setUint16(8, entries.length, true); end.setUint16(10, entries.length, true);
+        end.setUint32(12, cdSize, true); end.setUint32(16, offset, true);
+        return new Blob([...parts, ...central, end.buffer], { type: mime });
+      }
+
+      // ---- 一段文字（Word 的段落、Excel 的一格、簡報的一段）：把拆開的文字接起來遮，再照原長度放回 ----
+      function maskTextNodes(nodes, ctx, forced) {
+        if (!nodes.length) return;
+        const texts = nodes.map(node => node.textContent);
+        const joined = texts.join('');
+        const masked = maskString(joined, ctx.picks, ctx.names, forced, ctx.counts);
+        if (masked === joined) return;
+        let at = 0;
+        nodes.forEach((node, i) => { node.textContent = masked.slice(at, at + texts[i].length); at += texts[i].length; });
+        if (ctx.samples.length < 40) ctx.samples.push(masked.trim().slice(0, 80));
+      }
+      const childrenNamed = (el, local) => [...el.children].filter(c => c.localName === local);
+      const headerKind = text => (MASK_HEADERS.find(([, re]) => re.test(text)) || [])[0] || '';
+      // Word／簡報的表格：第一列是標題，標題寫「密碼」「生日」…的那一欄整欄遮
+      function maskTables(doc, ctx, paraName) {
+        [...doc.getElementsByTagNameNS('*', 'tbl')].forEach(table => {
+          const rows = childrenNamed(table, 'tr');
+          if (rows.length < 2) return;
+          const header = childrenNamed(rows[0], 'tc').map(cell => headerKind(cell.textContent.trim()));
+          rows.slice(1).forEach(row => childrenNamed(row, 'tc').forEach((cell, col) => {
+            const kind = header[col];
+            if (!kind || !ctx.picks[kind]) return;
+            maskTextNodes([...cell.getElementsByTagNameNS('*', 't')], ctx, kind);
+          }));
+        });
+      }
+      function maskXmlParagraphs(xml, ctx, paraName) {
+        const doc = new DOMParser().parseFromString(xml, 'application/xml');
+        if (doc.getElementsByTagName('parsererror').length) return xml;
+        maskTables(doc, ctx, paraName);
+        // 只拿「最靠近的段落就是自己」的文字（文字方塊裡的段落另外處理，不重複算）
+        const ownPara = node => { let a = node.parentNode; while (a && a.localName !== paraName) a = a.parentNode; return a; };
+        [...doc.getElementsByTagNameNS('*', paraName)].forEach(p => maskTextNodes([...p.getElementsByTagNameNS('*', 't')].filter(t => ownPara(t) === p), ctx, null));
+        return new XMLSerializer().serializeToString(doc);
+      }
+      // Excel：共用字串表＋每張工作表；標題列寫「密碼」「生日」…的那一欄整欄遮（連數字格也遮）
+      function excelColumn(ref) { return String(ref || '').replace(/\d+/g, ''); }
+      function maskExcel(entries, ctx) {
+        const enc = new TextEncoder(), dec = new TextDecoder();
+        const shared = entries.find(e => e.name === 'xl/sharedStrings.xml');
+        let sharedDoc = null, sharedItems = [];
+        if (shared) {
+          sharedDoc = new DOMParser().parseFromString(dec.decode(shared.data), 'application/xml');
+          sharedItems = [...sharedDoc.getElementsByTagNameNS('*', 'si')];
+        }
+        const cellText = (cell) => {
+          const type = cell.getAttribute('t');
+          const v = childrenNamed(cell, 'v')[0];
+          if (type === 's' && v) return (sharedItems[Number(v.textContent)] || {}).textContent || '';
+          if (type === 'inlineStr') return cell.textContent;
+          return v ? v.textContent : '';
+        };
+        entries.filter(e => /^xl\/worksheets\/sheet\d+\.xml$/.test(e.name)).forEach(entry => {
+          const doc = new DOMParser().parseFromString(dec.decode(entry.data), 'application/xml');
+          if (doc.getElementsByTagName('parsererror').length) return;
+          const rows = [...doc.getElementsByTagNameNS('*', 'row')];
+          // 標題列：前 5 列裡，第一個認得出欄位名稱的列
+          let headerRow = null, kinds = {};
+          for (const row of rows.slice(0, 5)) {
+            const found = {};
+            childrenNamed(row, 'c').forEach(cell => { const kind = headerKind(cellText(cell).trim()); if (kind) found[excelColumn(cell.getAttribute('r'))] = kind; });
+            if (Object.keys(found).length) { headerRow = row; kinds = found; break; }
+          }
+          if (headerRow) {
+            rows.slice(rows.indexOf(headerRow) + 1).forEach(row => childrenNamed(row, 'c').forEach(cell => {
+              const kind = kinds[excelColumn(cell.getAttribute('r'))];
+              if (!kind || !ctx.picks[kind]) return;
+              const text = cellText(cell);
+              if (!text.trim()) return;
+              const masked = maskString(text, { }, [], kind, ctx.counts);
+              if (masked === text) return;
+              // 改成這一格自己的文字（不動共用字串，免得別格一起變）
+              [...cell.childNodes].forEach(node => cell.removeChild(node));
+              cell.setAttribute('t', 'inlineStr');
+              const ns = cell.namespaceURI;
+              const is = doc.createElementNS(ns, 'is'), t = doc.createElementNS(ns, 't');
+              t.textContent = masked; is.appendChild(t); cell.appendChild(is);
+              if (ctx.samples.length < 40) ctx.samples.push(masked.slice(0, 80));
+            }));
+          }
+          [...doc.getElementsByTagNameNS('*', 'is')].forEach(is => maskTextNodes([...is.getElementsByTagNameNS('*', 't')], ctx, null));
+          entry.data = enc.encode(new XMLSerializer().serializeToString(doc));
+        });
+        if (sharedDoc) {
+          sharedItems.forEach(si => maskTextNodes([...si.getElementsByTagNameNS('*', 't')], ctx, null));
+          shared.data = enc.encode(new XMLSerializer().serializeToString(sharedDoc));
+        }
+      }
+      function maskCsvText(text, ctx) {
+        const lines = text.split(/\r?\n/);
+        const header = (lines[0] || '').split(',').map(h => headerKind(h.replace(/^"|"$/g, '').trim()));
+        return lines.map((line, i) => {
+          if (i === 0 || !header.some(Boolean)) return maskString(line, ctx.picks, ctx.names, null, ctx.counts);
+          return line.split(',').map((cell, col) => {
+            const kind = header[col];
+            const forced = kind && ctx.picks[kind] ? kind : null;
+            return maskString(cell, ctx.picks, ctx.names, forced, ctx.counts);
+          }).join(',');
+        }).join('\n');
+      }
+      const OFFICE = {
+        docx: { mime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', parts: /^word\/(document|header\d*|footer\d*|footnotes|endnotes|comments)\.xml$/, para: 'p' },
+        pptx: { mime: 'application/vnd.openxmlformats-officedocument.presentationml.presentation', parts: /^ppt\/(slides\/slide\d+|notesSlides\/notesSlide\d+)\.xml$/, para: 'p' },
+        xlsx: { mime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+      };
+      let maskDocResult = null;
+      async function maskDocument(file) {
+        const ext = (file.name.match(/\.([a-z0-9]+)$/i) || [])[1]?.toLowerCase() || '';
+        if (['doc', 'xls', 'ppt'].includes(ext)) throw new Error(`.${ext} 是舊格式：請先用 Office 打開，「另存新檔」成 .${ext}x 再放進來。`);
+        if (ext === 'pdf') throw new Error('PDF 請先到「📎 PDF 工具」轉成圖片，再用上面的圖片框選遮蔽。');
+        const picks = maskPicks();
+        if (!Object.values(picks).some(Boolean)) throw new Error('請至少勾一項要遮蔽的資料。');
+        const ctx = { picks, names: picks.name ? maskNameList() : [], counts: {}, samples: [] };
+        let blob;
+        if (OFFICE[ext]) {
+          const entries = await unzipEntries(await file.arrayBuffer());
+          if (ext === 'xlsx') maskExcel(entries, ctx);
+          else {
+            const enc = new TextEncoder(), dec = new TextDecoder();
+            entries.filter(e => OFFICE[ext].parts.test(e.name)).forEach(e => { e.data = enc.encode(maskXmlParagraphs(dec.decode(e.data), ctx, OFFICE[ext].para)); });
+          }
+          blob = await zipEntries(entries, OFFICE[ext].mime);
+        } else if (['txt', 'csv', 'md'].includes(ext)) {
+          const bytes = new Uint8Array(await file.arrayBuffer());
+          let text;
+          try { text = new TextDecoder('utf-8', { fatal: true }).decode(bytes); } catch (e) { text = new TextDecoder('big5').decode(bytes); }
+          text = text.replace(/^﻿/, '');
+          const out = ext === 'csv' ? maskCsvText(text, ctx) : maskString(text, ctx.picks, ctx.names, null, ctx.counts);
+          out.split(/\n/).filter((line, i) => line !== text.split(/\r?\n/)[i]).slice(0, 40).forEach(line => ctx.samples.push(line.trim().slice(0, 80)));
+          blob = new Blob(['﻿' + out], { type: ext === 'csv' ? 'text/csv' : 'text/plain' });
+        } else throw new Error('支援 Word（.docx）、Excel（.xlsx）、PowerPoint（.pptx）、文字檔（.txt、.csv）與圖片。');
+        return { blob, name: file.name.replace(/(\.[^.]+)$/, '_已遮蔽$1'), ctx };
+      }
+      async function handleMaskDocument(file) {
+        $('maskCanvas').hidden = true;
+        $('maskDocOut').hidden = false;
+        $('maskDocSummary').textContent = '遮蔽中……';
+        $('maskDocSamples').innerHTML = '';
+        $('maskDocDownload').hidden = true;
+        try {
+          maskDocResult = await maskDocument(file);
+          const { counts, samples } = maskDocResult.ctx;
+          const total = Object.values(counts).reduce((a, b) => a + b, 0);
+          $('maskDocSummary').textContent = total
+            ? `「${file.name}」已遮蔽 ${total} 處：${MASK_KINDS.filter(k => counts[k]).map(k => `${MASK_LABEL[k]} ${counts[k]}`).join('、')}。下載後請打開逐一確認再分享。`
+            : `「${file.name}」沒有找到勾選的項目。姓名請在「其他要遮的姓名或字詞」填入，或到座位表輸入學生名單。`;
+          $('maskDocSamples').innerHTML = samples.length ? `<div class="hint" style="margin:6px 0 4px">遮蔽後的樣子（抽樣）：</div>${samples.map(s => `<div class="mask-sample">${escapeHtml(s)}</div>`).join('')}` : '';
+          $('maskDocDownload').hidden = !total;
+          $('maskStatus').textContent = total ? '文件遮蔽完成，請下載檢查。' : '沒有找到要遮的資料。';
+        } catch (error) {
+          maskDocResult = null;
+          $('maskDocSummary').textContent = `❌ ${error.message}`;
+          $('maskStatus').textContent = '文件遮蔽失敗。';
+        }
+      }
+      $('maskDocDownload').addEventListener('click', () => {
+        if (!maskDocResult) return;
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(maskDocResult.blob);
+        a.download = maskDocResult.name;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+        showToast('已下載遮蔽後的檔案，請打開確認。');
+      });
+      function handleMaskFile(file) {
+        if (!file) return;
+        if (/^image\//.test(file.type)) { $('maskDocOut').hidden = true; loadMaskImage(file); }
+        else handleMaskDocument(file);
+      }
+
+      // 文字自動遮蔽（照上面勾的項目）
       $('maskTextButton').addEventListener('click', () => {
         const raw = $('maskTextInput').value;
         if (!raw.trim()) return showToast('請先貼上文字。', true);
-        let out = raw, hits = [];
-        TEXT_RULES.forEach(rule => {
-          let count = 0;
-          out = out.replace(rule.re, m => { count += 1; return rule.sub(m); });
-          if (count) hits.push(`${rule.name}×${count}`);
-        });
+        const picks = maskPicks();
+        if (!Object.values(picks).some(Boolean)) return showToast('請至少勾一項要遮蔽的資料。', true);
+        const counts = {};
+        const out = maskString(raw, picks, picks.name ? maskNameList() : [], null, counts);
+        const hits = MASK_KINDS.filter(k => counts[k]).map(k => `${MASK_LABEL[k]}×${counts[k]}`);
         $('maskTextOut').textContent = out;
         $('maskTextOut').hidden = false;
         $('maskCopyButton').hidden = false;
-        $('maskStatus').textContent = hits.length ? `已遮蔽：${hits.join('、')}。姓名請自行檢查！` : '沒有找到可自動遮蔽的個資（姓名需手動處理）。';
+        $('maskDocOut').hidden = true;
+        $('maskStatus').textContent = hits.length ? `已遮蔽：${hits.join('、')}。其他人名請自行檢查！` : '沒有找到勾選的項目（其他人名請填在「其他要遮的姓名或字詞」）。';
       });
       $('maskCopyButton').addEventListener('click', async () => {
         await navigator.clipboard.writeText($('maskTextOut').textContent).catch(() => {});

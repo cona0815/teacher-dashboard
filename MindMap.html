@@ -167,11 +167,11 @@ const TYPES = {
 };
 const TYPE_ORDER = Object.keys(TYPES);
 const typeOf = (w = work()) => TYPES[w.type] ? w.type : 'mind';
-// 每種圖型一個教室範例（原創內容）；第一個是老師資訊教室系統裡那張「資訊教室報到小精靈」
+// 每種圖型一個教室範例（原創內容）；第一個介紹晨間大屏系統
 function sampleWork(type = 'mind') {
   const n = (text, children, color) => ({ id: uid(), text, color: color || '', children: (children || []).map(c => typeof c === 'string' ? n(c) : c) });
   const S = {
-    mind: ['電腦教室管理（範例）', n('資訊教室報到小精靈', [n('🪄 智慧報到', ['班級座號', '姓名確認'], 'teal'), n('📚 課程學習', ['教學影片', '完成打勾'], 'blue'), n('📤 作業管理', ['排隊上傳', '桌寵通知'], 'gold'), n('🏆 學習成果', ['學習進度', '作品展示'], 'coral')])],
+    mind: ['晨間大屏介紹（範例）', n('晨間大屏', [n('🙋 每天早上', ['座號點名', '聯絡本黑板'], 'teal'), n('📚 作業管理', ['作業繳交', '補交與訂正'], 'blue'), n('🧰 班級工具', ['抽籤與分組', '定評小幫手'], 'gold'), n('📺 投影展示', ['螢幕公告', '心智圖'], 'coral')])],
     logic: ['做一份好簡報（範例）', n('做一份好簡報', [n('🔍 找資料', ['用關鍵字搜尋', '記下資料出處']), n('📝 規劃內容', ['一頁一個重點', '先寫大綱']), n('🎨 美化版面', ['字要夠大', '圖片清楚']), n('🎤 上台報告', ['看著觀眾', '控制時間'])])],
     org: ['電腦的組成（範例）', n('電腦', [n('硬體', ['主機', '螢幕', '鍵盤滑鼠']), n('軟體', ['作業系統', '應用程式']), n('網路', ['有線網路', '無線網路'])])],
     brace: ['一篇作文（範例）', n('一篇作文', [n('開頭', ['點出題目', '引起興趣']), n('中間', ['舉出例子', '說明想法']), n('結尾', ['總結重點', '寫下感想'])])],
@@ -198,12 +198,16 @@ function cleanNode(n, depth) {
   (Array.isArray(n.children) ? n.children : []).forEach(c => { const k = cleanNode(c, depth + 1); if (k) out.children.push(k); });
   return out;
 }
+// 舊版的範例圖只要老師沒改過字，就換成新範例；改過的一律不動
+const OLD_SAMPLE_TEXT = '資訊教室報到小精靈|🪄 智慧報到|班級座號|姓名確認|📚 課程學習|教學影片|完成打勾|📤 作業管理|排隊上傳|桌寵通知|🏆 學習成果|學習進度|作品展示';
+const nodeTexts = n => [n.text, ...n.children.flatMap(nodeTexts)];
+const isOldSample = w => w.title === '電腦教室管理（範例）' && nodeTexts(w.root).sort().join('|') === OLD_SAMPLE_TEXT.split('|').sort().join('|');
 function loadStore() {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) || 'null');
     if (raw && Array.isArray(raw.works) && raw.works.length) {
       const works = raw.works.map(w => w && w.root ? { id: /^[\w-]{1,24}$/.test(String(w.id)) ? w.id : uid(), type: TYPES[w.type] ? w.type : 'mind', title: String(w.title || '我的心智圖').slice(0, 40), updatedAt: Number(w.updatedAt) || Date.now(), root: cleanNode(w.root, 0) } : null).filter(w => w && w.root);
-      if (works.length) return { cur: works.some(w => w.id === raw.cur) ? raw.cur : works[0].id, works };
+      if (works.length) return { cur: works.some(w => w.id === raw.cur) ? raw.cur : works[0].id, works: works.map(w => isOldSample(w) ? { ...sampleWork('mind'), id: w.id, updatedAt: w.updatedAt } : w) };
     }
   } catch (error) {}
   const w = sampleWork();
@@ -211,15 +215,20 @@ function loadStore() {
 }
 store = loadStore();
 const work = () => store.works.find(w => w.id === store.cur) || store.works[0];
-let saveT;
+let saveT = 0;
+function flushSave() {
+  clearTimeout(saveT); saveT = 0;
+  try { localStorage.setItem(KEY, JSON.stringify(store)); $('saved').textContent = '✓ 已自動存在這台電腦'; }
+  catch (error) { $('saved').textContent = '⚠ 這台電腦的空間滿了，這次沒有存到（圖片太多時請刪掉幾張）'; }
+}
 function save() {
   work().updatedAt = Date.now();
   clearTimeout(saveT);
-  saveT = setTimeout(() => {
-    try { localStorage.setItem(KEY, JSON.stringify(store)); $('saved').textContent = '✓ 已自動存在這台電腦'; }
-    catch (error) { $('saved').textContent = '⚠ 這台電腦的空間滿了，這次沒有存到（圖片太多時請刪掉幾張）'; }
-  }, 400);
+  saveT = setTimeout(flushSave, 400);
 }
+// 改完馬上關掉或切走時，不等那 0.4 秒，免得最後一筆沒存到
+['pagehide', 'beforeunload'].forEach(type => addEventListener(type, () => { if (saveT) flushSave(); }));
+document.addEventListener('visibilitychange', () => { if (document.hidden && saveT) flushSave(); });
 
 // ---------- 復原 ----------
 const undoStack = [];
@@ -398,21 +407,41 @@ function layoutFishbone(root) {
 // 泡泡圖：主題在中間，形容詞圍一圈，例子再往外長
 function layoutBubble(root) {
   root._x = 0; root._y = 0;
-  const mains = root.children, k = mains.length;
-  const big = Math.max(0, ...mains.map(m => m._w));
-  const R = Math.max(root._w / 2 + big / 2 + 60, k * (big + 24) / (2 * Math.PI));
+  const mains = root.children;
+  const rad = n => Math.max(n._w, n._h) / 2;
+  // 例子往外長：同一層的泡泡依大小排開（至少維持原本的角度），才不會疊在一起
   const outward = (n, ang, depth) => {
     const kids = n.children;
+    if (!kids.length) return;
+    const dist = c => (n._w + c._w) / 2 + 34, base = depth === 1 ? .62 : .45, offs = [0];
+    for (let j = 1; j < kids.length; j += 1) {
+      const need = 2 * Math.asin(Math.min(1, (rad(kids[j - 1]) + rad(kids[j]) + 16) / (dist(kids[j - 1]) + dist(kids[j]))));
+      offs.push(offs[j - 1] + Math.max(base, need));
+    }
+    const mid = offs[offs.length - 1] / 2;
     kids.forEach((c, j) => {
-      const a = ang + (j - (kids.length - 1) / 2) * (depth === 1 ? .62 : .45), r = n._w / 2 + c._w / 2 + 34;
+      const a = ang + offs[j] - mid, r = dist(c);
       c._x = n._x + Math.cos(a) * r; c._y = n._y + Math.sin(a) * r;
       outward(c, a, depth + 1);
     });
   };
+  // 每個形容詞連同例子先在「朝外＝右邊」排好，量出它佔多寬，再依寬度分配圓周上的位置
+  const local = mains.map(m => {
+    m._x = 0; m._y = 0; outward(m, 0, 1);
+    const all = [], collect = n => n.children.forEach(c => { all.push(c); collect(c); });
+    collect(m);
+    return { all, reach: Math.max(rad(m), ...all.map(c => Math.abs(c._y) + rad(c))) };
+  });
+  const slots = local.map(l => 2 * l.reach + 24), total = Math.max(1, slots.reduce((s, v) => s + v, 0));
+  const big = Math.max(0, ...mains.map(m => m._w));
+  const R = Math.max(root._w / 2 + big / 2 + 60, total / (2 * Math.PI));
+  let used = 0;
   mains.forEach((m, i) => {
-    const a = -Math.PI / 2 + 2 * Math.PI * i / Math.max(1, k);
-    m._x = Math.cos(a) * R; m._y = Math.sin(a) * R;
-    outward(m, a, 1);
+    const a = -Math.PI / 2 + 2 * Math.PI * (used + slots[i] / 2 - slots[0] / 2) / total;
+    used += slots[i];
+    const cos = Math.cos(a), sin = Math.sin(a), ox = cos * R, oy = sin * R;
+    local[i].all.forEach(c => { const x = c._x, y = c._y; c._x = ox + x * cos - y * sin; c._y = oy + x * sin + y * cos; });
+    m._x = ox; m._y = oy;
   });
 }
 // 拖曳過的主題：位移連同下層一起加上去（每種圖型共用）
@@ -560,12 +589,12 @@ function bounds() {
 }
 function fit() {
   const b = bounds(), W = canvas.clientWidth, H = canvas.clientHeight; if (!W || !H) return;
-  view.s = Math.max(.2, Math.min(1.8, Math.min((W - 60) / (b.x2 - b.x1), (H - 60) / (b.y2 - b.y1))));
+  view.s = Math.max(.05, Math.min(1.8, Math.min((W - 60) / (b.x2 - b.x1), (H - 60) / (b.y2 - b.y1))));
   view.tx = W / 2 - view.s * (b.x1 + b.x2) / 2; view.ty = H / 2 - view.s * (b.y1 + b.y2) / 2;
   applyView();
 }
 function zoomAt(f, cx, cy) {
-  const s = Math.max(.2, Math.min(3, view.s * f)); if (s === view.s) return;
+  const s = Math.max(.05, Math.min(3, view.s * f)); if (s === view.s) return;
   view.tx = cx - (cx - view.tx) * s / view.s; view.ty = cy - (cy - view.ty) * s / view.s; view.s = s; applyView();
 }
 

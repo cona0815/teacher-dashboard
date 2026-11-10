@@ -28,9 +28,56 @@ VOICE_ALLOWED_HOSTS = ("generativelanguage.googleapis.com", "api.groq.com")
 GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 GROQ_STT_ENDPOINT = "https://api.groq.com/openai/v1/audio/transcriptions"
 GROQ_CHAT_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions"
-DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
+# 沒指定模型（或還是舊預設 2.5 Flash，Google 已停用）時依序使用；被停用（404）或今天額度用完（429）就換下一個
+GEMINI_AUTO_MODELS = ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-3.8-flash"]
+GEMINI_RETIRED_MODELS = {"gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"}
+# Google 的「最新版」別名：永遠指向最新的 Flash-Lite／Flash
+GEMINI_LATEST_ALIASES = ["gemini-flash-lite-latest", "gemini-flash-latest"]
+GEMINI_LIST_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models?pageSize=200"
+
+
+def rank_gemini_models(ids: list[str]) -> list[str]:
+    """只挑正式版 Flash-Lite／Flash（不挑 preview、exp、語音、圖片），Flash-Lite 排前面、版本新的排前面。"""
+    scored = []
+    for model_id in dict.fromkeys(ids):
+        m = re.fullmatch(r"gemini-(\d+(?:\.\d+)?)-flash(-lite)?", model_id)
+        if m:
+            scored.append(((1000 if m.group(2) else 0) + float(m.group(1)) * 10, model_id))
+    return [model_id for _, model_id in sorted(scored, reverse=True)][:4]
+DEFAULT_GEMINI_MODEL = ""
+# Groq 也會停用舊模型：下面只是「先試」的名字；被停用（404／400 decommissioned）或額度用完（429）
+# 就問 Groq 現在有哪些模型（GET /models），挑最適合的再試，並記住成功的那個。
 DEFAULT_GROQ_STT_MODEL = "whisper-large-v3"
 DEFAULT_GROQ_POLISH_MODEL = "llama-3.3-70b-versatile"
+GROQ_STT_MODELS = [DEFAULT_GROQ_STT_MODEL, "whisper-large-v3-turbo"]
+GROQ_POLISH_MODELS = [DEFAULT_GROQ_POLISH_MODEL]
+GROQ_LIST_ENDPOINT = "https://api.groq.com/openai/v1/models"
+
+
+def rank_groq_models(ids: list[str], kind: str) -> list[str]:
+    """kind＝stt：挑 Whisper 類（排除只聽英文的 -en）；kind＝chat：挑一般對話模型，參數量大的排前面。"""
+    picked = []
+    for model_id in dict.fromkeys(str(i) for i in ids if i):
+        low = model_id.lower()
+        if kind == "stt":
+            if "whisper" in low and not low.endswith("-en"):
+                picked.append(((0 if "turbo" in low else 1), low, model_id))
+        else:
+            if re.search(r"whisper|tts|guard|embed|playai|orpheus|vision|prompt|safety", low):
+                continue
+            size = re.search(r"(\d+)b\b", low)
+            picked.append(((int(size.group(1)) if size else 0), low, model_id))
+    return [model_id for *_, model_id in sorted(picked, reverse=True)][:4]
+
+
+def model_retired(status: int, payload: bytes) -> bool:
+    """模型被停用／不存在：404，或 400 且訊息提到 decommissioned／model_not_found／does not exist。"""
+    if status == 404:
+        return True
+    if status != 400:
+        return False
+    text = payload.decode("utf-8", "ignore").lower() if isinstance(payload, (bytes, bytearray)) else str(payload).lower()
+    return any(word in text for word in ("decommission", "model_not_found", "does not exist", "not found", "no longer"))
 SAMPLE_RATE = 16000
 VOICE_TIMEOUT_SECONDS = 40
 MAX_AUDIO_SECONDS = 120
@@ -102,6 +149,18 @@ def default_opener(url: str, headers: dict, body: bytes) -> tuple[int, bytes]:
                 pass
             return error.code, payload
         raise VoiceError(classify_error(error), str(error)) from error
+
+
+def default_lister(url: str, headers: dict) -> tuple[int, bytes]:
+    """問 Google 現在有哪些模型（GET，只送金鑰、不送音檔）；一樣只允許白名單網域。"""
+    if not voice_url_allowed(url):
+        raise VoiceError("other", "拒絕連線到白名單以外的網址")
+    request = Request(url, method="GET", headers=headers)
+    try:
+        with urlopen(request, timeout=VOICE_TIMEOUT_SECONDS) as response:
+            return response.status, response.read()
+    except Exception:  # noqa: BLE001 - 查不到清單就當作沒有
+        return 0, b""
 
 
 def classify_error(error: object) -> str:
@@ -214,10 +273,13 @@ def multipart_body(fields: dict, file_field: str, filename: str, content_type: s
 
 
 class VoiceEngine:
-    """辨識引擎：provider＝auto（有 Groq 金鑰用 Groq，否則 Gemini）｜gemini｜groq。"""
+    """辨識引擎：provider＝auto（Gemini 優先；沒有 Gemini 金鑰或 Gemini 額度用完才用 Groq）｜gemini｜groq。"""
 
-    def __init__(self, opener: Optional[Callable[[str, dict, bytes], tuple[int, bytes]]] = None):
+    def __init__(self, opener: Optional[Callable[[str, dict, bytes], tuple[int, bytes]]] = None, lister: Optional[Callable[[str, dict], tuple[int, bytes]]] = None):
         self.opener = opener or default_opener
+        self.lister = lister or default_lister
+        self.gemini_last_good = ""
+        self.groq_last_good: dict[str, str] = {}
         self.provider = "auto"
         self.gemini_key = ""
         self.groq_key = ""
@@ -241,10 +303,11 @@ class VoiceEngine:
             return "groq" if self.groq_key else ""
         if self.provider == "gemini":
             return "gemini" if self.gemini_key else ""
-        if self.groq_key:
-            return "groq"
+        # 自動：Gemini 優先（老師只要申請一把 Gemini 金鑰，工作台、教材小工場、小綿助共用）；沒有 Gemini 金鑰才用 Groq
         if self.gemini_key:
             return "gemini"
+        if self.groq_key:
+            return "groq"
         return ""
 
     @property
@@ -260,11 +323,33 @@ class VoiceEngine:
         wav = wav_bytes(audio_int16)
         terms = vocab_terms(self.vocab, self.custom_vocab)
         self.last_provider = provider
-        text = self._gemini(wav, terms) if provider == "gemini" else self._groq(wav, terms)
+        if provider == "gemini":
+            try:
+                text = self._gemini(wav, terms)
+            except VoiceError as error:
+                # 自動模式又剛好有填 Groq 金鑰：Gemini 今天額度用完或連不上時，改用 Groq 備援
+                if self.provider == "gemini" or not self.groq_key or error.kind not in ("rate", "network", "other"):
+                    raise
+                self.last_provider = "groq"
+                text = self._groq(wav, terms)
+        else:
+            text = self._groq(wav, terms)
         text = to_traditional((text or "").strip())
         if looks_like_hallucination(text) or text in ("（聽不清楚）", "(聽不清楚)"):
             return ""
         return text
+
+    def _discover_gemini_models(self) -> list[str]:
+        status, payload = self.lister(GEMINI_LIST_ENDPOINT, {"x-goog-api-key": self.gemini_key})
+        if status != 200:
+            return []
+        try:
+            data = json.loads(payload.decode("utf-8") or "{}")
+        except (ValueError, UnicodeDecodeError):
+            return []
+        names = [str(m.get("name") or "").replace("models/", "") for m in (data.get("models") or [])
+                 if isinstance(m, dict) and "generateContent" in (m.get("supportedGenerationMethods") or [])]
+        return rank_gemini_models(names)
 
     # ---- Gemini：一次完成聽寫＋校正 ----
     def _gemini(self, wav: bytes, terms: list[str]) -> str:
@@ -275,29 +360,103 @@ class VoiceEngine:
             ]}],
             "generationConfig": {"temperature": 0.2, "maxOutputTokens": 2048},
         }).encode("utf-8")
-        status, payload = self.opener(GEMINI_ENDPOINT.format(model=self.gemini_model),
-                                      {"Content-Type": "application/json", "x-goog-api-key": self.gemini_key}, body)
+        # 模型自動跟上 Google：先用上次成功的、再試「最新版」別名與預設清單；
+        # 全部被停用（404）或額度用完（429）就問 Google 現在有哪些模型，挑最新的再試。
+        chosen = (self.gemini_model or "").strip()
+        auto = not chosen or chosen in GEMINI_RETIRED_MODELS
+        tried: set[str] = set()
+        result = [0, b""]
+
+        def attempt(models: list[str], stop_on_429: bool) -> bool:
+            for model in models:
+                if not model or model in tried:
+                    continue
+                tried.add(model)
+                status_, payload_ = self.opener(GEMINI_ENDPOINT.format(model=model),
+                                                {"Content-Type": "application/json", "x-goog-api-key": self.gemini_key}, body)
+                result[0], result[1] = status_, payload_
+                if status_ not in (404, 429):
+                    if status_ < 300 and model != chosen:
+                        self.gemini_last_good = model
+                    return True
+                if status_ == 429 and stop_on_429:
+                    return True
+            return False
+
+        auto_list = [self.gemini_last_good, *GEMINI_LATEST_ALIASES, *GEMINI_AUTO_MODELS]
+        done = attempt(auto_list, False) if auto else attempt([chosen], True)
+        if not done and not auto:
+            done = attempt(auto_list, False)
+        if not done:
+            attempt(self._discover_gemini_models(), False)
+        status, payload = result
+        if not status:
+            raise VoiceError("network", "連不到 Gemini")
         data = self._json(status, payload, "Gemini")
         candidates = data.get("candidates") or []
         parts = ((candidates[0] if candidates else {}).get("content") or {}).get("parts") or []
         return "".join(str(part.get("text") or "") for part in parts if not part.get("thought"))
 
-    # ---- Groq：whisper-large-v3 辨識 + LLM 校正 ----
+    def _discover_groq_models(self, kind: str) -> list[str]:
+        status, payload = self.lister(GROQ_LIST_ENDPOINT, {"Authorization": f"Bearer {self.groq_key}"})
+        if status != 200:
+            return []
+        try:
+            data = json.loads(payload.decode("utf-8") or "{}")
+        except (ValueError, UnicodeDecodeError):
+            return []
+        ids = [str(m.get("id") or "") for m in (data.get("data") or []) if isinstance(m, dict) and m.get("active", True) is not False]
+        return rank_groq_models(ids, kind)
+
+    def _groq_auto(self, kind: str, endpoint: str, defaults: list[str], make_request: Callable[[str], tuple[dict, bytes]]) -> tuple[int, bytes]:
+        """先用上次成功的模型、再試預設名字；被停用或額度用完就問 Groq 現有模型再試。"""
+        tried: set[str] = set()
+        result = [0, b""]
+
+        def attempt(models: list[str]) -> bool:
+            for model in models:
+                if not model or model in tried:
+                    continue
+                tried.add(model)
+                headers, body = make_request(model)
+                status_, payload_ = self.opener(endpoint, headers, body)
+                result[0], result[1] = status_, payload_
+                if status_ != 429 and not model_retired(status_, payload_):
+                    if status_ < 300:
+                        self.groq_last_good[kind] = model
+                    return True
+            return False
+
+        if not attempt([self.groq_last_good.get(kind, ""), *defaults]):
+            attempt(self._discover_groq_models(kind))
+        return result[0], result[1]
+
+    # ---- Groq：Whisper 辨識 + LLM 校正（模型名稱自動跟上 Groq）----
     def _groq(self, wav: bytes, terms: list[str]) -> str:
-        fields = {"model": DEFAULT_GROQ_STT_MODEL, "language": "zh", "response_format": "json", "temperature": "0"}
-        if terms:
-            fields["prompt"] = "、".join(terms[:40])
-        body, content_type = multipart_body(fields, "file", "audio.wav", "audio/wav", wav)
-        status, payload = self.opener(GROQ_STT_ENDPOINT, {"Content-Type": content_type, "Authorization": f"Bearer {self.groq_key}"}, body)
+        auth = f"Bearer {self.groq_key}"
+
+        def stt_request(model: str) -> tuple[dict, bytes]:
+            fields = {"model": model, "language": "zh", "response_format": "json", "temperature": "0"}
+            if terms:
+                fields["prompt"] = "、".join(terms[:40])
+            body, content_type = multipart_body(fields, "file", "audio.wav", "audio/wav", wav)
+            return {"Content-Type": content_type, "Authorization": auth}, body
+
+        status, payload = self._groq_auto("stt", GROQ_STT_ENDPOINT, GROQ_STT_MODELS, stt_request)
+        if not status:
+            raise VoiceError("network", "連不到 Groq")
         raw = str(self._json(status, payload, "Groq").get("text") or "").strip()
         if not raw or looks_like_hallucination(raw):
             return ""
-        chat = json.dumps({
-            "model": DEFAULT_GROQ_POLISH_MODEL, "temperature": 0.3, "max_tokens": 2000,
-            "messages": [{"role": "system", "content": build_polish_prompt(self.style, terms)}, {"role": "user", "content": raw}],
-        }).encode("utf-8")
+
+        def chat_request(model: str) -> tuple[dict, bytes]:
+            return {"Content-Type": "application/json", "Authorization": auth}, json.dumps({
+                "model": model, "temperature": 0.3, "max_tokens": 2000,
+                "messages": [{"role": "system", "content": build_polish_prompt(self.style, terms)}, {"role": "user", "content": raw}],
+            }).encode("utf-8")
+
         try:
-            status, payload = self.opener(GROQ_CHAT_ENDPOINT, {"Content-Type": "application/json", "Authorization": f"Bearer {self.groq_key}"}, chat)
+            status, payload = self._groq_auto("chat", GROQ_CHAT_ENDPOINT, GROQ_POLISH_MODELS, chat_request)
             choices = self._json(status, payload, "Groq").get("choices") or []
             polished = str(((choices[0] if choices else {}).get("message") or {}).get("content") or "").strip()
             return polished or raw

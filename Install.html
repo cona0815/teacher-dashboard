@@ -147,11 +147,55 @@
     .sec-num { color:var(--primary); margin-right:4px; }
     section.tierb .sec-num { color:#2f65a5; } section.tierp .sec-num { color:#6b4fa8; } section.tier1 .sec-num { color:#2f8a5b; } section.tier2 .sec-num { color:#b07d12; } section.tier3 .sec-num { color:#b5523f; }
     @media (max-width:640px) { section { padding:20px 16px; } .sec-icon { flex-basis:42px; height:42px; font-size:21px; } table { display:block; overflow-x:auto; -webkit-overflow-scrolling:touch; } code { overflow-wrap:anywhere; word-break:break-all; } header.hero .pillcta { border-radius:18px; padding:10px 12px; } }
+    /* ===== 新手寫法（第 1～3 級）：一步一勾、你會看到、示意圖 ===== */
+    .bg { --point:#d2452f; }
+    .bg h4 { color:var(--primary-strong); font-size:16px; margin:14px 0 4px; }
+    .bg ol.plain, .bg ul.plain { padding-left:1.5em; margin:6px 0; }
+    .bg ol.plain li, .bg ul.plain li { margin:5px 0; }
+    .bg .pt { color:var(--point); font-weight:900; }
+    .bg .q { display:inline-block; background:#fff; border:2px solid var(--primary); color:var(--primary-strong); border-radius:8px; padding:0 8px; font-weight:900; line-height:1.55; white-space:nowrap; }
+    .bg .tablebox { overflow-x:auto; }
+    .bstep { border:2px solid var(--line); border-radius:16px; margin:16px 0; overflow:hidden; background:#fff; }
+    .bstep > label { display:flex; gap:12px; align-items:center; background:var(--soft); padding:10px 14px; cursor:pointer; font-weight:900; font-size:18px; color:var(--primary-strong); }
+    .bstep > label input { width:24px; height:24px; flex:0 0 24px; accent-color:var(--primary); cursor:pointer; }
+    .bstep .bno { flex:0 0 auto; background:var(--primary); color:#fff; border-radius:999px; padding:0 12px; font-size:14px; line-height:1.9; white-space:nowrap; }
+    .bstep .bbody { padding:12px 16px 16px; font-size:16px; }
+    .bstep.done > label { background:#e3f6ec; }
+    .bstep.done > label .btt { text-decoration:line-through; opacity:.7; }
+    .bg .see { background:#f7fbff; border:2px dashed #9fc3dd; border-radius:12px; padding:8px 14px; margin:10px 0; font-size:15px; }
+    .bg .see::before { content:"👀 你會看到："; font-weight:900; color:#215d86; }
+    .bg .big-btn { display:inline-block; background:var(--primary); color:#fff; text-decoration:none; font-weight:900; font-size:19px; border-radius:14px; padding:11px 24px; margin:6px 0; }
+    .bg .big-btn.ghost { background:#fff; color:var(--primary-strong); border:2px solid var(--primary); }
+    .bg-progress { position:sticky; top:58px; z-index:9; background:#fff; border:2px solid var(--line); border-radius:999px; padding:4px 14px; font-size:14px; font-weight:800; margin:12px 0; display:flex; gap:10px; align-items:center; }
+    .bg-progress .bar { flex:1; height:10px; background:var(--soft); border-radius:99px; overflow:hidden; }
+    .bg-progress .bar i { display:block; height:100%; width:0; background:var(--primary); transition:width .3s; }
+    .bg-progress button { border:0; background:none; color:var(--muted); font:inherit; cursor:pointer; text-decoration:underline; }
+    .bg .mock { border:2px solid #b9c7c1; border-radius:12px; background:#f4f7f5; margin:10px 0; overflow:hidden; font-size:13px; line-height:1.5; max-width:560px; }
+    .bg .mock .cap { background:#dfe8e4; color:#41524d; font-size:12px; font-weight:800; padding:2px 10px; }
+    .bg .mock .in { padding:10px; }
+    .bg .mtabs { display:flex; gap:5px; flex-wrap:wrap; }
+    .bg .mtabs span { border:1.5px solid #cfdad5; background:#fff; border-radius:8px; padding:3px 9px; font-weight:800; white-space:nowrap; }
+    .bg .mtabs span.on { background:var(--primary); color:#fff; border-color:var(--primary); }
+    .bg .hit { outline:4px solid var(--point); outline-offset:2px; }
+    .bg .hand { color:var(--point); font-weight:900; font-size:14px; margin-top:6px; }
+    .bg .dlg { background:#fff; border:2px solid #cfdad5; border-radius:12px; padding:12px; max-width:300px; margin:4px auto; box-shadow:0 4px 14px rgba(0,0,0,.12); }
+    .bg .fld { border:2px solid #1c302d; border-radius:8px; padding:4px 10px; margin:6px 0; background:#fff; min-height:30px; font-family:Consolas,monospace; }
+    .bg .btnm { display:inline-block; border-radius:8px; padding:3px 14px; font-weight:900; border:1.5px solid #cfdad5; background:#fff; }
+    .bg .btnm.p { background:var(--primary); color:#fff; border-color:var(--primary); }
+    .bg .cols3 { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+    .bg .seats { display:grid; grid-template-columns:repeat(5,1fr); gap:5px; max-width:260px; }
+    .bg .seats span { background:#aeb9b4; color:#fff; border-radius:8px; text-align:center; font-weight:900; padding:4px 0; }
+    .bg .chip { display:inline-block; border:1.5px solid #cfdad5; border-radius:99px; padding:1px 10px; margin:2px; background:#fff; font-weight:800; }
+    .bg .chip.on { background:var(--primary); color:#fff; border-color:var(--primary); }
+    .bg .keycard { display:grid; grid-template-columns:auto 1fr; gap:6px 12px; align-items:center; border:2px dashed var(--primary); border-radius:14px; padding:12px 14px; background:#fbfdfc; margin:10px 0; }
+    .bg .keycard .ln { border-bottom:2px solid #b9c7c1; height:1.6em; }
+    @media (max-width:560px) { .bg .cols3 { grid-template-columns:1fr; } .bstep > label { font-size:16px; } .bg-progress { top:0; } }
+    @media print { .bg-progress { position:static; } }
   </style>
 </head>
 <body>
   <div class="topnav"><div class="bar">
-    <a class="brand" href="#top"><span class="logo">📖</span><span>安裝教學（五級版）<small>教師工作台・部署方法</small></span></a>
+    <a class="brand" href="#top"><span class="logo">📖</span><span>安裝教學<small>超級新手也看得懂</small></span></a>
     <a class="nl" href="#part0">🧭 開始前</a>
     <a class="nl" href="#level1">🟢 1 大屏</a>
     <a class="nl" href="#level2">🔵 2 工作台</a>
@@ -166,11 +210,10 @@
   <header class="hero" id="top">
     <span class="badge">🟢 大屏 → 🔵 工作台 → 🟡 AI → 🟠 LINE → 🟣 桌寵・每一步都附操作畫面</span>
     <h1>📖 安裝教學（五級版）<br><em>照紅框點就對了</em></h1>
-    <p class="intro">從<strong>只用大屏</strong>開始，不用金鑰；用得順手再一級一級往下加。每一步都附操作畫面，<strong>照紅框點</strong>就對了。</p>
+    <p class="intro">完全不懂電腦也沒關係。從<strong>只用大屏</strong>開始，不用金鑰；用得順手再一級一級往下加。每一步都附操作畫面，<strong>照紅框點</strong>、做完<strong>打一個勾</strong>就對了。第 1 級大約 5 分鐘。</p>
     <div class="pillcta">還在考慮要不要用？先看一頁式功能介紹，那頁也適合直接轉給同事。 <a href="Intro.html">一頁式功能介紹 →</a></div>
   </header>
 
-  <div class="wrap" style="margin-top:14px"><div class="ok" style="font-size:16px">🐣 <strong>完全沒碰過、怕看不懂？</strong>先看 <a href="Beginner.html"><strong>超級新手設定教學</strong></a>：一步一張示意圖、一步打一個勾，5 分鐘把大屏設定好。</div></div>
   <nav class="toc"><div class="wrap">
     <a href="#part0">開始前</a>
     <a href="#level1">🟢 第 1 級 大屏</a>
@@ -187,9 +230,18 @@
   </div></nav>
 
   <main>
-    <section id="part0">
-      <div class="sec-head"><div class="sec-icon">🧭</div><div class="sec-titles"><h2><span class="sec-num">1.</span>開始前：你想用到哪一級？</h2></div></div>
-      <p class="lead">系統分成五級，<strong>從第 1 級開始，用得順手再往下加</strong>。沒有 AI 經驗的老師，只用第 1 級就很夠用。</p>
+    <section id="part0" class="bg">
+      <span id="before"></span><span id="words"></span>
+      <div class="sec-head"><div class="sec-icon">🧭</div><div class="sec-titles"><h2><span class="sec-num">1.</span>開始前：先放心三件事</h2></div></div>
+      <ul class="plain">
+        <li><b>不用安裝任何東西。</b>它就是一個網頁，像看新聞一樣打開就好。</li>
+        <li><b>第 1 級不用申請帳號、不用花錢。</b>後面幾級也都用免費方案。</li>
+        <li><b>按錯不會壞。</b>真的弄亂了，照這頁重做一次就好。</li>
+      </ul>
+      <div class="bg-progress"><span id="bgProgText">完成 0 步</span><span class="bar"><i id="bgProgBar"></i></span><button type="button" id="bgProgReset">重來</button></div>
+      <p class="lead">每一步的標題前面都有一個方框，做完就打勾，上面的進度條會跟著走；關掉網頁再打開，勾勾還在。</p>
+
+      <h3>系統分成五級，只做第 1 級就能用</h3>
       <figure class="diagram"><svg viewBox="0 0 780 462" role="img" aria-label="五級路線圖（點方框可跳到該級教學）：第 1 級只用大屏，第 2 級加工作台與雲端，第 3 級加 AI，第 4 級加 LINE，第 5 級加桌寵">
 <defs><marker id="ar-road" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
 <a href="#level1"><rect class="d-t1" x="10" y="10" width="344" height="76" rx="12"/>
@@ -242,19 +294,38 @@
 <text class="d-text" x="426" y="433" text-anchor="start">直連資料、按住說話就出字</text>
 <path class="d-line" d="M356,416 L406,416" marker-end="url(#ar-road)"/>
 </svg><figcaption>由上往下，一級一級加。停在哪一級都可以；上一級的資料和設定不會不見。</figcaption></figure>
+      <div class="tablebox"><table>
+        <tr><th>我想要</th><th>做到</th><th>要多久</th></tr>
+        <tr><td>教室大屏點名、收作業、補交、訂正、黑板聯絡本、抽籤、計時</td><td><a href="#level1">🟢 第 1 級</a></td><td>5 分鐘</td></tr>
+        <tr><td>在家用手機或電腦寫聯絡本，隔天大屏自動出現；查詢統計、任務清單、Google 日曆</td><td><a href="#level2">🔵 第 2 級</a></td><td>20 分鐘</td></tr>
+        <tr><td>請 AI 拆公文、回覆家長、做學習單、改作文</td><td><a href="#level3">🟡 第 3 級</a></td><td>3 分鐘</td></tr>
+        <tr><td>在 LINE 傳一句話就建任務、每天早上收到點名回報</td><td><a href="#level4">🟠 第 4 級</a></td><td>30 分鐘</td></tr>
+        <tr><td>桌面小綿助陪伴與健康提醒、按住說話就出字</td><td><a href="#level5">🟣 第 5 級</a></td><td>3 分鐘</td></tr>
+      </table></div>
 
-      <h3>我想要……要做到哪一級？</h3>
-      <table>
-        <tr><th>我想要</th><th>做到</th></tr>
-        <tr><td>教室大屏點名、收作業、補交、訂正、黑板聯絡本、班級工具</td><td><a href="#level1">🟢 第 1 級</a></td></tr>
-        <tr><td>在家寫聯絡本隔天黑板出現、查詢統計、平板和大屏同步、任務清單、Google 日曆與 Tasks</td><td><a href="#level2">🔵 第 2 級</a></td></tr>
-        <tr><td>AI 幫我拆公文、整合 LINE 群組訊息、做學習單、改作文、生海報、建 Google 表單</td><td><a href="#level3">🟡 第 3 級</a></td></tr>
-        <tr><td>在 LINE 傳一句話就建任務、每天早上收到點名回報</td><td><a href="#level4">🟠 第 4 級</a></td></tr>
-        <tr><td>桌面小綿助陪伴與健康提醒、按住說話就出字</td><td><a href="#level5">🟣 第 5 級</a></td></tr>
-      </table>
+      <h3>你只需要準備</h3>
+      <ul class="plain">
+        <li>教室那台<b>接著大電視（或投影機）的電腦</b>，而且連得上網路。</li>
+        <li>電腦裡的 <b>Chrome</b>（圓圓的紅黃綠藍圖示）或 <b>Edge</b>（藍綠色海浪圖示），兩個都可以。<b>之後請固定用同一個</b>，換瀏覽器就看不到之前的資料。</li>
+        <li>知道你們班<b>最後一號是幾號</b>、<b>哪幾號沒有人</b>（空號）。</li>
+      </ul>
+
+      <h3>看不懂的字，先看這裡</h3>
+      <div class="tablebox"><table>
+        <tr><th style="white-space:nowrap">這個字</th><th>白話意思</th></tr>
+        <tr><td>網址</td><td>網頁的「地址」，一串英文，通常是 https 開頭。</td></tr>
+        <tr><td>點一下</td><td>滑鼠移過去，按<b>左邊</b>那顆鍵一次。觸控大電視就用手指碰一下。</td></tr>
+        <tr><td>分頁</td><td>畫面上方那一排按鈕（點名、作業繳交…），點哪個就換到哪一頁。</td></tr>
+        <tr><td>複製／貼上</td><td>複製：先選起來，按 <span class="kbd">Ctrl</span>＋<span class="kbd">C</span>。貼上：點一下要放的格子，按 <span class="kbd">Ctrl</span>＋<span class="kbd">V</span>。</td></tr>
+        <tr><td>找字</td><td>畫面字太多找不到某一格？按 <span class="kbd">Ctrl</span>＋<span class="kbd">F</span>，打要找的字（例如「空號」），畫面會自動跳到那裡。</td></tr>
+        <tr><td>重新整理</td><td>按鍵盤最上面一排的 <span class="kbd">F5</span>，網頁會重新載入一次。</td></tr>
+        <tr><td>金鑰</td><td>一長串亂碼，就是「密碼」。第 2 級才會用到，<b>不要傳給別人、不要貼到群組</b>。</td></tr>
+        <tr><td>本機</td><td>就是「這台電腦」。資料存本機＝只放在這台電腦裡，不會傳出去。</td></tr>
+        <tr><td>記事本</td><td>Windows 內建寫字的小程式。按鍵盤左下角的 <span class="kbd">⊞ Win</span>，打「記事本」三個字，按 <span class="kbd">Enter</span> 就會打開。</td></tr>
+      </table></div>
 
       <h3>📝 做到第 2 級再準備：一份「金鑰記錄表」</h3>
-      <p class="lead">第 1 級完全用不到。從第 2 級開始會拿到幾串網址和「金鑰」（一長串亂碼），<strong>代號照用到的先後排成 A、B、C……</strong>。按下面的「複製」→ 開 Windows 的<strong>記事本</strong>（開始功能表搜尋「記事本」）→ 貼上 → 存到桌面，取名 <code>我的教師工作台金鑰.txt</code>。之後拿到哪一串，就貼在對應那一行後面。每個要貼的欄位上都印著同樣的代號，<strong>照代號貼就對了</strong>。</p>
+      <p class="lead">第 1 級完全用不到。從第 2 級開始會拿到幾串網址和「金鑰」，<b>代號照用到的先後排成 A、B、C……</b>。按「複製記錄表」→ 打開記事本 → 貼上 → 存到桌面，取名 <code>我的教師工作台金鑰.txt</code>。之後拿到哪一串，就貼在對應那一行後面。每個要貼的欄位上都印著同樣的代號，<b>照代號貼就對了</b>。</p>
       <pre class="notes" id="keyNotes">🌐A 機器人網址（第 2 級）：
 🔑B 教室大屏金鑰（第 2 級）：
 🔑C 工作台同步金鑰（第 2 級）：
@@ -264,25 +335,24 @@
 👤G LINE userId（第 4 級，U 開頭）：</pre>
       <div class="dl-row"><button class="copy-btn" data-copy="#keyNotes">複製記錄表</button><span class="lead">⚠ 這份檔案不要傳給別人、不要放群組；教室電腦只需要 🌐A 和 🔑B。</span></div>
 
-      <h3>🗝 代號對照表</h3>
-      <table>
+      <details class="box"><summary style="cursor:pointer;font-weight:900">🗝 代號對照表（每一把在哪裡拿到、貼到哪裡）</summary>
+      <div class="tablebox"><table>
         <tr><th>代號</th><th>第幾級</th><th>這是什麼</th><th>哪裡拿到</th><th>貼到哪裡</th></tr>
-        <tr><td><strong>🌐A</strong></td><td>🔵 第 2 級</td><td>機器人網址（/exec 結尾）</td><td>第 2 級第 3 關，部署後產生</td><td>大屏設定、工作台「① 雲端／LINE 小幫手」、小綿助雲端連線；（第 4 級）Webhook</td></tr>
-        <tr><td><strong>🔑B</strong></td><td>🔵 第 2 級</td><td>教室大屏金鑰（教室專用，只能報當天）</td><td rowspan="2">第 2 級第 2 關「① 初始化」彈窗<br><span class="lead">隨時可用選單「🔑 顯示我的金鑰」再看</span></td><td>晨間大屏「設定」的 🔑B 欄（教室電腦只放這把）</td></tr>
+        <tr><td><strong>🌐A</strong></td><td>🔵 第 2 級</td><td>機器人網址（/exec 結尾）</td><td>第 2 級第 3 步，部署後產生</td><td>大屏設定、工作台「① 雲端／LINE 小幫手」、小綿助雲端連線；（第 4 級）Webhook</td></tr>
+        <tr><td><strong>🔑B</strong></td><td>🔵 第 2 級</td><td>教室大屏金鑰（教室專用，只能報當天）</td><td rowspan="2">第 2 級第 2 步「① 初始化」彈窗<br><span class="lead">隨時可用選單「🔑 顯示我的金鑰」再看</span></td><td>晨間大屏「設定」的 🔑B 欄（教室電腦只放這把）</td></tr>
         <tr><td><strong>🔑C</strong></td><td>🔵 第 2 級</td><td>工作台同步金鑰（老師專用，可查歷史）</td><td>工作台「① 雲端／LINE 小幫手」、小綿助雲端連線、大屏「查詢統計」</td></tr>
         <tr><td><strong>🔑D</strong></td><td>🟡 第 3 級</td><td>AI 金鑰（Gemini）</td><td><a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a> 免費申請</td><td>工作台「② AI 設定」、小綿助「🎙 語音輸入」；（第 4 級）試算表選單「④ 填入 Gemini 金鑰」</td></tr>
         <tr><td><strong>🔑E</strong></td><td>🟠 第 4 級</td><td>LINE Channel access token</td><td>LINE Developers 按 Issue 發行</td><td>試算表選單「② 填入 LINE Token（🔑E）」</td></tr>
         <tr><td><strong>🔑F</strong></td><td>🟠 第 4 級</td><td>Webhook 驗證參數</td><td>第 2 級初始化時已一起產生（先不用）</td><td>接在 🌐A 後面：<code>🌐A?hook=🔑F</code>，貼到 LINE 的 Webhook URL</td></tr>
         <tr><td><strong>👤G</strong></td><td>🟠 第 4 級</td><td>LINE userId（U 開頭，用來鎖門）</td><td>對機器人傳「我的ID」</td><td>試算表選單「③ 填入我的 LINE userId」</td></tr>
-      </table>
+      </table></div></details>
       <div class="warn">💰 <strong>費用：全部免費。</strong>Google 免費額度＋ Gemini 免費額度＋ LINE 官方帳號免費方案就夠用。LINE 唯一的量限制是「主動推播」每月 200 則（晨間回報一天 2 則，一個月約 44 則）。</div>
     </section>
 
-    <section id="level1" class="tier1">
-      <span id="part3"></span>
-      <div class="sec-head"><div class="sec-icon">🟢</div><div class="sec-titles"><div class="tier-head"><h2><span class="sec-num">2.</span>第 1 級：只用晨間大屏</h2><span class="pill">約 5 分鐘</span><span class="pill">不用金鑰</span></div></div></div>
-      <p class="lead">沒用過 AI、沒碰過雲端也沒關係。打開網址、填幾個欄位，教室電腦就能點名、收作業、寫黑板。<strong>資料只存在這台電腦</strong>，不會上傳到任何地方。</p>
-      <div class="gets"><span>不用申請任何東西</span></div>
+    <section id="level1" class="tier1 bg">
+      <span id="part3"></span><span id="lv1"></span>
+      <div class="sec-head"><div class="sec-icon">🟢</div><div class="sec-titles"><div class="tier-head"><h2><span class="sec-num">2.</span>第 1 級：把教室大屏設定好</h2><span class="pill">約 5 分鐘</span><span class="pill">不用金鑰</span></div></div></div>
+      <p class="lead">一共 8 步，最後兩步選用。沒用過 AI、沒碰過雲端也沒關係。<strong>資料只存在這台電腦</strong>，不會上傳到任何地方。</p>
       <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="第 1 級：晨間大屏設定操作畫面">
 <defs><marker id="ar-pl" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
 <rect class="d-win" x="8" y="8" width="170" height="170" rx="8"/><rect class="d-wbar" x="9" y="9" width="168" height="19" rx="7"/><rect class="d-wbar" x="9" y="20" width="168" height="8" rx="0"/><circle cx="18" cy="18" r="3" fill="#e0766a"/><circle cx="27" cy="18" r="3" fill="#e8c15a"/><circle cx="36" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="46" y="22" text-anchor="start">晨間大屏（教室電腦）</text><rect class="d-btn-l" x="16" y="36" width="36" height="20" rx="5"/><text class="d-btxt-d" x="34" y="50" text-anchor="middle">點名</text><rect class="d-btn-l" x="57" y="36" width="36" height="20" rx="5"/><text class="d-btxt-d" x="75" y="50" text-anchor="middle">作業</text><rect class="d-btn-l" x="98" y="36" width="25" height="20" rx="5"/><text class="d-btxt-d" x="110" y="50" text-anchor="middle">…</text><rect class="d-btn-a" x="128" y="36" width="36" height="20" rx="5"/><text class="d-btxt-d" x="146" y="50" text-anchor="middle">設定</text><rect class="d-hl" x="125" y="33" width="42" height="26" rx="6"/><path class="d-cursor" d="M154,48 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/><rect class="d-seat" x="20" y="68" width="23" height="26" rx="4"/><rect class="d-seat" x="49" y="68" width="23" height="26" rx="4"/><rect class="d-seat" x="78" y="68" width="23" height="26" rx="4"/><rect class="d-seat" x="108" y="68" width="23" height="26" rx="4"/><rect class="d-seat" x="137" y="68" width="23" height="26" rx="4"/><rect class="d-seat" x="20" y="100" width="23" height="26" rx="4"/><rect class="d-seat" x="49" y="100" width="23" height="26" rx="4"/><rect class="d-seat" x="78" y="100" width="23" height="26" rx="4"/><rect class="d-seat" x="108" y="100" width="23" height="26" rx="4"/><rect class="d-seat" x="137" y="100" width="23" height="26" rx="4"/><rect class="d-seat" x="20" y="132" width="23" height="26" rx="4"/><rect class="d-seat" x="49" y="132" width="23" height="26" rx="4"/><rect class="d-seat" x="78" y="132" width="23" height="26" rx="4"/><rect class="d-seat" x="108" y="132" width="23" height="26" rx="4"/><rect class="d-seat" x="137" y="132" width="23" height="26" rx="4"/>
@@ -302,56 +372,127 @@
 <text class="d-small" x="687" y="218" text-anchor="middle">不用按存檔</text>
 </svg>
 </figure>
-      <div class="step"><div class="step-no">1</div><div class="step-body">
-        <strong class="t">教室電腦（接投影機或觸控大屏）開啟大屏網址</strong>
-        <div class="copyrow"><code id="urlMorning">（載入中…）</code><button class="copy-btn" data-copy="#urlMorning">複製</button></div>
-      
+
+      <div class="bstep"><label><input type="checkbox"><span class="bno">第 1 步</span><span class="btt">在教室電腦打開大屏</span></label><div class="bbody">
+        <p>請在<b>教室那台電腦</b>上，點下面這顆綠色按鈕；或複製網址貼到瀏覽器上方的網址列。</p>
+        <p><a class="big-btn" href="Morning.html" target="_blank" rel="noopener">👉 點我打開晨間大屏</a></p>
+        <div class="copyrow"><code id="urlMorning">（載入中…）</code><button class="copy-btn" data-copy="#urlMorning">複製網址</button></div>
+        <div class="see">左邊一格一格的座號（1、2、3…），右邊一塊綠色黑板。</div>
+        <div class="mock"><div class="cap">示意圖</div><div class="in">
+          <div class="mtabs"><span class="on">點名</span><span>作業繳交</span><span>作業補交</span><span>作業訂正</span><span>…</span><span>班級工具</span><span>設定</span></div>
+          <div style="display:flex;gap:10px;margin-top:8px"><div class="seats" style="flex:1"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span></div><div style="flex:1;background:#2f4a3f;border:4px solid #8a5a33;border-radius:8px;color:#cfe0d6;padding:6px;font-size:12px">今天還沒有聯絡本內容。</div></div>
+        </div></div>
+        <div class="warn">⭐ <b>順便把它存起來</b>，以後不用再找：在大屏那一頁按 <span class="kbd">Ctrl</span>＋<span class="kbd">D</span>，再按 <span class="q">完成</span>。以後打開瀏覽器，上方的書籤列就有它。</div>
       </div></div>
-      <div class="step"><div class="step-no">2</div><div class="step-body">
-        <strong class="t">點最上排<strong>最右邊的分頁「設定」</strong>→ 輸入密碼（預設 <code>1234</code>）→ 填好 → 最下面「儲存設定」</strong>
-        <table>
-          <tr><th>欄位</th><th>填什麼</th></tr>
-          <tr><td>班級名稱</td><td>例：601</td></tr>
-          <tr><td>班級最大座號／空號</td><td>照實填；轉走的座號填進「空號」就不會出現</td></tr>
-          <tr><td>科目管理／作業項目</td><td>點亮要收作業的科目與項目；不夠的自己新增</td></tr>
-          <tr><td>兩個時間</td><td>預設 08:00 遲到界線／08:05 未填轉未到，都可以自訂</td></tr>
-          <tr><td>設定頁密碼</td><td>建議改掉預設的 1234，免得學生進設定亂改</td></tr>
-          <tr><td>💾 資料要存在哪裡？</td><td>第 1 級選「💻 只存在這台電腦」。之後做第 2 級時再改選「☁️ 存到雲端」（可以跟工作台連線）</td></tr>
-          <tr><td>聯絡本字體</td><td>一般：標準／粉圓／芫荽；注音：注音芫荽／注音粉圓（低年級選注音體，第一次切換要等字型下載）</td></tr>
-        </table>
-        <span class="lead">設定頁下面「第 2 級」「第 4 級」那兩塊先不用打開。</span>
+
+      <div class="bstep"><label><input type="checkbox"><span class="bno">第 2 步</span><span class="btt">點最右邊的「設定」</span></label><div class="bbody">
+        <p>看畫面上方那一排按鈕，<b class="pt">最右邊</b>那一顆叫 <span class="q">設定</span>，點它一下。</p>
+        <div class="mock"><div class="cap">示意圖：紅框就是要點的地方</div><div class="in">
+          <div class="mtabs"><span class="on">點名</span><span>作業繳交</span><span>…</span><span>心智圖</span><span>班級工具</span><span class="hit">設定</span></div>
+          <div class="hand">☝ 點這裡</div>
+        </div></div>
       </div></div>
-      <div class="step"><div class="step-no">3</div><div class="step-body">
-        <strong class="t">（選用）開機自動全螢幕開啟大屏</strong>
-        <p>① 按你教室電腦用的瀏覽器下載啟動檔（會存到「下載」資料夾）：</p>
+
+      <div class="bstep"><label><input type="checkbox"><span class="bno">第 3 步</span><span class="btt">輸入密碼 1234</span></label><div class="bbody">
+        <div class="see">畫面中間跳出一個小視窗，寫著「請輸入設定頁密碼」。</div>
+        <p>用鍵盤打 <b class="pt" style="font-size:24px">1234</b>（預設 <code>1234</code>），再點 <span class="q">確定</span>。</p>
+        <div class="mock"><div class="cap">示意圖</div><div class="in"><div class="dlg"><b>請輸入設定頁密碼</b><div class="fld">1234</div><div style="text-align:right"><span class="btnm">取消</span> <span class="btnm p hit">確定</span></div></div></div></div>
+        <p class="lead">這個密碼是防學生亂改用的。第 7 步會教你換成自己的。打了沒反應？鍵盤右邊的數字鍵要先按一下 <span class="kbd">Num Lock</span>。</p>
+      </div></div>
+
+      <div class="bstep"><label><input type="checkbox"><span class="bno">第 4 步</span><span class="btt">填班級資料（只有 3 格）</span></label><div class="bbody">
+        <div class="see">一整頁的設定格子。不用每一格都填，只要找到下面這 3 格。</div>
+        <div class="mock"><div class="cap">示意圖（實際畫面的排列可能不太一樣，認格子上面的字就好）</div><div class="in"><div class="cols3">
+          <div>班級名稱<div class="fld">601</div></div><div>班級最大座號<div class="fld">26</div></div><div>空號<div class="fld">4、13</div></div></div></div></div>
+        <ol class="plain">
+          <li><b>班級名稱</b>：點一下格子，打你們班，例如 <span class="q">601</span>。</li>
+          <li><b>班級最大座號</b>：往下捲一點就看到。打你們班<b>最後一號</b>，例如最後一號是 26 號，就打 <span class="q">26</span>。</li>
+          <li><b>空號</b>：就在「班級最大座號」旁邊。中間有沒有人的座號（轉走的同學）才要填，用「、」隔開，例如 <span class="q">4、13</span>。<b>沒有空號就不用填。</b></li>
+        </ol>
+        <p class="lead">找不到？按 <span class="kbd">Ctrl</span>＋<span class="kbd">F</span> 打「最大座號」就會跳過去。如果有看到「我教的班級」這一格，<b>留空不用填</b>。</p>
+        <div class="warn">🔒 這裡<b>只用座號</b>，不用、也請不要打學生姓名；聯絡本也請不要寫學生姓名或個資。</div>
+      </div></div>
+
+      <div class="bstep"><label><input type="checkbox"><span class="bno">第 5 步</span><span class="btt">選要收作業的科目、聯絡本字體</span></label><div class="bbody">
+        <p>繼續往下捲，找到 <b>科目管理</b> 這幾個字。每個科目是一顆小按鈕：<b>深綠色有打勾＝會出現</b>，白色＝不出現，點一下就可以切換。不夠的科目可以在下面「自訂科目名稱」打字後按「＋ 新增科目」。</p>
+        <div class="mock"><div class="cap">示意圖</div><div class="in"><span class="chip on">國語 ✓</span><span class="chip on">數學 ✓</span><span class="chip on">英語 ✓</span><span class="chip">生活</span><span class="chip">音樂</span><span class="chip on">聯絡簿 ✓</span></div></div>
+        <p>下面一大片「<b>作業項目</b>」是每一科常交的作業（例如國語的「生字簿」「圈詞」），點亮的才會出現在收作業的選單。</p>
+        <p>往上一點還有「<b>聯絡本字體</b>」：一般選「標準字體」就好；低年級可以選「<b>注音粉圓</b>」或「注音芫荽」，黑板上的字會帶注音（第一次切換要等幾秒下載字型）。</p>
+        <div class="ok">😌 <b>不確定就先不要動</b>，預設的國語、數學、英語、自然、社會、聯絡簿、通知單已經夠用，之後用到再回來點亮就好。</div>
+      </div></div>
+
+      <div class="bstep"><label><input type="checkbox"><span class="bno">第 6 步</span><span class="btt">看一下兩個時間</span></label><div class="bbody">
+        <p>再往下捲過作業項目，會看到兩個時間：</p>
+        <div class="tablebox"><table>
+          <tr><th>格子</th><th>預設</th><th>意思</th></tr>
+          <tr><td>遲到界線</td><td>08:00</td><td>這個時間以後才點「到校」的，系統偷偷記成遲到（大屏上不會寫出來，孩子看不到）。</td></tr>
+          <tr><td>自動缺席</td><td>08:05</td><td>到這個時間還沒點的座號，自動變成「未到」。</td></tr>
+        </table></div>
+        <p>跟你們學校的時間一樣就<b>不用改</b>。不一樣就點格子改成你們的時間。</p>
+      </div></div>
+
+      <div class="bstep"><label><input type="checkbox"><span class="bno">第 7 步</span><span class="btt">換一個自己的密碼、確認資料存這台電腦</span></label><div class="bbody">
+        <p>找到寫著 <b>設定頁密碼（預設 1234，請改成只有您知道的）</b> 的格子（按 <span class="kbd">Ctrl</span>＋<span class="kbd">F</span> 打「設定頁密碼」最快）。點一下格子，把裡面的黑點全部刪掉，打一個<b>你記得住、學生猜不到</b>的密碼。</p>
+        <div class="warn">✏️ 請現在把新密碼寫在你的教師手冊裡。忘記了只能清掉這台瀏覽器裡這個網站的資料，<b>設定和紀錄會一起不見</b>。</div>
+        <p>再往下找到「<b>💾 資料要存在哪裡？</b>」——確認左邊 <span class="q">💻 只存在這台電腦（本機）</span> 前面的圓圈是選起來的（預設就是）。</p>
+        <p class="lead">設定頁最下面「🔵 第 2 級」「🟠 第 4 級」那兩塊<b>先不用打開</b>。</p>
+      </div></div>
+
+      <div class="bstep"><label><input type="checkbox"><span class="bno">第 8 步</span><span class="btt">按「儲存設定」，再檢查一次（最重要！）</span></label><div class="bbody">
+        <p>捲到<b>最下面</b>，點深綠色的 <span class="q">儲存設定</span>。</p>
+        <div class="mock"><div class="cap">示意圖</div><div class="in"><span class="btnm p hit" style="font-size:16px;padding:6px 18px">儲存設定</span><div class="hand">☝ 沒按這顆，前面填的都不算</div></div></div>
+        <h4>檢查有沒有成功</h4>
+        <ol class="plain">
+          <li>點上方最左邊的 <span class="q">點名</span>。座號是不是到你填的最後一號？空號是不是不見了？</li>
+          <li>點一下 <b>1 號</b>。它變成綠色的「到校」，就是成功了。再多點幾下會輪流變成 病假 → 事假 → 未到 → 未填。</li>
+          <li>到 <span class="q">作業繳交</span> 新增一科作業；回點名頁，在黑板上方按 <span class="q">✏️ 編輯</span> 寫一句再按儲存。</li>
+          <li>按 <span class="kbd">F5</span>。畫面閃一下之後，剛剛點的、寫的<b>都還在</b>，代表資料有存住。</li>
+        </ol>
+        <div class="ok">🎉 <b>第 1 級完成！</b>明天早上就可以用了。</div>
+      </div></div>
+
+      <div class="bstep"><label><input type="checkbox"><span class="bno">選用</span><span class="btt">開機自動全螢幕打開大屏</span></label><div class="bbody">
+        <p>① 按你教室電腦用的瀏覽器，下載啟動檔（會存到「下載」資料夾）：</p>
         <div class="dl-row"><button type="button" class="dl-btn" data-kiosk="chrome">⬇ 下載「啟動大屏（Chrome）.bat」</button><button type="button" class="dl-btn" data-kiosk="edge">⬇ 下載「啟動大屏（Edge）.bat」</button></div>
-        <p>② 按 <span class="kbd">Win</span>＋<span class="kbd">R</span> 輸入 <code>shell:startup</code> 按 Enter → 把剛下載的 .bat 檔拖進開啟的資料夾。之後開機就自動全螢幕進大屏（要離開全螢幕按 <span class="kbd">Alt</span>＋<span class="kbd">F4</span>）。</p>
+        <p>② 按 <span class="kbd">⊞ Win</span>＋<span class="kbd">R</span>，跳出小視窗後輸入 <code>shell:startup</code> 按 <span class="kbd">Enter</span> → 會打開一個資料夾 → 把剛下載的 .bat 檔<b>拖進</b>這個資料夾。</p>
+        <p>之後開機就自動全螢幕進大屏；要離開全螢幕按 <span class="kbd">Alt</span>＋<span class="kbd">F4</span>。</p>
         <details class="box"><summary style="cursor:pointer;font-weight:800">想自己做 .bat？</summary>記事本貼上下面這行 →「另存新檔」→ 存檔類型選「所有檔案」→ 檔名打 <code>啟動大屏.bat</code>：
           <div class="copyrow"><code id="kioskCmd">（載入中…）</code><button class="copy-btn" data-copy="#kioskCmd">複製</button></div></details>
       </div></div>
-      
-      <div class="step"><div class="step-no">4</div><div class="step-body">
-        <strong class="t">（內建）🧰 班級工具——不用任何設定</strong>
-        <p>抽籤機、檢核板、計分板、隨機分組、安靜偵測、定評小幫手、番茄鐘、大屏提示、螢幕公告、心智圖；全部只存教室電腦。使用情境見<a href="About.html" target="_blank" rel="noopener">系統說明</a>。</p>
-        <ul>
-          <li>常用的「<strong>✅ 檢核板</strong>」「<strong>📺 螢幕公告</strong>」「<strong>🧠 心智圖</strong>」在大屏<strong>上方選單</strong>就有按鈕，不用先進班級工具。</li>
-          <li><strong>📺 螢幕公告</strong>：自由擺放文字、時鐘、計時器、圖片、QR Code；工具列的「<strong>🔖 書籤</strong>」貼上常用網站網址按 Enter 就加進來，上課點一下就開新分頁。</li>
-          <li><strong>🧠 心智圖</strong>：左上角「圖型」有 8 種——心智圖、邏輯圖、樹狀圖（組織圖）、括號圖、流程圖、時間軸、魚骨圖、泡泡圖；按「＋ 新增」可以空白開始或看範例。按兩下改字、Tab 加下一層、Enter 加同一層，可以匯出 PNG、全螢幕投影。教材小工場生成的心智圖，按「🧠 在大屏心智圖打開」就會出現在這裡的「📂 我的圖」（同一台電腦）。</li>
-        </ul>
-      </div></div>
-      <div class="warn">🔒 <strong>第 1 級的資料範圍：</strong>只存在這台電腦的這個瀏覽器。大屏只用<strong>座號</strong>，不輸入學生姓名；聯絡本也請不要寫學生姓名或個資。換電腦或清除瀏覽器資料，內容就不見了。</div>
-      <div class="box"><strong>前幾天沒交的作業：</strong>到「作業補交」分頁，學生補來了就點掉號碼。點名、作業和聯絡本在這台電腦都留 <strong>180 天</strong>，超過會自動清掉；電腦空間滿了也會先清最舊的。補交清單平常列近 30 天，要看更早的到「設定」調「補交回溯天數」。<br><strong>第 1 級看不到的：</strong>「查詢統計」要接上第 2 級才會出現。之後接上第 2 級時，補交和聯絡本改看雲端，這台電腦以前的紀錄不會搬上去。</div>
-      <div class="ok">✅ <strong>第 1 級完成！</strong>測一下：點幾個座號 → 到「作業繳交」新增一科 → 黑板按「✏️ 編輯」寫一句並儲存 → 按 F5 重新整理，內容都還在就對了。</div>
+
+      <h3>☀️ 每天怎麼用（只要會這四件事）</h3>
+      <div class="tablebox"><table>
+        <tr><th style="white-space:nowrap">要做的事</th><th>怎麼做</th></tr>
+        <tr><td>點名</td><td>學生進教室，自己點自己的座號一下，變綠色「到校」。請假的由老師多點幾下，換成病假或事假。</td></tr>
+        <tr><td>寫聯絡本</td><td>在「點名」頁右邊的黑板上方，點 <span class="q">✏️ 編輯</span>，直接打字，打完按儲存。字太小就按 <span class="q">字＋</span>。</td></tr>
+        <tr><td>收作業</td><td>點上方 <span class="q">作業繳交</span> → 選科目和作業 → 新增。交了的學生點自己的座號。前幾天沒交的，到 <span class="q">作業補交</span>，補來了就點掉號碼。</td></tr>
+        <tr><td>計時</td><td>右上角點 <span class="q">5分</span> 或 <span class="q">10分</span>，再點 <span class="q">開始</span>。</td></tr>
+      </table></div>
+      <h4>🧰 班級工具（不用任何設定）</h4>
+      <p>抽籤機、檢核板、計分板、隨機分組、定評小幫手、番茄鐘、大屏提示、螢幕公告、心智圖都在上方的 <span class="q">班級工具</span> 裡，有空點進去玩玩看，不會壞。</p>
+      <ul class="plain">
+        <li>常用的「<strong>✅ 檢核板</strong>」「<strong>📺 螢幕公告</strong>」「<strong>🧠 心智圖</strong>」在大屏<strong>上方選單</strong>就有按鈕。</li>
+        <li><strong>📺 螢幕公告</strong>：自由擺放文字、時鐘、計時器、圖片、QR Code；工具列的「<strong>🔖 書籤</strong>」貼上常用網站網址按 Enter 就加進來。</li>
+        <li><strong>🧠 心智圖</strong>：左上角「圖型」有 8 種——心智圖、邏輯圖、樹狀圖、括號圖、流程圖、時間軸、魚骨圖、泡泡圖；按兩下改字、Tab 加下一層、Enter 加同一層，可以匯出 PNG、全螢幕投影。教材小工場生成的心智圖，按「🧠 在大屏心智圖打開」就會出現在這裡的「📂 我的圖」（同一台電腦）。</li>
+      </ul>
+      <div class="warn">⚠️ <b>第 1 級的資料只存在這台電腦的這個瀏覽器</b>，點名、作業、聯絡本保留 180 天，超過自動清掉。換電腦、換瀏覽器（Chrome 換 Edge）、或請人「清除瀏覽紀錄」，舊紀錄就看不到了。「查詢統計」要接上第 2 級才會出現。想換電腦也看得到，請做第 2 級（接上後補交和聯絡本改看雲端，這台電腦以前的紀錄不會搬上去）。</div>
     </section>
 
-    <section id="level2" class="tierb">
-      <span id="tier1"></span><span id="part2"></span><span id="part1"></span>
-      <div class="sec-head"><div class="sec-icon">🔵</div><div class="sec-titles"><div class="tier-head"><h2><span class="sec-num">3.</span>第 2 級：大屏＋教師工作台（用 GAS 連結）</h2><span class="pill">約 20 分鐘</span><span class="pill">不碰程式碼</span></div></div></div>
-      <p class="lead">在你自己的 Google 帳號複製一份程式，當作「雲端大腦」，把大屏和工作台接起來。接好後可以在家寫聯絡本、隔天黑板自動出現，平板和大屏同步，還多了查詢統計。<strong>先在瀏覽器登入 Google</strong>（右上角看得到你的頭像），建議用<strong>個人 Gmail</strong>（學校帳號可能被管理員擋）。</p>
+    <section id="level2" class="tierb bg">
+      <span id="tier1"></span><span id="part2"></span><span id="part1"></span><span id="lv2"></span>
+      <div class="sec-head"><div class="sec-icon">🔵</div><div class="sec-titles"><div class="tier-head"><h2><span class="sec-num">3.</span>第 2 級：在家也能寫聯絡本（大屏＋教師工作台）</h2><span class="pill">約 20 分鐘</span><span class="pill">不碰程式碼</span></div></div></div>
+      <p class="lead">在你自己的 Google 帳號複製一份程式，當作「雲端大腦」，把大屏和工作台接起來。做完之後：晚上在家用手機或電腦寫好聯絡本，隔天早上大屏自動出現；點名和缺交紀錄也會自動存到你自己的 Google 雲端，還多了查詢統計。</p>
       <div class="gets"><span>會拿到：🌐A 🔑B 🔑C</span><span>（🔑F 會一起產生，第 4 級才用）</span></div>
+      <div class="warn">⏱ 這一級有 5 步，請找一段不會被打斷的 20 分鐘，<b>用電腦做</b>（不要用手機）。先在瀏覽器登入 Google（右上角看得到你的頭像），<b>建議用自己的 Gmail</b>，學校帳號有時會被管理員擋。</div>
+      <h4>先準備好這張小卡（印出來或抄在記事本）</h4>
+      <div class="keycard">
+        <b>🌐A 機器人網址</b><span class="ln"></span>
+        <b>🔑B 大屏金鑰</b><span class="ln"></span>
+        <b>🔑C 工作台金鑰</b><span class="ln"></span>
+      </div>
 
-      <h3>第 1 關：打開工作台（1 分鐘）</h3>
-      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="打開工作台操作畫面">
+      <div class="bstep"><label><input type="checkbox"><span class="bno">第 1 步</span><span class="btt">打開工作台、填基本資料</span></label><div class="bbody">
+        <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="打開工作台操作畫面">
 <defs><marker id="ar-pa" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
 <rect class="d-win" x="8" y="8" width="236" height="170" rx="8"/><rect class="d-wbar" x="9" y="9" width="234" height="19" rx="7"/><rect class="d-wbar" x="9" y="20" width="234" height="8" rx="0"/><circle cx="18" cy="18" r="3" fill="#e0766a"/><circle cx="27" cy="18" r="3" fill="#e8c15a"/><circle cx="36" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="46" y="22" text-anchor="start">瀏覽器</text><rect class="d-field" x="18" y="38" width="192" height="22" rx="4"/><text class="d-mono" x="24" y="53" text-anchor="start">t-borad2026.netlify.app</text><text class="d-title2" x="222" y="54" text-anchor="middle">☆</text><rect class="d-hl" x="212" y="37" width="22" height="24" rx="5"/><rect class="d-hdr" x="18" y="70" width="216" height="34" rx="6"/><text class="d-white" x="28" y="92" text-anchor="start">教師工作台</text><rect class="d-ph" x="18" y="112" width="216" height="22" rx="4"/><rect class="d-ph" x="18" y="140" width="216" height="22" rx="4"/>
 <text class="d-cap" x="126" y="200" text-anchor="middle">① 打開網址</text>
@@ -366,26 +507,20 @@
 <text class="d-small" x="654" y="218" text-anchor="middle">每週下載一次 JSON 備份</text>
 </svg>
 </figure>
-      <div class="step"><div class="step-no">1</div><div class="step-body">
-        <strong class="t">打開工作台網址，加入書籤</strong>
-        <div class="copyrow"><code id="urlIndex">（載入中…）</code><button class="copy-btn" data-copy="#urlIndex">複製</button></div>
-        <p>開啟後按 <span class="kbd">Ctrl</span>＋<span class="kbd">D</span>（或網址列右邊的 ☆）加入書籤，以後一鍵開啟。</p>
+        <p>工作台是<b>老師自己用</b>的那一頁（在家、在辦公室、用手機都可以開）：</p>
+        <p><a class="big-btn ghost" href="Index.html" target="_blank" rel="noopener">👉 打開教師工作台</a></p>
+        <div class="copyrow"><code id="urlIndex">（載入中…）</code><button class="copy-btn" data-copy="#urlIndex">複製網址</button></div>
+        <ol class="plain">
+          <li>打開後按 <span class="kbd">Ctrl</span>＋<span class="kbd">D</span> 加入書籤，以後一鍵開啟。</li>
+          <li>右上角點 <span class="q">⚙ 設定</span> → 分頁 <span class="q">教師資訊</span>：填姓名、職稱 → 按 <span class="q">＋ 新增課程</span> 把任教課程一門一門加進去（例如「六年一班社會」）→ 最下面 <span class="q">儲存設定</span>。</li>
+        </ol>
+        <div class="warn">💡 工作台的任務和記事存在「<b>這台電腦的這個瀏覽器</b>」。請每週到「⚙ 設定 → 備份與還原 → 下載 JSON 備份」，換電腦時用備份檔還原（做完這一級還能雲端備份）。</div>
       </div></div>
-      <div class="step"><div class="step-no">2</div><div class="step-body">
-        <strong class="t">填基本資料</strong>
-        <p>右上「⚙ 設定」→ 分頁「教師資訊」：填姓名、職稱（可填多重身分）→ 按「＋ 新增課程」把任教課程一門一門加進去（例如「六年一班社會」）→ 最下面「儲存設定」。</p>
-      </div></div>
-      <div class="step"><div class="step-no">3</div><div class="step-body">
-        <strong class="t">重要觀念：資料存在「這台電腦的這個瀏覽器」</strong>
-        <p>不用登入、資料不上雲端；但換電腦或換瀏覽器就看不到資料。所以<strong>每週到「⚙ 設定 → 備份與還原 → 下載 JSON 備份」</strong>，換電腦時用備份檔還原（做完這一級還能雲端備份）。</p>
-      </div></div>
-      
-      <h3>第 2 關：一鍵複製試算表副本</h3>
-      <p class="lead">程式已經預先裝在範本試算表裡，點下方按鈕複製一份到你自己的雲端硬碟，<strong>完全不用貼任何程式碼</strong>。</p>
-      <p style="text-align:center;margin:16px 0">
-        <a href="https://docs.google.com/spreadsheets/d/1mP1N5VOtHnaiZAVlAJ5KATyY0G4EyQ50x6vMzR1j5UU/copy" target="_blank" rel="noopener" style="display:inline-block;background:#1d9e5f;color:#fff;font-size:19px;font-weight:900;padding:14px 32px;border-radius:14px;text-decoration:none;box-shadow:0 3px 10px rgba(20,80,50,.3)">📄 點此一鍵建立試算表副本</a>
-      </p>
-      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="第 2 級第 1 關操作畫面">
+
+      <div class="bstep"><label><input type="checkbox"><span class="bno">第 2 步</span><span class="btt">複製一份屬於你的試算表，按「初始化」</span></label><div class="bbody">
+        <p>程式已經預先裝在範本試算表裡，點這顆按鈕複製一份到你自己的雲端硬碟，<b>完全不用貼任何程式碼</b>：</p>
+        <p style="text-align:center"><a class="big-btn" href="https://docs.google.com/spreadsheets/d/1mP1N5VOtHnaiZAVlAJ5KATyY0G4EyQ50x6vMzR1j5UU/copy" target="_blank" rel="noopener" style="background:#1d9e5f">📄 點此一鍵建立試算表副本</a></p>
+        <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="第 2 級第 1 關操作畫面">
 <defs><marker id="ar-t1a" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
 <rect class="d-win" x="8" y="8" width="236" height="170" rx="8"/><rect class="d-wbar" x="9" y="9" width="234" height="19" rx="7"/><rect class="d-wbar" x="9" y="20" width="234" height="8" rx="0"/><circle cx="18" cy="18" r="3" fill="#e0766a"/><circle cx="27" cy="18" r="3" fill="#e8c15a"/><circle cx="36" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="46" y="22" text-anchor="start">docs.google.com</text><text class="d-title2" x="20" y="54" text-anchor="start">要建立文件副本嗎？</text><text class="d-small" x="20" y="74" text-anchor="start">會複製到你的雲端硬碟</text><rect class="d-field" x="20" y="86" width="212" height="22" rx="4"/><text class="d-text" x="26" y="101" text-anchor="start">LINE小幫手 的副本</text><rect class="d-btn-l" x="98" y="138" width="52" height="26" rx="5"/><text class="d-btxt-d" x="124" y="155" text-anchor="middle">取消</text><rect class="d-btn-g" x="158" y="138" width="74" height="26" rx="5"/><text class="d-btxt" x="195" y="155" text-anchor="middle">建立副本</text><rect class="d-hl" x="154" y="134" width="82" height="34" rx="6"/><path class="d-cursor" d="M202,154 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/>
 <text class="d-cap" x="126" y="200" text-anchor="middle">① 點綠色按鈕</text>
@@ -401,7 +536,14 @@
 </svg>
 <figcaption>第 ② 步之後會先跳授權（下一張圖的 4 個畫面），授權完<strong>再點一次「① 初始化」</strong>才會出現第 ④ 步的金鑰視窗。</figcaption>
 </figure>
-      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="第一次授權的四個畫面">
+        <ol class="plain">
+          <li>Google 頁面按藍色的 <span class="q">建立副本</span>（頁面提到「Apps Script 檔案也會一併複製」是正常的）。</li>
+          <li>等幾秒，會開出一張像 Excel 的表格。這張表格是<b>你自己的</b>，別人看不到。</li>
+          <li>再等 5～10 秒，表格<b>上方選單列（檔案、編輯、查看…那一排）的最右邊</b>會多出 <span class="q">🤖 LINE 小幫手</span>。沒看到就按 <span class="kbd">F5</span> 再等一下。</li>
+          <li>點 <span class="q">🤖 LINE 小幫手</span> → 點 <span class="q">① 初始化</span>。<span class="lead">（名字叫 LINE，但第 2 級完全不用 LINE，照點就好。）</span></li>
+        </ol>
+        <div class="see">「需要授權」的視窗。第一次一定會出現，照下面四張圖點：</div>
+        <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="第一次授權的四個畫面">
 <defs><marker id="ar-auth" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
 <rect class="d-win" x="8" y="8" width="170" height="170" rx="8"/><rect class="d-wbar" x="9" y="9" width="168" height="19" rx="7"/><rect class="d-wbar" x="9" y="20" width="168" height="8" rx="0"/><circle cx="18" cy="18" r="3" fill="#e0766a"/><circle cx="27" cy="18" r="3" fill="#e8c15a"/><circle cx="36" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="46" y="22" text-anchor="start">你的試算表</text><rect class="d-code" x="18" y="38" width="150" height="1" rx="0"/><rect class="d-code" x="18" y="60" width="150" height="1" rx="0"/><rect class="d-code" x="18" y="82" width="150" height="1" rx="0"/><rect class="d-code" x="18" y="104" width="150" height="1" rx="0"/><rect class="d-code" x="18" y="126" width="150" height="1" rx="0"/><rect class="d-code" x="18" y="148" width="150" height="1" rx="0"/><rect class="d-modal" x="18" y="48" width="150" height="112" rx="8"/><text class="d-title2" x="30" y="72" text-anchor="start">需要授權</text><text class="d-small" x="30" y="92" text-anchor="start">這個指令碼需要你的</text><text class="d-small" x="30" y="108" text-anchor="start">授權才能執行。</text><rect class="d-btn-l" x="50" y="126" width="48" height="24" rx="5"/><text class="d-btxt-d" x="74" y="142" text-anchor="middle">取消</text><rect class="d-btn-b" x="106" y="126" width="50" height="24" rx="5"/><text class="d-btxt" x="131" y="142" text-anchor="middle">確定</text><rect class="d-hl" x="102" y="122" width="58" height="32" rx="6"/><path class="d-cursor" d="M138,140 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/>
 <text class="d-cap" x="93" y="200" text-anchor="middle">① 需要授權</text>
@@ -421,24 +563,31 @@
 </svg>
 <figcaption>第 ④ 步如果<strong>沒勾「選取全部」</strong>，之後建表單、寫日曆會失敗。這組畫面之後（部署、升級）可能還會再出現，照同樣方式允許即可。</figcaption>
 </figure>
-      <div class="step"><div class="step-no">1</div><div class="step-body">點上方綠色按鈕 → Google 頁面按「<strong>建立副本</strong>」（頁面提到「Apps Script 檔案也會一併複製」是正常的）→ 開啟一份<strong>屬於你自己</strong>的試算表。</div></div>
-      <div class="step"><div class="step-no">2</div><div class="step-body">等 5 秒，試算表<strong>上方選單列最右邊</strong>會出現「<strong>🤖 LINE 小幫手</strong>」（沒看到就按 F5 重新整理）→ 點它 → 選「<strong>① 初始化</strong>」。<br><span class="lead">名字叫「LINE 小幫手」，但第 2 級完全不用 LINE，照點就好。</span></div></div>
-      <div class="step"><div class="step-no">3</div><div class="step-body">第一次會跳出<strong>授權</strong>（上面第二張圖的 4 個畫面）：「需要授權」按<strong>確定</strong> → 選你的帳號 → 看到「Google 尚未驗證這個應用程式」<strong>不用怕</strong>（程式就在你剛複製的試算表裡）→ 點小字「<strong>進階</strong>」→「<strong>前往…（不安全）</strong>」→ 如果出現一排勾選框，勾「<strong>選取全部</strong>」→「<strong>繼續</strong>」（或「允許」）。<br><span class="lead">授權完成後，<strong>再點一次</strong>「🤖 LINE 小幫手 → ① 初始化」。</span></div></div>
-      <div class="step"><div class="step-no">4</div><div class="step-body">跳出的金鑰視窗分成幾段，<strong>現在只要把【第 2 級】那段的兩把</strong>貼進你的金鑰記錄表：<br>・<strong>🔑B</strong> 教室大屏金鑰（第 4 關貼大屏）<br>・<strong>🔑C</strong> 工作台同步金鑰（第 5 關貼工作台）<br><span class="lead">做法：點進視窗裡的文字框 → <span class="kbd">Ctrl</span>＋<span class="kbd">A</span> 全選 → <span class="kbd">Ctrl</span>＋<span class="kbd">C</span> 複製 → 整段貼到記事本最下面，再把兩串搬到對應那一行。<br>【第 4 級】那段的 <strong>🔑F（Webhook 驗證參數）先不用管</strong>，做 LINE 時才用得到。任何時候都能用選單「<strong>🔑 顯示我的金鑰</strong>」再看一次；試算表最前面的「📋 安裝總表」分頁也列出每一把的狀態。</span></div></div>
-      <details class="box" style="margin-top:12px">
-        <summary style="cursor:pointer;font-weight:900">🛠 備用方法：手動貼程式碼（一鍵副本失效時才需要）</summary>
-        <div class="step"><div class="step-no">1</div><div class="step-body">開 <a href="https://sheets.google.com" target="_blank" rel="noopener">sheets.google.com</a> → 按「＋」建新試算表 → 名稱改成 <code>LINE小幫手資料</code> → 上方選單「<strong>擴充功能 → Apps Script</strong>」。</div></div>
-        <div class="step"><div class="step-no">2</div><div class="step-body">
-          開啟本站的程式檔（會顯示一整頁文字）：
-          <div class="copyrow"><code id="urlGs">（載入中…）</code><button class="copy-btn" data-copy="#urlGs">複製</button> <a href="LineBot.gs" target="_blank" rel="noopener"><button class="copy-btn" type="button">直接開啟</button></a></div>
-          在那頁 <span class="kbd">Ctrl</span>＋<span class="kbd">A</span> 全選 → <span class="kbd">Ctrl</span>＋<span class="kbd">C</span> 複製 → 回編輯器把原本內容全刪 → <span class="kbd">Ctrl</span>＋<span class="kbd">V</span> 貼上 → <span class="kbd">Ctrl</span>＋<span class="kbd">S</span> 儲存。<br><span class="lead">✔ 檢查：最後一行是單獨的「}」、儲存時沒有紅色錯誤。</span>
-        </div></div>
-        <div class="step"><div class="step-no">3</div><div class="step-body">回試算表按 F5 重新整理，改用選單「🤖 LINE 小幫手 → ① 初始化」（或在編輯器選函式 <code>setupLineBot</code> 按「執行」，金鑰會出現在下方「執行紀錄」）。</div></div>
-      </details>
+        <ol class="plain">
+          <li>「需要授權」→ 點 <span class="q">確定</span>（或「繼續」）。</li>
+          <li>選你的 Google 帳號。</li>
+          <li class="pt">看到「Google 尚未驗證這個應用程式」<b>不用怕</b>——程式就在你剛複製的試算表裡，不是外面來的。</li>
+          <li>點左下角小小的 <span class="q">進階</span> → 再點最下面的 <span class="q">前往…（不安全）</span>。</li>
+          <li>如果出現一排勾選框，勾 <span class="q">選取全部</span> → 捲到最下面點 <span class="q">繼續</span>（或「允許」）。</li>
+          <li class="pt">授權完，要回到表格<b>再點一次</b>：🤖 LINE 小幫手 → ① 初始化。</li>
+        </ol>
+        <div class="see">跳出一個視窗，上面有好幾串亂碼，分成【第 2 級】【第 4 級】幾段。</div>
+        <p><b>現在只要【第 2 級】那段的兩把</b>：<b>🔑B</b>（教室大屏金鑰）和 <b>🔑C</b>（工作台同步金鑰）。做法：點進視窗裡的文字框 → <span class="kbd">Ctrl</span>＋<span class="kbd">A</span> 全選 → <span class="kbd">Ctrl</span>＋<span class="kbd">C</span> 複製 → 整段貼到記事本，再把兩串搬到小卡對應那一行。</p>
+        <p class="lead">【第 4 級】那段的 <strong>🔑F（Webhook 驗證參數）先不用管</strong>，做 LINE 時才用得到。任何時候都能用選單「🔑 顯示我的金鑰」再看一次；試算表最前面的「📋 安裝總表」分頁也列出每一把的狀態。</p>
+        <details class="box"><summary style="cursor:pointer;font-weight:900">🛠 備用方法：手動貼程式碼（一鍵副本失效時才需要）</summary>
+          <ol class="plain">
+            <li>開 <a href="https://sheets.google.com" target="_blank" rel="noopener">sheets.google.com</a> → 按「＋」建新試算表 → 名稱改成 <code>LINE小幫手資料</code> → 上方選單「<strong>擴充功能 → Apps Script</strong>」。</li>
+            <li>開啟本站的程式檔（會顯示一整頁文字）：
+              <div class="copyrow"><code id="urlGs">（載入中…）</code><button class="copy-btn" data-copy="#urlGs">複製</button> <a href="LineBot.gs" target="_blank" rel="noopener"><button class="copy-btn" type="button">直接開啟</button></a></div>
+              在那頁 <span class="kbd">Ctrl</span>＋<span class="kbd">A</span> 全選 → <span class="kbd">Ctrl</span>＋<span class="kbd">C</span> 複製 → 回編輯器把原本內容全刪 → <span class="kbd">Ctrl</span>＋<span class="kbd">V</span> 貼上 → <span class="kbd">Ctrl</span>＋<span class="kbd">S</span> 儲存。<span class="lead">✔ 檢查：最後一行是單獨的「}」、儲存時沒有紅色錯誤。</span></li>
+            <li>回試算表按 F5 重新整理，改用選單「🤖 LINE 小幫手 → ① 初始化」。</li>
+          </ol>
+        </details>
+      </div></div>
 
-      
-      <h3>第 3 關：部署（把大腦開機，拿到 🌐A）</h3>
-      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="第 2 級第 2 關操作畫面">
+      <div class="bstep"><label><input type="checkbox"><span class="bno">第 3 步</span><span class="btt">「部署」——拿到 🌐A 網址</span></label><div class="bbody">
+        <p class="lead">「部署」聽起來很難，其實只是「請 Google 給這張表格一個網址」。照著點就好：</p>
+        <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="第 2 級第 2 關操作畫面">
 <defs><marker id="ar-t1b" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
 <rect class="d-win" x="8" y="8" width="170" height="170" rx="8"/><rect class="d-wbar" x="9" y="9" width="168" height="19" rx="7"/><rect class="d-wbar" x="9" y="20" width="168" height="8" rx="0"/><circle cx="18" cy="18" r="3" fill="#e0766a"/><circle cx="27" cy="18" r="3" fill="#e8c15a"/><circle cx="36" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="46" y="22" text-anchor="start">你的試算表</text><rect class="d-mbar" x="9" y="29" width="168" height="18" rx="0"/><text class="d-wtxt" x="16" y="42" text-anchor="start">檔案 編輯 檢視</text><text class="d-mtxt" x="170" y="42" text-anchor="end">擴充功能</text><rect class="d-hl" x="121" y="30" width="54" height="17" rx="4"/><rect class="d-box" x="16" y="52" width="154" height="118" rx="4"/><text class="d-small" x="25" y="72" text-anchor="start">外掛程式</text><text class="d-small" x="25" y="93" text-anchor="start">巨集</text><rect class="d-sel" x="19" y="100" width="148" height="19" rx="3"/><rect class="d-hl" x="18" y="99" width="150" height="21" rx="4"/><text class="d-mtxt" x="25" y="114" text-anchor="start">Apps Script</text><path class="d-cursor" d="M156,111 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/>
 <text class="d-cap" x="93" y="200" text-anchor="middle">① 擴充功能</text>
@@ -458,14 +607,21 @@
 </svg>
 <figcaption>存取權一定要選「<strong>任何人</strong>」——安全由亂數金鑰 🔑C／🔑B 把關，不是靠登入。按「部署」若又跳授權，照上一張圖允許。</figcaption>
 </figure>
-      <div class="step"><div class="step-no">1</div><div class="step-body">回到你的試算表 → 上方選單「<strong>擴充功能 → Apps Script</strong>」，會<strong>開新分頁</strong>顯示程式編輯器（滿滿的程式碼不用看、也不要動）。</div></div>
-      <div class="step"><div class="step-no">2</div><div class="step-body">編輯器<strong>右上角藍色「部署」</strong>→「<strong>新增部署</strong>」→ 跳出視窗後，點左上「選取類型」旁的<strong>齒輪 ⚙</strong> → 選「<strong>網頁應用程式</strong>」。</div></div>
-      <div class="step"><div class="step-no">3</div><div class="step-body">「說明」可以空白；執行身分選「<strong>我</strong>」、具有存取權的使用者選「<strong>任何人</strong>」→ 按「<strong>部署</strong>」（若又跳授權，照上面授權圖允許）。</div></div>
-      <div class="step"><div class="step-no">4</div><div class="step-body">完成視窗裡的「<strong>網頁應用程式 網址</strong>」按「複製」（<code>https://script.google.com/macros/s/…/exec</code>）＝ <strong>🌐A 機器人網址</strong>，貼進金鑰記錄表 → 按「完成」。<br><span class="lead">✔ 檢查：把網址貼到瀏覽器新分頁打開，看到 <code>{"ok":true,"service":"teacher-dashboard-line-bot",…}</code> 這種英文就代表大腦開機了。</span><br><span class="lead">🔁 以後更新程式要用「部署 → 管理部署 → ✏️ 編輯 → 版本選『新版本』→ 部署」，網址才不會變；千萬不要再按「新增部署」。</span></div></div>
+        <ol class="plain">
+          <li>表格上方選單點 <span class="q">擴充功能</span> → <span class="q">Apps Script</span>。會開一個滿滿英文程式的新分頁，<b>裡面什麼都不要改</b>。</li>
+          <li>右上角點藍色的 <span class="q">部署</span> → <span class="q">新增部署作業</span>。</li>
+          <li>左上「選取類型」旁邊有個 <span class="q">⚙</span> 齒輪，點它 → 選 <span class="q">網頁應用程式</span>。</li>
+          <li>「說明」可以空白；「執行身分」選 <span class="q">我</span>。</li>
+          <li>「誰可以存取」選 <span class="q pt">任何人</span>（一定要選這個，不然大屏連不上。別擔心，沒有金鑰的人進不來）。</li>
+          <li>點右下角 <span class="q">部署</span>（如果又跳授權，照第 2 步的授權圖允許）。</li>
+          <li>出現「網頁應用程式」下面一長串網址，結尾是 <b class="pt">/exec</b>。點旁邊的 <span class="q">複製</span>，貼到小卡的「🌐A」→ 點 <span class="q">完成</span>。</li>
+        </ol>
+        <div class="see">把 🌐A 網址貼到瀏覽器新分頁打開，會看到一段英文，裡面有 <code>"ok":true</code>——代表雲端大腦開機了。</div>
+        <div class="warn">🔁 以後更新程式要用「部署 → 管理部署 → ✏️ 編輯 → 版本選『新版本』→ 部署」，網址才不會變；<b>千萬不要再按「新增部署」</b>，不然會變成另一個網址。</div>
+      </div></div>
 
-      
-      <h3>第 4 關：把大屏接上（🌐A＋🔑B）</h3>
-      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="晨間大屏設定操作畫面">
+      <div class="bstep"><label><input type="checkbox"><span class="bno">第 4 步</span><span class="btt">回到大屏，貼上 🌐A 和 🔑B</span></label><div class="bbody">
+        <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="晨間大屏設定操作畫面">
 <defs><marker id="ar-pc" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
 <rect class="d-win" x="8" y="8" width="170" height="170" rx="8"/><rect class="d-wbar" x="9" y="9" width="168" height="19" rx="7"/><rect class="d-wbar" x="9" y="20" width="168" height="8" rx="0"/><circle cx="18" cy="18" r="3" fill="#e0766a"/><circle cx="27" cy="18" r="3" fill="#e8c15a"/><circle cx="36" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="46" y="22" text-anchor="start">晨間大屏（教室電腦）</text><rect class="d-btn-l" x="16" y="36" width="36" height="20" rx="5"/><text class="d-btxt-d" x="34" y="50" text-anchor="middle">點名</text><rect class="d-btn-l" x="57" y="36" width="36" height="20" rx="5"/><text class="d-btxt-d" x="75" y="50" text-anchor="middle">作業</text><rect class="d-btn-l" x="98" y="36" width="25" height="20" rx="5"/><text class="d-btxt-d" x="110" y="50" text-anchor="middle">…</text><rect class="d-btn-a" x="128" y="36" width="36" height="20" rx="5"/><text class="d-btxt-d" x="146" y="50" text-anchor="middle">設定</text><rect class="d-hl" x="125" y="33" width="42" height="26" rx="6"/><path class="d-cursor" d="M154,48 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/><rect class="d-seat" x="20" y="68" width="23" height="26" rx="4"/><rect class="d-seat" x="49" y="68" width="23" height="26" rx="4"/><rect class="d-seat" x="78" y="68" width="23" height="26" rx="4"/><rect class="d-seat" x="108" y="68" width="23" height="26" rx="4"/><rect class="d-seat" x="137" y="68" width="23" height="26" rx="4"/><rect class="d-seat" x="20" y="100" width="23" height="26" rx="4"/><rect class="d-seat" x="49" y="100" width="23" height="26" rx="4"/><rect class="d-seat" x="78" y="100" width="23" height="26" rx="4"/><rect class="d-seat" x="108" y="100" width="23" height="26" rx="4"/><rect class="d-seat" x="137" y="100" width="23" height="26" rx="4"/><rect class="d-seat" x="20" y="132" width="23" height="26" rx="4"/><rect class="d-seat" x="49" y="132" width="23" height="26" rx="4"/><rect class="d-seat" x="78" y="132" width="23" height="26" rx="4"/><rect class="d-seat" x="108" y="132" width="23" height="26" rx="4"/><rect class="d-seat" x="137" y="132" width="23" height="26" rx="4"/>
 <text class="d-cap" x="93" y="200" text-anchor="middle">① 最右邊分頁「設定」</text>
@@ -484,14 +640,20 @@
 <text class="d-small" x="687" y="218" text-anchor="middle">右上角 ☁️ 看存檔時間</text>
 </svg>
 </figure>
-      <div class="step"><div class="step-no">1</div><div class="step-body">教室電腦的大屏 →「設定」→ 打開「<strong>🔵 第 2 級：連上工作台</strong>」→「<strong>🌐A</strong>」欄貼 🌐A、「<strong>🔑B</strong>」欄貼 🔑B → 上面「<strong>💾 資料要存在哪裡？</strong>」選「<strong>☁️ 存到雲端</strong>」→ 按「<strong>儲存設定</strong>」。<br><span class="lead">⚠ 教室電腦只填這兩個，別填 🔑C——🔑B 只能回報當天，被學生玩到也拿不到你的資料。</span><br><span class="lead">✔ 檢查：上排多出「查詢統計」，右上角出現「☁️」。大屏每 5 分鐘與離開網頁時會自動存到雲端，不用按按鈕；按一下「☁️」會立刻存一次，變成「☁️ 已存 08:12」這樣就成功了。</span><br><span class="lead">💡 兩種存法的差別：「💻 只存在這台電腦」不用申請、打開就能用，但換電腦就看不到；「☁️ 存到雲端」<strong>可以跟教師工作台連線</strong>——在家用工作台寫的聯絡本、交代的作業會出現在大屏，大屏的點名、缺交、補交也會回到工作台和查詢統計。之後想改回只存本機，在同一個地方改選就好，已填的網址和金鑰會保留。</span></div></div>
-      <div class="step"><div class="step-no">2</div><div class="step-body">
-        <strong class="t">（選用）平板也能開大屏——拿著改作業、點補交</strong>
-        <p>平板開同一個大屏網址，照第 1 步填一次同一個 🌐A＋🔑B。作業補交／訂正、聯絡本、查詢統計即時相通；今日點名與收作業要等自動存檔（每 5 分鐘一次，或按右上角「☁️」立刻存）才同步，建議固定用教室那一台點名。</p>
+        <ol class="plain">
+          <li>教室電腦打開<a href="Morning.html" target="_blank" rel="noopener">晨間大屏</a> → 最右邊 <span class="q">設定</span> → 輸入你的密碼。</li>
+          <li>捲到下面，點一下藍色那一條 <span class="q">🔵 第 2 級：連上工作台</span>，它會打開。</li>
+          <li>「🌐A」那一格貼上 <b>🌐A</b>；「🔑B」那一格貼上 <b>🔑B</b>。</li>
+          <li>上面一點的「💾 資料要存在哪裡？」改選右邊 <span class="q">☁️ 存到雲端</span>。</li>
+          <li>最下面點 <span class="q">儲存設定</span>。</li>
+        </ol>
+        <div class="see">上方多出「查詢統計」，右上角出現「☁️ 自動存雲端」。大屏每 5 分鐘、離開網頁時會自動存，不用按按鈕；按一下「☁️」會立刻存一次，變成「☁️ 已存 08:12」這樣就成功了。</div>
+        <div class="warn">⚠ <b>教室電腦只填這兩個，別填 🔑C。</b>🔑B 只能回報當天，就算被學生玩到，也拿不到你的歷史資料。</div>
+        <details class="box"><summary style="cursor:pointer;font-weight:800">（選用）平板也能開大屏——拿著改作業、點補交</summary>平板開同一個大屏網址，照上面填一次同一個 🌐A＋🔑B。作業補交／訂正、聯絡本、查詢統計即時相通；今日點名與收作業要等自動存檔（每 5 分鐘，或按右上角「☁️」立刻存）才同步，建議固定用教室那一台點名。</details>
       </div></div>
-      
-      <h3>第 5 關：把工作台接上（🌐A＋🔑C）</h3>
-      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="第 2 級第 3 關操作畫面">
+
+      <div class="bstep"><label><input type="checkbox"><span class="bno">第 5 步</span><span class="btt">把工作台接上 🌐A 和 🔑C</span></label><div class="bbody">
+        <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="第 2 級第 3 關操作畫面">
 <defs><marker id="ar-t1c" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
 <rect class="d-win" x="8" y="8" width="236" height="170" rx="8"/><rect class="d-wbar" x="9" y="9" width="234" height="19" rx="7"/><rect class="d-wbar" x="9" y="20" width="234" height="8" rx="0"/><circle cx="18" cy="18" r="3" fill="#e0766a"/><circle cx="27" cy="18" r="3" fill="#e8c15a"/><circle cx="36" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="46" y="22" text-anchor="start">教師工作台</text><rect class="d-hdr" x="16" y="36" width="220" height="40" rx="6"/><text class="d-white" x="26" y="61" text-anchor="start">教師工作台</text><rect class="d-btn-o" x="112" y="46" width="66" height="20" rx="5"/><text class="d-btxt" x="145" y="60" text-anchor="middle">📖 使用說明</text><rect class="d-btn-o" x="184" y="46" width="48" height="20" rx="5"/><text class="d-btxt" x="208" y="60" text-anchor="middle">⚙ 設定</text><rect class="d-hl" x="180" y="43" width="56" height="26" rx="6"/><path class="d-cursor" d="M214,58 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/><rect class="d-ph" x="16" y="86" width="68" height="28" rx="5"/><rect class="d-ph" x="92" y="86" width="68" height="28" rx="5"/><rect class="d-ph" x="168" y="86" width="68" height="28" rx="5"/><rect class="d-ph" x="16" y="122" width="220" height="48" rx="5"/>
 <text class="d-cap" x="126" y="200" text-anchor="middle">① 工作台右上「⚙ 設定」</text>
@@ -506,16 +668,29 @@
 <text class="d-small" x="654" y="218" text-anchor="middle">最後按「儲存設定」</text>
 </svg>
 </figure>
-      <div class="step"><div class="step-no">1</div><div class="step-body">工作台右上「⚙ 設定」→ 分頁「<strong>① 雲端／LINE 小幫手</strong>」→ 勾「啟用雲端同步」→「<strong>🌐A Apps Script 部署網址</strong>」欄貼 🌐A、「<strong>🔑C 同步金鑰</strong>」欄貼 🔑C（欄位上印著同樣符號）→ 按「<strong>測試連線</strong>」→ 成功後按「<strong>立即同步</strong>」→ 最下面「<strong>儲存設定</strong>」。</div></div>
-      
-      <div class="ok">✅ <strong>第 2 級完成！</strong>工作台多出「聯絡本」按鈕；任務可一鍵加 Google 日曆、記事可同步 Google Tasks、檔案可歸檔到雲端硬碟、設定裡的「備份與還原」可雲端備份。工作台日曆也會出現今日出缺摘要。</div>
-      <div class="box"><strong>選配：記事同步 Google Tasks</strong>（想在手機 Google 日曆看到記事才要做）：Apps Script 編輯器<strong>左側「服務」旁的「＋」→ 選「Tasks API」→ 新增</strong>，再做一次「管理部署 → 新版本」（見<a href="#partv2">升級</a>那張圖）。沒做這步其他功能完全不受影響。</div>
+        <ol class="plain">
+          <li>工作台右上角點 <span class="q">⚙ 設定</span>。</li>
+          <li>視窗上方點分頁 <span class="q">① 雲端／LINE 小幫手</span>。</li>
+          <li>把「啟用雲端同步」打勾。</li>
+          <li>「🌐A Apps Script 部署網址」那一格貼上 <b>🌐A</b>；「🔑C 同步金鑰」那一格貼上 <b>🔑C</b>（欄位上印著同樣的代號）。</li>
+          <li>點 <span class="q">測試連線</span> → 看到「連線成功」→ 點 <span class="q">立即同步</span> → 最後點 <span class="q">儲存設定</span>。</li>
+        </ol>
+        <div class="ok">🎉 <b>第 2 級完成！</b>工作台的教師工具箱多了「聯絡本」；任務可一鍵加 Google 日曆、記事可同步 Google Tasks、檔案可歸檔到雲端硬碟、「備份與還原」可雲端備份。在家那台電腦或手機，也照這一步做一次（貼同樣的 🌐A 和 🔑C），就能在家寫聯絡本了。</div>
+        <h4>在家寫聯絡本</h4>
+        <ol class="plain">
+          <li>工作台中間的「教師工具箱 → 級務」點 <span class="q">聯絡本</span>。</li>
+          <li>日期選<b>明天</b>，用下拉選單加項目（例如「作業」→「國習」→ 補充欄打「p.20」→ <span class="q">＋ 加入</span>）。</li>
+          <li>按 <span class="q">💾 儲存到雲端</span>。明天早上大屏一打開，黑板就有了。</li>
+        </ol>
+        <p class="lead">💡 想一次看整個月寫了什麼，按日期那一列最左邊的 <span class="q">📅 日曆</span>，點任何一天就能修改（按 <span class="q">✏️ 單日</span> 回來）。右邊黑板上方的 <span class="q">直橫・間距</span> 可以換直書、調字距和行距。</p>
+        <details class="box"><summary style="cursor:pointer;font-weight:800">選配：記事同步 Google Tasks</summary>想在手機 Google 日曆看到記事才要做：Apps Script 編輯器<strong>左側「服務」旁的「＋」→ 選「Tasks API」→ 新增</strong>，再做一次「管理部署 → 新版本」（見<a href="#partv2">升級</a>那張圖）。沒做這步其他功能完全不受影響。</details>
+      </div></div>
     </section>
 
-    <section id="level3" class="tier2">
-      <span id="tier2"></span>
-      <div class="sec-head"><div class="sec-icon">🟡</div><div class="sec-titles"><div class="tier-head"><h2><span class="sec-num">4.</span>第 3 級：再加 AI 金鑰 🔑D（Gemini）</h2><span class="pill">約 3 分鐘</span><span class="pill">申請一串字</span></div></div></div>
-      <p class="lead">申請一串免費金鑰貼進設定，就打開 AI 行政助理（PDF／訊息拆成任務與記事）、回覆家長（依內容起草，沒金鑰時用範本）、教材小工場全部 AI 工具（學習單、作文批改、家長通知單生圖…）、小綿助語音輸入。</p>
+    <section id="level3" class="tier2 bg">
+      <span id="tier2"></span><span id="lv3"></span>
+      <div class="sec-head"><div class="sec-icon">🟡</div><div class="sec-titles"><div class="tier-head"><h2><span class="sec-num">4.</span>第 3 級：加上 AI（🔑D，Gemini）</h2><span class="pill">約 3 分鐘</span><span class="pill">免費申請</span></div></div></div>
+      <p class="lead">申請一串免費金鑰貼進設定，就打開 AI 行政助理（PDF、訊息拆成任務與記事）、回覆家長（依內容起草）、教材小工場的 AI 工具（學習單、作文批改、數學類似題…）、小綿助語音輸入。</p>
       <div class="gets"><span>會拿到：🔑D</span></div>
       <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="第 3 級操作畫面">
 <defs><marker id="ar-t2" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
@@ -537,11 +712,36 @@
 </svg>
 <figcaption>同一把 🔑D 還可以貼到小綿助（按住說話）與 LINE（聽語音），不用重新申請。</figcaption>
 </figure>
-      <div class="step"><div class="step-no">1</div><div class="step-body"><strong class="t">申請金鑰</strong><br>開 <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">aistudio.google.com/app/apikey</a> → 用 Google 帳號登入（第一次會要你勾同意條款）→「<strong>Create API key</strong>／建立 API 金鑰」→ 問你要放哪個專案時選「<strong>在新專案中建立</strong>」→ 複製 <code>AIza</code> 開頭的字 → 貼進金鑰記錄表的 🔑D 那行。<br><span class="lead">金鑰等於你的 Google 帳號額度，不要貼給別人或放到群組。</span></div></div>
-      <div class="step"><div class="step-no">2</div><div class="step-body"><strong class="t">貼進工作台</strong><br>工作台「⚙ 設定 → <strong>② AI 設定</strong>」→ 勾「開啟 AI 功能」→ AI 服務選 <strong>Google Gemini</strong> →「🔑D API 金鑰」欄貼上 → 按「🔄 取得清單」，在模型選單挑一個名字有 <strong>flash</strong> 的 → 儲存設定。<br><span class="lead">✔ 檢查：教師工具箱出現「AI 行政助理」；教材小工場左上顯示「🔑 已沿用工作台的 Gemini 金鑰」。</span></div></div>
-      <div class="step"><div class="step-no">3</div><div class="step-body"><strong class="t">（選用）貼進小綿助</strong>：見<a href="#level5">小綿助</a>第 5 步，按住右 Ctrl 說話就出字。</div></div>
-      <div class="step"><div class="step-no">4</div><div class="step-body"><strong class="t">（做到第 4 級才需要）貼進 LINE 小幫手</strong>：試算表選單「🤖 LINE 小幫手 → <strong>④ 填入 Gemini 金鑰</strong>」貼 🔑D，LINE 就聽得懂語音、看得懂照片。</div></div>
-      <div class="ok">✅ <strong>第 3 級完成！</strong>AI 只在你按「分析」「生成」時才呼叫，送出前工作台會先去識別化；金鑰只存在這台電腦（瀏覽器與小綿助資料檔），不進備份、不進 GitHub。</div>
+
+      <div class="bstep"><label><input type="checkbox"><span class="bno">第 1 步</span><span class="btt">拿一把免費的 AI 金鑰（🔑D）</span></label><div class="bbody">
+        <ol class="plain">
+          <li>打開 <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio 的金鑰頁</a>，用 Google 帳號登入（第一次會要你勾同意條款）。</li>
+          <li>點 <span class="q">Create API key</span>（建立 API 金鑰）。問你要放哪個專案時，選「<b>在新專案中建立</b>」。</li>
+          <li>出現一串 <code>AIza</code> 開頭的字 → 點複製，貼到記事本，註明「🔑D」。</li>
+        </ol>
+        <div class="warn">🔐 金鑰等於你的 Google 帳號額度，不要貼給別人或放到群組。</div>
+      </div></div>
+
+      <div class="bstep"><label><input type="checkbox"><span class="bno">第 2 步</span><span class="btt">貼到工作台，按「✓ 測試金鑰」</span></label><div class="bbody">
+        <ol class="plain">
+          <li>打開<a href="Index.html" target="_blank" rel="noopener">教師工作台</a> → 右上角 <span class="q">⚙ 設定</span> → 上方點 <span class="q">② AI 設定</span>。</li>
+          <li>勾「開啟 AI 功能」，AI 服務選 <b>Google Gemini</b>。</li>
+          <li>在「🔑D API 金鑰」那一格貼上。</li>
+          <li>「模型」維持 <span class="q">自動（建議）</span> 就好：先用 3.5 Flash-Lite，今天的免費額度用完會自動換下一個。</li>
+          <li>點 <span class="q">✓ 測試金鑰</span>，再點 <span class="q">儲存設定</span>。</li>
+        </ol>
+        <div class="see">按鈕旁邊出現「✅ 金鑰可以用。這次用的模型：…」。如果是「❌ 金鑰不對」就重新複製貼上（常常是前後多了空白）；「❌ 額度用完了」就等一下再試。</div>
+        <p class="lead">✔ 檢查：教師工具箱「📥 收件與 AI」裡出現「AI 行政助理」分頁；教材小工場左上顯示「🔑 已沿用工作台的 Gemini 金鑰」。想看今天用了幾次，到 <a href="https://aistudio.google.com/usage" target="_blank" rel="noopener">Google AI Studio 的用量頁</a>。</p>
+        <div class="warn">🔒 用 AI 時，請不要把學生的全名、身分證字號、電話貼進去；送出前工作台會先遮蔽電話、身分證、Email。</div>
+      </div></div>
+
+      <div class="bstep"><label><input type="checkbox"><span class="bno">選用</span><span class="btt">貼到小綿助、LINE 小幫手</span></label><div class="bbody">
+        <ul class="plain">
+          <li><b>小綿助</b>：見<a href="#level5">第 5 級</a>，貼進去後按住右 Ctrl 說話就出字。</li>
+          <li><b>LINE 小幫手</b>（做到第 4 級才需要）：試算表選單「🤖 LINE 小幫手 → <strong>④ 填入 Gemini 金鑰</strong>」貼 🔑D，LINE 就聽得懂語音、看得懂照片。</li>
+        </ul>
+      </div></div>
+      <div class="ok">🎉 <b>第 3 級完成！</b>AI 只在你按「分析」「生成」時才呼叫；金鑰只存在這台電腦（瀏覽器與小綿助資料檔），不進備份、不進 GitHub。</div>
     </section>
 
     <section id="level4" class="tier3">
@@ -725,7 +925,7 @@
         </div>
         <p><strong>看到這 8 項與本月用量，就代表全部設定成功。</strong>想調整就傳「<code>開啟 放學小結</code>」或「<code>關閉 作業推播</code>」。</p>
       </div></div>
-      <div class="ok">✅ <strong>第 4 級完成！</strong>工作台「教師工具箱」的「LINE 收件匣」會收到你在 LINE 傳的內容，確認後才建立任務或記事。傳「<code>說明</code>」看全部指令。</div>
+      <div class="ok">✅ <strong>第 4 級完成！</strong>在 LINE 傳一件事給小幫手，回覆下面會有［任務］［記事］［不要］按鈕，按一下就定案（沒按的 10 分鐘後照 AI 建議）；工作台同步時自動建立：任務進任務清單、記事進「📥 收件與 AI → 小綿助記事」。傳「<code>說明</code>」看全部指令。</div>
     </section>
 
     <section id="level5" class="tierp">
@@ -827,12 +1027,12 @@
         <tr><td>08:05</td><td>未填的座號自動轉「未到」</td></tr>
         <tr><td>08:08<br><span class="lead">第 4 級</span></td><td><strong>你的 LINE 收到晨間第一則</strong>：出缺情況＋今日課程進度＋今日任務＋今日記事提醒＋逾期任務（等於早安簡報，一則看完）</td></tr>
         <tr><td>08:40<br><span class="lead">第 4 級</span></td><td><strong>你的 LINE 收到完整回報</strong>（點名＋各科作業繳交，等收完作業再送）</td></tr>
-        <tr><td>白天隨時<br><span class="lead">第 4 級</span></td><td>LINE 傳「明天要收回條」→ 開工作台按立即同步 → 收件匣確認轉任務；語音、拍照通知單也可以</td></tr>
+        <tr><td>白天隨時<br><span class="lead">第 4 級</span></td><td>LINE 傳「明天要收回條」→ 按［任務］→ 工作台開著時 5 分鐘內自動出現在任務清單；語音、拍照通知單也可以</td></tr>
         <tr><td>批改後</td><td>大屏「<strong>作業訂正</strong>」分頁（延續作業繳交的版面）：沒交的自動變灰不能點，點已交的座號＝<strong>待訂正</strong>，學生改完再點一次＝<strong>訂正完成</strong>（回綠加小勾）；也可按「全部訂正完成」一次結清。
           <br><span class="lead">整塊清完的版面會自己收起來不佔畫面（要補標時按下方「顯示已完成的 N 個版面」叫回來）；正在點的那塊不會在手指底下消失，離開分頁再進來才收。</span>
           <br><span class="lead">下方「訂正統計」三種看法：<strong>依座號</strong>（誰身上還有幾筆）→<strong>按科目</strong>（科目 → 進度兩層，點進度旁的 ▲ 直接跳到上面的版面）→<strong>日曆</strong>（哪一天還沒清完）。統計是<strong>近 30 天</strong>、跨日累計，不是只有今天。</span></td></tr>
         <tr><td>下課</td><td>大屏「<strong>作業補交</strong>」分頁：前幾天沒交的，學生補來了就把號碼點掉。<strong>操作方式與「作業訂正」完全一致</strong>——一樣是依座號／按科目／日曆三種看法，一樣是科目 → 進度兩層，一樣點號碼＝完成。待訂正的項目也會一起列出來。</td></tr>
-        <tr><td>週五下午<br><span class="lead">第 4 級</span></td><td>缺交達 5 次的學生，LINE 自動送上委婉家長訊息草稿（在工作台收件匣，補上孩子優點再轉發）</td></tr>
+        <tr><td>週五下午<br><span class="lead">第 4 級</span></td><td>缺交達 5 次的學生，LINE 自動送上委婉家長訊息草稿（同步後在小綿助記事，補上孩子優點再轉發）</td></tr>
         <tr><td>期末<br><span class="lead">第 2 級</span></td><td>大屏「查詢統計」輸入 🔑C → 查區間 → 「⬇ 匯出 Excel」變輔導紀錄素材（含各科<strong>缺交／補交／待訂正／已訂正</strong>次數）</td></tr>
       </table>
       <div class="box">
@@ -935,13 +1135,14 @@
       <table>
         <tr><th>在哪裡</th><th>新功能</th></tr>
         <tr><td>🎨 教材小工場<br>（工作台「教師工具箱 → 備課」）</td><td><strong>📝 出題備課</strong>：學習單、數學出題（也能拍課本題目出類似題，系統自動驗算）、段考複習講義、心智圖（可直接在大屏心智圖打開）。<strong>✍️ 語文寫作</strong>：生詞本、作文引導單、作文批改、作文範文庫、閱讀分級改寫（找最新兒童適讀新聞，一鍵做成中文或英文的三種難度）。<strong>📣 親師溝通</strong>：家長通知單（Gemini 真的生圖）、Google 表單、LINE 圖文選單。<strong>🧰 班務工具</strong>：座位表、敏感資料遮蔽、📎 PDF 工具（加入 PDF 或照片後看到每一頁，直接刪除、轉向、拖曳排順序；可輸出成 PDF、圖片或 Word；還能多頁合一、加頁碼、加浮水印、拆成多份、掃描檔瘦身，全部本機處理不上傳）。所有選檔都可 📷 拍照／📋 貼上／Ctrl+V；產出可下載 Word／Excel／PDF。</td></tr>
-        <tr><td>🧭 AI 行政助理<br>（任務草稿板）</td><td>確認清單每項標「建議：任務／記事」並抓原文日期時間；任務先進<strong>草稿板</strong>，老師用<strong>拖曳</strong>決定主／子（拖到另一任務上＝子任務、拖到虛線區＝解除），確認後一次寫入任務清單。任務清單的列也能拖曳分組。原文／附件裡的網址自動附上（🔗 連結按鈕）；點任務名稱彈出完整說明、來源附件與 AI 摘要。</td></tr>
-        <tr><td>🧰 教師工具箱<br>（2026-11）</td><td>按鈕排成一行、分四組：<strong>級務</strong>（聯絡本、作業統計、💬 回覆家長、📣 大屏提示）、<strong>備課</strong>（🎨 教材小工場）、<strong>溝通</strong>（LINE 收件匣）、<strong>AI</strong>（AI 行政助理、小綿助記事）。聯絡本多了「📅 日曆」一次看整個月、「直橫・間距」；<strong>回覆家長</strong>：貼上家長的話、寫重點，就寫成一則可以直接傳的訊息。</td></tr>
-        <tr><td>🧰 大屏班級工具</td><td>🍅 番茄鐘（呼吸動畫＋LO-FI 音樂角：匯入 MP3、貼 YouTube）、📣 大屏提示（22 句班級經營句＋插圖，<strong>工作台或 LINE 傳「提示 排隊」就能遠端切換</strong>）、安靜偵測角色互動（安靜集 ⭐）、計分板改為手動歸零</td></tr>
+        <tr><td>🧭 AI 行政助理<br>（整理成任務／記事）</td><td>AI 把跟你有關的事列成<strong>一張清單</strong>，每件先選好「任務／記事／不要」並抓原文日期時間，可直接改；任務用<strong>拖曳</strong>決定主／子（拖到另一任務上＝子任務、拖到虛線區＝解除），按一次「確認建立」，任務寫進任務清單、記事存到小綿助記事。任務清單的列也能拖曳分組。原文／附件裡的網址自動附上（🔗 連結按鈕）；點任務名稱彈出完整說明、來源附件與 AI 摘要。</td></tr>
+        <tr><td>📅 學校常見活動<br>（2026-11）</td><td>依學校行事曆：任務清單上方每月出現「本月學校常見活動」，點一下就新增成任務（月底順便列下個月）；AI 行政助理會用學校慣用的活動名稱；教材小工場的通知單、作文、學習單主題下面有本月活動按鈕；研習心得／簽呈可選 16 項研習，自動寫成「115 學年度 ○○研習」。</td></tr>
+        <tr><td>🧰 教師工具箱<br>（2026-11）</td><td>按鈕排成一行、分三組：<strong>級務</strong>（聯絡本、作業統計、💬 回覆家長）、<strong>備課</strong>（🎨 教材小工場）、<strong>溝通</strong>（📥 收件與 AI：小綿助記事、AI 行政助理兩個分頁；LINE 傳來的事同步時自動帶入｜📂 雲端資料夾：一鍵打開 LINE 存檔的雲端硬碟資料夾，LINE 傳「雲端資料夾」也會回連結）。聯絡本多了「📅 日曆」一次看整個月、「直橫・間距」；<strong>回覆家長</strong>：貼上家長的話、寫重點，就寫成一則可以直接傳的訊息。</td></tr>
+        <tr><td>🧰 大屏班級工具</td><td>🍅 番茄鐘（呼吸動畫＋LO-FI 音樂角：匯入 MP3、貼 YouTube）、📣 大屏提示（22 句班級經營句＋插圖，在教室直接點選；LINE 傳「提示 排隊」也能遠端切換，但教室電腦要開著大屏網頁並切到「📣 大屏提示」分頁才收得到）、安靜偵測角色互動（安靜集 ⭐）、計分板改為手動歸零</td></tr>
         <tr><td>🖥 大屏<br>（2026-11）</td><td>「設定」新增<strong>💾 資料要存在哪裡</strong>（只存這台電腦／存到雲端，雲端可以跟工作台連線），底部存檔列拿掉、改成右上角「☁️」自動存；上方選單直接有<strong>檢核板、螢幕公告、心智圖</strong>；螢幕公告多了 🔖 書籤；新的 🧠 心智圖有 8 種圖型（心智圖、邏輯圖、樹狀圖、括號圖、流程圖、時間軸、魚骨圖、泡泡圖）</td></tr>
         <tr><td>📅 Google 整合</td><td>任務一鍵加入 Google 日曆、小綿助記事 ↔ Google Tasks 雙向同步</td></tr>
         <tr><td>☁️ 工作台雲端功能<br>（以前只是模擬）</td><td>教學進度「同步到 Google 日曆」、Drive 資料庫上傳、AI 助理「建立 Google 表單」——第 1 版在網頁上只會顯示假的成功訊息，第 2 版起<strong>真的寫進你的 Google 日曆／雲端硬碟「LINE小幫手備份／工作台檔案」／表單</strong>（需已安裝 LINE 小幫手；沒裝會明確告訴你）</td></tr>
-        <tr><td>🐑 小綿助 v2.3<br>（桌面程式）</td><td><strong>直連你自己的 LINE 小幫手</strong>（不開瀏覽器也拿得到工作台快照、LINE 待整理，還能遙控大屏提示）、<strong>分心提醒</strong>（只讀作用中視窗標題、不截圖不上傳；滑 YouTube／IG 連續 3 分鐘會跑出來提醒）、專注 25／50 分模式、探頭與蹭滑鼠新行為。工作台「⚙ 設定 → 小綿助」下載新版，解壓覆蓋舊資料夾即可，設定與記事都在 AppData 不會消失<br><strong>v2.1 會聽的小綿助</strong>：秘書頁貼一次 🔑D → 任何程式按住右 Ctrl 說話、放開就貼上整理好的繁體中文；按住右 Alt 說給小綿助變記事／任務。選填 Groq 金鑰更快。升級方式同下（換新 ZIP）。</td></tr>
+        <tr><td>🐑 小綿助 v2.3<br>（桌面程式）</td><td><strong>直連你自己的 LINE 小幫手</strong>（不開瀏覽器也拿得到工作台快照、LINE 待整理，還能遙控大屏提示）、<strong>分心提醒</strong>（只讀作用中視窗標題、不截圖不上傳；滑 YouTube／IG 連續 3 分鐘會跑出來提醒）、專注 25／50 分模式、探頭與蹭滑鼠新行為。工作台「⚙ 設定 → 小綿助」下載新版，解壓覆蓋舊資料夾即可，設定與記事都在 AppData 不會消失<br><strong>v2.1 會聽的小綿助</strong>：秘書頁貼一次 🔑D → 任何程式按住右 Ctrl 說話、放開就貼上整理好的繁體中文；按住右 Alt 說給小綿助變記事／任務。只要 Gemini 金鑰一把，Groq 金鑰選填當備援。升級方式同下（換新 ZIP）。</td></tr>
       </table>
 
 
@@ -1069,6 +1270,24 @@
         document.body.appendChild(a); a.click(); a.remove();
         setTimeout(() => URL.revokeObjectURL(a.href), 2000);
       }));
+    })();
+  </script>
+  <script>
+    (() => {
+      const KEY = 'teacherDashboardInstallSteps';
+      const boxes = [...document.querySelectorAll('.bstep > label input')];
+      let saved = [];
+      try { const raw = JSON.parse(localStorage.getItem(KEY) || localStorage.getItem('teacherDashboardBeginnerSteps') || '[]'); if (Array.isArray(raw)) saved = raw; } catch (e) {}
+      function paint() {
+        let n = 0;
+        boxes.forEach(b => { b.closest('.bstep').classList.toggle('done', b.checked); if (b.checked) n++; });
+        document.getElementById('bgProgText').textContent = `完成 ${n}／${boxes.length} 步`;
+        document.getElementById('bgProgBar').style.width = `${boxes.length ? n / boxes.length * 100 : 0}%`;
+        try { localStorage.setItem(KEY, JSON.stringify(boxes.map(b => (b.checked ? 1 : 0)))); } catch (e) {}
+      }
+      boxes.forEach((b, i) => { b.checked = saved[i] === 1; b.addEventListener('change', paint); });
+      document.getElementById('bgProgReset').addEventListener('click', () => { boxes.forEach(b => { b.checked = false; }); paint(); });
+      paint();
     })();
   </script>
   <script src="assets/version.js"></script>

@@ -34,7 +34,10 @@ var LINE_BOT_CONFIG = {
   REPLY_ENDPOINT: 'https://api.line.me/v2/bot/message/reply',
   PUSH_ENDPOINT: 'https://api.line.me/v2/bot/message/push',
   GEMINI_ENDPOINT: 'https://generativelanguage.googleapis.com/v1beta/models/',
-  DEFAULT_GEMINI_MODEL: 'gemini-2.5-flash',
+  // 沒設 GEMINI_MODEL 時依序使用；前一個被 Google 停用（404）才換下一個
+  DEFAULT_GEMINI_MODELS: ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-3.8-flash'],
+  // Google 的「最新版」別名：永遠指向最新的 Flash-Lite／Flash，舊模型停用也不用改程式
+  GEMINI_LATEST_ALIASES: ['gemini-flash-lite-latest', 'gemini-flash-latest'],
   WORK_AXES: ['教學', '行政', '學年主任', '導師'],
   NOTE_TAGS: ['家長聯繫', '學生概況', '作業缺交', '備課靈感', '生活雜事']
 };
@@ -492,7 +495,7 @@ function doGet() {
 }
 
 // 程式版本（每次發布都要更新；試算表選單「ℹ️ 程式版本」、LINE 傳「版本」、工作台連線檢查都會顯示）
-var BOT_VERSION = '2026-11-07 14:56';
+var BOT_VERSION = '2026-11-11 09:00';
 
 function lineBotJson_(payload) {
   return ContentService.createTextOutput(JSON.stringify(payload)).setMimeType(ContentService.MimeType.JSON);
@@ -527,7 +530,7 @@ function handleLineSyncApi_(body) {
     if (action === 'ping') {
       return lineBotJson_({ ok: true, service: 'teacher-dashboard-line-bot', version: 2, botVersion: BOT_VERSION, role: isTeacher ? 'teacher' : 'classroom', time: new Date().toISOString() });
     }
-    if (action === 'pull') return lineBotJson_(pullLineInbox_());
+    if (action === 'pull') return lineBotJson_(pullLineInbox_(body));
     if (action === 'ack') return lineBotJson_(ackLineInbox_(body));
     if (action === 'snapshot') return lineBotJson_(saveWorkspaceSnapshot_(body));
     if (action === 'backup_save') return lineBotJson_(saveWorkspaceBackup_(body));
@@ -1337,10 +1340,13 @@ function sendRollcallReminder() {
   });
 }
 
-function pullLineInbox_() {
+function pullLineInbox_(body) {
   var sheets = ensureLineBotSheets_(SpreadsheetApp.getActiveSpreadsheet());
+  // 工作台要「📂 雲端資料夾」的連結時順便帶回（LINE 傳來的照片、檔案都存在這裡）
+  var folderUrl = '';
+  if (body && body.folder === true) { try { folderUrl = driveBackupFolder_().getUrl(); } catch (error) {} }
   var lastRow = sheets.inbox.getLastRow();
-  if (lastRow <= 1) return { ok: true, items: [] };
+  if (lastRow <= 1) return { ok: true, items: [], folderUrl: folderUrl };
   var values = sheets.inbox.getRange(2, 1, lastRow - 1, LINE_BOT_CONFIG.INBOX_HEADERS.length).getValues();
   var items = [];
   for (var index = 0; index < values.length && items.length < LINE_BOT_CONFIG.MAX_PULL_ROWS; index += 1) {
@@ -1357,10 +1363,11 @@ function pullLineInbox_() {
       dueDate: String(row[5]),
       axis: String(row[6]),
       tag: String(extra.tag || ''),
-      medium: String(extra.medium || '')
+      medium: String(extra.medium || ''),
+      decided: extra.decided === true
     });
   }
-  return { ok: true, items: items };
+  return { ok: true, items: items, folderUrl: folderUrl };
 }
 
 function ackLineInbox_(body) {
@@ -1437,6 +1444,7 @@ function handleLineWebhook_(e, body) {
 }
 
 function handleLineEvent_(event, allowedUsers) {
+  if (event && event.type === 'postback') { handleLineKindPostback_(event, allowedUsers); return; }
   if (!event || event.type !== 'message' || !event.message) return;
   // 資安：只處理一對一聊天。小幫手若被拉進群組，回覆（出缺、座號查詢、代課包）會被整個群組看到。
   if (!event.source || event.source.type !== 'user') return;
@@ -1526,6 +1534,14 @@ function handleLineEvent_(event, allowedUsers) {
     replyLineMessage_(event.replyToken, cancelPendingContactBook_());
     return;
   }
+  if (/^(雲端資料夾|雲端硬碟|資料夾|備份資料夾|雲端)$/.test(text)) {
+    var folder = null;
+    try { folder = driveBackupFolder_(); } catch (error) {}
+    replyLineMessage_(event.replyToken, folder
+      ? '📂 LINE 傳來的照片和檔案都備份在你的雲端硬碟「' + folder.getName() + '」（按月份、分類分好）：\n' + folder.getUrl()
+      : '目前讀不到雲端硬碟資料夾，請確認 Apps Script 已授權 Google 雲端硬碟。');
+    return;
+  }
   var fileSearchMatch = text.match(/^(找檔案|找檔|檔案)\s*(.*)$/);
   if (fileSearchMatch) {
     replyLineMessage_(event.replyToken, buildFileSearchReply_(fileSearchMatch[2]));
@@ -1556,20 +1572,81 @@ function handleLineEvent_(event, allowedUsers) {
     ]);
     return;
   }
-  replyLineMessage_(event.replyToken, saveAndConfirm_(classified, text, userId, ''));
+  var saved = saveAndConfirm_(classified, text, userId, '');
+  replyLineMessages_(event.replyToken, [saved.text, lineKindButtons_(saved)]);
 }
 
-/** 寫入信箱並組出確認訊息；medium 為 ''（文字）、'voice'、'photo'。 */
+/** 寫入信箱並組出確認訊息；medium 為 ''（文字）、'voice'、'photo'。回傳 { text, id, type }。 */
 function saveAndConfirm_(classified, text, userId, medium) {
   var saved = appendLineInboxRow_(classified, text, userId, medium);
-  var label = classified.type === 'task' ? '任務' : '記事';
+  var type = classified.type === 'task' ? 'task' : 'note';
   var mediumLabel = medium === 'voice' ? '🎤 語音聽寫｜' : medium === 'photo' ? '📷 照片辨識｜' : '';
-  var lines = ['已收到，整理成「' + label + '」放進工作台的 LINE 收件匣：', '📌 ' + mediumLabel + (classified.title || text.slice(0, 60))];
+  var lines = ['已收到：', '📌 ' + mediumLabel + (classified.title || text.slice(0, 60))];
   if (classified.dueDate) lines.push('📅 到期日：' + classified.dueDate);
   if (classified.axis) lines.push('🏷️ 工作主軸：' + classified.axis);
   if (classified.tag) lines.push('📂 分類：' + classified.tag);
-  lines.push('（開啟教師工作台按「立即同步」，確認後才會正式建立。傳「撤回」可作廢這一筆。）');
-  return lines.join('\n');
+  lines.push('（按下面的按鈕決定建成任務、記事或不要；沒按的話 10 分鐘後照 AI 建議，工作台同步時自動建立。傳「撤回」可作廢。）');
+  return { text: lines.join('\n'), id: saved.id, type: type };
+}
+
+/** 「任務／記事／不要」三個按鈕（按鈕留在那則訊息上，連傳好幾則也按得到）。 */
+function lineKindButtons_(saved) {
+  var suggest = saved.type === 'task' ? '任務' : '記事';
+  var action = function (kind, label) {
+    var suggested = (kind === 'task' && saved.type === 'task') || (kind === 'note' && saved.type === 'note');
+    return { type: 'postback', label: (label + (suggested ? '（建議）' : '')).slice(0, 20), data: 'kind=' + saved.id + '|' + kind, displayText: label };
+  };
+  return {
+    type: 'template',
+    altText: '要建成任務、記事，還是不要？（AI 建議：' + suggest + '）',
+    template: {
+      type: 'buttons',
+      text: ('要放進工作台的哪裡？AI 建議：' + suggest + '。沒按就照建議。').slice(0, 160),
+      actions: [action('task', '✅ 任務'), action('note', '📌 記事'), action('skip', '✖ 不要')]
+    }
+  };
+}
+
+/** 老師按了「任務／記事／不要」：還沒帶進工作台的才改得到。 */
+function handleLineKindPostback_(event, allowedUsers) {
+  if (!event.source || event.source.type !== 'user') return;
+  var userId = String(event.source.userId || '');
+  if (!allowedUsers.length || allowedUsers.indexOf(userId) === -1) return;
+  var match = String((event.postback && event.postback.data) || '').match(/^kind=(L-\d+-\d+)\|(task|note|skip)$/);
+  if (!match) return;
+  var id = match[1], kind = match[2];
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  var reply = '';
+  try {
+    var sheets = ensureLineBotSheets_(SpreadsheetApp.getActiveSpreadsheet());
+    var lastRow = sheets.inbox.getLastRow();
+    var values = lastRow > 1 ? sheets.inbox.getRange(2, 1, lastRow - 1, LINE_BOT_CONFIG.INBOX_HEADERS.length).getValues() : [];
+    var index = -1;
+    for (var i = 0; i < values.length; i += 1) { if (String(values[i][0]) === id) { index = i; break; } }
+    if (index < 0) reply = '找不到這一筆（可能太舊已清除）。';
+    else if (userId && String(values[index][8]) && String(values[index][8]) !== userId) reply = '這一筆不是你傳的。';
+    else if (String(values[index][7]) !== 'new') reply = String(values[index][7]) === 'ignored'
+      ? '這一筆已經作廢了。'
+      : '這一筆已經帶進工作台了；要改請到工作台的任務清單或小綿助記事。';
+    else {
+      var title = String(values[index][4] || values[index][3]).slice(0, 40);
+      if (kind === 'skip') {
+        sheets.inbox.getRange(index + 2, 8).setValue('ignored');
+        reply = '✖ 不要了：「' + title + '」不會帶進工作台。';
+      } else {
+        var extra = {};
+        try { extra = JSON.parse(String(values[index][9] || '{}')) || {}; } catch (error) { extra = {}; }
+        extra.decided = true;
+        sheets.inbox.getRange(index + 2, 3).setValue(kind);
+        sheets.inbox.getRange(index + 2, 10).setValue(JSON.stringify(extra));
+        reply = (kind === 'task' ? '✅ 定為任務' : '📌 定為記事') + '：「' + title + '」\n工作台同步時會自動建立' + (kind === 'task' ? '到任務清單。' : '到小綿助記事。');
+      }
+    }
+  } finally {
+    lock.releaseLock();
+  }
+  if (reply && event.replyToken) replyLineMessage_(event.replyToken, reply);
 }
 
 /** 「撤回」與「刪除 關鍵字」：把該使用者最新一筆符合的未處理項目作廢。 */
@@ -1585,7 +1662,7 @@ function revokeLineInbox_(userId, keyword) {
     var haystack = String(row[3]) + ' ' + String(row[4]);
     if (keyword && haystack.indexOf(keyword) === -1) continue;
     sheets.inbox.getRange(index + 2, 8).setValue('ignored');
-    return '已作廢這一筆：\n「' + (String(row[4]) || String(row[3]).slice(0, 40)) + '」\n它不會再出現在工作台收件匣。';
+    return '已作廢這一筆：\n「' + (String(row[4]) || String(row[3]).slice(0, 40)) + '」\n它不會帶進工作台。';
   }
   return keyword ? '找不到含「' + keyword + '」的未處理項目。' : '目前沒有可撤回的項目。';
 }
@@ -1614,7 +1691,7 @@ function handleLineMediaMessage_(event, userId) {
   if (messageType === 'file' || messageType === 'video') {
     var fileLabel = String(event.message.fileName || (messageType === 'video' ? '影片' : '檔案'));
     var saved = saveAndConfirm_({ type: 'note', title: fileLabel, tag: '檔案' }, fileLabel, userId, '');
-    replyLineMessage_(event.replyToken, saved + driveBackupNote_(backup));
+    replyLineMessages_(event.replyToken, [saved.text + driveBackupNote_(backup), lineKindButtons_(saved)]);
     return;
   }
 
@@ -1658,9 +1735,10 @@ function handleLineMediaMessage_(event, userId) {
   PropertiesService.getScriptProperties().setProperty(LAST_MEDIA_SUMMARY_KEY, sourceText.slice(0, 1000));
   // 用 AI 讀出的標題把雲端檔案改成看得懂的名字，並歸到正確的分類資料夾。
   backup = refineDriveBackup_(backup, classified.title || sourceText.slice(0, 30), classified.tag || '');
-  var confirmText = saveAndConfirm_(classified, sourceText, userId, messageType === 'audio' ? 'voice' : 'photo');
+  var mediaSaved = saveAndConfirm_(classified, sourceText, userId, messageType === 'audio' ? 'voice' : 'photo');
+  var confirmText = mediaSaved.text;
   if (messageType === 'image') confirmText += '\n（要把重點寫進今天的聯絡本嗎？傳「照片轉聯絡本」即可。）';
-  replyLineMessage_(event.replyToken, confirmText + driveBackupNote_(backup));
+  replyLineMessages_(event.replyToken, [confirmText + driveBackupNote_(backup), lineKindButtons_(mediaSaved)]);
 }
 
 /** 以 LINE Content API 取回語音／照片位元組。 */
@@ -1681,8 +1759,64 @@ function fetchLineContent_(messageId) {
   }
 }
 
+/**
+ * 呼叫 Gemini，模型自動跟上 Google（舊模型停用也不會壞）：
+ * ① 先用上次成功的模型（存在指令碼屬性 GEMINI_LAST_GOOD）；② 再試「最新版」別名與預設清單；
+ * ③ 全部被停用（404）或額度用完（429）時，問 Google 現在有哪些模型，挑最新的 Flash-Lite／Flash 再試並記下來。
+ * 老師自己指定 GEMINI_MODEL 時：被停用（404）改用自動；額度用完（429）照實回報。
+ */
+function fetchGemini_(apiKey, body) {
+  var custom = lineBotProperty_('GEMINI_MODEL');
+  var auto = !custom || custom === 'gemini-2.5-flash';
+  var props = PropertiesService.getScriptProperties();
+  var tried = {};
+  var response = null;
+  function attempt(list, stopOn429) {
+    for (var i = 0; i < list.length; i += 1) {
+      var model = list[i];
+      if (!model || tried[model]) continue;
+      tried[model] = true;
+      response = UrlFetchApp.fetch(LINE_BOT_CONFIG.GEMINI_ENDPOINT + model + ':generateContent?key=' + encodeURIComponent(apiKey), {
+        method: 'post',
+        contentType: 'application/json',
+        muteHttpExceptions: true,
+        payload: JSON.stringify(body)
+      });
+      var code = response.getResponseCode();
+      if (code !== 404 && code !== 429) {
+        if (code < 300 && model !== custom) props.setProperty('GEMINI_LAST_GOOD', model);
+        return true;
+      }
+      if (code === 429 && stopOn429) return true;
+    }
+    return false;
+  }
+  var autoList = [props.getProperty('GEMINI_LAST_GOOD') || ''].concat(LINE_BOT_CONFIG.GEMINI_LATEST_ALIASES, LINE_BOT_CONFIG.DEFAULT_GEMINI_MODELS);
+  if (attempt(auto ? autoList : [custom], !auto)) return response;
+  if (!auto && attempt(autoList, false)) return response;
+  attempt(discoverGeminiModels_(apiKey), false);
+  return response;
+}
+
+/** 問 Google 現在有哪些模型，只挑正式版 Flash-Lite／Flash，Flash-Lite 排前面、版本新的排前面。 */
+function discoverGeminiModels_(apiKey) {
+  try {
+    var res = UrlFetchApp.fetch(LINE_BOT_CONFIG.GEMINI_ENDPOINT.replace(/\/$/, '') + '?pageSize=200&key=' + encodeURIComponent(apiKey), { muteHttpExceptions: true });
+    if (res.getResponseCode() !== 200) return [];
+    var models = (JSON.parse(res.getContentText()).models || []).filter(function (m) {
+      return (m.supportedGenerationMethods || []).indexOf('generateContent') >= 0;
+    }).map(function (m) { return String(m.name || '').replace(/^models\//, ''); });
+    return models.map(function (id) {
+      var m = /^gemini-(\d+(?:\.\d+)?)-flash(-lite)?$/.exec(id);
+      return { id: id, score: m ? (m[2] ? 1000 : 0) + Number(m[1]) * 10 : -1 };
+    }).filter(function (x) { return x.score >= 0; }).sort(function (a, b) { return b.score - a.score; })
+      .map(function (x) { return x.id; }).slice(0, 4);
+  } catch (error) {
+    return [];
+  }
+}
+
 function classifyMediaByGemini_(content, messageType, apiKey) {
-  var model = lineBotProperty_('GEMINI_MODEL') || LINE_BOT_CONFIG.DEFAULT_GEMINI_MODEL;
   var mimeType = messageType === 'audio'
     ? 'audio/mp4'
     : (content.contentType.indexOf('image/') === 0 ? content.contentType : 'image/jpeg');
@@ -1697,17 +1831,12 @@ function classifyMediaByGemini_(content, messageType, apiKey) {
     '今天是 ' + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd') + '。'
   ].join('\n');
   try {
-    var response = UrlFetchApp.fetch(LINE_BOT_CONFIG.GEMINI_ENDPOINT + model + ':generateContent?key=' + encodeURIComponent(apiKey), {
-      method: 'post',
-      contentType: 'application/json',
-      muteHttpExceptions: true,
-      payload: JSON.stringify({
-        contents: [{ parts: [
-          { text: prompt },
-          { inline_data: { mime_type: mimeType, data: Utilities.base64Encode(content.bytes) } }
-        ] }],
-        generationConfig: { temperature: 0.1 }
-      })
+    var response = fetchGemini_(apiKey, {
+      contents: [{ parts: [
+        { text: prompt },
+        { inline_data: { mime_type: mimeType, data: Utilities.base64Encode(content.bytes) } }
+      ] }],
+      generationConfig: { temperature: 0.1 }
     });
     if (response.getResponseCode() !== 200) return null;
     var data = JSON.parse(response.getContentText());
@@ -1909,7 +2038,7 @@ function buildFileSearchReply_(keyword) {
     if (!query) return true;
     return (String(row[2]) + String(row[3]) + String(row[4])).indexOf(query) !== -1;
   }).slice(-8).reverse();
-  if (!matched.length) return '找不到含「' + query + '」的備份檔案。傳「找檔案」可看最近備份的幾筆。';
+  if (!matched.length) return '找不到含「' + query + '」的備份檔案。傳「找檔案」可看最近備份的幾筆，或傳「雲端資料夾」打開整個資料夾。';
   var lines = [query ? '📁 含「' + query + '」的備份（最近 ' + matched.length + ' 筆）' : '📁 最近備份的檔案'];
   matched.forEach(function (row) {
     var date = row[0] instanceof Date ? Utilities.formatDate(row[0], Session.getScriptTimeZone(), 'yyyy-MM-dd') : String(row[0]);
@@ -2143,11 +2272,12 @@ function lineBotHelpText_() {
     '・「照片轉聯絡本」→ 把剛剛辨識的通知單重點寫進今天的聯絡本',
     '・傳照片或檔案 → 自動備份到雲端硬碟，AI 會依內容命名並分類歸檔',
     '・「找檔案 通知單」→ 從備份索引找出檔案並附連結（不加關鍵字就看最近幾筆）',
+    '・「雲端資料夾」→ 回傳備份資料夾連結，一次看全部存檔',
     '・「推播設定」→ 查看本月用量與各項推播開關；「開啟 放學小結」「關閉 作業推播」可切換',
     '・「撤回」→ 作廢剛剛那一筆；「刪除 關鍵字」→ 作廢含關鍵字的最新一筆',
     '・「我的ID」→ 查詢自己的 LINE userId（安裝設定用）',
     '・「版本」→ 看目前程式版本日期（跟網站比對要不要更新）',
-    '訊息會先進工作台的 LINE 收件匣，由你確認後才正式建立。',
+    '傳訊息後會出現［任務］［記事］［不要］按鈕；沒按的 10 分鐘後照 AI 建議，工作台同步時自動建立。',
     '（以上你問我答的功能都不用 LINE 額度；只有主動推播才會計算。）'
   ].join('\n');
 }
@@ -2283,7 +2413,6 @@ function formatDateLabel_(dateText) {
 }
 
 function classifyByGemini_(text, apiKey) {
-  var model = lineBotProperty_('GEMINI_MODEL') || LINE_BOT_CONFIG.DEFAULT_GEMINI_MODEL;
   var prompt = [
     '你是臺灣國小教師工作台的訊息分類器。把老師傳來的 LINE 訊息分類，只回傳 JSON，不要其他文字。',
     'JSON 格式：{"type":"task|note|query|contact|contactbook","title":"20字內標題","dueDate":"yyyy-MM-dd或空字串","axis":"教學|行政|學年主任|導師|空字串","tag":"家長聯繫|學生概況|作業缺交|備課靈感|生活雜事|空字串","content":"若type=contact或contactbook，放項目內容"}',
@@ -2292,12 +2421,7 @@ function classifyByGemini_(text, apiKey) {
     '老師的訊息：' + text
   ].join('\n');
   try {
-    var response = UrlFetchApp.fetch(LINE_BOT_CONFIG.GEMINI_ENDPOINT + model + ':generateContent?key=' + encodeURIComponent(apiKey), {
-      method: 'post',
-      contentType: 'application/json',
-      muteHttpExceptions: true,
-      payload: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.1 } })
-    });
+    var response = fetchGemini_(apiKey, { contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.1 } });
     if (response.getResponseCode() !== 200) return null;
     var data = JSON.parse(response.getContentText());
     var answer = String(((data.candidates || [])[0] || {}).content && data.candidates[0].content.parts[0].text || '');
@@ -2463,8 +2587,8 @@ function replyLineWithOptions_(replyToken, text, options) {
 }
 
 function replyLineMessages_(replyToken, texts, quickReply) {
-  var messages = (texts || []).filter(String).slice(0, 5)
-    .map(function (text) { return { type: 'text', text: String(text).slice(0, 4900) }; });
+  var messages = (texts || []).filter(function (item) { return item && (typeof item === 'object' || String(item)); }).slice(0, 5)
+    .map(function (item) { return typeof item === 'object' ? item : { type: 'text', text: String(item).slice(0, 4900) }; });
   if (quickReply && messages.length) messages[messages.length - 1].quickReply = quickReply;
   if (!replyToken || !messages.length) return;
   var accessToken = lineBotProperty_('LINE_CHANNEL_ACCESS_TOKEN');
@@ -2786,8 +2910,8 @@ function listContactBook_(body) {
  *
  * 統計最近 7 天各座號缺交次數；達門檻（預設 5 次，可在指令碼屬性設
  * WEEKLY_ALERT_THRESHOLD 調整）時：
- * 1. 為每位學生產生一則「委婉的家長溝通訊息草稿」，放進 LINE收件匣
- *    （同步後出現在教師工作台，標籤：家長聯繫）。
+ * 1. 為每位學生產生一則「委婉的家長溝通訊息草稿」，工作台同步時自動存進小綿助記事
+ *    （標籤：家長聯繫）。
  * 2. LINE 推播提醒老師有哪些座號達門檻。
  * 訊息只含座號與缺交明細，不含姓名；請老師在工作台補上稱謂與孩子的優點後再轉發。
  */
@@ -2826,8 +2950,8 @@ function sendWeeklyHomeworkAlerts() {
     '缺交達 ' + threshold + ' 次的座號：',
     flagged.map(function (student) { return '・' + student.className + ' ' + student.seat + '號：' + student.items.length + ' 次'; }).join('\n'),
     '',
-    '已為每位學生準備一則委婉的家長訊息草稿，放在工作台的 LINE 收件匣。',
-    '請開工作台按「立即同步」，補上稱謂與孩子的優點後再轉發給家長。'
+    '已為每位學生準備一則委婉的家長訊息草稿，工作台同步時會存進「小綿助記事」（標籤：家長聯繫）。',
+    '補上稱謂與孩子的優點後再轉發給家長。'
   ].join('\n');
   users.forEach(function (userId) { pushLineMessage_(userId, summary); });
 }

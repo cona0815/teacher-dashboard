@@ -264,7 +264,13 @@ assert.match(lineBotSource, /LINE_SYNC_TOKEN/, "工作台同步必須驗證同�
 assert.match(lineBotSource, /LINE_ALLOWED_USER_IDS/, "應支援鎖定只回應老師本人的 userId");
 assert.doesNotMatch(lineBotSource, /\b1[A-Za-z0-9_-]{30,}\b/, "LineBot.gs 不得含固定 Google 資源 ID");
 assert.match(indexHtml, /data-settings-tab="linebot"/, "系統設定應提供 LINE 小幫手分頁");
-assert.match(indexHtml, /id="lineInboxSection"/, "工作台應提供 LINE 收件匣");
+// 2026-11-11 LINE 收件匣拿掉：LINE 回覆附［任務］［記事］［不要］按鈕，工作台同步時自動帶入
+assert.doesNotMatch(indexHtml, /id="lineInboxSection"/, "LINE 收件匣已拿掉");
+assert.match(indexHtml, /async function autoImportLineItems\(\)/, "同步時自動帶入 LINE 的任務／記事");
+assert.match(indexHtml, /const LINE_AUTO_IMPORT_MS = 10 \* 60 \* 1000/, "沒按按鈕的 10 分鐘後照 AI 建議帶入");
+assert.match(lineBotSource, /function lineKindButtons_\(saved\)/, "LINE 回覆要附任務／記事／不要按鈕");
+assert.match(lineBotSource, /function handleLineKindPostback_\(event, allowedUsers\)[\s\S]*?allowedUsers\.indexOf\(userId\) === -1\) return;/, "按鈕也要檢查是不是老師本人");
+assert.match(lineBotSource, /decided: extra\.decided === true/, "工作台拉資料時帶「老師已按過」");
 assert.match(indexHtml, /grade6LineInbox/, "LINE 收件匣應保存於瀏覽器本機");
 assert.match(indexHtml, /https:\/\/script\.google\.com/, "CSP 應允許連線老師自己的 Apps Script");
 assert.match(indexHtml, /lineInbox: lineInboxItemsForPet\(\)/, "本機橋接應把 LINE 待整理清單帶給桌面小綿助");
@@ -304,7 +310,7 @@ assert.match(lineBotSource, /sendRollcallReminder/, "GAS 應提供未點名雲�
 assert.match(lineBotSource, /作業名稱/, "作業紀錄表應含作業名稱欄");
 assert.match(lineBotSource, /sendWeeklyHomeworkAlerts/, "GAS 應提供每週缺交達門檻的家長訊息草稿");
 assert.match(lineBotSource, /WEEKLY_ALERT_THRESHOLD/, "每週關懷門檻應可由指令碼屬性調整");
-assert.match(lineBotSource, /家長聯繫/, "家長訊息草稿應帶家長聯繫標籤進工作台收件匣");
+assert.match(lineBotSource, /家長聯繫/, "家長訊息草稿應帶家長聯繫標籤（同步後進小綿助記事）");
 // 聯絡本（大屏黑板 ⇄ 工作台管理）契約
 assert.match(lineBotSource, /contactbook_get/, "GAS 應提供聯絡本讀取");
 assert.match(lineBotSource, /contactbook_save/, "GAS 應提供聯絡本儲存");
@@ -336,7 +342,7 @@ assert.match(indexHtml, /grade6RollcallStats/, "工作台應保存大屏統計�
 assert.match(indexHtml, /rollcallBadgeFor\(key\)/, "工作台日曆應顯示出缺與缺交摘要");
 
 // 班級工具（純本機）與說明頁契約
-for (const tool of ["抽籤機", "檢核板", "計分板", "隨機分組", "安靜偵測", "定評小幫手", "排除今日缺席"]) {
+for (const tool of ["抽籤機", "檢核板", "計分板", "隨機分組", "定評小幫手", "排除今日缺席"]) {
   assert.match(morningHtml, new RegExp(tool), `班級工具缺少「${tool}」`);
 }
 // 純本機原則的唯一例外：大屏提示的唯讀輪詢 prompt_get（使用者 2026-09-04 核定的遠端切換功能）
@@ -468,11 +474,11 @@ assert.match(morningHtml, /data-tool="tomato"/, "班級工具應含番茄鐘分�
 assert.match(morningHtml, /tomatoFullscreenButton/, "番茄鐘應支援全螢幕播放");
 // 2026-10 班級工具動畫大升級：吉祥物內嵌、投影模式、hidden 不被樣式蓋掉
 assert.match(morningHtml, /const SHEEP = \{\s*idle: 'data:image\/webp;base64,/, "小綿羊吉祥物應內嵌為 WebP（大屏維持單檔可攜）");
-for (const tool of ["lottery", "check", "score", "group", "quiet"]) {
+for (const tool of ["lottery", "check", "score", "group"]) {
   assert.match(morningHtml, new RegExp(`data-fs-panel="${tool}"`), `班級工具「${tool}」應有投影模式`);
 }
 assert.match(morningHtml, /\.tool-opts\[hidden\], \.tomato-edit\[hidden\]/, "有 hidden 的編輯列與番茄鐘編輯框必須真的藏起來");
-for (const fx of ["lot-bulbs", "check-ring", "score-crown", "group-pool", "quietNeedle", "tomatoRing", "promptTiles"]) {
+for (const fx of ["lot-bulbs", "check-ring", "score-crown", "group-pool", "tomatoRing", "promptTiles"]) {
   assert.match(morningHtml, new RegExp(fx), `班級工具動畫元件缺少「${fx}」`);
 }
 
@@ -488,6 +494,35 @@ assert.match(source, /verifyCsrfToken_/, "寫入流程必須保留 CSRF 驗證")
 assert.match(source, /verifyInstallToken_\(installToken\)/, "安裝寫入必須驗證安裝憑證");
 assert.match(source, /assertSpreadsheetUiContext_\(\)/, "安裝端點必須限制在試算表 UI");
 assert.match(source, /LockService/, "共享寫入必須保留鎖");
+
+// Gemini 沒指定模型時的順序（工作台、教材小工場、LINE 小幫手要一致）
+for (const [name, text] of [["工作台", indexHtml], ["教材小工場", studioHtml], ["LINE 小幫手", lineBotSource]]) {
+  assert.match(text, /\['gemini-3\.5-flash-lite', 'gemini-3\.1-flash-lite', 'gemini-3\.8-flash'\]/, `${name}的 Gemini 自動順序應為 3.5 Flash-Lite → 3.1 Flash-Lite → 3.8 Flash`);
+}
+
+// 大屏編輯聯絡本也有快速輸入下拉，預設項目與工作台相同、共用自訂清單
+const presetsOf = text => text.match(/const CONTACT_BOOK_PRESETS = \{[\s\S]*?\n    \};/)[0];
+assert.strictEqual(presetsOf(morningHtml), presetsOf(indexHtml), "大屏與工作台的聯絡本預設項目應相同");
+assert.match(morningHtml, /CONTACT_PRESETS_KEY = 'grade6ContactBookPresets'/, "大屏應沿用工作台的聯絡本自訂項目");
+
+// 聯絡本字型選了就自動設定好，不要求老師自己安裝
+assert.match(morningHtml, /'setupContactFont'\)\.addEventListener\('change', chooseContactFont\)/, "大屏選字型應立即生效");
+assert.doesNotMatch(morningHtml, /安裝到 Windows/, "大屏不應要求老師自己安裝字型");
+
+// 班級工具不再有安靜偵測；定評小幫手有考試日總覽（不放提醒）
+assert.doesNotMatch(morningHtml, /data-tool="quiet"|stopQuiet/, "安靜偵測應已拿掉");
+assert.match(morningHtml, /id="examDayBoard"/, "定評小幫手應有考試日總覽");
+// 聯絡本直書編輯只有黑板一個畫面
+assert.match(morningHtml, /setAttribute\('contenteditable', 'plaintext-only'\)/, "直書應直接在黑板上打字");
+
+// 作業統計：沿用現有雲端查詢、全班訊息不列座號、A4 一張 8 格
+assert.match(indexHtml, /id="homeworkReportSection"/, "工作台應有作業統計");
+assert.match(indexHtml, /callLineBridge\('rollcall_query', \{ from: fromKey, to: toKey, className: '' \}\)/, "作業統計應沿用 rollcall_query，不需改 GAS");
+assert.match(indexHtml, /grid-template-columns: repeat\(2, 97mm\); grid-template-rows: repeat\(4, 70mm\)/, "小紙條應為 A4 八格");
+
+// 上方選單：潔牙點名在檢核板後面，選單固定一行
+assert.match(morningHtml, /\['check', '✅', '檢核板'\], \['tooth', '🦷', '潔牙點名'\]/, "潔牙點名應在檢核板後面");
+assert.match(morningHtml, /\.tabs \{[^}]*flex-wrap: nowrap/, "上方選單應維持一行");
 
 console.log("profile_config.test.js: all checks passed");
 
@@ -617,7 +652,9 @@ assert.match(studioHtml, /improve 一條/, "評語應固定一條待改進");
 
 // 2026-09-07 工作台：清單分任務／記事＋帶時間、任務拖曳分主子、訊息整合站
 assert.match(indexHtml, /"kind": "task 或 note/, "AI 清單應標示每項是任務或記事");
-assert.match(indexHtml, /id="aiAdviceApplyAll"/, "應有依建議一鍵建立全部");
+assert.doesNotMatch(indexHtml, /id="aiAdviceChecklist"|id="aiAdviceApplyAll"/, "2026-11-11 上面的確認清單已併進「整理成任務／記事」，不再兩塊");
+assert.match(indexHtml, /data-draft-kind="\$\{item\.id\}" data-kind="\$\{kind\}"/, "每一件可選任務／記事／不要");
+assert.match(indexHtml, /function sameDraftName/, "AI 重複寫的同一件事要併成一件");
 assert.match(indexHtml, /function safeTimeString/, "應能擷取原文時間到任務欄位");
 assert.match(indexHtml, /draggable="true" data-task-row=/, "任務列應可拖曳");
 assert.match(indexHtml, /async function nestTask/, "應能拖曳設定／解除主子任務");
@@ -1005,34 +1042,16 @@ assert.match(studioHtml, /section\('代課教師當日簽認'/, "代課包應有
 }
 // ===== 組A 行政文書 end =====
 
-// ===== 組C 多班模式 =====
-// G10 大屏多班模式（科任）：第一個班沿用舊 key，其他班 key 後加「:班級」；點名、聯絡本仍屬第一個班
+// 科任模式已移除（2026-11-10 老師決定只服務導師）：存檔 key 仍不可改名，舊資料才讀得到
 {
   const mh = fs.readFileSync(path.join(projectRoot, "Morning.html"), "utf8");
-  assert.match(mh, /id="setupClasses"/, "設定頁應有「我教的班級」欄");
-  assert.match(mh, /我教的班級/, "設定頁欄位名稱應為「我教的班級」");
-  assert.match(mh, /座號範圍與空號各班共用/, "設定頁應說明各班共用座號設定");
-  assert.match(mh, /id="classSwitch" hidden/, "班級切換鈕預設隱藏（單班＝舊畫面）");
-  assert.match(mh, /const CURRENT_CLASS_KEY = 'morningCurrentClass'/, "目前班應存在 morningCurrentClass");
-  assert.match(mh, /return out\.length >= 2 \? out\.slice\(0, 12\) : \[\]/, "不到兩班時 classes 應為空陣列（行為與單班相同）");
-  assert.match(mh, /return !isMultiClass\(\) \|\| cls === state\.settings\.classes\[0\] \? '' : ':' \+ cls;/, "第一個班沿用舊 key，其他班加「:班級」");
+  assert.doesNotMatch(mh, /id="setupClasses"|id="classSwitch"|isMultiClass|classKeySuffix/, "大屏不應再有多班模式");
+  assert.doesNotMatch(indexHtml, /data-role="subject"/, "工作台不應再有科任身分");
   assert.match(mh, /const SETTINGS_KEY = 'morningBoardSettings'/, "設定 key 不可改名");
   assert.match(mh, /const STATE_PREFIX = 'morningBoardState:'/, "當日狀態 key 不可改名");
   assert.match(mh, /const CONFIG_KEY = 'morningToolsConfig'/, "班級工具設定 key 不可改名");
   assert.match(mh, /const DAY_PREFIX = 'morningToolsDay:'/, "班級工具當日 key 不可改名");
-  assert.match(mh, /const CLASS_CONFIG_FIELDS = \['scores', 'teamNames', 'teamCount', 'drawn'\]/, "計分板分數、隊名與已抽名單每班一份，已抽名單跨天保留");
-  assert.match(mh, /const CLASS_DAY_FIELDS = \['boards', 'groups'\]/, "檢核板、分組結果每班一份");
   assert.doesNotMatch(mh, /day\.drawn\.push|day\.drawn = \[\]/, "已抽名單不可再存當日，抽籤可能用好幾個星期");
-  assert.match(mh, /setLocalRecord\(STATE_PREFIX \+ todayKey\(\) \+ suffix, JSON\.stringify\(\{ boards: state\.boards \}\)\)/, "作業繳交版面每班一份，別班只存 boards");
-  assert.match(mh, /JSON\.stringify\(\{ attendance: state\.attendance, boards: firstBoards, flags: state\.flags \}\)/, "別班畫面改點名仍寫回第一個班、不蓋掉第一個班的版面");
-  assert.match(mh, /const target = cls \|\| \(push !== 'none' \? firstClass\(\) : currentClass\(\)\)/, "推播只送第一個班，一般存檔送目前的班");
-  assert.match(mh, /const attendance = \(isFirst \? Object\.entries\(state\.attendance\) : \[\]\)/, "點名只屬第一個班");
-  assert.match(mh, /date: todayKey\(\), className: cls, attendance, homework, push/, "送出雲端的 className 用指定班");
-  assert.doesNotMatch(mh, /action: 'classroom_missing', token: state\.settings\.classroomToken, className: state\.settings\.className/, "補交／訂正應讀目前的班");
-  assert.match(mh, /action: 'contactbook_get', token: state\.settings\.classroomToken, className: state\.settings\.className/, "聯絡本仍屬第一個班");
-  assert.match(mh, /new CustomEvent\('morning:classchange'/, "切班要通知班級工具重新載入");
-  assert.match(mh, /if \(lotteryBusy\) event\.preventDefault\(\)/, "抽籤進行中不可切班");
-  assert.match(mh, /if \(toolsClassSuffix\(\)\) return absent;/, "別班沒有點名資料，抽籤分組不排除第一個班的缺席");
 }
 
 // ── ART-02 大屏提示原創插圖（溫暖繪本 R4）──
@@ -1111,11 +1130,6 @@ assert.match(studioHtml, /section\('代課教師當日簽認'/, "代課包應有
 }
 // ── end 資安稽核 2026-11-06 ──
 
-// 2026-11-10 先只上線工作台（大屏等回家實測後再上）：工作台專屬檢查
-assert.match(indexHtml, /\['gemini-3\.5-flash-lite', 'gemini-3\.1-flash-lite', 'gemini-3\.8-flash'\]/, "工作台的 Gemini 自動順序");
-assert.match(indexHtml, /id="homeworkReportSection"/, "工作台應有作業統計");
-assert.doesNotMatch(indexHtml, /data-role="subject"/, "工作台不應再有科任身分");
-
 // 工作台聯絡本：日曆一次看整個月（沿用雲端 contactbook_month，不用改 GAS）；直橫・間距與大屏共用同一份設定
 assert.match(indexHtml, /callLineBridge\('contactbook_month', \{ month \}\)/, "工作台聯絡本日曆應沿用 contactbook_month");
 assert.match(indexHtml, /const CB_LAYOUT_KEY = 'morningDisplayScale'/, "工作台黑板排版應與大屏共用 morningDisplayScale");
@@ -1124,10 +1138,13 @@ assert.match(indexHtml, /function cbConfirmLeave\(\)/, "換日期前應提醒尚
 // 2026-11-10 工具箱改成一行四組；大屏提示搬到級務；回覆家長；教材小工場只留 15 個並分四組
 {
   const groups = [...indexHtml.matchAll(/<div class="toolbox-group"><span class="toolbox-group-label">([^<]+)<\/span>/g)].map(m => m[1]);
-  assert.deepStrictEqual(groups, ['級務', '備課', '溝通', 'AI'], "工具箱分組應為級務、備課、溝通、AI");
+  assert.deepStrictEqual(groups, ['級務', '備課', '溝通'], "工具箱分組應為級務、備課、溝通（溝通＝📥 收件與 AI）");
+  assert.match(indexHtml, /id="inboxHubButton" data-toolbox-hub[^>]*>📥 收件與 AI/, "LINE 收件匣、小綿助記事、AI 行政助理合成「📥 收件與 AI」一顆");
+  const hubTabs = indexHtml.slice(indexHtml.indexOf('id="inboxHubTabs"'), indexHtml.indexOf('</div>', indexHtml.indexOf('id="inboxHubTabs"')));
+  for (const target of ['secretaryNotesSection', 'aiAssistantSection']) assert.match(hubTabs, new RegExp(`data-toolbox-target="${target}"`), `收件與 AI 的分頁應有 ${target}`);
   assert.match(indexHtml, /\.teacher-toolbox-actions \{[^}]*flex-wrap: nowrap/, "工具箱按鈕應保持一行");
-  assert.match(indexHtml, /data-toolbox-target="screenPromptSection"/, "級務應有大屏提示");
-  assert.doesNotMatch(indexHtml.slice(indexHtml.indexOf('id="lineInboxSection"'), indexHtml.indexOf('id="screenPromptSection"')), /id="screenPromptSelect"/, "大屏提示不應再放在 LINE 收件匣裡");
+  // 2026-11-10 老師：工作台遙控大屏提示要大屏剛好開在提示分頁才收得到，不實用 → 從工作台移除（大屏自己的提示分頁、LINE 指令保留）
+  assert.doesNotMatch(indexHtml, /screenPromptSection|screenPromptSelect/, "工作台不再有大屏提示遙控");
   assert.match(indexHtml, /<span class="toolbox-group-label">級務<\/span>(?:(?!toolbox-group-label)[\s\S])*data-toolbox-target="parentReplySection"/, "回覆家長應放在級務");
   assert.match(indexHtml, /const review = reviewParentFacingMessage\(message\)/, "回覆家長草稿要過用語檢查");
   assert.match(indexHtml, /\['parent-learning', \/[^\n]*作業沒/, "「作業沒寫」應配到學習狀況溝通");
@@ -1151,8 +1168,7 @@ assert.match(studioHtml, /name="rdLang" value="en"/, "閱讀分級應能做英�
 assert.match(studioHtml, /Pre-A1/, "英文閱讀應依 CEFR 分級");
 {
   const pick = text => [...text.matchAll(/text: '([^']+)', img: '([^']+)'/g)].map(m => `${m[1]}|${m[2]}`).join('\n');
-  assert.strictEqual(pick(indexHtml.slice(indexHtml.indexOf('const SCREEN_PROMPT_GROUPS'))), pick(morningHtml.slice(morningHtml.indexOf('const PROMPT_GROUPS'))), "工作台的大屏提示清單應與大屏一致");
-  assert.strictEqual(pick(indexHtml.slice(indexHtml.indexOf('const SCREEN_PROMPT_GROUPS'))), pick(lineBotSource.slice(lineBotSource.indexOf('var SCREEN_PROMPTS'))), "工作台的大屏提示清單應與 LINE 小幫手一致");
+  assert.strictEqual(pick(morningHtml.slice(morningHtml.indexOf('const PROMPT_GROUPS'))), pick(lineBotSource.slice(lineBotSource.indexOf('var SCREEN_PROMPTS'))), "大屏的提示清單應與 LINE 小幫手一致");
 }
 
 // 畫面上的元件 id 不可重複（重複時程式只抓得到第一個，另一個會「按了沒反應」）
@@ -1162,3 +1178,68 @@ for (const [name, html] of [["工作台", indexHtml], ["教材小工場", studio
   assert.deepStrictEqual(dup, [], `${name}有重複的 id：${dup.join("、")}`);
 }
 assert.match(studioHtml, /<details class="field" id="pdfAdvanced" open>/, "PDF 常用加工應預設展開");
+
+// AI 設定：✓ 測試金鑰（結果留在畫面上）、模型選單不用先抓清單、額度用完自動換模型
+assert.match(indexHtml, /id="checkApiButton">✓ 測試金鑰</, "AI 設定應有測試金鑰按鈕");
+assert.match(indexHtml, /id="apiCheckResult"/, "測試結果應留在畫面上");
+assert.match(indexHtml, /function explainAiError/, "AI 錯誤要翻成白話（金鑰錯／額度用完／模型不能用）");
+assert.match(indexHtml, /response\.status !== 404 && response\.status !== 429/, "工作台：額度用完（429）也換下一個模型");
+assert.match(studioHtml, /response\.status !== 404 && response\.status !== 429/, "教材小工場：額度用完（429）也換下一個模型");
+
+// Gemini 模型自動跟上 Google：記住上次成功的、試「最新版」別名、全部停用時問 Google 現有模型（工作台、教材小工場、LINE 小幫手）
+for (const [name, text] of [["工作台", indexHtml], ["教材小工場", studioHtml]]) {
+  assert.match(text, /async function discoverGeminiModels/, `${name}應能問 Google 現有模型`);
+  assert.match(text, /const GEMINI_LAST_GOOD_KEY = 'grade6GeminiLastGood'/, `${name}應記住上次成功的模型`);
+  assert.match(text, /'gemini-flash-lite-latest'/, `${name}應試最新版別名`);
+}
+// 其他用金鑰的地方也不寫死模型：生圖模型、OpenAI／Grok 選的模型被停用要自動換
+assert.match(studioHtml, /async function discoverImageModels/, "教材小工場生圖應能問 Google 現有生圖模型");
+assert.doesNotMatch(studioHtml, /gemini-2\.0-flash-preview-image-generation|gemini-3-flash-image'/, "教材小工場生圖不應再寫死一串舊模型名稱");
+assert.match(indexHtml, /async function fetchOpenAiAuto/, "工作台 OpenAI／Grok 應能在模型停用時自動換");
+assert.equal((indexHtml.match(/\/chat\/completions`/g) || []).length, 1, "工作台所有 OpenAI 相容呼叫都要經過 fetchOpenAiAuto");
+assert.match(lineBotSource, /function discoverGeminiModels_/, "LINE 小幫手應能問 Google 現有模型");
+assert.match(lineBotSource, /GEMINI_LAST_GOOD/, "LINE 小幫手應記住上次成功的模型");
+
+// 今日看板（取代上方「電子紙看板」按鈕）：出缺席、作業繳交、訂正、要多關心、待辦、聯絡本；只用座號、資料讀大屏紀錄
+assert.match(indexHtml, /id="todayBoardButton"[^>]*>📊 今日看板</, "上方按鈕應改成今日看板");
+assert.doesNotMatch(indexHtml, />電子紙看板<\/a>/, "上方不再放電子紙看板按鈕");
+for (const id of ["todayKpis", "todaySeats", "todayHomework", "todayCorrect", "todayWatch", "todayContact"]) {
+  assert.match(indexHtml, new RegExp(`id="${id}"`), `今日看板應有 ${id}`);
+}
+assert.match(indexHtml, /<section class="today-board" id="todayBoardSection"[^>]*hidden>/, "今日看板是頁首下方獨立的一塊，預設收起");
+assert.ok(indexHtml.indexOf('id="todayBoardSection"') < indexHtml.indexOf('id="teacherToolbox"'), "今日看板不放在教師工具箱裡");
+assert.match(indexHtml, /\.app\.today-mode > :not\(\.topbar\):not\(#todayBoardSection\)/, "今日看板是另一個畫面，打開時只留頁首和看板");
+assert.match(indexHtml, /'↩ 回工作台' : '📊 今日看板'/, "看板畫面的按鈕要變成「↩ 回工作台」");
+assert.doesNotMatch(indexHtml, /localStorage\.setItem\(TODAY_OPEN_KEY/, "不記住看板開關：重新整理一定回到原本的工作台");
+assert.match(indexHtml, /callLineBridge\('rollcall_query', \{ from, to: today/, "今日看板應讀雲端的大屏紀錄");
+assert.match(indexHtml, /\$\('boardLink'\)\) \$\('boardLink'\)\.href/, "舊電子紙看板連結改到看板底部，設定 GAS 網址時不可報錯");
+
+// 2026-11-10 敏感資料遮蔽：Word／Excel／PowerPoint／文字檔也能遮（本機解壓、只改文字、包回同格式），可勾選要遮的項目
+assert.match(studioHtml, /id="maskImageInput" accept="\.docx,\.xlsx,\.pptx,\.txt,\.csv,image\/\*/, "遮蔽工具應接受 Word、Excel、PowerPoint、文字檔與圖片");
+for (const kind of ["id", "mobile", "phone", "email", "birthday", "address", "account", "name"]) {
+  assert.match(studioHtml, new RegExp(`id="maskPick_${kind}"`), `遮蔽工具應能勾選 ${kind}`);
+}
+assert.match(studioHtml, /new DecompressionStream\('deflate-raw'\)/, "Office 檔在瀏覽器本機解壓");
+assert.doesNotMatch(studioHtml.slice(studioHtml.indexOf('id="page-mask"'), studioHtml.indexOf('id="page-pdf"')), /callGemini|fetchGemini/, "遮蔽頁不呼叫任何雲端");
+// 作文：引導單內容簡述、範文評語對應原文、Tab 帶入範例
+assert.match(studioHtml, /id="gdBrief"/, "作文引導單應有內容簡述");
+assert.doesNotMatch(studioHtml, /<b>為什麼是這個程度：<\/b>/, "範文不再用「為什麼是這個程度」");
+assert.match(studioHtml, /class="lb-mark"/, "範文評語要在文章裡標出對應的句子");
+assert.match(studioHtml, /function rdVocabList/, "詞彙小幫手要容錯，空的不印");
+// 2026-11-11 AI 讀文件：上傳欄位收 PDF、Word、PPT、Excel；Office 檔本機取文字、PDF 直接給 Gemini；文件文字也做個資檢查
+assert.match(studioHtml, /async function docFileToPart\(file\)/, "教材小工場應能把 Word／PPT／Excel 轉成文字給 AI");
+assert.match(studioHtml, /id="mmImage" accept="image\/\*,\.pdf,application\/pdf,\.docx,\.pptx,\.xlsx/, "心智圖上傳應收 PDF 與 Office 檔");
+assert.match(studioHtml, /aiPrivacyHits\(String\(prompt \|\| ''\) \+ '\\n' \+ attachedText\)/, "文件取出的文字也要做個資檢查");
+// 2026-11-11 📂 雲端資料夾：LINE 存檔的「LINE小幫手備份」一鍵打開（工作台按鈕＋LINE 傳「雲端資料夾」）
+assert.match(indexHtml, /id="driveFolderButton" data-line-only/, "工具箱應有「📂 雲端資料夾」");
+assert.match(lineBotSource, /\(雲端資料夾\|雲端硬碟\|資料夾\|備份資料夾\|雲端\)/, "LINE 傳「雲端資料夾」應回連結");
+assert.match(lineBotSource, /if \(body && body\.folder === true\)/, "工作台同步時可順便拿資料夾連結");
+// 2026-11-11 學校常見活動（老師提供的行事曆）：AI 提示、本月活動小卡、研習名稱、教材小工場主題按鈕
+const schoolEvents = fs.readFileSync(path.join(projectRoot, "assets", "school-events.js"), "utf8");
+assert.match(schoolEvents, /國家防災日複合式防災演練/, "活動清單應含 9 月防災演練");
+assert.match(schoolEvents, /'兒少保護與責任通報研習'/, "研習清單應含 16 項研習");
+for (const [name, html] of [["工作台", indexHtml], ["教材小工場", studioHtml]]) assert.match(html, /<script src="assets\/school-events\.js"><\/script>/, `${name}應載入學校活動清單`);
+assert.match(indexHtml, /function schoolEventsHint/, "AI 行政助理應知道本月學校活動");
+assert.match(indexHtml, /id="monthEventsCard"/, "工作台應有本月學校常見活動小卡");
+assert.match(indexHtml, /id="aiDocTraining"/, "研習心得／簽呈應有研習名稱選單");
+assert.match(studioHtml, /addMonthEventChips\('ntSubject'/, "家長通知單應有本月活動按鈕");

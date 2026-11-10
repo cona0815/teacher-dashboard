@@ -523,13 +523,6 @@
     .group-buy-table th, .group-buy-table td { padding: 7px; border-bottom: 1px solid var(--line); text-align: left; }
     .group-buy-table th { color: var(--primary-strong); background: #edf4ef; }
     .ai-section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
-    .ai-advice-items { display: grid; gap: 7px; }
-    .ai-advice-option { display: flex; align-items: flex-start; gap: 8px; padding: 8px 9px; border: 1.5px solid #d6ddd7; border-radius: 10px; background: white; color: var(--ink); font-size: 12px; font-weight: 750; line-height: 1.5; }
-    .ai-advice-option input { width: 17px; height: 17px; margin-top: 1px; flex: 0 0 auto; accent-color: var(--primary); }
-    .ai-advice-option:has(input:checked) { border-color: #8eb09b; background: #edf5ef; color: #3f6a49; }
-    .ai-advice-option { cursor: grab; }
-    .ai-advice-actions { margin-left: auto; display: inline-flex; gap: 4px; flex: 0 0 auto; }
-    .ai-advice-actions .mini-button { padding: 2px 8px; font-size: 12px; }
     .ai-drop-target { outline: 2px dashed var(--primary); outline-offset: 5px; border-radius: 12px; }
     .ai-draft-unnest { border: 2px dashed #b9c9c2; border-radius: 10px; padding: 5px 10px; margin: 6px 0 8px; font-size: 12px; color: #657570; text-align: center; }
     .ai-draft-unnest.is-drop-target { border-color: var(--primary); background: #e8f2ee; color: var(--primary-strong); }
@@ -537,7 +530,16 @@
     .ai-draft-card { display: flex; align-items: flex-start; gap: 7px; padding: 7px 9px; border: 1.5px solid #d3ddd6; border-radius: 10px; background: white; font-size: 11.5px; line-height: 1.45; cursor: grab; }
     .ai-draft-card.is-child { margin-left: 26px; border-left: 4px solid #8eb09b; background: #f7fbf8; }
     .ai-draft-card.is-parent { border-color: #8eb09b; box-shadow: 0 0 0 2px #e8f2ee inset; }
-    .ai-draft-card.is-off { opacity: .5; }
+    .ai-draft-card.is-off { opacity: .55; background: #fafaf7; }
+    .ai-draft-card.is-off .ai-draft-name { text-decoration: line-through; color: var(--muted); }
+    .ai-draft-card.is-note { border-color: #e3c988; background: #fffcf2; cursor: default; }
+    .ai-draft-kind { display: inline-flex; flex: 0 0 auto; border: 1.5px solid #d3ddd6; border-radius: 999px; overflow: hidden; margin-top: 1px; }
+    .ai-draft-kind button { border: 0; background: white; color: var(--muted); font-size: 12px; font-weight: 800; padding: 2px 9px; cursor: pointer; }
+    .ai-draft-kind button + button { border-left: 1.5px solid #d3ddd6; }
+    .ai-draft-kind button[aria-pressed="true"][data-kind="task"] { background: var(--primary); color: #fff; }
+    .ai-draft-kind button[aria-pressed="true"][data-kind="note"] { background: #c98a1d; color: #fff; }
+    .ai-draft-kind button[aria-pressed="true"][data-kind="skip"] { background: #9aa8a2; color: #fff; }
+    .ai-draft-card.is-note .ai-draft-tag { background: #fbefd2; color: #8a5a00; }
     .ai-draft-card.is-dragging { opacity: .4; }
     .ai-draft-card.is-drop-target { border-color: #b9852f; background: #fff7e6; }
     .ai-draft-card.is-created { border-style: dashed; opacity: .6; cursor: default; }
@@ -621,6 +623,9 @@
     .theme-choice small { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; }
     .theme-swatches { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 4px; height: 24px; }
     .theme-swatches span { border-radius: 6px; }
+    .api-check-result { font-size: 13px; font-weight: 800; line-height: 1.5; }
+    .api-check-result.ok { color: var(--success); }
+    .api-check-result.bad { color: var(--danger); }
     .theme-choice[data-theme-choice="forest"] .theme-swatches span:nth-child(1) { background: #355e59; }
     .theme-choice[data-theme-choice="forest"] .theme-swatches span:nth-child(2) { background: #c46e52; }
     .theme-choice[data-theme-choice="forest"] .theme-swatches span:nth-child(3) { background: #f4efe6; border: 1px solid #ddd4c6; }
@@ -738,6 +743,83 @@
     .hw-summary div { border: 1px solid var(--line); border-radius: 12px; padding: 8px 10px; text-align: center; font-size: 13px; font-weight: 700; color: var(--muted); }
     .hw-summary b { display: block; font-size: 26px; color: var(--primary-strong); line-height: 1.2; }
     .hw-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 1fr); gap: 16px; align-items: start; margin-top: 12px; }
+    /* 本月學校常見活動 */
+    .month-events { margin: 0 0 14px; padding: 12px 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); box-shadow: var(--shadow); }
+    .month-events[hidden] { display: none; }
+    .month-events-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .month-events-head h2 { margin: 0; font-size: 16px; color: var(--ink); }
+    .month-events-hint { font-size: 12px; color: var(--muted); flex: 1; }
+    .month-events-body { display: grid; gap: 6px; margin-top: 8px; }
+    .month-events-row { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+    .month-events-group { font-size: 12px; font-weight: 900; color: var(--muted); min-width: 64px; }
+    .month-event-chip { border: 1.5px solid var(--line); border-radius: 999px; background: #fffefb; color: var(--primary-strong); font-size: 12.5px; font-weight: 800; padding: 3px 11px; cursor: pointer; }
+    .month-event-chip:hover { border-color: var(--primary); background: var(--primary-soft); }
+    .month-event-chip.is-done { color: var(--muted); border-style: dashed; cursor: default; }
+    .month-events-next { font-size: 12px; font-weight: 900; color: var(--accent); margin-top: 4px; }
+    /* 今日看板：頁首下方獨立一塊；上面一排數字，下面左「學生」右「作業」兩欄 */
+    .today-board { margin: 12px 0 14px; padding: 14px 16px 12px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); box-shadow: var(--shadow); }
+    .today-board[hidden] { display: none; }
+    .today-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+    .today-title { display: flex; align-items: baseline; gap: 10px; }
+    .today-title h2 { margin: 0; font-size: 20px; color: var(--ink); }
+    .today-title span { font-size: 15px; font-weight: 800; color: var(--muted); }
+    .today-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .today-meta { font-size: 12px; color: var(--muted); }
+    /* 回工作台：用醒目的強調色，一眼就找得到 */
+    .today-back { padding: 9px 18px; border: 0; border-radius: 999px; background: var(--accent); color: #fff; font: inherit; font-size: 15px; font-weight: 900; cursor: pointer; box-shadow: 0 3px 0 rgba(0, 0, 0, .18); }
+    .today-back:hover { filter: brightness(1.06); }
+    .today-back:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+    .today-cols { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 12px; margin-top: 12px; align-items: start; }
+    .today-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+    .today-foot { margin-top: 10px; font-size: 12px; color: var(--muted); }
+    .today-foot a { color: var(--muted); }
+    /* 看板畫面：只留頁首和看板，其他（任務摘要、身分、工具箱、任務清單）先藏起來 */
+    .app.today-mode > :not(.topbar):not(#todayBoardSection) { display: none !important; }
+    #todayBoardButton[aria-pressed="true"] { background: #fff; color: var(--primary-strong); border-color: #fff; }
+    @media (max-width: 860px) { .today-cols { grid-template-columns: 1fr; } }
+    .today-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+    .today-kpi { border: 1.5px solid var(--line); border-radius: 14px; padding: 8px 12px; background: var(--surface); min-width: 0; }
+    .today-kpi .k-label { font-size: 13px; font-weight: 800; color: var(--muted); }
+    .today-kpi .k-value { font-size: 30px; font-weight: 900; color: var(--primary-strong); line-height: 1.15; }
+    .today-kpi .k-sub { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .today-kpi.need { border-color: var(--danger); }
+    .today-kpi.need .k-value { color: var(--danger); }
+    .today-kpi.good .k-value { color: #2f7d52; }
+    .today-kpi.good { border-color: #b9dbc7; }
+    .today-card { border: 1.5px solid var(--line); border-radius: 14px; padding: 12px 14px; background: var(--surface); min-width: 0; }
+    .today-card h3 { margin: 0 0 10px; font-size: 16px; display: flex; justify-content: space-between; gap: 8px; align-items: baseline; color: var(--ink); }
+    .today-card h3 small { font-size: 12px; color: var(--muted); font-weight: 700; text-align: right; }
+    .today-seats { display: grid; grid-template-columns: repeat(auto-fill, minmax(38px, 1fr)); gap: 5px; }
+    .today-seat { height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; background: #e4f2ea; color: #2f6b4a; border: 1.5px solid #b9dbc7; }
+    .today-seat[data-st="遲到"] { background: #fff2cc; color: #85600a; border-color: #e9cf83; }
+    .today-seat[data-st="病假"] { background: #fde3cf; color: #a3500f; border-color: #efb586; }
+    .today-seat[data-st="事假"] { background: #f8efc0; color: #776000; border-color: #ddc969; }
+    .today-seat[data-st="未到"] { background: #f9d9d3; color: #a33a2c; border-color: #e7a296; }
+    .today-seat[data-st="還沒點"] { background: transparent; color: var(--muted); border-style: dashed; border-color: var(--line); }
+    .today-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); margin-top: 8px; }
+    .today-legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: -1px; background: #b9dbc7; }
+    .today-legend .dot.late { background: #e9cf83; }
+    .today-legend .dot.sick { background: #efb586; }
+    .today-legend .dot.personal { background: #ddc969; }
+    .today-legend .dot.absent { background: #e7a296; }
+    .today-legend .dot.blank { background: transparent; border: 1.5px dashed var(--line); }
+    .today-hw { margin-bottom: 10px; }
+    .today-hw-head { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; font-weight: 800; color: var(--ink); }
+    .today-hw-head span:last-child { white-space: nowrap; color: var(--muted); }
+    .today-bar { height: 12px; border-radius: 99px; background: var(--primary-soft); overflow: hidden; margin: 4px 0; }
+    .today-bar i { display: block; height: 100%; background: var(--primary); border-radius: 99px; }
+    .today-bar.all i { background: #3d9a66; }
+    .today-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+    .today-chip { font-size: 12px; font-weight: 800; padding: 2px 8px; border-radius: 99px; background: var(--accent-soft); color: var(--danger); }
+    .today-chip.fix { background: #efe8fa; color: #6b3fb5; }
+    .today-chip.done { background: #e4f2ea; color: #2f6b4a; }
+    .today-empty { color: var(--muted); font-size: 13px; padding: 4px 0; }
+    .today-watch { width: 100%; min-width: 0; border-collapse: collapse; font-size: 14px; table-layout: fixed; }
+    .today-watch th, .today-watch td { padding: 5px 6px; border-bottom: 1px solid var(--line); text-align: left; }
+    .today-watch th { font-size: 12px; color: var(--muted); }
+    .today-watch td.n { font-weight: 900; color: var(--danger); }
+    .today-contact { white-space: pre-wrap; font-size: 14px; line-height: 1.6; max-height: 220px; overflow: auto; margin: 0; }
+    @media (max-width: 860px) { .today-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     @media (max-width: 860px) { .hw-layout { grid-template-columns: 1fr; } .hw-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     .hw-table-wrap { max-height: 430px; overflow: auto; border: 1px solid var(--line); border-radius: 12px; }
     .hw-table { width: 100%; min-width: 0; border-collapse: collapse; font-size: 14px; }
@@ -848,6 +930,10 @@
     .toolbox-group { display: inline-flex; align-items: center; gap: 5px; padding: 3px 5px 3px 9px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.55); }
     .toolbox-group:not(:has(.toolbox-button:not([hidden]))) { display: none; }
     .toolbox-group-label { color: var(--muted); font-size: 11px; font-weight: 900; letter-spacing: .04em; margin-right: 2px; }
+    /* 「📥 收件與 AI」打開後上方的分頁：小綿助記事／AI 行政助理 */
+    .inbox-hub-tabs { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 16px 0; }
+    .inbox-hub-tabs[hidden] { display: none; }
+    .inbox-hub-tabs .toolbox-button { min-height: 36px; padding: 6px 14px; font-size: 13.5px; }
     .teacher-toolbox-copy { display: flex; align-items: center; gap: 10px; min-width: 0; }
     .teacher-toolbox-copy img { width: 36px; height: 36px; padding: 5px; border-radius: 11px; background: var(--primary-soft); object-fit: contain; }
     .teacher-toolbox-copy h2 { margin: 0; font-size: 16px; }
@@ -1501,10 +1587,36 @@
       <div class="top-actions">
         <button class="button button-outline" type="button" id="helpMenuButton">📖 使用說明</button>
         <button class="button button-outline" type="button" id="settingsButton">⚙ 設定</button>
-        <a class="button button-outline" id="boardLink" href="Board.html" target="_blank" rel="noopener">電子紙看板</a>
+        <button class="button button-outline" type="button" id="todayBoardButton" aria-pressed="false">📊 今日看板</button>
         <button class="button button-primary" type="button" id="newTaskButton">＋ 新增任務</button>
       </div>
     </header>
+
+
+    <section class="today-board" id="todayBoardSection" aria-labelledby="todayBoardTitle" hidden>
+      <div class="today-head">
+        <div class="today-title"><h2 id="todayBoardTitle">📊 今日看板</h2><span id="todayBoardDate"></span></div>
+        <div class="today-actions">
+          <span class="today-meta" id="todayMeta"></span>
+          <button class="mini-button" type="button" id="todayReload">🔄 重新整理</button>
+          <button class="today-back" type="button" id="todayClose">↩ 回工作台</button>
+        </div>
+      </div>
+      <div class="today-kpis" id="todayKpis"></div>
+      <div class="today-cols">
+        <div class="today-col">
+          <article class="today-card"><h3>🙋 出缺席<small id="todayAttendSub"></small></h3><div class="today-seats" id="todaySeats"></div>
+            <div class="today-legend"><span><i class="dot ok"></i>到</span><span><i class="dot late"></i>遲到</span><span><i class="dot sick"></i>病假</span><span><i class="dot personal"></i>事假</span><span><i class="dot absent"></i>未到</span><span><i class="dot blank"></i>還沒點</span></div></article>
+          <article class="today-card"><h3>👀 要多關心<small>近 30 天還沒補交、還沒訂正</small></h3><div id="todayWatch"></div></article>
+          <article class="today-card"><h3>📒 今天的聯絡本</h3><div id="todayContact"></div></article>
+        </div>
+        <div class="today-col">
+          <article class="today-card"><h3>✏️ 今天的作業<small>交了幾份</small></h3><div id="todayHomework"></div></article>
+          <article class="today-card"><h3>🔁 訂正<small id="todayCorrectSub"></small></h3><div id="todayCorrect"></div></article>
+        </div>
+      </div>
+      <div class="today-foot">資料來自晨間大屏（大屏每 5 分鐘自動存檔，這裡開著時每 5 分鐘自動更新）；請假那天沒交的作業不算缺交。整週、整學期統計與家長訊息請用「作業統計」。<a id="boardLink" href="Board.html" target="_blank" rel="noopener">舊版電子紙看板</a></div>
+    </section>
 
     <section class="summary-grid" aria-label="任務摘要">
       <article class="summary-card"><img data-cozy-icon="sum_todo" class="summary-icon" src="assets/ipas/abacus-todo.webp" alt="待辦"><div><div class="summary-label">待辦總數</div><div class="summary-value" id="sumActive">0</div></div></article>
@@ -1530,7 +1642,6 @@
           <img data-cozy-icon="panel_toolbox" src="assets/ipas/owl-toolbox.webp" alt="">
           <div>
             <h2 id="teacherToolboxTitle">教師工具箱</h2>
-            <p>級務、備課、溝通與 AI 工具都收在這裡；需要時再展開，不打擾任務清單。</p>
           </div>
         </div>
         <div class="teacher-toolbox-actions" aria-label="教師工具">
@@ -1538,21 +1649,21 @@
             <button class="toolbox-button" type="button" data-toolbox-target="contactBookSection" data-line-only data-role-only="homeroom" aria-expanded="false" hidden>聯絡本</button>
             <button class="toolbox-button" type="button" data-toolbox-target="homeworkReportSection" aria-expanded="false">作業統計</button>
             <button class="toolbox-button" type="button" data-toolbox-target="parentReplySection" aria-expanded="false">💬 回覆家長</button>
-            <button class="toolbox-button" type="button" data-toolbox-target="screenPromptSection" data-line-only aria-expanded="false" hidden>📣 大屏提示</button>
           </div>
           <div class="toolbox-group"><span class="toolbox-group-label">備課</span>
             <a class="toolbox-button" href="Studio.html" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center">🎨 教材小工場</a>
           </div>
           <div class="toolbox-group"><span class="toolbox-group-label">溝通</span>
-            <button class="toolbox-button" type="button" data-toolbox-target="lineInboxSection" data-line-only aria-expanded="false" hidden>LINE 收件匣<span class="toolbox-badge" id="lineInboxBadge" hidden>0</span></button>
-          </div>
-          <div class="toolbox-group"><span class="toolbox-group-label">AI</span>
-            <button class="toolbox-button" type="button" data-toolbox-target="aiAssistantSection" data-ai-only aria-expanded="false" hidden>AI 行政助理</button>
-            <button class="toolbox-button" type="button" data-toolbox-target="secretaryNotesSection" aria-expanded="false">小綿助記事</button>
+            <button class="toolbox-button" type="button" id="inboxHubButton" data-toolbox-hub aria-expanded="false">📥 收件與 AI</button>
+            <button class="toolbox-button" type="button" id="driveFolderButton" data-line-only hidden title="LINE 傳來的照片、檔案自動備份在你雲端硬碟的「LINE小幫手備份」資料夾">📂 雲端資料夾</button>
           </div>
         </div>
       </div>
       <div class="teacher-toolbox-content" id="teacherToolboxContent" hidden>
+        <div class="inbox-hub-tabs" id="inboxHubTabs" role="tablist" aria-label="收件與 AI" hidden>
+          <button class="toolbox-button" type="button" role="tab" data-toolbox-target="secretaryNotesSection" aria-expanded="false">小綿助記事</button>
+          <button class="toolbox-button" type="button" role="tab" data-toolbox-target="aiAssistantSection" data-ai-only aria-expanded="false" hidden>AI 行政助理</button>
+        </div>
 
     <section class="teaching-progress-panel" id="teachingProgressPanel" aria-labelledby="teachingProgressTitle" hidden>
       <div class="teaching-progress-head">
@@ -1649,7 +1760,7 @@
           <img data-cozy-icon="panel_ai" src="assets/ipas/robot-ai.webp" alt="AI 行政助理">
           <div>
             <h2 id="aiAssistantTitle">AI 行政助理</h2>
-            <p>描述情境，AI 會先分析與建議；跟你有關的事會分成「任務」與「記事」並帶入時間；任務先拆成一個個單一任務放在草稿板，你用拖曳決定主／子，確認後一次寫入任務清單。</p>
+            <p>描述情境，AI 會先分析與建議；跟你有關的事會列成一張清單，每件選「任務／記事／不要」並帶入時間；任務可拖曳排主／子，確認後一次建好。</p>
           </div>
         </div>
         <span class="privacy-badge">不處理個人資料</span>
@@ -1720,6 +1831,10 @@
                 <label for="aiDocSpeechMinutes">時長</label>
                 <select class="select" id="aiDocSpeechMinutes"><option value="1">1 分鐘（約 250 字）</option><option value="2" selected>2 分鐘（約 500 字）</option><option value="3">3 分鐘（約 750 字）</option></select>
               </div>
+            </div>
+            <div class="ai-docs-row" id="aiDocTrainingRow" hidden>
+              <label for="aiDocTraining">研習名稱</label>
+              <select class="select" id="aiDocTraining"><option value="">（選一項，會自動加上學年度）</option></select>
             </div>
             <textarea class="textarea" id="aiDocInput" rows="5" placeholder="用幾句話說明要寫什麼；請勿輸入學生姓名。"></textarea>
             <div class="ai-actions">
@@ -1792,27 +1907,18 @@
           <div class="ai-pane-label"><span>AI 分析與建議</span><button class="mini-button" type="button" id="aiCopyButton">複製內容</button></div>
           <span class="ai-result-type" id="aiResultType" hidden></span>
           <div class="ai-output is-empty" id="aiOutput" aria-live="polite">輸入老師遇到的情境，AI 會判斷這是諮詢型或任務型，再提供可執行的建議。</div>
-          <div class="ai-advice-checklist" id="aiAdviceChecklist" hidden>
-            <div class="ai-section-head">
-              <h4>建議確認清單</h4>
-              <span class="ai-hint" id="aiAdviceProgress">已確認 0／0</span>
-            </div>
-            <p class="ai-hint" style="margin:2px 0 8px">怎麼用：AI 已把「跟我有關的事」分成<strong>任務</strong>（要動手做、有期限）與<strong>記事</strong>（只要記得），並抓出原文裡的日期時間。逐項按「➕任務」或「📌記事」，或直接按下方「⚡ 依建議一鍵建立」；勾選框是給你確認用的。任務會先放到下方<strong>任務草稿板</strong>，在那裡<strong>拖曳</strong>排好主／子（拖到另一個任務上＝子任務，拖到虛線區＝解除）再按「確認並建立」，一次寫進任務清單。</p>
-            <div class="ai-advice-items" id="aiAdviceItems"></div>
-            <div class="ai-actions"><button class="button button-light" type="button" id="aiAdviceApplyAll" hidden>⚡ 依建議一鍵建立全部（任務＋記事）</button></div>
-          </div>
           <div class="ai-task-suggestion" id="aiTaskSuggestion" hidden>
             <div class="ai-section-head">
-              <h4>任務草稿板</h4>
+              <h4>📋 整理成任務／記事</h4>
               <span class="ai-hint" id="aiDraftBoardCount"></span>
             </div>
             <div class="ai-task-main" id="aiMainTaskTitle"></div>
-            <div class="ai-subtask-note" id="aiSubtaskRecommendation">AI 先拆成一個個<strong>單一任務</strong>；把任務<strong>拖到另一個任務上</strong>就變成它的子任務（只有一層），拖到下方虛線區就解除。名稱、日期、時間都可直接改，取消勾選＝不建立。排好後按「確認並建立」，會一次寫進任務清單。</div>
+            <div class="ai-subtask-note" id="aiSubtaskRecommendation">AI 把跟你有關的事一件件列出來，並先選好建議：每件可改成 <strong>任務</strong>（要動手做、寫進任務清單）、<strong>記事</strong>（只要記得，存到小綿助記事，日期＝提醒日）或 <strong>不要</strong>。名稱、日期、時間都可以直接改；任務<strong>拖到另一個任務上</strong>＝變成它的子任務，拖到虛線區＝解除。最後按下面的按鈕，一次建好。</div>
             <div class="ai-draft-unnest" id="aiDraftUnnestZone">⤴ 拖到這裡＝解除子任務、變回獨立任務</div>
             <div class="ai-draft-board" id="aiDraftBoard"></div>
             <div class="ai-actions">
-              <button class="button button-dark" type="button" id="aiCreateTaskButton">確認並建立任務</button>
-              <button class="mini-button" type="button" id="aiDraftAddButton">＋ 加一個空白任務</button>
+              <button class="button button-dark" type="button" id="aiCreateTaskButton">確認建立</button>
+              <button class="mini-button" type="button" id="aiDraftAddButton">＋ 自己加一件</button>
               <button class="mini-button" type="button" id="aiDraftFlattenButton">全部變回獨立</button>
             </div>
           </div>
@@ -1876,46 +1982,6 @@
           <input id="secretaryNotesFileInput" type="file" accept="application/json,.json" hidden>
         </div>
         <div class="secretary-note-list" id="secretaryNoteList"></div>
-      </div>
-    </section>
-
-    <section class="secretary-notes line-inbox" id="lineInboxSection" aria-labelledby="lineInboxTitle">
-      <div class="secretary-notes-head">
-        <div class="secretary-notes-title">
-          <img data-cozy-icon="panel_line_inbox" src="assets/ipas/mailbox-line.webp" alt="">
-          <div>
-            <h2 id="lineInboxTitle">LINE 收件匣 <span class="secretary-note-count" id="lineInboxCount">0</span></h2>
-            <p>從 LINE 傳來的訊息先收在這裡；按「轉為任務」或「轉為記事」確認後才會正式建立。</p>
-          </div>
-        </div>
-        <div class="secretary-note-actions">
-          <button class="mini-button" type="button" id="syncLineInboxButton">立即同步</button>
-        </div>
-      </div>
-      <div class="secretary-notes-body">
-        <div class="secretary-note-meta" id="lineInboxStatus">尚未同步。</div>
-        <div class="secretary-note-list" id="lineInboxList"></div>
-      </div>
-    </section>
-
-    <section class="secretary-notes screen-prompt" id="screenPromptSection" aria-labelledby="screenPromptTitle">
-      <div class="secretary-notes-head">
-        <div class="secretary-notes-title">
-          <img data-cozy-icon="sum_overdue" src="assets/ipas/bell-overdue.webp" alt="">
-          <div>
-            <h2 id="screenPromptTitle">📣 大屏提示</h2>
-            <p>在這裡選一句，教室大屏會跳出大字提示（例如「上課囉！眼睛看老師」）；不用走到電腦前。</p>
-          </div>
-        </div>
-      </div>
-      <div class="secretary-notes-body">
-        <div class="secretary-note-actions" style="align-items:center;gap:8px;flex-wrap:wrap">
-          <select class="input" id="screenPromptSelect" style="max-width:240px;padding:6px 8px"></select>
-          <input class="input" id="screenPromptCustom" maxlength="40" placeholder="或自訂一句…" style="max-width:200px;padding:6px 8px">
-          <button class="mini-button" type="button" id="screenPromptSendButton">送到大屏</button>
-          <button class="mini-button" type="button" id="screenPromptClearButton">清除</button>
-        </div>
-        <div class="secretary-note-meta" style="margin-top:6px">大屏約 20 秒內切換；LINE 傳「提示 排隊」也有同樣效果，「提示」看全部指令。</div>
       </div>
     </section>
 
@@ -2134,6 +2200,15 @@
     </section>
 
       </div>
+    </section>
+
+    <section class="month-events" id="monthEventsCard" aria-labelledby="monthEventsTitle" hidden>
+      <div class="month-events-head">
+        <h2 id="monthEventsTitle">📅 本月學校常見活動</h2>
+        <span class="month-events-hint">點一下＝新增成任務（期限自己填）；已經有的會打 ✓</span>
+        <button class="mini-button" type="button" id="monthEventsClose">這個月先收起</button>
+      </div>
+      <div class="month-events-body" id="monthEventsBody"></div>
     </section>
 
     <section class="workspace" id="workspace">
@@ -2426,11 +2501,11 @@
           <div class="field">
             <label for="apiModelSelect">模型</label>
             <div style="display:flex;gap:6px">
-              <select class="select" id="apiModelSelect" style="flex:1"><option value="">（使用服務預設模型）</option></select>
+              <select class="select" id="apiModelSelect" style="flex:1"><option value="">自動（建議）</option></select>
               <button class="mini-button" type="button" id="fetchModelsButton" title="用你的金鑰向服務商查詢目前可用的模型">🔄 取得清單</button>
             </div>
             <input class="input" id="apiModel" placeholder="或自行輸入模型代號（Gemini 留空＝自動）" style="margin-top:6px">
-            <div class="api-secret-note">先填 API 金鑰、按「🔄 取得清單」，就能直接從服務商抓到最新模型；以後出新模型也不用更新系統。Gemini 不選模型時先用 3.5 Flash-Lite；Google 停用它時會自動換 3.1 Flash-Lite，再換 3.8 Flash。</div>
+            <div class="api-secret-note">先填 API 金鑰、按「🔄 取得清單」，就能直接從服務商抓到最新模型；以後出新模型也不用更新系統。Gemini 選「自動」時先用 3.5 Flash-Lite；它今天的免費額度用完、或被 Google 停用時，會自動換 3.1 Flash-Lite，再換 3.8 Flash。</div>
           </div>
           <div class="field field-wide" id="apiEndpointField" hidden>
             <label for="apiEndpoint">API 端點（OpenAI 相容，不含 /chat/completions）</label>
@@ -2444,7 +2519,11 @@
             <div class="api-secret-note">金鑰不會放進備份檔或 GitHub。共用電腦請取消勾選，金鑰便只保留到關閉此瀏覽器分頁。</div>
           </div>
         </div>
-        <button class="button button-light" type="button" id="checkApiButton">檢查設定</button>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <button class="button button-light" type="button" id="checkApiButton">✓ 測試金鑰</button>
+          <span class="api-check-result" id="apiCheckResult" role="status" aria-live="polite"></span>
+        </div>
+        <div class="api-secret-note">按「✓ 測試金鑰」會送一句「請回覆 OK」給 AI（算 1 次額度），告訴你：金鑰能不能用、實際用到哪個模型、是不是今天額度用完了。程式查不到「今天還剩幾次」，要看請到 <a href="https://aistudio.google.com/usage" target="_blank" rel="noopener">Google AI Studio 的用量頁</a>。</div>
       </section>
 
       <section class="settings-panel" data-settings-panel="pet">
@@ -2522,7 +2601,7 @@
             <button class="button button-light" type="button" id="testLineBridgeButton">測試連線</button>
             <button class="button button-dark" type="button" id="syncLineBridgeButton">立即同步</button>
           </span>
-          <span>同步會做兩件事：拉回 LINE 收件匣的新訊息，並把「今日任務與課程進度摘要」推上雲端，供 LINE 查詢與晨間簡報使用（摘要不含學生個資與附件）。</span>
+          <span>同步會做兩件事：把你在 LINE 傳的事自動帶進來（你在 LINE 按了［任務］［記事］的立刻帶入，沒按的 10 分鐘後照 AI 建議；任務進任務清單、記事進小綿助記事），並把「今日任務與課程進度摘要」推上雲端，供 LINE 查詢與晨間簡報使用（摘要不含學生個資與附件）。</span>
         </div>
         <div class="field field-wide" style="margin-top:14px">
           <label>聯絡本常用項目（可自訂；每行一項，改完自動儲存）</label>
@@ -2770,6 +2849,7 @@
     </button>
   </div>
 
+  <script src="assets/school-events.js"></script>
   <script>
     'use strict';
 
@@ -3630,6 +3710,7 @@
 
     let toastTimer = null;
     function showToast(message, isError) {
+      if (isError && /HTTP 429/.test(String(message || ''))) message = 'AI 今天的免費額度用完了（或短時間內用太多次）。等一下再試，或到工作台「⚙ 設定 → ② AI 設定」把模型改成「自動」。';
       window.clearTimeout(toastTimer);
       const toast = $('toast');
       toast.textContent = message;
@@ -4550,13 +4631,8 @@
     function updateLineToolboxVisibility() {
       const enabled = lineBridgeState.settings.enabled === true;
       document.querySelectorAll('[data-line-only]').forEach(element => { element.hidden = !enabled; });
-      const badge = $('lineInboxBadge');
-      if (badge) {
-        badge.textContent = String(lineBridgeState.inbox.length);
-        badge.hidden = !enabled || !lineBridgeState.inbox.length;
-      }
       if (!enabled) {
-        // 關掉雲端時，開著的雲端專用面板（LINE 收件匣、聯絡本、大屏提示）一起收起來
+        // 關掉雲端時，開著的雲端專用面板（聯絡本等）一起收起來
         if (document.querySelector('[data-line-only].active')) setTeacherToolbox('');
       }
     }
@@ -4645,10 +4721,11 @@
       if (lineBridgeState.inFlight) return false;
       lineBridgeState.inFlight = true;
       try {
-        const pull = await callLineBridge('pull');
-        const known = new Set(lineBridgeState.inbox.map(item => String(item.id)));
-        const fresh = (Array.isArray(pull.items) ? pull.items : [])
-          .filter(item => item && item.id && item.text && !known.has(String(item.id)))
+        const pull = await callLineBridge('pull', { folder: !lineDriveFolderUrl() });
+        if (/^https:\/\/drive\.google\.com\//.test(String(pull.folderUrl || ''))) { try { localStorage.setItem(LINE_DRIVE_FOLDER_KEY, pull.folderUrl); } catch (error) {} }
+        const imported = lineImportedIds();
+        const pulled = (Array.isArray(pull.items) ? pull.items : [])
+          .filter(item => item && item.id && item.text)
           .map(item => ({
             id: String(item.id),
             createdAt: String(item.createdAt || new Date().toISOString()),
@@ -4658,18 +4735,22 @@
             dueDate: /^\d{4}-\d{2}-\d{2}$/.test(String(item.dueDate || '')) ? String(item.dueDate) : '',
             axis: SIMPLE_WORK_AXES.includes(String(item.axis || '')) ? String(item.axis) : '',
             tag: String(item.tag || '').slice(0, 20),
-            medium: item.medium === 'voice' || item.medium === 'photo' ? item.medium : ''
+            medium: item.medium === 'voice' || item.medium === 'photo' ? item.medium : '',
+            decided: item.decided === true
           }));
-        if (fresh.length) {
-          lineBridgeState.inbox = [...fresh, ...lineBridgeState.inbox].slice(0, 200);
-          saveLineInbox();
-        }
+        // 雲端還沒標「已帶入」的，這台電腦帶過就補標記、不重複建立
+        const already = pulled.filter(item => imported.has(String(item.id))).map(item => String(item.id));
+        if (already.length) { try { await callLineBridge('ack', { ids: already, status: 'imported' }); } catch (error) {} }
+        lineBridgeState.inbox = pulled.filter(item => !imported.has(String(item.id))).slice(0, 200);
+        const brought = await autoImportLineItems();
+        saveLineInbox();
         try { await callLineBridge('snapshot', { snapshot: buildLineSnapshot() }); } catch (error) {}
         try { await syncRollcallStats(); } catch (error) {}
         lineBridgeState.lastSync = new Date().toISOString();
         renderLineInbox();
-        setLineBridgeStatus(`已連線｜最後同步 ${new Date(lineBridgeState.lastSync).toLocaleTimeString('zh-TW')}｜待處理 ${lineBridgeState.inbox.length} 則`);
-        if (!silent) showToast(fresh.length ? `LINE 同步完成，帶回 ${fresh.length} 則新訊息。` : 'LINE 同步完成，沒有新訊息。');
+        setLineBridgeStatus(`已連線｜最後同步 ${new Date(lineBridgeState.lastSync).toLocaleTimeString('zh-TW')}｜LINE 待定 ${lineBridgeState.inbox.length} 則`);
+        if (brought.tasks || brought.notes) showToast(`📥 從 LINE 帶入 ${[brought.tasks ? `${brought.tasks} 個任務` : '', brought.notes ? `${brought.notes} 則記事（小綿助記事）` : ''].filter(Boolean).join('、')}。`);
+        else if (!silent) showToast(lineBridgeState.inbox.length ? `LINE 同步完成；${lineBridgeState.inbox.length} 則等你在 LINE 按按鈕（10 分鐘後照 AI 建議自動帶入）。` : 'LINE 同步完成，沒有新訊息。');
         schedulePetBridgeSync();
         return true;
       } catch (error) {
@@ -4692,104 +4773,71 @@
       }
     }
 
-    async function ackLineItem(id, status) {
-      try { await callLineBridge('ack', { ids: [id], status }); } catch (error) {}
+    // ---- 📂 雲端資料夾：LINE 傳來的照片、檔案都自動備份在老師雲端硬碟的「LINE小幫手備份」----
+    const LINE_DRIVE_FOLDER_KEY = 'grade6LineDriveFolderUrl';
+    function lineDriveFolderUrl() {
+      try { const url = localStorage.getItem(LINE_DRIVE_FOLDER_KEY) || ''; return /^https:\/\/drive\.google\.com\//.test(url) ? url : ''; } catch (error) { return ''; }
+    }
+    function openLineDriveFolder() {
+      // 還沒拿到資料夾連結（例如 LINE 小幫手是舊版）就先用雲端硬碟搜尋資料夾名稱
+      const url = lineDriveFolderUrl() || `https://drive.google.com/drive/search?q=${encodeURIComponent('LINE小幫手備份')}`;
+      window.open(url, '_blank', 'noopener');
+      if (!lineDriveFolderUrl() && lineBridgeReady()) syncLineBridge({ silent: true });
     }
 
-    function removeLineItem(id) {
-      lineBridgeState.inbox = lineBridgeState.inbox.filter(item => String(item.id) !== String(id));
-      try { saveLineInbox(); } catch (error) {}
-      renderLineInbox();
-      schedulePetBridgeSync();
+    // ---- LINE 傳來的訊息：同步時自動帶入（2026-11-11 拿掉 LINE 收件匣）----
+    // 老師在 LINE 按了［任務］［記事］的立刻帶入；沒按的放 10 分鐘（給老師時間按），之後照 AI 建議帶入。
+    const LINE_AUTO_IMPORT_MS = 10 * 60 * 1000;
+    const LINE_IMPORTED_KEY = 'grade6LineImportedIds';
+    function lineImportedIds() {
+      try { const list = JSON.parse(localStorage.getItem(LINE_IMPORTED_KEY) || '[]'); return new Set(Array.isArray(list) ? list.map(String) : []); } catch (error) { return new Set(); }
     }
-
-    function lineCategoryOptionsHtml(axis, selected) {
-      const categories = axis ? (state.options['類型'] || []).filter(category => taskWorkAxis({ category }) === axis) : [];
-      return ['<option value="">細項不選</option>', ...categories.map(category =>
-        `<option value="${escapeHtml(category)}"${category === selected ? ' selected' : ''}>${escapeHtml(category)}</option>`)].join('');
+    function rememberLineImported(ids) {
+      try { localStorage.setItem(LINE_IMPORTED_KEY, JSON.stringify([...ids, ...lineImportedIds()].slice(0, 500))); } catch (error) {}
     }
-
     function renderLineInbox() {
-      const host = $('lineInboxList');
-      if (!host) return;
-      const count = $('lineInboxCount');
-      if (count) count.textContent = lineBridgeState.inbox.length;
       updateLineToolboxVisibility();
-      if (!lineBridgeState.inbox.length) {
-        host.innerHTML = '<div class="secretary-note-empty">目前沒有待處理的 LINE 訊息。到 LINE 傳訊息給小幫手後，按「立即同步」。</div>';
-        return;
-      }
-      host.innerHTML = lineBridgeState.inbox.map(item => {
-        const time = new Date(item.createdAt);
-        const timeText = Number.isNaN(time.getTime()) ? '' : time.toLocaleString('zh-TW');
-        const chips = [
-          `<span class="line-chip${item.type === 'task' ? ' line-chip-task' : ''}">${item.type === 'task' ? '任務草稿' : '記事草稿'}</span>`,
-          item.tag ? `<span class="line-chip">${escapeHtml(item.tag)}</span>` : '',
-          item.medium === 'voice' ? '<span class="line-chip">🎤 語音</span>' : '',
-          item.medium === 'photo' ? '<span class="line-chip">📷 照片</span>' : '',
-          `<span class="secretary-note-meta">${escapeHtml(timeText)}</span>`
-        ].filter(Boolean).join('');
-        const axis = item.axis || '';
-        return `<article class="line-inbox-item" data-line-id="${escapeHtml(item.id)}">
-          <div class="line-inbox-chips">${chips}</div>
-          <div class="line-inbox-title">${escapeHtml(item.title || item.text.slice(0, 60))}</div>
-          <div class="line-inbox-original">${escapeHtml(item.text)}</div>
-          <div class="line-inbox-controls">
-            <select class="select" data-line-field="axis">${['<option value="">選工作主軸</option>', ...SIMPLE_WORK_AXES.map(value =>
-              `<option value="${value}"${value === axis ? ' selected' : ''}>${value}</option>`)].join('')}</select>
-            <select class="select" data-line-field="category">${lineCategoryOptionsHtml(axis, '')}</select>
-            <input class="input" type="date" data-line-field="dueDate" value="${escapeHtml(item.dueDate || '')}">
-            <button class="mini-button" type="button" data-line-action="task">轉為任務</button>
-            <button class="mini-button" type="button" data-line-action="note">轉為記事</button>
-            <button class="mini-button" type="button" data-line-action="ignore">忽略</button>
-          </div>
-        </article>`;
-      }).join('');
     }
-
-    async function convertLineItemToTask(item, host) {
-      const axis = host.querySelector('[data-line-field="axis"]')?.value || item.axis || '行政';
-      const category = host.querySelector('[data-line-field="category"]')?.value || '';
-      const dueDate = host.querySelector('[data-line-field="dueDate"]')?.value || item.dueDate || '';
-      setLoading(true, '正在建立任務……');
-      try {
-        const result = await serverCall('saveTask', {
-          taskId: '', name: item.title || item.text.slice(0, 60), category, status: '未開始', priority: '中',
-          dueDate, dueTime: '', nextAction: item.text, waitingFor: '',
-          progress: `由 LINE 小幫手${item.medium === 'voice' ? '（語音）' : item.medium === 'photo' ? '（照片）' : ''}傳入；已經使用者確認`,
-          owner: state.settings.DEFAULT_OWNER || '', ownerEmail: state.settings.DEFAULT_OWNER_EMAIL || '',
-          boardDisplay: '自動', sortOrder: 100, detailUrl: '', taskType: '一般任務',
-          parentTaskId: '', projectId: '', workAxis: SIMPLE_WORK_AXES.includes(axis) ? axis : '行政',
-          csrfToken: state.csrfToken
-        });
-        state.tasks = result.tasks || state.tasks;
-        state.filteredTasks = [...state.tasks];
-        renderSummary(result.summary || summarizeCurrentTasks());
-        applyFilters();
-        removeLineItem(item.id);
-        ackLineItem(item.id, 'imported');
-        showToast('已依 LINE 訊息建立任務。');
-      } catch (error) {
-        showToast(error.message || '任務建立失敗。', true);
-      } finally {
-        setLoading(false);
-      }
+    function lineTaskPayload(item) {
+      const axis = SIMPLE_WORK_AXES.includes(item.axis) ? item.axis : '行政';
+      return {
+        taskId: '', name: (item.title || item.text.slice(0, 60)).slice(0, 90), category: '', status: '未開始', priority: '中',
+        dueDate: item.dueDate || '', dueTime: '', nextAction: item.text, waitingFor: '',
+        progress: `由 LINE 小幫手${item.medium === 'voice' ? '（語音）' : item.medium === 'photo' ? '（照片）' : ''}傳入；${item.decided ? '老師在 LINE 選「任務」' : '照 AI 建議自動建立'}`,
+        owner: state.settings.DEFAULT_OWNER || '', ownerEmail: state.settings.DEFAULT_OWNER_EMAIL || '',
+        boardDisplay: '自動', sortOrder: 100, detailUrl: '', taskType: '一般任務',
+        parentTaskId: '', projectId: '', workAxis: axis, csrfToken: state.csrfToken
+      };
     }
-
-    function convertLineItemToNote(item) {
-      const text = (item.tag ? `【${item.tag}】` : '') + item.text;
-      const note = normalizeSecretaryNote({ text, createdAt: item.createdAt, remindDate: item.dueDate || '' }, 'line');
-      if (!note) return showToast('這則訊息沒有可保存的內容。', true);
-      secretaryNotesState.notes.unshift(note);
-      try {
-        saveSecretaryNotes(note.remindDate
-          ? `已把 LINE 訊息存成記事；提醒日 ${note.remindDate.replace(/-/g, '/')} 會出現在日曆與晨間簡報。`
-          : '已把 LINE 訊息存成記事。');
-        removeLineItem(item.id);
-        ackLineItem(item.id, 'imported');
-      } catch (error) {
-        secretaryNotesState.notes.shift();
+    async function autoImportLineItems() {
+      const now = Date.now();
+      const ready = lineBridgeState.inbox.filter(item => item.decided || !(now - Date.parse(item.createdAt) < LINE_AUTO_IMPORT_MS));
+      let tasks = 0, notes = 0, result = null;
+      const done = [];
+      for (const item of ready) {
+        try {
+          if (item.type === 'task') {
+            const name = (item.title || item.text.slice(0, 60)).slice(0, 90);
+            // 同一筆（例如上次標記沒送到）不要重複建
+            if (!state.tasks.some(task => task.name === name && String(task.nextAction || '').startsWith(item.text.slice(0, 40)))) {
+              result = await serverCall('saveTask', lineTaskPayload(item));
+              tasks += 1;
+            }
+          } else {
+            const note = normalizeSecretaryNote({ text: (item.tag ? `【${item.tag}】` : '') + item.text, createdAt: item.createdAt, remindDate: item.dueDate || '' }, 'line');
+            if (note && !secretaryNotesState.notes.some(old => old.text === note.text)) { secretaryNotesState.notes.unshift(note); notes += 1; }
+          }
+          done.push(String(item.id));
+        } catch (error) { break; }   // 寫入失敗：留到下次同步再試
       }
+      if (notes) { try { saveSecretaryNotes(''); } catch (error) {} }
+      if (result) applyTaskResult(result);
+      if (done.length) {
+        rememberLineImported(done);
+        lineBridgeState.inbox = lineBridgeState.inbox.filter(item => !done.includes(String(item.id)));
+        try { await callLineBridge('ack', { ids: done, status: 'imported' }); } catch (error) {}
+      }
+      return { tasks, notes };
     }
 
     // ---- 晨間大屏統計：拉回近 60 天出缺與作業紀錄，顯示在工作台日曆 ----
@@ -5345,29 +5393,6 @@
       [enabledInput, urlInput, tokenInput, rememberInput].forEach(input => input.addEventListener('change', persistForm));
       $('testLineBridgeButton')?.addEventListener('click', () => { persistForm(); testLineBridge(); });
       $('syncLineBridgeButton')?.addEventListener('click', () => { persistForm(); syncLineBridge(); });
-      $('syncLineInboxButton')?.addEventListener('click', () => syncLineBridge());
-      const list = $('lineInboxList');
-      list?.addEventListener('change', event => {
-        const axisSelect = event.target.closest('[data-line-field="axis"]');
-        if (!axisSelect) return;
-        const itemHost = event.target.closest('.line-inbox-item');
-        const categorySelect = itemHost?.querySelector('[data-line-field="category"]');
-        if (categorySelect) categorySelect.innerHTML = lineCategoryOptionsHtml(axisSelect.value, '');
-      });
-      list?.addEventListener('click', event => {
-        const button = event.target.closest('[data-line-action]');
-        if (!button) return;
-        const itemHost = button.closest('.line-inbox-item');
-        const item = lineBridgeState.inbox.find(entry => String(entry.id) === itemHost?.dataset.lineId);
-        if (!item) return;
-        if (button.dataset.lineAction === 'task') convertLineItemToTask(item, itemHost);
-        else if (button.dataset.lineAction === 'note') convertLineItemToNote(item);
-        else if (button.dataset.lineAction === 'ignore') {
-          removeLineItem(item.id);
-          ackLineItem(item.id, 'ignored');
-          showToast('已忽略這則 LINE 訊息。');
-        }
-      });
     }
 
     function addOptions(selectId, values, includeBlank, blankText) {
@@ -5420,6 +5445,8 @@
       $('sumDueToday').textContent = summary.dueToday || 0;
       $('sumOverdue').textContent = summary.overdue || 0;
       $('sumCompleted').textContent = summary.completed || 0;
+      // 任務變了，本月活動小卡的 ✓ 也跟著更新（程式剛載入、小卡還沒準備好時略過）
+      try { renderMonthEvents(); } catch (error) {}
     }
 
     function parseDateOnly(value) {
@@ -5871,7 +5898,7 @@
               ${note.done ? `<button class="mini-button" type="button" data-delete-secretary-note="${escapeHtml(note.id)}">刪除</button>` : `<button class="mini-button" type="button" data-note-to-task="${escapeHtml(note.id)}">轉任務</button>`}
             </span>
           </div>`).join('')}
-        <div class="secretary-note-meta">完整管理請到「教師工具箱 → 小綿助記事」。</div>`;
+        <div class="secretary-note-meta">完整管理請到「教師工具箱 → 📥 收件與 AI → 小綿助記事」。</div>`;
       popover.hidden = false;
       const dayCell = document.querySelector(`.calendar-day[data-date="${calendarNotePopoverDate}"]`);
       const rect = dayCell?.getBoundingClientRect();
@@ -6204,7 +6231,7 @@
           ? `${officeText}｜登入帳號：${state.user.email}｜同步時間：${data.serverTime}`
           : `${officeText || '校務行政'}｜Workspace 使用者｜同步時間：${data.serverTime}`;
         applyWorkspaceBranding();
-        if (data.appUrl) $('boardLink').href = `${data.appUrl}?page=board`;
+        if (data.appUrl && $('boardLink')) $('boardLink').href = `${data.appUrl}?page=board`;
 
         initializeOptions();
         renderSummary(data.summary || {});
@@ -7063,18 +7090,16 @@
       $('aiOutput').classList.add('is-empty');
       $('aiResultType').hidden = true;
       $('aiTaskSuggestion').hidden = true;
-      $('aiAdviceChecklist').hidden = true;
       $('aiTeacherMessage').hidden = true;
       $('aiFormDraft').hidden = true;
       $('aiGroupBuyDraft').hidden = true;
-      $('aiAdviceItems').innerHTML = '';
       $('aiTeacherMessageText').value = '';
       $('aiFormQuestionList').innerHTML = '';
       $('aiGroupBuyTable').innerHTML = '';
       $('aiCreateGoogleFormButton').disabled = false;
       $('activePromptLabel').textContent = 'AI 自動辨識';
       $('aiCreateTaskButton').disabled = false;
-      $('aiCreateTaskButton').textContent = '確認並建立任務';
+      $('aiCreateTaskButton').textContent = '確認建立';
       aiAssistantState.draftBoard = [];
       $('aiDraftBoard').innerHTML = '';
       $('aiDraftBoardCount').textContent = '';
@@ -7392,83 +7417,12 @@
       return kindItems[analysis.classification.kind] || kindItems.administrative;
     }
 
-    function renderAdviceChecklist(analysis) {
-      const items = buildAdviceItems(analysis);
-      const meta = analysis.aiChecklistMeta || [];
-      $('aiAdviceChecklist').hidden = !items.length;
-      $('aiAdviceItems').innerHTML = items.map((item, index) => {
-        const m = meta[index] || {};
-        const when = m.dueDate ? `${m.dueDate.replace(/-/g, '/')}${m.dueTime ? ' ' + m.dueTime : ''}` : '';
-        const badge = (m.kind === 'task' ? '<span class="ai-kind-badge is-task">建議：任務</span>' : m.kind === 'note' ? '<span class="ai-kind-badge">建議：記事</span>' : '')
-          + (m.link ? `<a class="ai-kind-badge is-link" href="${escapeHtml(m.link)}" target="_blank" rel="noopener" title="${escapeHtml(m.link)}">🔗 連結</a>` : '');
-        return `
-        <label class="ai-advice-option" draggable="true" data-ai-advice-drag="${index}" title="拖到下方「任務建立建議」可轉成任務">
-          <input type="checkbox" data-ai-advice-index="${index}">
-          <span>${escapeHtml(item)}${badge}${when ? `<span class="ai-kind-badge is-time">⏰ ${escapeHtml(when)}</span>` : ''}</span>
-          <span class="ai-advice-actions">
-            <button type="button" class="mini-button${m.kind === 'task' ? ' is-suggested' : ''}" data-advice-to-task="${index}" title="直接建立成獨立任務（會帶入時間）">➕任務</button>
-            <button type="button" class="mini-button${m.kind === 'note' ? ' is-suggested' : ''}" data-advice-to-note="${index}" title="存到小綿助記事（會帶入提醒日）">📌記事</button>
-          </span>
-        </label>`;
-      }).join('');
-      $('aiAdviceApplyAll').hidden = !meta.length;
-      updateAdviceProgress();
-    }
-
-    async function applyAllAdviceSuggestions() {
-      const analysis = aiAssistantState.analysis;
-      const meta = analysis?.aiChecklistMeta || [];
-      if (!meta.length) return showToast('這次沒有可依建議建立的項目。', true);
-      let tasks = 0, notes = 0;
-      for (let index = 0; index < meta.length; index += 1) {
-        if (meta[index].kind === 'task') { adviceItemToTask(index, true); tasks += 1; }
-        else { adviceItemToNote(index, true); notes += 1; }
-        const box = document.querySelector(`[data-ai-advice-index="${index}"]`);
-        if (box) box.checked = true;
-      }
-      updateAdviceProgress();
-      showToast(`⚡ 已建立 ${notes} 則記事；${tasks} 個任務已放到草稿板，排好主／子後按「確認並建立」。`);
-      $('aiTaskSuggestion').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-
-    function adviceItemText(index) {
-      const analysis = aiAssistantState.analysis;
-      if (!analysis) return '';
-      return buildAdviceItems(analysis)[index] || '';
-    }
-
-    function adviceItemToNote(index, quiet) {
-      const text = adviceItemText(index);
-      if (!text) return;
-      const meta = (aiAssistantState.analysis?.aiChecklistMeta || [])[index] || {};
-      if (secretaryNotesState.notes.some(note => note.text === `【提醒】${text}`)) { if (!quiet) showToast('這一則已在記事裡。'); return; }
-      const note = normalizeSecretaryNote({ text: `【提醒】${text}${meta.link ? ` 🔗 ${meta.link}` : ''}`, createdAt: new Date().toISOString(), remindDate: meta.dueDate || '' }, 'web');
-      if (!note) return;
-      secretaryNotesState.notes.unshift(note);
-      saveSecretaryNotes(quiet ? '' : `📌 已存到「小綿助記事」${meta.dueDate ? `，提醒日 ${meta.dueDate.replace(/-/g, '/')}` : ''}。`);
-    }
-
-    function adviceItemToTask(index, quiet) {
-      const analysis = aiAssistantState.analysis;
-      const text = adviceItemText(index);
-      if (!analysis || !text) return;
-      const meta = (analysis.aiChecklistMeta || [])[index] || {};
-      const draft = addDraftTask({ name: text, dueDate: meta.dueDate || analysis.dueDate || '', dueTime: meta.dueTime || '', link: meta.link || '', category: analysis.classification?.category }, quiet);
-      if (draft && !quiet) showToast('➕ 已放到下方「任務草稿板」；拖好主／子關係後按「確認並建立」。');
-    }
-
     function applyTaskResult(result) {
       if (!result) return;
       state.tasks = result.tasks || state.tasks;
       state.filteredTasks = [...state.tasks];
       renderSummary(result.summary || summarizeCurrentTasks());
       applyFilters();
-    }
-
-    function updateAdviceProgress() {
-      const boxes = [...document.querySelectorAll('[data-ai-advice-index]')];
-      const checked = boxes.filter(box => box.checked).length;
-      $('aiAdviceProgress').textContent = `已確認 ${checked}／${boxes.length}`;
     }
 
     function resolveMessageAudience(text, analysis) {
@@ -7636,27 +7590,50 @@
       }
     }
 
+    // 兩件事是不是同一件（AI 有時把同一件事寫兩次，例如「統計同意書回條」和「本週五前統計同意書回條」）
+    function sameDraftName(a, b) {
+      const norm = text => String(text || '').replace(/[\s，。、；：:,.!！?？（）()「」【】]/g, '');
+      const x = norm(a), y = norm(b);
+      if (!x || !y) return false;
+      if (x.includes(y) || y.includes(x)) return true;
+      const grams = t => new Set([...t].slice(0, -1).map((ch, i) => ch + t[i + 1]));
+      const gx = grams(x), gy = grams(y);
+      const shared = [...gx].filter(g => gy.has(g)).length;
+      return shared / Math.min(gx.size, gy.size) >= 0.6;
+    }
+    // 一張清單：AI 列出的每件事＋AI 拆出的任務（重複的併成一件），每件選「任務／記事／不要」
     function renderTaskSuggestion(analysis) {
       $('aiTaskSuggestion').hidden = false;
       aiAssistantState.draftBoard = [];
-      if (!analysis.isTask) {
-        $('aiMainTaskTitle').textContent = '目前不建議建立任務';
-        $('aiSubtaskRecommendation').innerHTML = '這次內容屬於文字草稿或單次溝通；若仍要追蹤，可從上方清單按「➕任務」或「＋ 加一個空白任務」放到草稿板。';
-        renderDraftBoard();
-        return;
-      }
       const category = analysis.classification?.category || '行政交辦';
-      const seen = new Set();
-      const push = (name, dueDate, dueTime, priority, nextAction, link) => {
-        const clean = String(name || '').replace(/[。；]$/, '').trim().slice(0, 90);
-        if (!clean || seen.has(clean)) return;
-        seen.add(clean);
-        aiAssistantState.draftBoard.push({ id: `d${aiAssistantState.draftBoard.length + 1}-${Date.now().toString(36)}`, name: clean, dueDate: safeIsoDate(dueDate), dueTime: safeTimeString(dueTime), priority: ['高', '中', '低'].includes(priority) ? priority : '中', nextAction: String(nextAction || clean).slice(0, 120), link: safeUrl(link), category, parentId: '', include: true, created: false });
+      const push = (fields, kind) => {
+        const clean = String(fields.name || '').replace(/[。；]$/, '').trim().slice(0, 90);
+        if (!clean) return;
+        const same = aiAssistantState.draftBoard.find(item => sameDraftName(item.name, clean));
+        if (same) {
+          // 同一件事：AI 認為要做的（任務）優先；缺的日期時間連結補上
+          if (kind === 'task') same.kind = 'task';
+          if (fields.priority === '高') same.priority = '高';
+          same.dueDate = same.dueDate || safeIsoDate(fields.dueDate);
+          same.dueTime = same.dueTime || safeTimeString(fields.dueTime);
+          same.link = same.link || safeUrl(fields.link);
+          return;
+        }
+        aiAssistantState.draftBoard.push({ id: `d${aiAssistantState.draftBoard.length + 1}-${Date.now().toString(36)}`, name: clean, kind, dueDate: safeIsoDate(fields.dueDate), dueTime: safeTimeString(fields.dueTime), priority: ['高', '中', '低'].includes(fields.priority) ? fields.priority : '中', nextAction: String(fields.nextAction || clean).slice(0, 120), link: safeUrl(fields.link), category, parentId: '', created: false });
       };
-      push(analysis.mainTask.name, analysis.mainTask.dueDate, analysis.mainTask.dueTime, analysis.mainTask.priority, analysis.mainTask.nextAction, analysis.mainTask.detailUrl);
-      (analysis.children || []).forEach(child => push(child.name, child.dueDate, '', '中', child.name, child.link));
-      (analysis.aiChecklistMeta || []).filter(item => item.kind === 'task').forEach(item => push(item.text, item.dueDate, item.dueTime, '中', item.text, item.link));
-      $('aiMainTaskTitle').textContent = `AI 拆出 ${aiAssistantState.draftBoard.length} 個單一任務（全部獨立）`;
+      const meta = analysis.aiChecklistMeta || [];
+      meta.forEach(item => push({ name: item.text, dueDate: item.dueDate, dueTime: item.dueTime, link: item.link }, item.kind === 'task' ? 'task' : 'note'));
+      if (analysis.isTask && analysis.mainTask) {
+        push({ name: analysis.mainTask.name, dueDate: analysis.mainTask.dueDate, dueTime: analysis.mainTask.dueTime, priority: analysis.mainTask.priority, nextAction: analysis.mainTask.nextAction, link: analysis.mainTask.detailUrl }, 'task');
+        (analysis.children || []).forEach(child => push({ name: child.name, dueDate: child.dueDate, link: child.link }, 'task'));
+      }
+      // 沒有 AI 清單時（本機規則），把建議確認事項列出來、預設「不要」，老師要追蹤再改成任務或記事
+      if (!meta.length) buildAdviceItems(analysis).forEach(text => push({ name: text }, 'skip'));
+      const tasks = aiAssistantState.draftBoard.filter(item => item.kind === 'task').length;
+      const notes = aiAssistantState.draftBoard.filter(item => item.kind === 'note').length;
+      $('aiMainTaskTitle').textContent = aiAssistantState.draftBoard.length
+        ? `AI 建議：${tasks} 個任務、${notes} 則記事（可以改）`
+        : '這次沒有需要建立的任務或記事';
       renderDraftBoard();
     }
 
@@ -7670,49 +7647,56 @@
       const board = aiAssistantState.draftBoard || [];
       const host = $('aiDraftBoard');
       if (!board.length) {
-        host.innerHTML = '<div class="ai-hint">草稿板是空的。</div>';
+        host.innerHTML = '<div class="ai-hint">清單是空的；可以按「＋ 自己加一件」。</div>';
         $('aiDraftBoardCount').textContent = '';
         $('aiCreateTaskButton').hidden = true;
         return;
       }
+      // 只有任務能當主／子：變成記事或不要的，主子關係自動解除
+      board.forEach(item => { if (item.parentId && (item.kind !== 'task' || board.find(other => other.id === item.parentId)?.kind !== 'task')) item.parentId = ''; });
       const parentIds = new Set(board.filter(item => item.parentId).map(item => item.parentId));
       host.innerHTML = draftBoardOrdered().map(item => {
         const isChild = Boolean(item.parentId) && board.some(other => other.id === item.parentId);
         const isParent = parentIds.has(item.id);
         const parentName = isChild ? board.find(other => other.id === item.parentId).name : '';
-        return `<div class="ai-draft-card${isChild ? ' is-child' : ''}${isParent ? ' is-parent' : ''}${item.include ? '' : ' is-off'}${item.created ? ' is-created' : ''}" draggable="${item.created ? 'false' : 'true'}" data-draft-id="${item.id}">
-          <input type="checkbox" data-draft-include="${item.id}" ${item.include ? 'checked' : ''} ${item.created ? 'disabled' : ''} title="勾選＝要建立">
-          <span class="ai-draft-grip" title="拖曳">⠿</span>
+        const isTask = item.kind === 'task', isNote = item.kind === 'note';
+        const kindButtons = [['task', '任務'], ['note', '記事'], ['skip', '不要']].map(([kind, label]) => `<button type="button" data-draft-kind="${item.id}" data-kind="${kind}" aria-pressed="${item.kind === kind}" ${item.created ? 'disabled' : ''}>${label}</button>`).join('');
+        return `<div class="ai-draft-card${isChild ? ' is-child' : ''}${isParent ? ' is-parent' : ''}${isNote ? ' is-note' : ''}${item.kind === 'skip' ? ' is-off' : ''}${item.created ? ' is-created' : ''}" draggable="${item.created || !isTask ? 'false' : 'true'}" data-draft-id="${item.id}">
+          <span class="ai-draft-kind" role="group" aria-label="要建立成">${kindButtons}</span>
+          ${isTask ? '<span class="ai-draft-grip" title="拖曳">⠿</span>' : ''}
           <div class="ai-draft-body">
             <div class="ai-draft-name" contenteditable="${item.created ? 'false' : 'true'}" spellcheck="false" data-draft-name="${item.id}">${escapeHtml(item.name)}</div>
-            <div class="ai-draft-meta">
-              <span class="ai-draft-tag">${item.created ? '✅ 已建立' : isChild ? `子任務 ← ${escapeHtml(parentName.slice(0, 14))}` : isParent ? '主任務' : '獨立任務'}</span>
-              📅 <input type="date" data-draft-date="${item.id}" value="${item.dueDate}" ${item.created ? 'disabled' : ''}>
-              <input type="time" data-draft-time="${item.id}" value="${item.dueTime}" ${item.created ? 'disabled' : ''}>
-              <select data-draft-priority="${item.id}" ${item.created ? 'disabled' : ''}>${['高', '中', '低'].map(level => `<option${level === item.priority ? ' selected' : ''}>${level}</option>`).join('')}</select>
+            ${item.kind === 'skip' ? '' : `<div class="ai-draft-meta">
+              <span class="ai-draft-tag">${item.created ? (isNote ? '✅ 已存成記事' : '✅ 已建立') : isNote ? '記事' : isChild ? `子任務 ← ${escapeHtml(parentName.slice(0, 14))}` : isParent ? '主任務' : '獨立任務'}</span>
+              ${isNote ? '提醒日' : '📅'} <input type="date" data-draft-date="${item.id}" value="${item.dueDate}" ${item.created ? 'disabled' : ''}>
+              ${isTask ? `<input type="time" data-draft-time="${item.id}" value="${item.dueTime}" ${item.created ? 'disabled' : ''}>
+              <select data-draft-priority="${item.id}" ${item.created ? 'disabled' : ''}>${['高', '中', '低'].map(level => `<option${level === item.priority ? ' selected' : ''}>${level}</option>`).join('')}</select>` : ''}
               🔗 <input type="url" data-draft-link="${item.id}" value="${escapeHtml(item.link || '')}" placeholder="連結（表單、報名網址…）" style="width:200px" ${item.created ? 'disabled' : ''}>${item.link ? `<a href="${escapeHtml(item.link)}" target="_blank" rel="noopener" class="ai-kind-badge is-link">開啟</a>` : ''}
-            </div>
+            </div>`}
           </div>
-          ${item.created ? '' : `<button type="button" class="ai-draft-remove" data-draft-remove="${item.id}" title="從草稿板移除">✕</button>`}
+          ${item.created ? '' : `<button type="button" class="ai-draft-remove" data-draft-remove="${item.id}" title="從清單移除">✕</button>`}
         </div>`;
       }).join('');
-      const pending = board.filter(item => item.include && !item.created);
-      const parents = pending.filter(item => board.some(other => other.parentId === item.id && other.include && !other.created)).length;
+      const pending = board.filter(item => item.kind === 'task' && !item.created);
+      const notes = board.filter(item => item.kind === 'note' && !item.created);
+      const parents = pending.filter(item => board.some(other => other.parentId === item.id && other.kind === 'task' && !other.created)).length;
       const children = pending.filter(item => item.parentId && board.some(other => other.id === item.parentId)).length;
-      $('aiDraftBoardCount').textContent = `${pending.length} 個待建立（${parents} 主、${children} 子、${pending.length - parents - children} 獨立）`;
+      $('aiDraftBoardCount').textContent = `待建立：${pending.length} 個任務${pending.length ? `（${parents} 主、${children} 子、${pending.length - parents - children} 獨立）` : ''}、${notes.length} 則記事`;
       $('aiCreateTaskButton').hidden = false;
-      $('aiCreateTaskButton').disabled = !pending.length;
-      $('aiCreateTaskButton').textContent = pending.length ? `✅ 確認並建立 ${pending.length} 個任務` : '草稿板的任務都已建立';
+      $('aiCreateTaskButton').disabled = !pending.length && !notes.length;
+      $('aiCreateTaskButton').textContent = pending.length || notes.length
+        ? `✅ 確認建立：${[pending.length ? `${pending.length} 個任務` : '', notes.length ? `${notes.length} 則記事` : ''].filter(Boolean).join('＋')}`
+        : '都已建立完成';
     }
 
     function addDraftTask(fields, quiet) {
       if (!aiAssistantState.draftBoard) aiAssistantState.draftBoard = [];
       const clean = String(fields.name || '').replace(/[。；]$/, '').trim().slice(0, 90);
-      if (clean && aiAssistantState.draftBoard.some(item => item.name === clean)) { if (!quiet) showToast('草稿板已有這一項。'); return null; }
-      const draft = { id: `d${aiAssistantState.draftBoard.length + 1}-${Date.now().toString(36)}`, name: clean, dueDate: safeIsoDate(fields.dueDate), dueTime: safeTimeString(fields.dueTime), priority: fields.priority || '中', nextAction: String(fields.nextAction || clean).slice(0, 120), link: safeUrl(fields.link), category: fields.category || aiAssistantState.analysis?.classification?.category || '行政交辦', parentId: '', include: true, created: false };
+      if (clean && aiAssistantState.draftBoard.some(item => item.name === clean)) { if (!quiet) showToast('清單裡已有這一項。'); return null; }
+      const draft = { id: `d${aiAssistantState.draftBoard.length + 1}-${Date.now().toString(36)}`, name: clean, kind: fields.kind || 'task', dueDate: safeIsoDate(fields.dueDate), dueTime: safeTimeString(fields.dueTime), priority: fields.priority || '中', nextAction: String(fields.nextAction || clean).slice(0, 120), link: safeUrl(fields.link), category: fields.category || aiAssistantState.analysis?.classification?.category || '行政交辦', parentId: '', created: false };
       aiAssistantState.draftBoard.push(draft);
       $('aiTaskSuggestion').hidden = false;
-      if ($('aiMainTaskTitle').textContent === '目前不建議建立任務' || !$('aiMainTaskTitle').textContent) $('aiMainTaskTitle').textContent = '老師自行加入的任務';
+      if (!$('aiMainTaskTitle').textContent || $('aiMainTaskTitle').textContent.startsWith('這次沒有')) $('aiMainTaskTitle').textContent = '老師自行加入';
       renderDraftBoard();
       return draft;
     }
@@ -7723,6 +7707,7 @@
       if (!child || child.created) return;
       let parent = parentId ? board.find(item => item.id === parentId) : null;
       if (parent && parent.parentId && board.some(item => item.id === parent.parentId)) parent = board.find(item => item.id === parent.parentId);   // 只有一層
+      if (child.kind !== 'task' || (parent && parent.kind !== 'task')) return showToast('只有「任務」可以排主／子；記事不用。', true);
       if (parent && (parent.id === child.id || parent.created)) return;
       board.forEach(item => { if (item.parentId === child.id) item.parentId = ''; });   // 自己的子任務先升回獨立
       child.parentId = parent ? parent.id : '';
@@ -7829,17 +7814,127 @@
       return !cleaned || cleaned === GEMINI_OLD_DEFAULT ? GEMINI_AUTO_MODELS : [cleaned];
     }
 
-    async function fetchGemini(endpoint, models, key, body) {
-      let response;
-      for (const model of models) {
-        response = await fetch(`${endpoint}/${model}:generateContent`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-          body: JSON.stringify(body)
-        });
-        if (response.status !== 404) { geminiModelInUse = model; break; }
+
+    // ===== Gemini 模型自動跟上 Google（2026-11-10）=====
+    // Google 會陸續停用舊模型，寫死名字遲早會壞。做法：
+    // ① 記住上一次成功的模型，下次先用它；② 也試 Google 的「最新版」別名（永遠指向最新的 Flash-Lite／Flash）；
+    // ③ 全部都被停用（404）或額度用完（429）時，直接問 Google 現在有哪些模型，挑最新的 Flash-Lite／Flash 再試，並記下來。
+    const GEMINI_LATEST_ALIASES = ['gemini-flash-lite-latest', 'gemini-flash-latest'];
+    const GEMINI_LAST_GOOD_KEY = 'grade6GeminiLastGood';
+    function geminiLastGood() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(GEMINI_LAST_GOOD_KEY) || 'null');
+        if (saved && /^[a-z0-9.\-]{3,60}$/.test(String(saved.model || '')) && Date.now() - Number(saved.at || 0) < 30 * 86400000) return saved.model;
+      } catch (error) {}
+      return '';
+    }
+    function rememberGeminiModel(model) {
+      try { localStorage.setItem(GEMINI_LAST_GOOD_KEY, JSON.stringify({ model, at: Date.now() })); } catch (error) {}
+    }
+    // 只挑正式版的 Flash-Lite／Flash（不挑 preview、exp、圖片、語音），Flash-Lite 免費額度多排前面，版本新的排前面
+    function rankGeminiModels(ids) {
+      const score = id => {
+        const m = /^gemini-(\d+(?:\.\d+)?)-flash(-lite)?$/.exec(id);
+        return m ? (m[2] ? 1000 : 0) + Number(m[1]) * 10 : null;
+      };
+      return [...new Set(ids)].map(id => [id, score(id)]).filter(item => item[1] !== null).sort((a, b) => b[1] - a[1]).map(item => item[0]).slice(0, 4);
+    }
+    async function discoverGeminiModels(listEndpoint, key) {
+      try {
+        const response = await fetch(`${listEndpoint}?pageSize=200`, { headers: { 'x-goog-api-key': key } });
+        if (!response.ok) return [];
+        const data = await response.json();
+        return rankGeminiModels((data.models || [])
+          .filter(model => (model.supportedGenerationMethods || []).includes('generateContent'))
+          .map(model => String(model.name || '').replace(/^models\//, '')));
+      } catch (error) { return []; }
+    }
+    // models 只有一個＝老師指定的模型：被停用（404）就改用自動；額度用完（429）尊重老師的選擇，直接回報
+    async function fetchGeminiAuto(listEndpoint, models, key, body, onModel) {
+      const auto = models.length !== 1;
+      const tried = new Set();
+      let response = null;
+      const attempt = async (list, stopOn429) => {
+        for (const model of list) {
+          if (!model || tried.has(model)) continue;
+          tried.add(model);
+          response = await fetch(`${listEndpoint}/${model}:generateContent`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key }, body: JSON.stringify(body)
+          });
+          if (onModel) onModel(model);
+          // 404＝模型被停用、429＝這個模型今天的額度用完：換下一個
+          if (response.status !== 404 && response.status !== 429) {
+            if (response.ok && (auto || model !== models[0])) rememberGeminiModel(model);
+            return true;
+          }
+          if (response.status === 429 && stopOn429) return true;
+        }
+        return false;
+      };
+      const autoList = [geminiLastGood(), ...GEMINI_LATEST_ALIASES, ...GEMINI_AUTO_MODELS];
+      if (await attempt(auto ? autoList : models, !auto)) return response;
+      if (!auto && await attempt(autoList, false)) return response;
+      await attempt(await discoverGeminiModels(listEndpoint, key), false);
+      return response;
+    }
+
+    // ===== OpenAI／Grok／自訂服務：老師選的模型被停用時自動換（2026-11-10）=====
+    // 先用老師選的模型；回 404 或「模型不存在／已停用」就問服務現有模型，挑名字最接近的新模型再試，
+    // 成功就記下「舊名 → 新名」，之後直接用新名（不改老師的設定）。429（額度用完）照實回報。
+    const OPENAI_MODEL_SWAP_KEY = 'grade6AiModelSwap';
+    let openAiModelInUse = '';
+    function openAiModelFor(provider, model) {
+      try {
+        const saved = JSON.parse(localStorage.getItem(OPENAI_MODEL_SWAP_KEY) || 'null');
+        if (saved && saved.provider === provider && saved.from === model && /^[\w.:\/-]{1,80}$/.test(String(saved.to || ''))) return saved.to;
+      } catch (error) {}
+      return model;
+    }
+    function openAiModelGone(status, text) {
+      return status === 404 || ((status === 400 || status === 410) && /model_not_found|does not exist|decommission|deprecated|no longer|not found|invalid model/i.test(text));
+    }
+    function rankOpenAiReplacements(ids, original) {
+      const common = id => { let i = 0; while (i < id.length && id[i] === original[i]) i += 1; return i; };
+      return [...new Set(ids)]
+        .filter(id => id && id !== original && !/-\d{4}-?\d{2}-?\d{2}$|preview|search|audio|realtime|transcribe|tts|image/i.test(id))
+        .sort((a, b) => common(b) - common(a) || b.localeCompare(a, 'en', { numeric: true }))
+        .slice(0, 3);
+    }
+    async function discoverOpenAiModels(endpoint, key, filter, original) {
+      try {
+        const response = await fetch(`${endpoint}/models`, { headers: { Authorization: `Bearer ${key}` } });
+        if (!response.ok) return [];
+        const data = await response.json();
+        return rankOpenAiReplacements((data.data || []).map(model => String(model.id || '')).filter(id => filter(id)), original);
+      } catch (error) { return []; }
+    }
+    async function fetchOpenAiAuto(cfg, payload) {
+      const post = model => fetch(`${cfg.endpoint}/chat/completions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${cfg.key}` },
+        body: JSON.stringify({ ...payload, model })
+      });
+      let model = openAiModelFor(cfg.provider, cfg.model);
+      openAiModelInUse = model;
+      let response = await post(model);
+      if (response.ok || !openAiModelGone(response.status, await response.clone().text().catch(() => ''))) return response;
+      for (const alt of await discoverOpenAiModels(cfg.endpoint, cfg.key, cfg.modelFilter || (() => true), cfg.model)) {
+        if (alt === model) continue;
+        openAiModelInUse = alt;
+        response = await post(alt);
+        if (response.ok) {
+          try { localStorage.setItem(OPENAI_MODEL_SWAP_KEY, JSON.stringify({ provider: cfg.provider, from: cfg.model, to: alt })); } catch (error) {}
+          return response;
+        }
+        if (!openAiModelGone(response.status, await response.clone().text().catch(() => ''))) return response;
       }
       return response;
+    }
+
+    let geminiAttempts = [];   // 這次試過哪些模型（給「✓ 測試金鑰」說明用）
+    async function fetchGemini(endpoint, models, key, body) {
+      geminiAttempts = [];
+      return fetchGeminiAuto(endpoint, models, key, body, model => { geminiModelInUse = model; geminiAttempts.push(model); });
     }
 
     function providerConfig() {
@@ -7911,6 +8006,15 @@
       });
     }
 
+    /** 本月（月底加下個月）學校常見活動：原文提到時，任務名稱用學校慣用的寫法 */
+    function schoolEventsHint(date = new Date()) {
+      if (!window.SCHOOL_EVENTS) return '';
+      const month = date.getMonth() + 1, next = month % 12 + 1;
+      const parts = [`${month} 月：${SCHOOL_EVENTS.list(month).join('、')}`];
+      if (date.getDate() >= 15) parts.push(`${next} 月：${SCHOOL_EVENTS.list(next).join('、')}`);
+      return `學校這段時間常見的活動（${parts.join('；')}）。原文提到這些活動時，任務與記事的名稱用這裡的寫法；不要因為清單上有就自己多加任務。\n`;
+    }
+
     function buildAiInstruction(safeText, analysis) {
       const promptHint = analysis.activePrompt?.prompt ? `分析方式指引：${analysis.activePrompt.prompt}\n` : '';
       const audience = $('aiAudience').value;
@@ -7923,9 +8027,10 @@
         teacher.committees ? `行政兼職：${teacher.committees}` : ''
       ].filter(Boolean).join('、');
       const identityHint = identity ? `這位老師的身分：${identity}。請站在這個身分的視角判斷哪些事與他有關、該由他做什麼。\n` : '';
+      const eventsHint = schoolEventsHint();
       const instruction = [
         '你是台灣國小教師的班級經營與行政助理。以下是老師描述的情境（已先去識別化，可能以〔遮蔽〕代替敏感字）。',
-        identityHint + promptHint + audienceHint,
+        identityHint + promptHint + audienceHint + eventsHint,
         `今天是 ${localDateString(new Date())}。請閱讀文字與所有附件後，只回覆一個 JSON 物件（不要 markdown、不要多餘文字），格式如下：`,
         '{',
         ' "category": "情境分類，例如 行政交辦/親師溝通/活動籌備/教學/會議",',
@@ -7994,15 +8099,10 @@
           generationConfig: { temperature: 0.4, maxOutputTokens: 8192, responseMimeType: 'application/json' }
         });
       } else {
-        response = await fetch(`${cfg.endpoint}/chat/completions`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${cfg.key}` },
-          body: JSON.stringify({
-            model: cfg.model,
-            messages: [{ role: 'user', content: await buildOpenAiContentParts(instruction) }],
-            temperature: 0.4,
-            response_format: { type: 'json_object' }
-          })
+        response = await fetchOpenAiAuto(cfg, {
+          messages: [{ role: 'user', content: await buildOpenAiContentParts(instruction) }],
+          temperature: 0.4,
+          response_format: { type: 'json_object' }
         });
       }
       if (!response.ok) {
@@ -8065,7 +8165,6 @@
         analysis.aiChecklist = meta.map(item => item.text);
         analysis.aiChecklistMeta = meta;
       }
-      renderAdviceChecklist(analysis);
       if (parsed.mainTask?.name) {
         analysis.mainTask = makeGenericTaskDraft(
           String(parsed.mainTask.name).slice(0, 90),
@@ -8219,7 +8318,6 @@ ${cleanBase}`;
       $('aiResultType').hidden = false;
       $('aiOutput').textContent = resultLines.join('\n');
       $('aiOutput').classList.remove('is-empty');
-      renderAdviceChecklist(analysis);
       if (!analysis.formDraft && !analysis.groupBuyRows) renderTeacherLineMessage(redaction.text, analysis);
       else $('aiTeacherMessage').hidden = true;
       renderTaskSuggestion(analysis);
@@ -8242,11 +8340,24 @@ ${cleanBase}`;
 
     async function createAiSuggestedTasks() {
       const board = aiAssistantState.draftBoard || [];
-      const pending = board.filter(item => item.include && !item.created && item.name.trim());
-      if (!pending.length) return showToast('草稿板沒有勾選、待建立的任務。', true);
+      const pending = board.filter(item => item.kind === 'task' && !item.created && item.name.trim());
+      // 記事：存到小綿助記事（日期＝提醒日），本機就完成
+      let savedNotes = 0;
+      board.filter(item => item.kind === 'note' && !item.created && item.name.trim()).forEach(item => {
+        const text = `【提醒】${item.name.trim()}${item.link ? ` 🔗 ${item.link}` : ''}`;
+        item.created = true;
+        if (secretaryNotesState.notes.some(note => note.text === text)) return;
+        const note = normalizeSecretaryNote({ text, createdAt: new Date().toISOString(), remindDate: item.dueDate || '' }, 'web');
+        if (note) { secretaryNotesState.notes.unshift(note); savedNotes += 1; }
+      });
+      if (savedNotes) saveSecretaryNotes('');
+      if (!pending.length) {
+        renderDraftBoard();
+        return showToast(savedNotes ? `📌 已存 ${savedNotes} 則記事到「小綿助記事」。` : '清單裡沒有要建立的任務或記事。', !savedNotes);
+      }
       const roots = pending.filter(item => !item.parentId || !pending.some(other => other.id === item.parentId));
       const existingNames = new Set(state.tasks.map(task => task.name.trim()));
-      setLoading(true, '正在把草稿板寫入任務清單……');
+      setLoading(true, '正在寫入任務清單……');
       let result = null, created = 0, skipped = 0, parents = 0, children = 0;
       const toPayload = item => {
         const draft = makeGenericTaskDraft(item.name.trim().slice(0, 90), item.category || '行政交辦', item.priority, item.dueDate, item.nextAction || item.name);
@@ -8280,7 +8391,7 @@ ${cleanBase}`;
         }
         if (result) applyTaskResult(result);
         renderDraftBoard();
-        showToast(`✅ 已寫入任務清單：${created} 個任務（${parents} 個主任務、${children} 個子任務）${skipped ? `，${skipped} 個同名已存在略過` : ''}。`);
+        showToast(`✅ 已寫入任務清單：${created} 個任務（${parents} 個主任務、${children} 個子任務）${skipped ? `，${skipped} 個同名已存在略過` : ''}${savedNotes ? `；📌 ${savedNotes} 則記事已存到小綿助記事` : ''}。`);
         $('taskTableWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (error) { showToast(error.message || '建立任務失敗。', true); }
       finally { setLoading(false); }
@@ -8376,13 +8487,41 @@ ${cleanBase}`;
       $('apiModel').placeholder = provider === 'gemini'
         ? '或自行輸入模型代號（Gemini 留空＝自動）'
         : '此服務必須選擇或輸入模型，請先按「🔄 取得清單」';
+      // Gemini 不用先抓清單就有常用模型可選；其他服務要按「取得清單」
+      const select = $('apiModelSelect');
+      if (select.dataset.provider !== provider) {
+        select.dataset.provider = provider;
+        fillModelSelect(provider === 'gemini' ? GEMINI_AUTO_MODELS : [], $('apiModel').value.trim());
+      } else if ($('apiModel').value.trim()) select.value = $('apiModel').value.trim();
+      setApiCheckResult('', true);
     }
 
+    const GEMINI_MODEL_LABELS = {
+      'gemini-3.5-flash-lite': '3.5 Flash-Lite（快，自動的第一順位）',
+      'gemini-3.1-flash-lite': '3.1 Flash-Lite（備用）',
+      'gemini-3.8-flash': '3.8 Flash（較聰明、較慢）'
+    };
+    // 把 AI 服務回的錯誤變成老師看得懂的話
+    function explainAiError(status, message) {
+      const text = String(message || '');
+      if (status === 429 || /quota|rate.?limit|RESOURCE_EXHAUSTED|insufficient_quota/i.test(text)) return '額度用完了（或短時間內用太多次）。等一下再試，或把模型改成「自動」／換另一個模型。';
+      if (status === 401 || status === 403 || /API.?key|API_KEY_INVALID|invalid.*key|Incorrect API key|PERMISSION_DENIED|unauthor/i.test(text)) return '金鑰不對（可能貼錯、多了空白，或這把金鑰被停用）。請重新複製貼上。';
+      if (status === 404 || /not found|does not exist|model/i.test(text)) return '這個模型不能用（名稱打錯或已停用）。請改選「自動」或按「🔄 取得清單」重選。';
+      return `AI 服務回了錯誤：${text.slice(0, 100) || `HTTP ${status}`}`;
+    }
+    function setApiCheckResult(text, ok) {
+      const el = $('apiCheckResult');
+      if (!el) return;
+      el.textContent = text;
+      el.className = `api-check-result${text ? (ok ? ' ok' : ' bad') : ''}`;
+    }
     function fillModelSelect(ids, current) {
       const select = $('apiModelSelect');
-      select.innerHTML = '<option value="">（使用服務預設模型）</option>'
-        + ids.map(id => `<option value="${escapeHtml(id)}">${escapeHtml(id)}</option>`).join('');
-      if (current && ids.includes(current)) select.value = current;
+      const all = current && !ids.includes(current) ? [current, ...ids] : ids;
+      const auto = $('apiProvider').value === 'gemini' ? '自動（建議）' : '（請選擇模型）';
+      select.innerHTML = `<option value="">${auto}</option>`
+        + all.map(id => `<option value="${escapeHtml(id)}">${escapeHtml(GEMINI_MODEL_LABELS[id] || id)}</option>`).join('');
+      if (current) select.value = current;
     }
 
     async function fetchProviderModels() {
@@ -8420,6 +8559,7 @@ ${cleanBase}`;
         }
         ids = [...new Set(ids.filter(id => id && preset.modelFilter(id)))].sort().reverse();
         if (!ids.length) throw new Error('沒有找到可用的對話模型');
+        if (preset.kind === 'gemini') ids = [...GEMINI_AUTO_MODELS.filter(id => ids.includes(id)), ...ids.filter(id => !GEMINI_AUTO_MODELS.includes(id))];
         fillModelSelect(ids, $('apiModel').value.trim());
         showToast(`✅ 已取得 ${ids.length} 個模型，請從下拉選單挑一個。`);
       } catch (error) {
@@ -8471,12 +8611,36 @@ ${cleanBase}`;
       } catch (error) { $('apiKey').value = ''; }
     }
 
+    // 「📥 收件與 AI」：小綿助記事、AI 行政助理，用分頁切換（LINE 傳來的事同步時自動帶入，不用再確認）
+    const INBOX_HUB_TARGETS = ['secretaryNotesSection', 'aiAssistantSection'];
+    let inboxHubLast = '';
+    function inboxHubTabs() {
+      return INBOX_HUB_TARGETS.map(id => document.querySelector(`#inboxHubTabs [data-toolbox-target="${id}"]`)).filter(button => button && !button.hidden);
+    }
+    function refreshInboxHub() {
+      const tabs = inboxHubTabs();
+      $('inboxHubButton').hidden = !tabs.length;
+    }
+    function openInboxHub() {
+      const tabs = inboxHubTabs();
+      if (!tabs.length) return;
+      const open = !$('teacherToolboxContent').hidden && INBOX_HUB_TARGETS.includes(document.querySelector('#inboxHubTabs .toolbox-button.active')?.dataset.toolboxTarget);
+      if (open) return setTeacherToolbox('');
+      const preferred = inboxHubLast;
+      setTeacherToolbox(tabs.some(tab => tab.dataset.toolboxTarget === preferred) ? preferred : tabs[0].dataset.toolboxTarget);
+    }
     function setTeacherToolbox(targetId) {
       const content = $('teacherToolboxContent');
       const buttons = [...document.querySelectorAll('[data-toolbox-target]')];
-      const panels = ['teachingProgressPanel', 'aiAssistantSection', 'secretaryNotesSection', 'lineInboxSection', 'contactBookSection', 'homeworkReportSection', 'messageHubSection', 'screenPromptSection', 'parentReplySection'];
+      const panels = ['teachingProgressPanel', 'aiAssistantSection', 'secretaryNotesSection', 'contactBookSection', 'homeworkReportSection', 'messageHubSection', 'parentReplySection'];
       const current = buttons.find(button => button.classList.contains('active'))?.dataset.toolboxTarget || '';
-      const shouldCollapse = !targetId || (current === targetId && !content.hidden);
+      // 三合一面板裡的分頁：點目前這頁不收起（要收起請按上面的「📥 收件與 AI」）
+      const shouldCollapse = !targetId || (current === targetId && !content.hidden && !INBOX_HUB_TARGETS.includes(targetId));
+      const inHub = !shouldCollapse && INBOX_HUB_TARGETS.includes(targetId);
+      $('inboxHubTabs').hidden = !inHub;
+      $('inboxHubButton').classList.toggle('active', inHub);
+      $('inboxHubButton').setAttribute('aria-expanded', String(inHub));
+      if (inHub) inboxHubLast = targetId;
 
       buttons.forEach(button => {
         const active = !shouldCollapse && button.dataset.toolboxTarget === targetId;
@@ -8639,43 +8803,49 @@ ${cleanBase}`;
 
     async function checkApiSettings() {
       const config = readSettingsForm().api;
-      if (!config.enabled) return showToast('請先勾選「開啟 AI 功能」。');
-      if (config.provider === 'disabled') return showToast('請選擇 AI 服務。', true);
+      const fail = text => { setApiCheckResult(`❌ ${text}`, false); showToast(text, true); };
+      if (!config.enabled) return fail('請先勾選「開啟 AI 功能」。');
       const preset = PROVIDER_PRESETS[config.provider];
-      if (!preset) return showToast('請選擇 AI 服務。', true);
+      if (config.provider === 'disabled' || !preset) return fail('請選擇 AI 服務。');
       const key = $('apiKey').value.trim() || storedApiKey();
-      if (!key) return showToast('請填寫 API 金鑰。', true);
+      if (!key) return fail('請先貼上 API 金鑰。');
       const endpoint = (config.provider === 'custom' ? config.endpoint : preset.endpoint).replace(/\/+$/, '');
-      if (!endpoint) return showToast('自訂服務必須填寫 API 端點。', true);
-      try { new URL(endpoint); } catch (error) { return showToast('API 端點網址格式不正確。', true); }
+      if (!endpoint) return fail('自訂服務必須填寫 API 端點。');
+      try { new URL(endpoint); } catch (error) { return fail('API 端點網址格式不正確。'); }
       const models = preset.kind === 'gemini' ? geminiModelChain(config.model) : [];
       const model = preset.kind === 'gemini' ? models[0] : String(config.model || '').trim();
-      if (!model) return showToast('此服務必須選擇模型：先按「🔄 取得清單」再挑一個。', true);
+      if (!model) return fail('此服務必須選擇模型：先按「🔄 取得清單」再挑一個。');
       const button = $('checkApiButton');
       button.disabled = true;
-      button.textContent = '測試連線中…';
+      button.textContent = '測試中…';
+      setApiCheckResult('', true);
+      let status = 0;
       try {
         let response;
         if (preset.kind === 'gemini') {
           response = await fetchGemini(endpoint, models, key, { contents: [{ parts: [{ text: '請回覆 OK' }] }], generationConfig: { maxOutputTokens: 20 } });
         } else {
-          response = await fetch(`${endpoint}/chat/completions`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-            body: JSON.stringify({ model, messages: [{ role: 'user', content: '請回覆 OK' }], max_tokens: 20 })
-          });
+          response = await fetchOpenAiAuto({ provider: config.provider, endpoint, key, model, modelFilter: preset.modelFilter },
+            { messages: [{ role: 'user', content: '請回覆 OK' }], max_tokens: 20 });
         }
+        status = response.status;
         if (!response.ok) {
           const data = await response.json().catch(() => null);
           const message = data?.error?.message || data?.error || `HTTP ${response.status}`;
           throw new Error(typeof message === 'object' ? JSON.stringify(message) : message);
         }
-        showToast(`✅ ${preset.label} 連線成功（模型 ${preset.kind === 'gemini' ? geminiModelInUse : model}）。記得按「儲存設定」。`);
+        const used = preset.kind === 'gemini' ? geminiModelInUse : openAiModelInUse;
+        const skipped = preset.kind === 'gemini' ? geminiAttempts.slice(0, -1) : (used !== model ? [model] : []);
+        const text = `金鑰可以用。這次用的模型：${used}${skipped.length ? `（前面試的 ${skipped.join('、')} 不能用或今天額度用完，已自動換到這個）` : ''}。記得按「儲存設定」。`;
+        setApiCheckResult(`✅ ${text}`, true);
+        showToast(`✅ ${preset.label} ${text}`);
       } catch (error) {
-        showToast(`❌ 連線失敗：${String(error.message).slice(0, 140)}`, true);
+        const text = status ? explainAiError(status, error.message) : '連不到 AI 服務（可能是網路被擋，或自訂端點不在允許名單）。';
+        setApiCheckResult(`❌ ${text}`, false);
+        showToast(`❌ ${text}`, true);
       } finally {
         button.disabled = false;
-        button.textContent = '檢查設定';
+        button.textContent = '✓ 測試金鑰';
       }
     }
 
@@ -9008,6 +9178,44 @@ ${cleanBase}`;
     updateAiConnectionNote();
     loadRoleWorkspace();
 
+
+    // ---- 📅 本月學校常見活動（老師提供的行事曆清單；點一下＝新增成任務）----
+    const MONTH_EVENTS_HIDE_KEY = 'grade6MonthEventsHidden';
+    function monthKey(date = new Date()) { return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`; }
+    function renderMonthEvents() {
+      const card = $('monthEventsCard');
+      if (!card || !window.SCHOOL_EVENTS) return;
+      let hidden = '';
+      try { hidden = localStorage.getItem(MONTH_EVENTS_HIDE_KEY) || ''; } catch (error) {}
+      const now = new Date(), month = now.getMonth() + 1, next = month % 12 + 1;
+      card.hidden = hidden === monthKey(now);
+      if (card.hidden) return;
+      const names = state.tasks.filter(task => !['取消', '封存'].includes(task.status)).map(task => String(task.name || ''));
+      const chip = name => {
+        const done = names.some(taskName => taskName.includes(name.replace(/（.*?）/g, '')));
+        return `<button type="button" class="month-event-chip${done ? ' is-done' : ''}" data-month-event="${escapeHtml(name)}" ${done ? 'disabled title="任務清單裡已經有了"' : ''}>${done ? '✓ ' : ''}${escapeHtml(name)}</button>`;
+      };
+      const rows = (SCHOOL_EVENTS.months[month] || []).map(([group, items]) => `<div class="month-events-row"><span class="month-events-group">${escapeHtml(group)}</span>${items.map(chip).join('')}</div>`);
+      // 月底（20 號以後）順便列下個月，提早準備
+      if (now.getDate() >= 20) rows.push(`<div class="month-events-next">下個月（${next} 月）</div>`, `<div class="month-events-row">${SCHOOL_EVENTS.list(next).map(chip).join('')}</div>`);
+      $('monthEventsTitle').textContent = `📅 ${month} 月學校常見活動`;
+      $('monthEventsBody').innerHTML = rows.join('');
+    }
+    $('monthEventsBody').addEventListener('click', event => {
+      const button = event.target.closest('[data-month-event]');
+      if (!button || button.disabled) return;
+      openTaskModal(null);
+      $('name').value = button.dataset.monthEvent;
+      $('name').focus();
+      showToast(`已帶入「${button.dataset.monthEvent}」，填好期限後按儲存。`);
+    });
+    $('monthEventsClose').addEventListener('click', () => {
+      try { localStorage.setItem(MONTH_EVENTS_HIDE_KEY, monthKey()); } catch (error) {}
+      renderMonthEvents();
+      showToast('這個月先收起，下個月會再出現。');
+    });
+    renderMonthEvents();
+
     // ---- 作業統計：每週／學期，只用座號；資料來自雲端或這台電腦的大屏紀錄 ----
     const HW_STATUS_KEY = { '缺交': 'missing', '補交': 'resub', '待訂正': 'correcting', '已訂正': 'corrected' };
     const HW_BOARD_MARK = { resub: '補交', correcting: '待訂正', corrected: '已訂正' };
@@ -9141,6 +9349,202 @@ ${cleanBase}`;
       }
       renderHomeworkReport();
     }
+    // ---- 今日看板：今天的出缺席、作業繳交、訂正、待辦與聯絡本（資料來自晨間大屏；只用座號）----
+    const TODAY_ABSENT = ['病假', '事假', '未到'];
+    const TODAY_LOOKBACK_DAYS = 30;
+    const TODAY_MARK = { submitted: '已交', resub: '補交', correcting: '待訂正', corrected: '已訂正' };
+    const todayBoard = { request: 0, timer: 0 };
+    function todaySeats() {
+      const count = Math.min(60, Math.max(1, Number(localStorage.getItem(HW_SEATS_KEY)) || Number(morningSettings().seatCount) || 26));
+      const empty = (morningSettings().emptySeats || []).map(Number);
+      return Array.from({ length: count }, (_, index) => index + 1).filter(seat => !empty.includes(seat));
+    }
+    function todayShiftKey(key, days) {
+      const [year, month, day] = key.split('-').map(Number);
+      return calendarDateKey(new Date(year, month - 1, day + days));
+    }
+    /** 同一個瀏覽器裡大屏的紀錄：今天的點名與每份作業都完整；前幾天用來算還沒補交、還沒訂正。 */
+    function todayLocalData(fromKey, toKey, seats) {
+      const attendance = [], homework = [];
+      let hasToday = false;
+      Object.keys(localStorage).forEach(key => {
+        const matched = key.match(/^morningBoardState:(\d{4}-\d{2}-\d{2})$/);
+        if (!matched || matched[1] < fromKey || matched[1] > toKey) return;
+        let saved = null;
+        try { saved = JSON.parse(localStorage.getItem(key)); } catch (error) {}
+        if (!saved || typeof saved !== 'object') return;
+        const date = matched[1];
+        if (date === toKey) hasToday = true;
+        Object.entries(saved.attendance && typeof saved.attendance === 'object' ? saved.attendance : {})
+          .forEach(([seat, status]) => attendance.push({ date, seat: Number(seat), status: String(status) }));
+        (Array.isArray(saved.boards) ? saved.boards : []).forEach(board => {
+          if (!board || !board.subject) return;
+          const marks = board.seats && typeof board.seats === 'object' ? board.seats : {};
+          seats.forEach(seat => {
+            const mark = marks[seat];
+            homework.push({ date, subject: String(board.subject), assignment: String(board.assignment || ''), seat, status: mark ? (TODAY_MARK[mark] || '已交') : '缺交' });
+          });
+        });
+      });
+      return { attendance, homework, hasToday };
+    }
+    const todayDateLabel = key => {
+      const [year, month, day] = key.split('-').map(Number);
+      return `${month}/${day}（${'日一二三四五六'[new Date(year, month - 1, day).getDay()]}）`;
+    };
+    const todaySeatChips = (seats, kind = '') => seats.length
+      ? `<div class="today-chips">${seats.map(seat => `<span class="today-chip ${kind}">${Number(seat)}</span>`).join('')}</div>` : '';
+
+    async function loadTodayBoard() {
+      const today = calendarDateKey(new Date());
+      const from = todayShiftKey(today, -(TODAY_LOOKBACK_DAYS - 1));
+      const seats = todaySeats();
+      const request = todayBoard.request = todayBoard.request + 1;
+      $('todayBoardDate').textContent = todayDateLabel(today);
+      $('todayMeta').textContent = '讀取中……';
+      const local = todayLocalData(from, today, seats);
+      let attendance = local.attendance, homework = local.homework, todayKnown = local.hasToday, todayComplete = local.hasToday;
+      let source = local.hasToday ? '這台電腦的晨間大屏' : '';
+      let contactText = null, contactNote = '接上 LINE 小幫手後，這裡會顯示今天的聯絡本。';
+      if (lineBridgeReady()) {
+        const [rollcall, contact] = await Promise.allSettled([
+          callLineBridge('rollcall_query', { from, to: today, className: '' }),
+          callLineBridge('contactbook_get', { date: today })
+        ]);
+        if (request !== todayBoard.request) return;
+        if (rollcall.status === 'fulfilled') {
+          const cloudAttendance = (Array.isArray(rollcall.value.attendance) ? rollcall.value.attendance : []).map(row => ({ date: String(row.date), seat: Number(row.seat), status: String(row.status) }));
+          const cloudHomework = (Array.isArray(rollcall.value.homework) ? rollcall.value.homework : []).map(row => ({ date: String(row.date), subject: String(row.subject || ''), assignment: String(row.assignment || ''), seat: Number(row.seat), status: String(row.status) }));
+          // 雲端只存「不是正常到校、不是準時交」的紀錄；今天若這台電腦有完整的大屏紀錄，今天就用這台的
+          attendance = [...cloudAttendance.filter(row => !(local.hasToday && row.date === today)), ...local.attendance.filter(row => row.date === today)];
+          homework = [...cloudHomework.filter(row => !(local.hasToday && row.date === today)), ...local.homework.filter(row => row.date === today)];
+          if (!local.hasToday) todayKnown = cloudAttendance.some(row => row.date === today) || cloudHomework.some(row => row.date === today);
+          source = local.hasToday ? '雲端＋這台電腦的晨間大屏' : '雲端（大屏存檔）';
+        } else {
+          source = source || '';
+          $('todayMeta').textContent = `雲端讀取失敗：${rollcall.reason?.message || ''}`;
+        }
+        if (contact.status === 'fulfilled') {
+          contactText = String(contact.value.text || '');
+          contactNote = '今天還沒有寫聯絡本。';
+        } else contactNote = `聯絡本讀取失敗：${contact.reason?.message || ''}`;
+      }
+      if (request !== todayBoard.request) return;
+      renderTodayBoard({ today, seats, attendance, homework, todayKnown, todayComplete, contactText, contactNote });
+      const time = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+      if (!/失敗/.test($('todayMeta').textContent)) $('todayMeta').textContent = source ? `資料來自${source}｜更新於 ${time}` : `還沒有大屏紀錄｜${time}`;
+    }
+
+    function renderTodayBoard({ today, seats, attendance, homework, todayKnown, todayComplete, contactText, contactNote }) {
+      const seatSet = new Set(seats);
+      // 請假那天沒交的作業不算缺交
+      const leave = new Set(attendance.filter(row => ['病假', '事假'].includes(row.status)).map(row => `${row.date}|${row.seat}`));
+      const rows = homework.filter(row => seatSet.has(row.seat) && !(row.status === '缺交' && leave.has(`${row.date}|${row.seat}`)));
+
+      // ① 出缺席
+      const todayStatus = {};
+      attendance.filter(row => row.date === today && seatSet.has(row.seat)).forEach(row => { todayStatus[row.seat] = row.status; });
+      const statusOf = seat => todayStatus[seat] || (todayKnown && !todayComplete ? '到' : '還沒點');
+      $('todaySeats').innerHTML = seats.map(seat => {
+        const status = statusOf(seat);
+        return `<span class="today-seat" data-st="${escapeHtml(status)}" title="${seat} 號：${escapeHtml(status === '遲到' ? '遲到（有到）' : status)}">${seat}</span>`;
+      }).join('');
+      const listOf = status => seats.filter(seat => statusOf(seat) === status);
+      const absentSeats = seats.filter(seat => TODAY_ABSENT.includes(statusOf(seat)));
+      const blankSeats = listOf('還沒點');
+      const present = seats.length - absentSeats.length - blankSeats.length;
+      const attendParts = [['病假', listOf('病假')], ['事假', listOf('事假')], ['未到', listOf('未到')], ['遲到', listOf('遲到')]].filter(([, list]) => list.length);
+      $('todayAttendSub').textContent = !todayKnown ? '大屏今天還沒有存檔' : attendParts.map(([label, list]) => `${label} ${list.join('、')} 號`).join('｜') || '全班到齊 🎉';
+
+      // ② 今天的作業（每份作業：交了幾份、誰還沒交）
+      const groups = new Map();
+      rows.filter(row => row.date === today).forEach(row => {
+        const key = `${row.subject}｜${row.assignment}`;
+        if (!groups.has(key)) groups.set(key, { subject: row.subject, assignment: row.assignment, missing: [], correcting: [], corrected: [], resub: [], all: new Set() });
+        const group = groups.get(key);
+        group.all.add(row.seat);
+        if (row.status === '缺交') group.missing.push(row.seat);
+        else if (row.status === '待訂正') group.correcting.push(row.seat);
+        else if (row.status === '已訂正') group.corrected.push(row.seat);
+        else if (row.status === '補交') group.resub.push(row.seat);
+      });
+      const leaveToday = new Set(seats.filter(seat => ['病假', '事假'].includes(statusOf(seat))));
+      let todayMissing = 0;
+      const hwHtml = [...groups.values()].map(group => {
+        const total = seats.filter(seat => !leaveToday.has(seat)).length;
+        const handed = Math.max(0, total - group.missing.length);
+        todayMissing += group.missing.length;
+        const pct = total ? Math.round(handed / total * 100) : 0;
+        return `<div class="today-hw"><div class="today-hw-head"><span>${escapeHtml(group.subject)}${group.assignment ? ' ' + escapeHtml(group.assignment) : ''}</span><span>${handed}/${total} 份</span></div>`
+          + `<div class="today-bar${handed === total ? ' all' : ''}"><i style="width:${pct}%"></i></div>`
+          + (group.missing.length ? `<div class="today-chips"><span class="today-empty">還沒交：</span>${group.missing.map(seat => `<span class="today-chip">${seat}</span>`).join('')}</div>` : '<div class="today-empty">全部交齊 ✅</div>')
+          + '</div>';
+      }).join('');
+      $('todayHomework').innerHTML = hwHtml || `<div class="today-empty">${todayKnown ? '今天的作業都交齊了，或大屏還沒登記今天的作業。' : '大屏今天還沒登記作業。'}</div>`;
+
+      // ③ 訂正：今天登記的＋近 30 天還沒訂正完的
+      const pendingFix = rows.filter(row => row.status === '待訂正');
+      const fixedToday = [...groups.values()].reduce((sum, group) => sum + group.corrected.length, 0);
+      const fixBySubject = new Map();
+      pendingFix.forEach(row => {
+        const key = `${row.subject}${row.assignment ? ' ' + row.assignment : ''}`;
+        if (!fixBySubject.has(key)) fixBySubject.set(key, []);
+        fixBySubject.get(key).push(row.seat);
+      });
+      $('todayCorrectSub').textContent = pendingFix.length ? `還沒訂正完 ${pendingFix.length} 份${fixedToday ? `｜今天已訂正 ${fixedToday} 份` : ''}` : (fixedToday ? `今天已訂正 ${fixedToday} 份` : '');
+      $('todayCorrect').innerHTML = fixBySubject.size
+        ? [...fixBySubject.entries()].map(([name, list]) => `<div class="today-hw"><div class="today-hw-head"><span>${escapeHtml(name)}</span><span>${list.length} 人</span></div>${todaySeatChips([...new Set(list)].sort((a, b) => a - b), 'fix')}</div>`).join('')
+        : '<div class="today-empty">目前沒有要訂正的作業 ✅</div>';
+
+      // ④ 要多關心：前幾天還沒補交＋還沒訂正，依座號加總
+      const owe = new Map();
+      rows.filter(row => (row.status === '缺交' && row.date < today) || row.status === '待訂正').forEach(row => {
+        if (!owe.has(row.seat)) owe.set(row.seat, { seat: row.seat, missing: 0, fix: 0, first: row.date });
+        const entry = owe.get(row.seat);
+        if (row.status === '缺交') entry.missing += 1; else entry.fix += 1;
+        if (row.date < entry.first) entry.first = row.date;
+      });
+      const oweList = [...owe.values()].sort((a, b) => (b.missing + b.fix) - (a.missing + a.fix) || a.seat - b.seat);
+      const owedMissing = oweList.reduce((sum, entry) => sum + entry.missing, 0);
+      $('todayWatch').innerHTML = oweList.length
+        ? `<table class="today-watch"><thead><tr><th>座號</th><th>欠交</th><th>待訂正</th><th>最早</th></tr></thead><tbody>${oweList.slice(0, 8).map(entry => `<tr><td><b>${entry.seat}</b> 號</td><td class="${entry.missing ? 'n' : ''}">${entry.missing}</td><td class="${entry.fix ? 'n' : ''}">${entry.fix}</td><td>${escapeHtml(todayDateLabel(entry.first))}</td></tr>`).join('')}</tbody></table>${oweList.length > 8 ? `<div class="today-empty">還有 ${oweList.length - 8} 位，請到「作業統計」看完整名單。</div>` : ''}`
+        : '<div class="today-empty">近 30 天的作業都補齊、訂正完了 🎉</div>';
+
+
+      // ⑤ 今天的聯絡本
+      $('todayContact').innerHTML = contactText ? `<pre class="today-contact">${escapeHtml(contactText.slice(0, 1200))}</pre>` : `<div class="today-empty">${escapeHtml(contactNote)}</div>`;
+
+      // 最上面一排：一眼看完的數字
+      const kpi = (label, value, sub, tone) => `<div class="today-kpi ${tone || ''}"><div class="k-label">${label}</div><div class="k-value">${value}</div><div class="k-sub" title="${escapeHtml(sub)}">${escapeHtml(sub)}</div></div>`;
+      $('todayKpis').innerHTML = [
+        kpi('🙋 今天出席', todayKnown && present ? `${present}/${seats.length}` : '—',
+          !todayKnown ? '大屏還沒存檔'
+            : [absentSeats.length ? `請假 ${listOf('病假').length + listOf('事假').length}、未到 ${listOf('未到').length}` : '', blankSeats.length ? `${blankSeats.length} 位還沒點名` : ''].filter(Boolean).join('｜') || '全班到齊',
+          todayKnown && listOf('未到').length ? 'need' : (todayKnown && !absentSeats.length && !blankSeats.length ? 'good' : '')),
+        kpi('✏️ 今天缺交', todayMissing, groups.size ? `${groups.size} 份作業` : '還沒登記作業', todayMissing ? 'need' : (groups.size ? 'good' : '')),
+        kpi('🔁 待訂正', pendingFix.length, fixedToday ? `今天已訂正 ${fixedToday} 份` : `近 ${TODAY_LOOKBACK_DAYS} 天`, pendingFix.length ? 'need' : 'good'),
+        kpi('📌 前幾天還沒補', owedMissing, oweList.length ? `${oweList.length} 位要追` : '都補齊了', owedMissing ? 'need' : 'good')
+      ].join('');
+    }
+    $('todayReload').addEventListener('click', loadTodayBoard);
+    // 今日看板是另一個畫面：按「📊 今日看板」只看看板，按「↩ 回工作台」回到原本的工作台。
+    // 不記住開關：每次打開或重新整理都是原本的工作台。
+    function setTodayBoardOpen(open) {
+      $('todayBoardSection').hidden = !open;
+      document.querySelector('main.app').classList.toggle('today-mode', open);
+      $('todayBoardButton').textContent = open ? '↩ 回工作台' : '📊 今日看板';
+      $('todayBoardButton').setAttribute('aria-pressed', String(open));
+      window.scrollTo({ top: 0 });
+      if (open) loadTodayBoard();
+    }
+    $('todayBoardButton').addEventListener('click', () => setTodayBoardOpen($('todayBoardSection').hidden));
+    $('todayClose').addEventListener('click', () => setTodayBoardOpen(false));
+    try { localStorage.removeItem('grade6TodayBoardOpen'); } catch (error) {}   // 清掉舊版記住的開關
+    // 看板開著時每 5 分鐘自動更新（大屏也是每 5 分鐘存一次）
+    todayBoard.timer = window.setInterval(() => {
+      if (!$('todayBoardSection').hidden && document.visibilityState === 'visible') loadTodayBoard();
+    }, 5 * 60 * 1000);
+
     function homeworkSlipHtml(entry) {
       const finished = entry.resub.length + entry.corrected.length;
       const pending = entry.missing.length || entry.correcting.length;
@@ -9199,6 +9603,11 @@ ${cleanBase}`;
       }
       setTeacherToolbox(targetId);
     });
+    $('inboxHubButton').addEventListener('click', openInboxHub);
+    $('driveFolderButton').addEventListener('click', openLineDriveFolder);
+    // 分頁按鈕的顯示（AI 開關）變了，就同步到「📥 收件與 AI」
+    new MutationObserver(refreshInboxHub).observe($('inboxHubTabs'), { subtree: true, attributes: true, attributeFilter: ['hidden'], childList: true, characterData: true });
+    refreshInboxHub();
     $('roleSwitcher').addEventListener('click', event => {
       const button = event.target.closest('[data-role]');
       if (button) toggleWorkspaceRole(button.dataset.role);
@@ -9348,17 +9757,6 @@ ${cleanBase}`;
       if (button) button.closest('[data-form-question]')?.remove();
     });
     $('aiCreateGoogleFormButton').addEventListener('click', createGoogleFormFromDraft);
-    $('aiAdviceItems').addEventListener('change', updateAdviceProgress);
-    $('aiAdviceItems').addEventListener('click', event => {
-      const toTask = event.target.closest('[data-advice-to-task]');
-      const toNote = event.target.closest('[data-advice-to-note]');
-      if (toTask) { event.preventDefault(); adviceItemToTask(Number(toTask.dataset.adviceToTask)); }
-      else if (toNote) { event.preventDefault(); adviceItemToNote(Number(toNote.dataset.adviceToNote)); }
-    });
-    $('aiAdviceItems').addEventListener('dragstart', event => {
-      const row = event.target.closest('[data-ai-advice-drag]');
-      if (row) event.dataTransfer.setData('text/advice-index', row.dataset.aiAdviceDrag);
-    });
     let draftDragId = '';
     $('aiDraftBoard').addEventListener('dragstart', event => {
       const card = event.target.closest('[data-draft-id]');
@@ -9379,12 +9777,9 @@ ${cleanBase}`;
       if (field && card) { card.setAttribute('draggable', 'false'); const restore = () => { if (!card.classList.contains('is-created')) card.setAttribute('draggable', 'true'); document.removeEventListener('mouseup', restore); }; document.addEventListener('mouseup', restore); }
     });
     $('aiTaskSuggestion').addEventListener('dragover', event => {
-      const types = [...event.dataTransfer.types];
-      const fromAdvice = types.includes('text/advice-index');
-      if (!draftDragId && !fromAdvice) return;
+      if (!draftDragId) return;
       event.preventDefault();
       document.querySelectorAll('#aiTaskSuggestion .is-drop-target').forEach(el => el.classList.remove('is-drop-target'));
-      if (fromAdvice) { $('aiTaskSuggestion').classList.add('ai-drop-target'); return; }
       const target = event.target.closest('[data-draft-id], #aiDraftUnnestZone');
       if (target && target.dataset.draftId !== draftDragId) target.classList.add('is-drop-target');
     });
@@ -9393,8 +9788,6 @@ ${cleanBase}`;
     });
     $('aiTaskSuggestion').addEventListener('drop', event => {
       $('aiTaskSuggestion').classList.remove('ai-drop-target');
-      const adviceIndex = event.dataTransfer.getData('text/advice-index');
-      if (adviceIndex !== '') { event.preventDefault(); adviceItemToTask(Number(adviceIndex)); return; }
       if (!draftDragId) return;
       event.preventDefault();
       const childId = draftDragId;
@@ -9407,8 +9800,7 @@ ${cleanBase}`;
     $('aiDraftBoard').addEventListener('change', event => {
       const board = aiAssistantState.draftBoard || [];
       const pick = attr => { const el = event.target.closest(`[${attr}]`); return el ? [el, board.find(item => item.id === el.getAttribute(attr))] : [null, null]; };
-      let [el, item] = pick('data-draft-include'); if (item) { item.include = el.checked; renderDraftBoard(); return; }
-      [el, item] = pick('data-draft-date'); if (item) { item.dueDate = safeIsoDate(el.value); return; }
+      let [el, item] = pick('data-draft-date'); if (item) { item.dueDate = safeIsoDate(el.value); return; }
       [el, item] = pick('data-draft-time'); if (item) { item.dueTime = safeTimeString(el.value); return; }
       [el, item] = pick('data-draft-priority'); if (item) { item.priority = el.value; return; }
       [el, item] = pick('data-draft-link'); if (item) { item.link = safeUrl(el.value); if (item.link || !el.value.trim()) renderDraftBoard(); else showToast('連結要以 http(s):// 開頭。', true); }
@@ -9423,6 +9815,12 @@ ${cleanBase}`;
       if (event.key === 'Enter' && event.target.closest('[data-draft-name]')) { event.preventDefault(); event.target.blur(); }
     });
     $('aiDraftBoard').addEventListener('click', event => {
+      const kindButton = event.target.closest('[data-draft-kind]');
+      if (kindButton) {
+        const target = (aiAssistantState.draftBoard || []).find(entry => entry.id === kindButton.dataset.draftKind);
+        if (target && !target.created) { target.kind = kindButton.dataset.kind; renderDraftBoard(); }
+        return;
+      }
       const remove = event.target.closest('[data-draft-remove]');
       if (!remove) return;
       const board = aiAssistantState.draftBoard || [];
@@ -9504,9 +9902,8 @@ ${cleanBase}`;
       updateApiFieldVisibility();
     });
     $('apiProvider').addEventListener('change', () => {
-      updateApiFieldVisibility();
-      fillModelSelect([], '');
       $('apiModel').value = '';
+      updateApiFieldVisibility();   // 換服務時模型選單一起換（Gemini 直接列出常用模型）
     });
     $('fetchModelsButton').addEventListener('click', fetchProviderModels);
     $('apiModelSelect').addEventListener('change', () => { $('apiModel').value = $('apiModelSelect').value; });
@@ -9838,7 +10235,6 @@ ${cleanBase}`;
     });
     $('addSecretaryNoteButton').addEventListener('click', addSecretaryNote);
     $('syncGoogleTasksButton').addEventListener('click', syncNotesWithGoogleTasksClient);
-    $('aiAdviceApplyAll').addEventListener('click', applyAllAdviceSuggestions);
     $('aiRetryButton').addEventListener('click', retryGeminiAnalysis);
     $('helpMenuButton').addEventListener('click', () => {
       $('helpSiteVersion').textContent = window.TD_VERSION || '—';
@@ -9848,68 +10244,6 @@ ${cleanBase}`;
     $('helpOverlay').addEventListener('click', event => { if (event.target === $('helpOverlay')) $('helpOverlay').hidden = true; });
     document.addEventListener('keydown', event => { if (event.key === 'Escape') $('helpOverlay').hidden = true; });
 
-    // 📣 大屏提示遙控
-    // 和晨間大屏的 PROMPT_GROUPS、LINE 小幫手的 SCREEN_PROMPTS 同一份（測試會檢查三邊一致）
-    const SCREEN_PROMPT_GROUPS = [
-      { label: '🪑 上課秩序', items: [
-        { text: '上課囉！眼睛看老師', img: 'class_focus.png' },
-        { text: '坐姿端正，抬頭挺胸', img: 'class_focus.png' },
-        { text: '動作快，三秒內坐好', img: 'class_focus.png' },
-        { text: '發言請舉手，輪流說', img: 'raise_hand.png' },
-        { text: '安靜！音量零級', img: 'quiet_usagi.png' },
-        { text: '輕聲討論，別吵到隔壁組', img: 'quiet_cat.png' },
-        { text: '上課鐘響，回教室坐好', img: 'class_focus.png' },
-        { text: '準備下一節的課本和用品', img: 'homework.png' }
-      ] },
-      { label: '📚 作業與學習', items: [
-        { text: '收作業囉，交給小組長', img: 'homework.png' },
-        { text: '訂正完拿給老師檢查', img: 'homework.png' },
-        { text: '寫完的同學自己再檢查一遍', img: 'homework.png' },
-        { text: '閱讀時間，安靜看書', img: 'reading.png' },
-        { text: '自習時間，完成自己的進度', img: 'reading.png' },
-        { text: '不會的先圈起來，等一下問', img: 'raise_hand.png' }
-      ] },
-      { label: '🍱 生活作息', items: [
-        { text: '下課先喝水、上廁所', img: 'drink_water.png' },
-        { text: '午餐準備：洗手、拿餐具、排隊打菜', img: 'line_up.png' },
-        { text: '吃飯不說話，細嚼慢嚥', img: 'quiet_cat.png' },
-        { text: '吃完收好餐具，擦乾淨桌面', img: 'cleaning.png' },
-        { text: '午休時間，趴下休息', img: 'nap.png' },
-        { text: '打掃時間，責任區掃乾淨', img: 'cleaning.png' },
-        { text: '垃圾分類，做好資源回收', img: 'cleaning.png' },
-        { text: '整理書包，檢查抽屜', img: 'cleaning.png' }
-      ] },
-      { label: '🦷 衛生健康', items: [
-        { text: '飯後潔牙，刷牙三分鐘', img: 'drink_water.png' },
-        { text: '吃飯前，先用肥皂洗手', img: 'drink_water.png' },
-        { text: '咳嗽打噴嚏，記得摀住口鼻', img: 'raise_hand.png' },
-        { text: '眼睛休息一下，看看遠方', img: 'reading.png' }
-      ] },
-      { label: '🚶 集合與移動', items: [
-        { text: '排隊囉！快、靜、齊', img: 'line_up.png' },
-        { text: '到走廊排隊，不推不擠', img: 'line_up.png' },
-        { text: '上下樓梯靠右走、不奔跑', img: 'line_up.png' },
-        { text: '專科教室集合，帶課本鉛筆盒', img: 'line_up.png' },
-        { text: '準備放學：桌面清空、帶齊物品', img: 'cleaning.png' },
-        { text: '放學路隊，跟著路隊長走', img: 'line_up.png' }
-      ] }
-    ];
-    const SCREEN_PROMPT_PRESETS = SCREEN_PROMPT_GROUPS.flatMap(group => group.items);
-    let screenPromptIndex = 0;
-    $('screenPromptSelect').innerHTML = SCREEN_PROMPT_GROUPS.map(group =>
-      `<optgroup label="${escapeHtml(group.label)}">${group.items.map(item =>
-        `<option value="${screenPromptIndex++}">${escapeHtml(item.text)}</option>`).join('')}</optgroup>`).join('');
-    $('screenPromptSendButton').addEventListener('click', async () => {
-      const custom = $('screenPromptCustom').value.trim();
-      const preset = SCREEN_PROMPT_PRESETS[Number($('screenPromptSelect').value)] || SCREEN_PROMPT_PRESETS[0];
-      try {
-        await callLineBridge('prompt_set', custom
-          ? { text: custom, img: 'class_focus.png' }
-          : { text: preset.text, img: preset.img });
-        showToast(`📣 已送出：「${custom || preset.text}」，大屏約 20 秒內切換。`);
-        $('screenPromptCustom').value = '';
-      } catch (error) { showToast(error.message || '送出失敗。', true); }
-    });
     // ---- 💬 回覆家長：家長的話＋老師的重點 → 一則可以直接傳的訊息（有 AI 用 AI，沒有就用範本） ----
     const PARENT_REPLY_TONES = {
       warm: { label: '溫和親切', close: ['再麻煩您在家多鼓勵{c}，有任何狀況都歡迎隨時跟我聯繫，謝謝您！', '謝謝您的關心與配合，我們一起陪{c}慢慢進步。', '有需要我協助的地方，請隨時告訴我，謝謝您！'] },
@@ -10018,10 +10352,7 @@ ${cleanBase}`;
       if (cfg.kind === 'gemini') {
         response = await fetchGemini(cfg.endpoint, cfg.models, cfg.key, { contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { temperature: 0.3, maxOutputTokens: 4096, responseMimeType: 'application/json' } });
       } else {
-        response = await fetch(`${cfg.endpoint}/chat/completions`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${cfg.key}` },
-          body: JSON.stringify({ model: cfg.model, messages: [{ role: 'user', content: prompt }], temperature: 0.3, response_format: { type: 'json_object' } })
-        });
+        response = await fetchOpenAiAuto(cfg, { messages: [{ role: 'user', content: prompt }], temperature: 0.3, response_format: { type: 'json_object' } });
       }
       if (!response.ok) throw new Error(`AI 回應錯誤（HTTP ${response.status}）`);
       const data = await response.json();
@@ -10188,12 +10519,6 @@ ${cleanBase}`;
     });
     renderHub();
 
-    $('screenPromptClearButton').addEventListener('click', async () => {
-      try {
-        await callLineBridge('prompt_set', { clear: true });
-        showToast('已清除大屏提示。');
-      } catch (error) { showToast(error.message || '清除失敗。', true); }
-    });
     $('secretaryNoteInput').addEventListener('keydown', event => {
       if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') addSecretaryNote();
     });
@@ -10518,10 +10843,7 @@ ${cleanBase}`;
           if (/^image\//.test(file.type)) content.push({ type: 'image_url', image_url: { url: await fileToDataUrl(file) } });
           else content.push({ type: 'text', text: `附件「${file.name}」是 PDF，此服務無法直接讀取；要讀 PDF 請改用 Google Gemini。` });
         }
-        response = await fetch(`${cfg.endpoint}/chat/completions`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${cfg.key}` },
-          body: JSON.stringify({ model: cfg.model, messages: [{ role: 'user', content }], temperature: 0.5, response_format: { type: 'json_object' } })
-        });
+        response = await fetchOpenAiAuto(cfg, { messages: [{ role: 'user', content }], temperature: 0.5, response_format: { type: 'json_object' } });
       }
       if (!response.ok) throw new Error(`AI 回應錯誤（HTTP ${response.status}）`);
       const data = await response.json();
@@ -10657,7 +10979,19 @@ ${cleanBase}`;
       const def = ADMIN_DOC_TYPES[$('aiDocType').value];
       if (def) $('aiDocInput').placeholder = `${def.placeholder}（請勿輸入學生姓名）`;
       $('aiDocSpeechFields').hidden = $('aiDocType').value !== 'speech';
+      $('aiDocTrainingRow').hidden = !['reflection', 'memo'].includes($('aiDocType').value);
     }
+    // 研習名稱：16 項常見研習，選了就在說明最前面寫「研習名稱：115 學年度 ○○研習」
+    if (window.SCHOOL_EVENTS) {
+      $('aiDocTraining').innerHTML += SCHOOL_EVENTS.trainings.map(([group, items]) => `<optgroup label="${escapeHtml(group)}">${items.map(item => `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`).join('')}</optgroup>`).join('');
+    }
+    $('aiDocTraining').addEventListener('change', () => {
+      const name = $('aiDocTraining').value;
+      if (!name) return;
+      const line = `研習名稱：${SCHOOL_EVENTS.trainingName(name)}`;
+      const input = $('aiDocInput');
+      input.value = /^研習名稱：.*$/m.test(input.value) ? input.value.replace(/^研習名稱：.*$/m, line) : `${line}\n${input.value}`.trim();
+    });
 
     $('aiDocType').addEventListener('change', syncAdminDocType);
     $('aiDocGenerateButton').addEventListener('click', generateAdminDoc);
@@ -10695,6 +11029,8 @@ ${cleanBase}`;
       if (lineBridgeState.settings.enabled) syncLineBridge({ silent: true });
     });
     window.setInterval(() => schedulePetBridgeSync(50), 60000);
+    // LINE 傳來的事：開著工作台時每 5 分鐘同步一次，自動帶入任務／記事
+    window.setInterval(() => { if (lineBridgeState.settings.enabled && document.visibilityState === 'visible') syncLineBridge({ silent: true }); }, 5 * 60 * 1000);
   </script>
   <script src="assets/version.js"></script>
 </body>

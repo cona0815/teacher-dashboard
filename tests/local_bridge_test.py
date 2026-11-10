@@ -312,11 +312,65 @@ class VoiceModuleTest(unittest.TestCase):
         text = engine.transcribe(audio)
         self.assertIn("同意", text)
         self.assertEqual(calls[0][1]["x-goog-api-key"], "AIza-test")
+        # 兩把都有：自動模式 Gemini 優先（老師只要申請一把 Gemini 金鑰）
         engine.configure({"voice_provider": "auto", "voice_gemini_key": "AIza-test", "voice_groq_key": "gsk_test"})
+        self.assertEqual(engine.resolved_provider(), "gemini")
+        engine.configure({"voice_provider": "auto", "voice_groq_key": "gsk_test"})
+        self.assertEqual(engine.resolved_provider(), "groq")
+        engine.configure({"voice_provider": "groq", "voice_gemini_key": "AIza-test", "voice_groq_key": "gsk_test"})
         self.assertEqual(engine.resolved_provider(), "groq")
         self.assertEqual(engine.transcribe(audio), "明天要交同意書。")
         self.assertTrue(calls[-2][0].endswith("/audio/transcriptions"))
         self.assertTrue(calls[-2][1]["Content-Type"].startswith("multipart/form-data"))
+
+    def test_engine_gemini_quota_falls_back_to_groq(self):
+        import numpy as np
+        from desktop_pet_voice import VoiceEngine
+        calls = []
+
+        def opener(url, headers, body):
+            calls.append(url)
+            if "generativelanguage" in url:
+                return 429, b'{"error":{"message":"quota"}}'
+            if url.endswith("/audio/transcriptions"):
+                return 200, json.dumps({"text": "明天要交同意書"}).encode()
+            return 200, json.dumps({"choices": [{"message": {"content": "明天要交同意書。"}}]}).encode()
+
+        audio = (np.sin(np.linspace(0, 200, 16000)) * 8000).astype(np.int16)
+        engine = VoiceEngine(opener=opener, lister=lambda url, headers: (200, b'{"models":[]}'))
+        engine.configure({"voice_provider": "auto", "voice_gemini_key": "AIza-test", "voice_groq_key": "gsk_test"})
+        self.assertEqual(engine.transcribe(audio), "明天要交同意書。")
+        self.assertEqual(engine.last_provider, "groq")
+        self.assertIn("generativelanguage", calls[0])
+
+    def test_groq_models_follow_groq(self):
+        """Groq 把寫死的模型全部停用、只剩新名字：自動問 Groq 清單、改用新模型，第二次直接用記住的。"""
+        import numpy as np
+        from desktop_pet_voice import VoiceEngine, rank_groq_models
+        alive = {"whisper-large-v9", "llama-9-90b-chat"}
+        used = []
+
+        def opener(url, headers, body):
+            model = json.loads(body)["model"] if url.endswith("/chat/completions") else body.split(b'name="model"\r\n\r\n')[1].split(b"\r\n")[0].decode()
+            used.append(model)
+            if model not in alive:
+                return 400, b'{"error":{"message":"The model has been decommissioned","code":"model_decommissioned"}}'
+            if url.endswith("/audio/transcriptions"):
+                return 200, json.dumps({"text": "明天要交同意書"}).encode()
+            return 200, json.dumps({"choices": [{"message": {"content": "明天要交同意書。"}}]}).encode()
+
+        listing = {"data": [{"id": "whisper-large-v9"}, {"id": "distil-whisper-large-v9-en"}, {"id": "llama-9-90b-chat"},
+                            {"id": "llama-guard-9-8b"}, {"id": "llama-9-8b-instant"}, {"id": "playai-tts"}]}
+        engine = VoiceEngine(opener=opener, lister=lambda url, headers: (200, json.dumps(listing).encode()))
+        engine.configure({"voice_provider": "groq", "voice_groq_key": "gsk_test"})
+        audio = (np.sin(np.linspace(0, 200, 16000)) * 8000).astype(np.int16)
+        self.assertEqual(engine.transcribe(audio), "明天要交同意書。")
+        self.assertEqual(engine.groq_last_good, {"stt": "whisper-large-v9", "chat": "llama-9-90b-chat"})
+        used.clear()
+        engine.transcribe(audio)
+        self.assertEqual(used, ["whisper-large-v9", "llama-9-90b-chat"])
+        self.assertEqual(rank_groq_models([m["id"] for m in listing["data"]], "stt"), ["whisper-large-v9"])
+        self.assertEqual(rank_groq_models([m["id"] for m in listing["data"]], "chat"), ["llama-9-90b-chat", "llama-9-8b-instant"])
 
     def test_engine_errors(self):
         import numpy as np
