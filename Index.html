@@ -731,6 +731,47 @@
     .line-inbox-controls { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
     .line-inbox-controls .select, .line-inbox-controls .input { max-width: 160px; min-height: 32px; padding: 4px 8px; font-size: 12px; }
     /* 聯絡本直覺化編輯：左逐項編輯、右迷你黑板即時預覽 */
+    .hw-controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+    .hw-controls .select, .hw-controls .input { width: auto; }
+    .hw-range { font-weight: 800; color: var(--primary-strong); }
+    .hw-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+    .hw-summary div { border: 1px solid var(--line); border-radius: 12px; padding: 8px 10px; text-align: center; font-size: 13px; font-weight: 700; color: var(--muted); }
+    .hw-summary b { display: block; font-size: 26px; color: var(--primary-strong); line-height: 1.2; }
+    .hw-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 1fr); gap: 16px; align-items: start; margin-top: 12px; }
+    @media (max-width: 860px) { .hw-layout { grid-template-columns: 1fr; } .hw-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .hw-table-wrap { max-height: 430px; overflow: auto; border: 1px solid var(--line); border-radius: 12px; }
+    .hw-table { width: 100%; min-width: 0; border-collapse: collapse; font-size: 14px; }
+    .hw-table th { position: sticky; top: 0; background: var(--surface); font-size: 12px; color: var(--muted); }
+    .hw-table th, .hw-table td { padding: 6px 8px; text-align: center; border-bottom: 1px solid var(--line); }
+    .hw-table tbody tr { cursor: pointer; }
+    .hw-table tbody tr:hover { background: var(--primary-soft); }
+    .hw-table tr.selected { background: var(--primary-soft); font-weight: 800; }
+    .hw-table td.need { color: #c0392b; font-weight: 800; }
+    .hw-message-title { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 14px; font-weight: 800; margin-top: 10px; }
+    .hw-message-title:first-child { margin-top: 0; }
+    #hwParentMessage, #hwClassMessage { width: 100%; box-sizing: border-box; margin-top: 6px; }
+    .hw-note { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+    #hwPrintSheet { display: none; }
+    @media print {
+      @page { size: A4; margin: 0; }
+      body.hw-printing { background: #fff !important; }
+      body.hw-printing > *:not(#hwPrintSheet) { display: none !important; }
+      #hwPrintSheet { display: block; color: #000; font-family: "Microsoft JhengHei", "Noto Sans TC", sans-serif; }
+      .hw-page { box-sizing: border-box; width: 210mm; height: 296.5mm; padding: 8mm; display: grid; grid-template-columns: repeat(2, 97mm); grid-template-rows: repeat(4, 70mm); break-after: page; overflow: hidden; }
+      .hw-page:last-child { break-after: auto; }
+      .hw-slip { box-sizing: border-box; padding: 4mm 6mm; border-right: .3mm dashed #888; border-bottom: .3mm dashed #888; overflow: hidden; font-size: 15pt; line-height: 1.38; }
+      .hw-slip:nth-child(-n+2) { border-top: .3mm dashed #888; }
+      .hw-slip:nth-child(odd) { border-left: .3mm dashed #888; }
+      .hw-slip h3 { margin: 0 0 1.5mm; font-size: 17pt; line-height: 1.25; }
+      .hw-slip h3 small { display: block; font-size: 11pt; font-weight: 400; }
+      .hw-slip p { margin: 0 0 1mm; }
+      .hw-slip .hw-foot { margin-top: 1.5mm; }
+      .hw-slip.dense { font-size: 11.5pt; line-height: 1.3; }
+      .hw-slip.dense h3 { font-size: 14pt; margin-bottom: .5mm; }
+      .hw-slip.dense h3 small { display: inline; font-size: 10pt; margin-left: 2mm; }
+      .hw-slip.dense p { margin-bottom: .5mm; }
+      .hw-slip.dense .hw-foot { margin-top: .5mm; }
+    }
     .cb-layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(280px, 1fr); gap: 16px; align-items: start; margin-top: 8px; }
     @media (max-width: 860px) { .cb-layout { grid-template-columns: 1fr; } }
     .cb-items { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; min-height: 44px; }
@@ -1276,21 +1317,28 @@
       let previewCloudBackups = readLocalPreviewArray(LOCAL_PREVIEW_STORAGE_KEYS.backups, []);
       let previewDriveFiles = readLocalPreviewArray(LOCAL_PREVIEW_STORAGE_KEYS.driveFiles, []);
       window.localPreviewStorage.replaceTasks = tasks => {
-        const next = Array.isArray(tasks) ? tasks.filter(task => task && task.taskId && task.name).slice(0, 5000) : [];
+        const incoming = Array.isArray(tasks) ? tasks.filter(task => task && task.taskId && task.name).slice(0, 5000) : [];
+        // 備份只含畫面上的任務；本機已封存的要留著，不能因為還原就真的消失
+        const incomingIds = new Set(incoming.map(task => task.taskId));
+        const next = [...incoming, ...previewTasks.filter(task => task.status === '封存' && !incomingIds.has(task.taskId))];
         writeLocalPreviewJson(LOCAL_PREVIEW_STORAGE_KEYS.tasks, next);
         previewTasks = next;
         return previewTasks;
       };
       window.localPreviewStorage.persistTasks = () => writeLocalPreviewJson(LOCAL_PREVIEW_STORAGE_KEYS.tasks, previewTasks);
 
-      const previewSummary = () => ({
-        active: previewTasks.filter(t => !['已完成', '取消', '封存'].includes(t.status)).length,
-        urgent: previewTasks.filter(t => t.priority === '高' && t.status !== '已完成').length,
-        waiting: previewTasks.filter(t => ['等待他人', '待確認'].includes(t.status)).length,
-        dueToday: previewTasks.filter(t => t.dueDate === previewToday && t.status !== '已完成').length,
-        overdue: previewTasks.filter(t => t.dueDate && t.dueDate < previewToday && !['已完成', '取消'].includes(t.status)).length,
-        completed: previewTasks.filter(t => t.status === '已完成').length
-      });
+      // 口徑與 Code.gs 相同：已完成／取消／封存的不算進「重要、今天、逾期」
+      const previewSummary = () => {
+        const active = previewTasks.filter(t => !['已完成', '取消', '封存'].includes(t.status));
+        return {
+          active: active.length,
+          urgent: active.filter(t => t.priority === '高').length,
+          waiting: active.filter(t => ['等待他人', '待確認'].includes(t.status)).length,
+          dueToday: active.filter(t => t.dueDate === previewToday).length,
+          overdue: active.filter(t => t.dueDate && t.dueDate < previewToday).length,
+          completed: previewTasks.filter(t => t.status === '已完成').length
+        };
+      };
       const previewResult = () => ({ tasks: previewTasks.filter(t => t.status !== '封存'), summary: previewSummary(), serverTime: new Date().toLocaleString('zh-TW', { hour12: false }) });
       // 新編號＝現有最大編號＋1（備份還原時已封存的不在清單裡，用「筆數＋1」會撞號）
       const nextPreviewTaskId = tasks => {
@@ -1371,9 +1419,16 @@
         get(_target, property) {
           if (property === 'withSuccessHandler') return handler => { successHandler = handler; return runner; };
           if (property === 'withFailureHandler') return handler => { failureHandler = handler; return runner; };
-          return (...args) => window.setTimeout(() => {
-            try { successHandler(api[property](...args)); } catch (error) { failureHandler(error); }
-          }, 180);
+          // 每次呼叫都記住自己的回呼；兩個呼叫前後腳送出時才不會互搶結果、其中一個永遠等不到
+          return (...args) => {
+            const onSuccess = successHandler, onFailure = failureHandler;
+            successHandler = () => {}; failureHandler = () => {};
+            window.setTimeout(() => {
+              let result;
+              try { result = api[property](...args); } catch (error) { onFailure(error); return; }
+              onSuccess(result);
+            }, 180);
+          };
         }
       });
       window.google = { script: { run: runner } };
@@ -1411,7 +1466,6 @@
       <button class="role-person" type="button" data-role="gradeLead" aria-pressed="true"><img data-cozy-icon="role_grade_lead" src="assets/koboyo/parent-teacher-association.svg" alt=""><span>學年主任</span><span class="role-check">✓</span></button>
       <button class="role-person" type="button" data-role="admin" aria-pressed="false"><img data-cozy-icon="role_admin" src="assets/koboyo/teacher-checking-list.svg" alt=""><span>行政</span><span class="role-check">✓</span></button>
       <button class="role-person" type="button" data-role="homeroom" aria-pressed="true"><img data-cozy-icon="role_homeroom" src="assets/koboyo/teacher-group-students.svg" alt=""><span>導師</span><span class="role-check">✓</span></button>
-      <button class="role-person" type="button" data-role="subject" aria-pressed="false"><img data-cozy-icon="role_subject" src="assets/koboyo/academic-year-planner.svg" alt=""><span>科任</span><span class="role-check">✓</span></button>
       <button class="role-person" type="button" data-role="teacher" aria-pressed="true"><img data-cozy-icon="role_teacher" src="assets/koboyo/academic-year-planner.svg" alt=""><span>教師</span><span class="role-check">✓</span></button>
       <span class="role-multi-note">可同時選擇多個身分</span>
     </nav>
@@ -1428,6 +1482,7 @@
         <div class="teacher-toolbox-actions" aria-label="教師工具">
           <div class="toolbox-group"><span class="toolbox-group-label">溝通</span>
             <button class="toolbox-button" type="button" data-toolbox-target="contactBookSection" data-line-only data-role-only="homeroom" aria-expanded="false" hidden>聯絡本</button>
+            <button class="toolbox-button" type="button" data-toolbox-target="homeworkReportSection" aria-expanded="false">作業統計</button>
             <button class="toolbox-button" type="button" data-toolbox-target="lineInboxSection" data-line-only aria-expanded="false" hidden>LINE 收件匣<span class="toolbox-badge" id="lineInboxBadge" hidden>0</span></button>
             <button class="toolbox-button" type="button" data-toolbox-target="messageHubSection" aria-expanded="false">📮 訊息整合站<span class="toolbox-badge" id="messageHubBadge" hidden>0</span></button>
           </div>
@@ -1436,7 +1491,7 @@
             <button class="toolbox-button" type="button" data-toolbox-target="secretaryNotesSection" aria-expanded="false">小綿助記事</button>
           </div>
           <div class="toolbox-group"><span class="toolbox-group-label">備課</span>
-            <button class="toolbox-button" type="button" data-toolbox-target="teachingProgressPanel" data-role-only="teacher subject" aria-expanded="false">教學進度</button>
+            <button class="toolbox-button" type="button" data-toolbox-target="teachingProgressPanel" data-role-only="teacher" aria-expanded="false">教學進度</button>
             <a class="toolbox-button" href="Studio.html" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center">🎨 教材小工場</a>
           </div>
         </div>
@@ -1839,6 +1894,47 @@
       </div>
     </section>
 
+    <section class="secretary-notes" id="homeworkReportSection" aria-labelledby="homeworkReportTitle">
+      <div class="secretary-notes-head">
+        <div class="secretary-notes-title">
+          <img data-cozy-icon="contact_book" src="assets/ipas/book-contact.webp" alt="">
+          <div>
+            <h2 id="homeworkReportTitle">作業統計</h2>
+            <p>看每週或本學期的缺交、補交與訂正，做成給家長的 LINE 訊息或可裁切的聯絡本小紙條。只使用座號。</p>
+          </div>
+        </div>
+      </div>
+      <div class="secretary-notes-body">
+        <div class="hw-controls">
+          <select class="select" id="hwMode" aria-label="統計範圍"><option value="week">每週統計</option><option value="semester">本學期累計</option></select>
+          <button class="mini-button" type="button" id="hwPrevWeek">‹ 上一週</button>
+          <span class="hw-range" id="hwRangeText"></span>
+          <button class="mini-button" type="button" id="hwNextWeek">下一週 ›</button>
+          <select class="select" id="hwClass" aria-label="班級" hidden></select>
+          <label>座號到 <input class="input" id="hwSeatCount" type="number" min="1" max="60" style="width:76px"> 號</label>
+          <button class="mini-button" type="button" id="hwReload">🔄 重新讀取</button>
+          <span class="secretary-note-meta" id="hwMeta"></span>
+        </div>
+        <div class="hw-summary" id="hwSummary"></div>
+        <div class="hw-layout">
+          <div class="hw-table-wrap"><table class="hw-table"><thead><tr><th>座號</th><th>還沒交</th><th>已補交</th><th>待訂正</th><th>已訂正</th></tr></thead><tbody id="hwTableBody"></tbody></table></div>
+          <div>
+            <div class="hw-message-title"><span id="hwParentTitle">個別家長訊息</span><button class="mini-button" type="button" id="hwCopyParent">📋 複製</button></div>
+            <textarea class="textarea" id="hwParentMessage" rows="8" aria-label="個別家長訊息"></textarea>
+            <div class="hw-note">點左邊的座號換人。內容可以先改再複製，建議私訊給該位家長。</div>
+            <div class="hw-message-title"><span>全班家長訊息</span><button class="mini-button" type="button" id="hwCopyClass">📋 複製</button></div>
+            <textarea class="textarea" id="hwClassMessage" rows="6" aria-label="全班家長訊息"></textarea>
+            <div class="hw-note">只有全班總數，不列座號，可以放在家長群組。</div>
+          </div>
+        </div>
+        <div class="hw-controls">
+          <button class="button button-dark" type="button" id="hwPrintButton">🖨 列印聯絡本小紙條（A4 一張 8 格）</button>
+          <label class="check-row"><input type="checkbox" id="hwPrintNeedOnly">只印還有作業要完成的</label>
+        </div>
+        <div class="hw-note">統計的是缺交、補交、訂正的項數。全班都交的作業不會留下紀錄，所以不計算繳交率。請假那天沒交的作業不列入。今天的狀況要等大屏存檔後才會算進來。</div>
+      </div>
+    </section>
+
     <section class="secretary-notes contact-book" id="contactBookSection" aria-labelledby="contactBookTitle">
       <div class="secretary-notes-head">
         <div class="secretary-notes-title">
@@ -2059,7 +2155,7 @@
           </div>
           <div class="field field-wide">
             <label for="detailUrl">詳細資料連結</label>
-            <input class="input" id="detailUrl" name="detailUrl" type="url" placeholder="https://docs.google.com/…">
+            <input class="input" id="detailUrl" name="detailUrl" type="url" pattern="https://.*" title="連結要以 https:// 開頭" placeholder="https://docs.google.com/…">
           </div>
           <section class="project-flow" id="projectFlow" hidden>
             <div class="project-flow-head">
@@ -2192,8 +2288,8 @@
               <select class="select" id="apiModelSelect" style="flex:1"><option value="">（使用服務預設模型）</option></select>
               <button class="mini-button" type="button" id="fetchModelsButton" title="用你的金鑰向服務商查詢目前可用的模型">🔄 取得清單</button>
             </div>
-            <input class="input" id="apiModel" placeholder="或自行輸入模型代號（Gemini 留空＝gemini-2.5-flash）" style="margin-top:6px">
-            <div class="api-secret-note">先填 API 金鑰、按「🔄 取得清單」，就能直接從服務商抓到最新模型；以後出新模型也不用更新系統。</div>
+            <input class="input" id="apiModel" placeholder="或自行輸入模型代號（Gemini 留空＝自動）" style="margin-top:6px">
+            <div class="api-secret-note">先填 API 金鑰、按「🔄 取得清單」，就能直接從服務商抓到最新模型；以後出新模型也不用更新系統。Gemini 不選模型時先用 3.5 Flash-Lite；Google 停用它時會自動換 3.1 Flash-Lite，再換 3.8 Flash。</div>
           </div>
           <div class="field field-wide" id="apiEndpointField" hidden>
             <label for="apiEndpoint">API 端點（OpenAI 相容，不含 /chat/completions）</label>
@@ -2291,7 +2387,7 @@
           <label>聯絡本常用項目（可自訂；每行一項，改完自動儲存）</label>
           <div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap">
             <select class="select" id="contactPresetEditCategory" style="max-width:130px"></select>
-            <textarea class="textarea" id="contactPresetEditTextarea" rows="6" style="flex:1;min-width:240px" placeholder="每行一個常用項目，例如：&#10;國習 P.&#10;甲本一課"></textarea>
+            <textarea class="textarea" id="contactPresetEditTextarea" rows="6" style="flex:1;min-width:240px" placeholder="每行一個常用項目，例如：&#10;國習&#10;甲本"></textarea>
           </div>
           <div class="api-secret-note">這些項目會出現在「教師工具箱 → 聯絡本」的快速輸入下拉選單；以「P.」結尾的項目，加入時會自動接上補充欄的頁數。清空全部內容可還原該分類的預設清單。</div>
         </div>
@@ -2564,7 +2660,7 @@
       progressPlans: {},
       activeProgressSubject: ''
     };
-    const ROLE_LABELS = { gradeLead: '學年主任', admin: '行政', homeroom: '導師', subject: '科任', teacher: '教師' };
+    const ROLE_LABELS = { gradeLead: '學年主任', admin: '行政', homeroom: '導師', teacher: '教師' };
     // Source: government open-data office calendar (2018–2027), filtered to weekday closures
     // applicable to schools. Military Day is intentionally excluded because it is military-only.
     const OFFICIAL_SCHOOL_HOLIDAYS = {
@@ -2893,7 +2989,7 @@
         button.setAttribute('aria-pressed', String(roleWorkspaceState.selectedRoles.has(button.dataset.role)));
       });
       const roles = roleWorkspaceState.selectedRoles;
-      const hasTeacherRole = roles.has('teacher') || roles.has('subject');   // 教學進度：教師、科任都用得到
+      const hasTeacherRole = roles.has('teacher');
       $('teachingProgressPanel').hidden = !hasTeacherRole;
       // 工具箱依身分顯示（data-role-only 可寫多個身分）；用 class 隱藏，不跟「LINE 才顯示」的 hidden 互相蓋掉
       document.querySelectorAll('[data-role-only]').forEach(el => {
@@ -2901,7 +2997,7 @@
         el.classList.toggle('role-hidden', !allowed);
         if (!allowed && el.classList.contains('active')) setTeacherToolbox('');
       });
-      $('teachingProgressTitle').textContent = roles.has('subject') && !roles.has('teacher') ? '科任｜各班教學與評量進度' : '教師｜教學與評量進度';
+      $('teachingProgressTitle').textContent = '教師｜教學與評量進度';
     }
 
     function toggleWorkspaceRole(role) {
@@ -4092,7 +4188,7 @@
       try {
         if (file.size > 5 * 1024 * 1024) throw new Error('記事檔超過 5 MB，已停止匯入。');
         const payload = JSON.parse(await file.text());
-        const sourceNotes = Array.isArray(payload.notes) ? payload.notes : [];
+        const sourceNotes = payload && Array.isArray(payload.notes) ? payload.notes : [];
         if (!sourceNotes.length) throw new Error('找不到可匯入的記事。請選擇桌面小綿助的 secretary_data.json 或網頁記事匯出檔。');
         const imported = sourceNotes.map(note => normalizeSecretaryNote(note, 'desktop')).filter(Boolean).slice(0, 500);
         const existing = new Set(secretaryNotesState.notes.map(note => `${note.createdAt}|${note.text}`));
@@ -4210,7 +4306,7 @@
         const existingTaskIds = new Set(state.tasks.map(task => String(task.taskId || '')));
         const desktopTasks = (Array.isArray(payload.tasks) ? payload.tasks : [])
           .filter(task => task && task.source === 'desktop' && task.taskId && task.name && !existingTaskIds.has(String(task.taskId)))
-          .map(task => ({ ...task, detailUrl: safeUrl(task.detailUrl) }));   // 資安：本機程式回傳的連結也只收 http(s)
+          .map(task => ({ ...task, detailUrl: safeUrl(task.detailUrl) }));   // 資安：本機程式回傳的連結也只收 https
         if (desktopTasks.length && IS_LOCAL_PREVIEW && window.localPreviewStorage) {
           state.tasks = [...desktopTasks, ...state.tasks].slice(0, 5000);
           state.filteredTasks = [...state.tasks];
@@ -4614,7 +4710,7 @@
     // ---- 聯絡本管理：依日期讀寫雲端聯絡本（晨間大屏黑板同步顯示）----
     // 常用內容取材自台灣國小聯絡簿慣用寫法（國習、甲乙本、圈詞等縮寫）。
     const CONTACT_BOOK_PRESETS = {
-      '作業': ['國習 P.', '數習 P.', '甲本一課', '乙本一課', '圈詞一遍', '造句', '寫作文', '閱讀 20 分鐘', '預習課文', '訂正考卷', '學習單一張', '數學卷一張', '英語唸讀'],
+      '作業': ['國習', '數習', '甲本', '乙本', '圈詞一遍', '造句', '寫作文', '閱讀 20 分鐘', '預習課文', '訂正考卷', '學習單一張', '數學卷一張', '英語唸讀'],
       '考試': ['明天國語聽寫', '明天數學小考', '明天英語考試', '明天社會小考', '明天自然小考', '考卷訂正並請家長簽名'],
       '攜帶物品': ['帶直笛', '帶水壺', '帶彩色筆', '帶美勞用品', '穿體育服裝', '帶抹布、衛生紙', '帶圖書館借書歸還', '帶健保卡'],
       '通知': ['回條請家長簽名', '繳交費用', '校外教學通知請詳閱', '明天朝會請準時到校', '天氣變化請添加衣物', '請檢查並修剪指甲'],
@@ -5097,13 +5193,18 @@
         if (!childrenByParent.has(task.parentTaskId)) childrenByParent.set(task.parentTaskId, []);
         childrenByParent.get(task.parentTaskId).push(task);
       });
-      const orderedTasks = [];
-      tasks.filter(task => !task.parentTaskId || !visibleIds.has(task.parentTaskId)).forEach(task => {
+      // 一層一層往下排；孫任務、或資料壞掉互相指來指去的，也都要顯示出來，不能憑空消失
+      const orderedTasks = [], placed = new Set();
+      const place = task => {
+        if (placed.has(task.taskId)) return;
+        placed.add(task.taskId);
         orderedTasks.push(task);
         (childrenByParent.get(task.taskId) || [])
           .sort((a, b) => Number(a.sortOrder || 9999) - Number(b.sortOrder || 9999) || String(a.dueDate || '').localeCompare(String(b.dueDate || '')))
-          .forEach(child => orderedTasks.push(child));
-      });
+          .forEach(place);
+      };
+      tasks.filter(task => !task.parentTaskId || !visibleIds.has(task.parentTaskId) || task.parentTaskId === task.taskId).forEach(place);
+      tasks.forEach(place);
 
       const rows = orderedTasks.map(task => {
         const dueClass = isOverdue(task) ? 'badge-overdue' : '';
@@ -6070,7 +6171,7 @@
     function buildDailySummary(extra) {
       const active = state.tasks.filter(task => !['已完成', '取消', '封存'].includes(task.status));
       const urgent = active.filter(task => task.priority === '高').slice(0, 3);
-      const waiting = active.filter(task => ['等待他人', '等待回覆'].includes(task.status));
+      const waiting = active.filter(task => ['等待他人', '待確認'].includes(task.status));
       const today = active.filter(task => isToday(task.dueDate));
       const top = (urgent.length ? urgent : active.slice(0, 3)).map((task, index) => `${index + 1}. ${task.name}｜${task.nextAction || '確認下一步'}`);
       aiAssistantState.taskDrafts = [makeEventDraft(
@@ -7373,16 +7474,34 @@
       return localStorage.getItem('grade6AssistantApiKey') || sessionStorage.getItem('grade6AssistantApiKey') || '';
     }
 
+    // Gemini 沒指定模型時依序使用；前一個被 Google 停用（404）才換下一個
+    const GEMINI_AUTO_MODELS = ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-3.8-flash'];
+    const GEMINI_OLD_DEFAULT = 'gemini-2.5-flash'; // 舊版的預設值，存過的視同沒指定
+    let geminiModelInUse = '';
+
     const PROVIDER_PRESETS = {
-      gemini: { label: 'Google Gemini', kind: 'gemini', endpoint: 'https://generativelanguage.googleapis.com/v1beta/models', defaultModel: 'gemini-2.5-flash', modelFilter: id => !/embedding|imagen|veo|tts|aqa/i.test(id) },
+      gemini: { label: 'Google Gemini', kind: 'gemini', endpoint: 'https://generativelanguage.googleapis.com/v1beta/models', defaultModel: GEMINI_AUTO_MODELS[0], modelFilter: id => !/embedding|imagen|veo|tts|aqa/i.test(id) },
       openai: { label: 'OpenAI', kind: 'openai', endpoint: 'https://api.openai.com/v1', defaultModel: '', modelFilter: id => /^(gpt|o[0-9]|chatgpt)/i.test(id) && !/embedding|whisper|tts|dall|audio|realtime|image|moderation|transcribe/i.test(id) },
       grok: { label: 'xAI Grok', kind: 'openai', endpoint: 'https://api.x.ai/v1', defaultModel: '', modelFilter: id => /grok/i.test(id) && !/image|video/i.test(id) },
       custom: { label: '自訂服務', kind: 'openai', endpoint: '', defaultModel: '', modelFilter: () => true }
     };
 
-    function normalizeGeminiModel(name) {
+    function geminiModelChain(name) {
       const cleaned = String(name || '').trim().toLowerCase().replace(/\s+/g, '-').replace(/^models\//, '');
-      return cleaned || 'gemini-2.5-flash';
+      return !cleaned || cleaned === GEMINI_OLD_DEFAULT ? GEMINI_AUTO_MODELS : [cleaned];
+    }
+
+    async function fetchGemini(endpoint, models, key, body) {
+      let response;
+      for (const model of models) {
+        response = await fetch(`${endpoint}/${model}:generateContent`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+          body: JSON.stringify(body)
+        });
+        if (response.status !== 404) { geminiModelInUse = model; break; }
+      }
+      return response;
     }
 
     function providerConfig() {
@@ -7391,11 +7510,12 @@
       if (!preset) return { ready: false, provider, label: 'AI 服務' };
       const key = storedApiKey();
       const endpoint = (provider === 'custom' ? (assistantSettings.api.endpoint || '') : preset.endpoint).replace(/\/+$/, '');
+      const models = preset.kind === 'gemini' ? geminiModelChain(assistantSettings.api.model) : [];
       const model = preset.kind === 'gemini'
-        ? normalizeGeminiModel(assistantSettings.api.model)
+        ? (models.includes(geminiModelInUse) ? geminiModelInUse : models[0])
         : String(assistantSettings.api.model || preset.defaultModel).trim();
       return {
-        provider, label: preset.label, kind: preset.kind, endpoint, model, key,
+        provider, label: preset.label, kind: preset.kind, endpoint, model, models, key,
         modelFilter: preset.modelFilter,
         ready: assistantSettings.api.enabled === true && !!key && !!endpoint && !!model
       };
@@ -7489,7 +7609,7 @@
 
     function safeUrl(value) {
       const text = String(value || '').trim();
-      return /^https?:\/\/\S{4,}$/i.test(text) ? text.slice(0, 500) : '';
+      return /^https:\/\/\S{4,}$/i.test(text) ? text.slice(0, 500) : '';   // 與雲端 sanitizeUrl_ 相同：只收 https，避免草稿帶 http 連結時整筆任務存不進去
     }
 
     function safeTimeString(value) {
@@ -7531,13 +7651,9 @@
       let response;
       if (cfg.kind === 'gemini') {
         const parts = [{ text: instruction }, ...await buildGeminiAttachmentParts()];
-        response = await fetch(`${cfg.endpoint}/${cfg.model}:generateContent`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': cfg.key },
-          body: JSON.stringify({
-            contents: [{ role: 'user', parts }],
-            generationConfig: { temperature: 0.4, maxOutputTokens: 8192, responseMimeType: 'application/json' }
-          })
+        response = await fetchGemini(cfg.endpoint, cfg.models, cfg.key, {
+          contents: [{ role: 'user', parts }],
+          generationConfig: { temperature: 0.4, maxOutputTokens: 8192, responseMimeType: 'application/json' }
         });
       } else {
         response = await fetch(`${cfg.endpoint}/chat/completions`, {
@@ -7920,7 +8036,7 @@ ${cleanBase}`;
       $('apiEndpointField').hidden = provider !== 'custom';
       if (preset && provider !== 'custom') $('apiEndpoint').value = preset.endpoint;
       $('apiModel').placeholder = provider === 'gemini'
-        ? '或自行輸入模型代號（Gemini 留空＝gemini-2.5-flash）'
+        ? '或自行輸入模型代號（Gemini 留空＝自動）'
         : '此服務必須選擇或輸入模型，請先按「🔄 取得清單」';
     }
 
@@ -7998,7 +8114,7 @@ ${cleanBase}`;
       $('customSensitiveTerms').value = assistantSettings.privacy.customTerms || '';
       $('aiEnabled').checked = assistantSettings.api.enabled === true;
       $('apiProvider').value = assistantSettings.api.provider || 'gemini';
-      $('apiModel').value = assistantSettings.api.model || '';
+      $('apiModel').value = assistantSettings.api.model === GEMINI_OLD_DEFAULT ? '' : (assistantSettings.api.model || '');
       $('apiEndpoint').value = assistantSettings.api.endpoint || '';
       updateApiFieldVisibility();
       $('rememberApiKey').checked = assistantSettings.api.rememberKey !== false;
@@ -8020,7 +8136,7 @@ ${cleanBase}`;
     function setTeacherToolbox(targetId) {
       const content = $('teacherToolboxContent');
       const buttons = [...document.querySelectorAll('[data-toolbox-target]')];
-      const panels = ['teachingProgressPanel', 'aiAssistantSection', 'secretaryNotesSection', 'lineInboxSection', 'contactBookSection', 'messageHubSection'];
+      const panels = ['teachingProgressPanel', 'aiAssistantSection', 'secretaryNotesSection', 'lineInboxSection', 'contactBookSection', 'homeworkReportSection', 'messageHubSection'];
       const current = buttons.find(button => button.classList.contains('active'))?.dataset.toolboxTarget || '';
       const shouldCollapse = !targetId || (current === targetId && !content.hidden);
 
@@ -8036,6 +8152,7 @@ ${cleanBase}`;
       });
       if (shouldCollapse) return;
 
+      if (targetId === 'homeworkReportSection') loadHomeworkReport();
       if (targetId === 'teachingProgressPanel') {
         $('teachingProgressBody').hidden = false;
         $('toggleTeachingProgressButton').textContent = '收合';
@@ -8144,7 +8261,7 @@ ${cleanBase}`;
 
     function saveAssistantSettings() {
       const next = readSettingsForm();
-      if (next.api.enabled && !IS_LOCAL_PREVIEW && (next.api.provider === 'disabled' || !next.api.model || !next.api.endpoint)) {
+      if (next.api.enabled && !IS_LOCAL_PREVIEW && (next.api.provider === 'disabled' || (next.api.provider !== 'gemini' && !next.api.model) || !next.api.endpoint)) {
         selectSettingsTab('api');
         showToast('開啟 AI 前，請選擇服務並填寫模型名稱與 API 端點。', true);
         return;
@@ -8193,7 +8310,8 @@ ${cleanBase}`;
       const endpoint = (config.provider === 'custom' ? config.endpoint : preset.endpoint).replace(/\/+$/, '');
       if (!endpoint) return showToast('自訂服務必須填寫 API 端點。', true);
       try { new URL(endpoint); } catch (error) { return showToast('API 端點網址格式不正確。', true); }
-      const model = preset.kind === 'gemini' ? normalizeGeminiModel(config.model) : String(config.model || '').trim();
+      const models = preset.kind === 'gemini' ? geminiModelChain(config.model) : [];
+      const model = preset.kind === 'gemini' ? models[0] : String(config.model || '').trim();
       if (!model) return showToast('此服務必須選擇模型：先按「🔄 取得清單」再挑一個。', true);
       const button = $('checkApiButton');
       button.disabled = true;
@@ -8201,11 +8319,7 @@ ${cleanBase}`;
       try {
         let response;
         if (preset.kind === 'gemini') {
-          response = await fetch(`${endpoint}/${model}:generateContent`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-            body: JSON.stringify({ contents: [{ parts: [{ text: '請回覆 OK' }] }], generationConfig: { maxOutputTokens: 20 } })
-          });
+          response = await fetchGemini(endpoint, models, key, { contents: [{ parts: [{ text: '請回覆 OK' }] }], generationConfig: { maxOutputTokens: 20 } });
         } else {
           response = await fetch(`${endpoint}/chat/completions`, {
             method: 'POST',
@@ -8218,7 +8332,7 @@ ${cleanBase}`;
           const message = data?.error?.message || data?.error || `HTTP ${response.status}`;
           throw new Error(typeof message === 'object' ? JSON.stringify(message) : message);
         }
-        showToast(`✅ ${preset.label} 連線成功（模型 ${model}）。記得按「儲存設定」。`);
+        showToast(`✅ ${preset.label} 連線成功（模型 ${preset.kind === 'gemini' ? geminiModelInUse : model}）。記得按「儲存設定」。`);
       } catch (error) {
         showToast(`❌ 連線失敗：${String(error.message).slice(0, 140)}`, true);
       } finally {
@@ -8232,7 +8346,7 @@ ${cleanBase}`;
       return {
         active: active.length,
         urgent: active.filter(task => task.priority === '高').length,
-        waiting: active.filter(task => ['等待他人', '等待回覆'].includes(task.status)).length,
+        waiting: active.filter(task => ['等待他人', '待確認'].includes(task.status)).length,
         dueToday: active.filter(task => isToday(task.dueDate)).length,
         overdue: active.filter(isOverdue).length,
         completed: state.tasks.filter(task => task.status === '已完成').length
@@ -8294,17 +8408,34 @@ ${cleanBase}`;
       }
     }
 
+    /** 匯入的任務只留文字／數字／是非值；欄位型別不對會讓清單整個畫不出來。 */
+    function sanitizeImportedTask(task) {
+      const clean = {};
+      Object.keys(task).forEach(key => {
+        if (['__proto__', 'constructor', 'prototype'].includes(key)) return;
+        const value = task[key];
+        if (typeof value === 'string') clean[key] = value.slice(0, 4000);
+        else if (typeof value === 'boolean') clean[key] = value;
+        else if (typeof value === 'number' && Number.isFinite(value)) clean[key] = key === 'sortOrder' ? value : String(value);
+      });
+      clean.taskId = String(task.taskId).slice(0, 60);
+      clean.name = String(task.name).slice(0, 200);
+      clean.dueDate = /^\d{4}-\d{2}-\d{2}$/.test(clean.dueDate || '') ? clean.dueDate : '';
+      clean.dueTime = /^\d{1,2}:\d{2}$/.test(clean.dueTime || '') ? clean.dueTime : '';
+      clean.detailUrl = safeUrl(clean.detailUrl);
+      return clean;
+    }
+
     /** 套用一份備份內容；檔案匯入與雲端還原共用。回傳是否真的完成還原。 */
     function applyBackupObject(backup, sourceLabel = '備份') {
       {
-        if (backup.kind !== 'grade6-team-dashboard-backup' || backup.version !== 1 || !Array.isArray(backup.tasks)) {
+        if (!backup || typeof backup !== 'object' || backup.kind !== 'grade6-team-dashboard-backup' || backup.version !== 1 || !Array.isArray(backup.tasks)) {
           throw new Error('這不是有效的六年級工作台備份檔。');
         }
         if (backup.tasks.length > 5000) throw new Error('備份檔任務數量異常，已停止匯入。');
         if (!window.confirm(`${sourceLabel}包含 ${backup.tasks.length} 項任務。要還原到目前畫面嗎？\n（目前的任務清單會被覆蓋）`)) return false;
-        // 資安：備份檔可能是別人給的，連結只收 http(s)，擋 javascript: 這類網址
-        state.tasks = backup.tasks.filter(task => task && typeof task === 'object' && task.taskId && task.name)
-          .map(task => ({ ...task, taskId: String(task.taskId).slice(0, 60), name: String(task.name).slice(0, 200), detailUrl: safeUrl(task.detailUrl) }));
+        // 資安：備份檔可能是別人給的或被改壞的，每個欄位都整理成文字、日期時間要是正確格式、連結只收 https
+        state.tasks = backup.tasks.filter(task => task && typeof task === 'object' && task.taskId && task.name).map(sanitizeImportedTask);
         state.filteredTasks = [...state.tasks];
         if (IS_LOCAL_PREVIEW && window.localPreviewStorage && window.localPreviewStorage.replaceTasks) {
           window.localPreviewStorage.replaceTasks(state.tasks);
@@ -8539,6 +8670,185 @@ ${cleanBase}`;
     updateAiConnectionNote();
     loadRoleWorkspace();
 
+    // ---- 作業統計：每週／學期，只用座號；資料來自雲端或這台電腦的大屏紀錄 ----
+    const HW_STATUS_KEY = { '缺交': 'missing', '補交': 'resub', '待訂正': 'correcting', '已訂正': 'corrected' };
+    const HW_BOARD_MARK = { resub: '補交', correcting: '待訂正', corrected: '已訂正' };
+    const HW_SEATS_KEY = 'grade6HomeworkReportSeats';
+    const HW_LEAVE_STATUS = ['病假', '事假'];   // 請假那天沒交的作業不列入通知
+    const homeworkReport = { mode: 'week', weekOffset: 0, rows: [], selectedSeat: 0 };
+
+    const hwMonthDay = date => `${date.getMonth() + 1}/${date.getDate()}`;
+    function homeworkReportRange(today = new Date()) {
+      const base = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      if (homeworkReport.mode === 'semester') {
+        const month = base.getMonth() + 1, year = base.getFullYear();
+        const from = month >= 8 ? new Date(year, 7, 1) : month === 1 ? new Date(year - 1, 7, 1) : new Date(year, 1, 1);
+        return { from, to: base, text: `本學期（${hwMonthDay(from)}～${hwMonthDay(base)}）` };
+      }
+      const from = new Date(base);
+      from.setDate(base.getDate() - (base.getDay() + 6) % 7 + homeworkReport.weekOffset * 7);
+      const to = new Date(from);
+      to.setDate(from.getDate() + 6);
+      const word = homeworkReport.weekOffset === 0 ? '這週' : homeworkReport.weekOffset === -1 ? '上週' : '當週';
+      return { from, to, text: `${word}（${hwMonthDay(from)}～${hwMonthDay(to)}）` };
+    }
+    function morningSettings() {
+      try { return JSON.parse(localStorage.getItem('morningBoardSettings') || 'null') || {}; } catch (error) { return {}; }
+    }
+    function homeworkReportSeats() {
+      const count = Math.min(60, Math.max(1, Number($('hwSeatCount').value) || 26));
+      const empty = (morningSettings().emptySeats || []).map(Number);
+      return Array.from({ length: count }, (_, index) => index + 1).filter(seat => !empty.includes(seat));
+    }
+    /** 沒接雲端時讀同一個瀏覽器裡大屏的紀錄（未標記＝缺交，和存到雲端的規則相同）。 */
+    function homeworkLocalRows(fromKey, toKey, seats) {
+      const rows = [];
+      Object.keys(localStorage).forEach(key => {
+        const matched = key.match(/^morningBoardState:(\d{4}-\d{2}-\d{2})$/);
+        if (!matched || matched[1] < fromKey || matched[1] > toKey) return;
+        let saved = null;
+        try { saved = JSON.parse(localStorage.getItem(key)); } catch (error) {}
+        (Array.isArray(saved?.boards) ? saved.boards : []).forEach(board => {
+          if (!board || !board.subject) return;
+          const marks = board.seats || {};
+          seats.forEach(seat => {
+            const status = marks[seat] ? HW_BOARD_MARK[marks[seat]] : '缺交';
+            if (status && !(status === '缺交' && HW_LEAVE_STATUS.includes(saved?.attendance?.[seat]))) rows.push({ date: matched[1], className: '', subject: String(board.subject), assignment: String(board.assignment || ''), seat, status });
+          });
+        });
+      });
+      return rows;
+    }
+    function summarizeHomework(rows, seats) {
+      const bySeat = new Map(seats.map(seat => [seat, { seat, missing: [], resub: [], correcting: [], corrected: [] }]));
+      rows.forEach(row => {
+        const entry = bySeat.get(Number(row.seat)), key = HW_STATUS_KEY[row.status];
+        if (!entry || !key) return;
+        const [, month, day] = String(row.date).split('-').map(Number);
+        entry[key].push(`${row.subject}${row.assignment ? ' ' + row.assignment : ''}（${month}/${day}）`);
+      });
+      return [...bySeat.values()];
+    }
+    const hwListed = (items, limit) => items.slice(0, limit).join('、') + (items.length > limit ? ` 等 ${items.length} 項` : '');
+    function homeworkParentMessage(entry, rangeText) {
+      const head = `親愛的家長您好：\n跟您分享 ${entry.seat} 號孩子${rangeText}的作業情形。`;
+      const finished = entry.resub.length + entry.corrected.length;
+      if (!entry.missing.length && !entry.correcting.length) {
+        return `${head}\n${finished ? '缺的作業都補齊了，該訂正的也完成了，孩子很負責！' : '作業都按時完成，孩子表現得很棒！'}\n謝謝您平日的陪伴。`;
+      }
+      const lines = [head];
+      if (entry.missing.length) lines.push(`・還沒交（${entry.missing.length} 項）：${hwListed(entry.missing, 8)}`);
+      if (entry.correcting.length) lines.push(`・還要訂正（${entry.correcting.length} 項）：${hwListed(entry.correcting, 8)}`);
+      if (finished) lines.push(`・已經補交或訂正完成 ${finished} 項，孩子有在努力。`);
+      lines.push('方便的話，再麻煩您提醒孩子完成後交給老師，謝謝您的協助！');
+      return lines.join('\n');
+    }
+    function homeworkClassMessage(entries, rangeText) {
+      const total = key => entries.reduce((sum, entry) => sum + entry[key].length, 0);
+      const missing = total('missing'), correcting = total('correcting'), finished = total('resub') + total('corrected');
+      if (!missing && !correcting) return `各位家長好：\n${rangeText}全班的作業都完成了，孩子們很棒，謝謝各位家長的陪伴！`;
+      return [`各位家長好：\n跟大家分享${rangeText}全班的作業情形。`, `・還沒交的作業：共 ${missing} 項`, `・還要訂正的作業：共 ${correcting} 項`, `・已經補交或訂正完成：共 ${finished} 項`,
+        '老師會在聯絡簿上個別提醒，也請家長有空時陪孩子看一下。謝謝大家的協助！'].join('\n');
+    }
+    function renderHomeworkReport() {
+      const range = homeworkReportRange();
+      $('hwRangeText').textContent = range.text;
+      const isWeek = homeworkReport.mode === 'week';
+      $('hwPrevWeek').hidden = !isWeek;
+      $('hwNextWeek').hidden = !isWeek;
+      $('hwNextWeek').disabled = homeworkReport.weekOffset >= 0;
+      const classes = [...new Set(homeworkReport.rows.map(row => row.className).filter(Boolean))];
+      const classSelect = $('hwClass');
+      classSelect.hidden = classes.length < 2;
+      const chosen = classes.includes(classSelect.value) ? classSelect.value : classes[0] || '';
+      classSelect.innerHTML = classes.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');
+      classSelect.value = chosen;
+      const rows = classes.length < 2 ? homeworkReport.rows : homeworkReport.rows.filter(row => row.className === chosen);
+      const entries = summarizeHomework(rows, homeworkReportSeats());
+      const total = key => entries.reduce((sum, entry) => sum + entry[key].length, 0);
+      $('hwSummary').innerHTML = [['還沒交', 'missing'], ['已補交', 'resub'], ['待訂正', 'correcting'], ['已訂正', 'corrected']].map(([label, key]) => `<div><b>${total(key)}</b>${label}</div>`).join('');
+      if (!entries.some(entry => entry.seat === homeworkReport.selectedSeat)) {
+        homeworkReport.selectedSeat = (entries.find(entry => entry.missing.length || entry.correcting.length) || entries[0] || {}).seat || 0;
+      }
+      $('hwTableBody').innerHTML = entries.map(entry => `<tr data-hw-seat="${entry.seat}" class="${entry.seat === homeworkReport.selectedSeat ? 'selected' : ''}"><td>${entry.seat}</td><td class="${entry.missing.length ? 'need' : ''}">${entry.missing.length}</td><td>${entry.resub.length}</td><td class="${entry.correcting.length ? 'need' : ''}">${entry.correcting.length}</td><td>${entry.corrected.length}</td></tr>`).join('');
+      const selected = entries.find(entry => entry.seat === homeworkReport.selectedSeat);
+      $('hwParentTitle').textContent = selected ? `${selected.seat} 號家長訊息` : '個別家長訊息';
+      $('hwParentMessage').value = selected ? homeworkParentMessage(selected, range.text) : '';
+      $('hwClassMessage').value = homeworkClassMessage(entries, range.text);
+      homeworkReport.entries = entries;
+      homeworkReport.rangeText = range.text;
+    }
+    async function loadHomeworkReport() {
+      const saved = Number(localStorage.getItem(HW_SEATS_KEY)) || Number(morningSettings().seatCount) || 26;
+      if (!$('hwSeatCount').value) $('hwSeatCount').value = saved;
+      const range = homeworkReportRange();
+      const fromKey = calendarDateKey(range.from), toKey = calendarDateKey(range.to);
+      $('hwMeta').textContent = '讀取中……';
+      const request = homeworkReport.request = (homeworkReport.request || 0) + 1;
+      try {
+        if (lineBridgeReady()) {
+          const result = await callLineBridge('rollcall_query', { from: fromKey, to: toKey, className: '' });
+          if (request !== homeworkReport.request) return;
+          const onLeave = new Set((Array.isArray(result.attendance) ? result.attendance : []).filter(row => HW_LEAVE_STATUS.includes(row.status)).map(row => `${row.date}|${row.className}|${row.seat}`));
+          homeworkReport.rows = (Array.isArray(result.homework) ? result.homework : []).filter(row => !(row.status === '缺交' && onLeave.has(`${row.date}|${row.className}|${row.seat}`)));
+          $('hwMeta').textContent = '資料來自雲端。';
+        } else {
+          homeworkReport.rows = homeworkLocalRows(fromKey, toKey, homeworkReportSeats());
+          $('hwMeta').textContent = '資料來自這台電腦的晨間大屏。';
+        }
+      } catch (error) {
+        if (request !== homeworkReport.request) return;
+        homeworkReport.rows = [];
+        $('hwMeta').textContent = `讀取失敗：${error.message}`;
+      }
+      renderHomeworkReport();
+    }
+    function homeworkSlipHtml(entry) {
+      const finished = entry.resub.length + entry.corrected.length;
+      const pending = entry.missing.length || entry.correcting.length;
+      const roomy = (hwListed(entry.missing, 3) + hwListed(entry.correcting, 3)).length <= 110;
+      const missingText = hwListed(entry.missing, roomy ? 3 : 2), correctingText = hwListed(entry.correcting, roomy ? 3 : 2);
+      const body = pending
+        ? `${entry.missing.length ? `<p><b>還沒交：</b>${escapeHtml(missingText)}</p>` : ''}${entry.correcting.length ? `<p><b>要訂正：</b>${escapeHtml(correctingText)}</p>` : ''}${finished ? `<p>已補交或訂正完成 ${finished} 項，有在努力！</p>` : ''}<p class="hw-foot">完成後請交給老師，謝謝家長協助。</p>`
+        : `<p>${finished ? '缺的作業都補齊了，該訂正的也完成了，很負責！' : '作業都按時完成，表現得很棒！'}</p><p class="hw-foot">謝謝家長平日的陪伴。</p>`;
+      // 內容多的用小一點的字，才不會被裁掉
+      const dense = missingText.length + correctingText.length + (finished ? 12 : 0) > 42;
+      return `<div class="hw-slip${dense ? ' dense' : ''}"><h3>${entry.seat} 號 作業小叮嚀<small>${escapeHtml(homeworkReport.rangeText)}</small></h3>${body}</div>`;
+    }
+    function printHomeworkSlips() {
+      const entries = (homeworkReport.entries || []).filter(entry => !$('hwPrintNeedOnly').checked || entry.missing.length || entry.correcting.length);
+      if (!entries.length) return showToast('沒有要列印的小紙條。', true);
+      const pages = [];
+      for (let index = 0; index < entries.length; index += 8) pages.push(entries.slice(index, index + 8));
+      document.getElementById('hwPrintSheet')?.remove();
+      const sheet = document.createElement('div');
+      sheet.id = 'hwPrintSheet';
+      sheet.innerHTML = pages.map(page => `<div class="hw-page">${page.map(homeworkSlipHtml).join('')}</div>`).join('');
+      document.body.appendChild(sheet);
+      document.body.classList.add('hw-printing');
+      window.addEventListener('afterprint', () => { document.body.classList.remove('hw-printing'); sheet.remove(); }, { once: true });
+      window.print();
+    }
+    $('hwMode').addEventListener('change', () => { homeworkReport.mode = $('hwMode').value; homeworkReport.weekOffset = 0; loadHomeworkReport(); });
+    $('hwPrevWeek').addEventListener('click', () => { homeworkReport.weekOffset -= 1; loadHomeworkReport(); });
+    $('hwNextWeek').addEventListener('click', () => { homeworkReport.weekOffset = Math.min(0, homeworkReport.weekOffset + 1); loadHomeworkReport(); });
+    $('hwReload').addEventListener('click', loadHomeworkReport);
+    $('hwClass').addEventListener('change', renderHomeworkReport);
+    $('hwSeatCount').addEventListener('change', () => { try { localStorage.setItem(HW_SEATS_KEY, String(homeworkReportSeats().length && $('hwSeatCount').value)); } catch (error) {} loadHomeworkReport(); });
+    $('hwTableBody').addEventListener('click', event => {
+      const row = event.target.closest('[data-hw-seat]');
+      if (!row) return;
+      homeworkReport.selectedSeat = Number(row.dataset.hwSeat);
+      renderHomeworkReport();
+    });
+    const copyHomeworkMessage = async (id, label) => {
+      try { await navigator.clipboard.writeText($(id).value); showToast(`${label}已複製，可以貼到 LINE。`); }
+      catch (error) { $(id).select(); document.execCommand('copy'); showToast(`${label}已複製。`); }
+    };
+    $('hwCopyParent').addEventListener('click', () => copyHomeworkMessage('hwParentMessage', '家長訊息'));
+    $('hwCopyClass').addEventListener('click', () => copyHomeworkMessage('hwClassMessage', '全班訊息'));
+    $('hwPrintButton').addEventListener('click', printHomeworkSlips);
+
     $('teacherToolbox').addEventListener('click', event => {
       const button = event.target.closest('[data-toolbox-target]');
       if (!button) return;
@@ -8546,8 +8856,8 @@ ${cleanBase}`;
       if (targetId === 'aiAssistantSection' && assistantSettings.api.enabled !== true) {
         return showToast('請先到「設定 → AI 設定」開啟 AI 功能。', true);
       }
-      if (targetId === 'teachingProgressPanel' && !roleWorkspaceState.selectedRoles.has('teacher') && !roleWorkspaceState.selectedRoles.has('subject')) {
-        return showToast('請先勾選「教師」或「科任」身分。', true);
+      if (targetId === 'teachingProgressPanel' && !roleWorkspaceState.selectedRoles.has('teacher')) {
+        return showToast('請先勾選「教師」身分。', true);
       }
       setTeacherToolbox(targetId);
     });
@@ -9003,7 +9313,7 @@ ${cleanBase}`;
 
     // 點任務名稱／下一步 → 說明彈窗（完整說明、連結、來源附件）
     function linkifyText(text) {
-      return escapeHtml(text).replace(/(https?:\/\/[^\s<]+)/g, url => `<a href="${url}" target="_blank" rel="noopener">${url}</a>`);
+      return escapeHtml(text).replace(/(https?:\/\/[!-~]+?(?=[.,;:!?)\]}]*(?:[^!-~]|$)))/g, url => `<a href="${url}" target="_blank" rel="noopener">${url}</a>`);
     }
     function closeTaskDetail() { document.querySelector('.task-detail-popover')?.remove(); }
     function openTaskDetail(task, anchor) {
@@ -9252,7 +9562,8 @@ ${cleanBase}`;
     // ---- 📮 訊息整合站：LINE 河道碎片 → 拆條 → 勾選 → 整合成一則 ----
     const HUB_KEY = 'grade6MessageHubItems';
     const HUB_CATEGORIES = ['轉達學生', '轉達家長', '轉達科任', '自己待辦', '略過'];
-    let hubItems = readLocalPreviewArray(HUB_KEY, []).filter(item => item && item.text);
+    let hubItems = readLocalPreviewArray(HUB_KEY, []).filter(item => item && typeof item === 'object' && item.text)
+      .map(item => ({ ...item, text: String(item.text).slice(0, 300), when: String(item.when || '').slice(0, 30), source: String(item.source || '').slice(0, 30), link: safeUrl(item.link), category: String(item.category || '轉達學生') }));
     async function callAssistantJson(prompt) {
       const cfg = providerConfig();
       if (!cfg.ready) throw new Error('AI 服務尚未設定');
@@ -9260,10 +9571,7 @@ ${cleanBase}`;
       prompt = redactSensitiveText(prompt).text;
       let response;
       if (cfg.kind === 'gemini') {
-        response = await fetch(`${cfg.endpoint}/${cfg.model}:generateContent`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': cfg.key },
-          body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { temperature: 0.3, maxOutputTokens: 4096, responseMimeType: 'application/json' } })
-        });
+        response = await fetchGemini(cfg.endpoint, cfg.models, cfg.key, { contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { temperature: 0.3, maxOutputTokens: 4096, responseMimeType: 'application/json' } });
       } else {
         response = await fetch(`${cfg.endpoint}/chat/completions`, {
           method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${cfg.key}` },
@@ -9308,7 +9616,7 @@ ${cleanBase}`;
     }
     function hubFallbackSplit(raw) {
       return raw.split(/\n{2,}|\n(?=\S{0,3}[：:•●■▶\-—]|\n)/).map(t => t.trim()).filter(t => t.length > 3)
-        .map(text => ({ text: text.slice(0, 300), category: '轉達學生', link: safeUrl((text.match(/https?:\/\/\S+/) || [''])[0]), when: (text.match(/\d{1,2}\/\d{1,2}(?:\s*\(?[一二三四五六日]\)?)?(?:\s*\d{1,2}:\d{2})?/) || [''])[0], checked: true }));
+        .map(text => ({ text: text.slice(0, 300), category: '轉達學生', link: safeUrl((text.match(/https?:\/\/[!-~]+?(?=[.,;:!?)\]}'\"]*(?:[^!-~]|$))/) || [''])[0]), when: (text.match(/\d{1,2}\/\d{1,2}(?:\s*\(?[一二三四五六日]\)?)?(?:\s*\d{1,2}:\d{2})?/) || [''])[0], checked: true }));
     }
     $('hubAddButton').addEventListener('click', async () => {
       const raw = $('hubInput').value.trim();
@@ -9389,8 +9697,8 @@ ${cleanBase}`;
       showToast('🧩 已整合成一則，可直接修改後複製。');
     });
     $('hubCopyButton').addEventListener('click', async () => {
-      await navigator.clipboard.writeText($('hubOutput').value).catch(() => {});
-      showToast('已複製整合訊息。');
+      try { await navigator.clipboard.writeText($('hubOutput').value); showToast('已複製整合訊息。'); }
+      catch (error) { $('hubOutput').select(); showToast('瀏覽器不讓我自動複製，已幫你全選，請按 Ctrl＋C。', true); }
     });
     $('hubNoteButton').addEventListener('click', () => {
       const note = normalizeSecretaryNote({ text: $('hubOutput').value.trim(), createdAt: new Date().toISOString() }, 'web');
@@ -9402,25 +9710,36 @@ ${cleanBase}`;
       const mine = hubItems.filter(item => item.category === '自己待辦' && !item.done);
       if (!mine.length) return showToast('沒有「自己待辦」的項目（可先把分類改成自己待辦）。', true);
       setLoading(true, '正在建立任務……');
-      let result = null, created = 0;
+      let result = null, created = 0, skipped = 0;
       try {
         for (const item of mine) {
-          if (state.tasks.some(task => task.name.trim() === item.text.slice(0, 90).trim())) continue;
+          if (state.tasks.some(task => String(task.name || '').trim() === item.text.slice(0, 90).trim())) { skipped += 1; continue; }
           const dateMatch = String(item.when || '').match(/(\d{1,2})\/(\d{1,2})/);
           const timeMatch = String(item.when || '').match(/(\d{1,2}):(\d{2})/);
-          const year = new Date().getFullYear();
-          const dueDate = dateMatch ? `${year}-${String(dateMatch[1]).padStart(2, '0')}-${String(dateMatch[2]).padStart(2, '0')}` : '';
+          // 只收真的存在的日期時間（13/45、25:99 這種就當沒填）；半年前的月日視為明年
+          let dueDate = '';
+          if (dateMatch) {
+            const month = Number(dateMatch[1]), dayOfMonth = Number(dateMatch[2]), now = new Date();
+            let date = new Date(now.getFullYear(), month - 1, dayOfMonth, 12);
+            if (date.getMonth() === month - 1 && date.getDate() === dayOfMonth) {
+              if (now - date > 180 * 86400000) date = new Date(now.getFullYear() + 1, month - 1, dayOfMonth, 12);
+              if (date.getMonth() === month - 1) dueDate = `${date.getFullYear()}-${String(month).padStart(2, '0')}-${String(dayOfMonth).padStart(2, '0')}`;
+            }
+          }
           const draft = makeGenericTaskDraft(item.text.slice(0, 90), '行政交辦', '中', dueDate, item.text.slice(0, 120));
-          draft.dueTime = timeMatch ? `${String(timeMatch[1]).padStart(2, '0')}:${timeMatch[2]}` : '';
-          draft.detailUrl = item.link || '';
+          draft.dueTime = timeMatch && Number(timeMatch[1]) < 24 && Number(timeMatch[2]) < 60 ? `${String(timeMatch[1]).padStart(2, '0')}:${timeMatch[2]}` : '';
+          draft.detailUrl = safeUrl(item.link);
           result = await serverCall('saveTask', { ...draft, taskId: '', parentTaskId: '', projectId: '', taskType: '一般任務', csrfToken: state.csrfToken });
           item.done = true; created += 1;
         }
+        showToast(created || !skipped ? `已建立 ${created} 個任務（時間已帶入）${skipped ? `；另有 ${skipped} 個同名任務已存在，沒有重複建立` : ''}。` : `這 ${skipped} 項都已經有同名任務，沒有重複建立。`);
+      } catch (error) { showToast(`${error.message || '建立任務失敗。'}${created ? `（前面 ${created} 個已建立）` : ''}`, true); }
+      finally {
+        // 中途失敗時，已經建好的也要顯示出來並記成已處理，不然再按一次會重複建
         if (result) applyTaskResult(result);
-        saveHub();
-        showToast(`已建立 ${created} 個任務（時間已帶入）。`);
-      } catch (error) { showToast(error.message || '建立任務失敗。', true); }
-      finally { setLoading(false); }
+        if (created) { try { saveHub(); } catch (error) {} }
+        setLoading(false);
+      }
     });
     renderHub();
 
@@ -9747,10 +10066,7 @@ ${cleanBase}`;
       if (cfg.kind === 'gemini') {
         const parts = [{ text: prompt }];
         for (const file of files) parts.push({ inline_data: { mime_type: file.type || 'image/png', data: await fileToBase64(file) } });
-        response = await fetch(`${cfg.endpoint}/${cfg.model}:generateContent`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': cfg.key },
-          body: JSON.stringify({ contents: [{ role: 'user', parts }], generationConfig: { temperature: 0.5, maxOutputTokens: 8192, responseMimeType: 'application/json' } })
-        });
+        response = await fetchGemini(cfg.endpoint, cfg.models, cfg.key, { contents: [{ role: 'user', parts }], generationConfig: { temperature: 0.5, maxOutputTokens: 8192, responseMimeType: 'application/json' } });
       } else {
         const content = [{ type: 'text', text: prompt }];
         for (const file of files) {

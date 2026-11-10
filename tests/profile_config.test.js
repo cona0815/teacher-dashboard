@@ -193,7 +193,7 @@ assert.match(indexHtml, /:root\[data-theme="cozy"\] \.role-person\[aria-pressed=
   const cozyIds = [...indexHtml.matchAll(/data-cozy-icon="([a-z_]+)"/g)].map(m => m[1]);
   assert.ok(cozyIds.length >= 18, "工作台摘要卡、面板、身分都有溫暖風圖示");
   cozyIds.forEach(id => assert.ok(fs.existsSync(path.join(projectRoot, "assets", "art", "cozy", "icon", id + ".webp")), `工作台溫暖風圖示存在：${id}.webp`));
-  ["role_grade_lead", "role_admin", "role_homeroom", "role_subject", "role_teacher"].forEach(id => assert.ok(cozyIds.includes(id), `身分 ${id} 有溫暖風圖示`));
+  ["role_grade_lead", "role_admin", "role_homeroom", "role_teacher"].forEach(id => assert.ok(cozyIds.includes(id), `身分 ${id} 有溫暖風圖示`));
   assert.match(indexHtml, /safeTheme === 'cozy' \? 'assets\/art\/cozy\/icon\/'/, "選溫暖風才換圖示");
   ["quiet_super", "quiet_good", "quiet_warn", "quiet_loud"].forEach(id => assert.ok(fs.existsSync(path.join(projectRoot, "assets", "art", "cozy", "quiet", id + ".webp")), `安靜偵測溫暖風插圖存在：${id}.webp`));
 }
@@ -1099,3 +1099,8 @@ assert.match(studioHtml, /section\('代課教師當日簽認'/, "代課包應有
   assert.match(code, /set\("任務名稱", sheetText_\(task\.name \|\| ""\)\)/, "Code.gs 寫試算表要防公式注入");
 }
 // ── end 資安稽核 2026-11-06 ──
+
+// 2026-11-10 先只上線工作台（大屏等回家實測後再上）：工作台專屬檢查
+assert.match(indexHtml, /\['gemini-3\.5-flash-lite', 'gemini-3\.1-flash-lite', 'gemini-3\.8-flash'\]/, "工作台的 Gemini 自動順序");
+assert.match(indexHtml, /id="homeworkReportSection"/, "工作台應有作業統計");
+assert.doesNotMatch(indexHtml, /data-role="subject"/, "工作台不應再有科任身分");
