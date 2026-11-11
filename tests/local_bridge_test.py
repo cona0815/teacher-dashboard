@@ -512,7 +512,8 @@ class PetV5PackTest(unittest.TestCase):
                 path = self.root / info["file"]
                 self.assertTrue(path.is_file(), f"{char}/{action}")
                 self.assertEqual(sum(info["durations"]), info["duration_ms"], f"{char}/{action}")
-                self.assertEqual(info["duration_ms"], info["source_frames"] * 40, f"{char}/{action}")
+                if "source_frames" in info:   # v5（25fps 原始影格）才有
+                    self.assertEqual(info["duration_ms"], info["source_frames"] * 40, f"{char}/{action}")
                 self.assertEqual(len(info["durations"]), info["unique_frames"], f"{char}/{action}")
 
     def test_webp_frames_match_manifest(self):

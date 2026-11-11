@@ -1,0 +1,1040 @@
+{
+ "version": 2,
+ "fps": 7,
+ "size": 320,
+ "source": "PET-03 六格精靈圖",
+ "characters": {
+  "lamb": {
+   "idle": {
+    "file": "lamb/idle.webp",
+    "label": "安靜陪伴",
+    "source": "R1",
+    "unique_frames": 6,
+    "duration_ms": 1560,
+    "durations": [
+     260,
+     260,
+     260,
+     260,
+     260,
+     260
+    ],
+    "loop": true
+   },
+   "notice": {
+    "file": "lamb/notice.webp",
+    "label": "看向你",
+    "source": "R1",
+    "unique_frames": 6,
+    "duration_ms": 858,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     143
+    ],
+    "loop": true
+   },
+   "success": {
+    "file": "lamb/success.webp",
+    "label": "完成慶祝",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 858,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     143
+    ],
+    "loop": true
+   },
+   "rest": {
+    "file": "lamb/rest.webp",
+    "label": "趴下休息",
+    "source": "R1",
+    "unique_frames": 6,
+    "duration_ms": 1920,
+    "durations": [
+     320,
+     320,
+     320,
+     320,
+     320,
+     320
+    ],
+    "loop": true
+   },
+   "acknowledge": {
+    "file": "lamb/acknowledge.webp",
+    "label": "了解、收到",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 1287,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     572
+    ],
+    "loop": false
+   },
+   "cheer": {
+    "file": "lamb/cheer.webp",
+    "label": "幫你打氣",
+    "source": "R2",
+    "unique_frames": 6,
+    "duration_ms": 858,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     143
+    ],
+    "loop": true
+   },
+   "listen": {
+    "file": "lamb/listen.webp",
+    "label": "專心聆聽",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 858,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     143
+    ],
+    "loop": true
+   },
+   "note": {
+    "file": "lamb/note.webp",
+    "label": "幫你筆記",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 858,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     143
+    ],
+    "loop": true
+   },
+   "pet": {
+    "file": "lamb/pet.webp",
+    "label": "摸摸回應",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 1287,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     572
+    ],
+    "loop": false
+   },
+   "remind": {
+    "file": "lamb/remind.webp",
+    "label": "行程到了",
+    "source": "R2",
+    "unique_frames": 6,
+    "duration_ms": 1287,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     572
+    ],
+    "loop": false
+   },
+   "report": {
+    "file": "lamb/report.webp",
+    "label": "數據總結報告",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 1287,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     572
+    ],
+    "loop": false
+   },
+   "rise": {
+    "file": "lamb/rise.webp",
+    "label": "起身陪你",
+    "source": "R2",
+    "unique_frames": 6,
+    "duration_ms": 1287,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     572
+    ],
+    "loop": false
+   },
+   "spin": {
+    "file": "lamb/spin.webp",
+    "label": "開心轉圈圈",
+    "source": "R2",
+    "unique_frames": 6,
+    "duration_ms": 1287,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     572
+    ],
+    "loop": false
+   },
+   "stretch": {
+    "file": "lamb/stretch.webp",
+    "label": "伸展一下",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 1287,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     572
+    ],
+    "loop": false
+   },
+   "task_due": {
+    "file": "lamb/task_due.webp",
+    "label": "任務時間到了",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 1287,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     572
+    ],
+    "loop": false
+   },
+   "think": {
+    "file": "lamb/think.webp",
+    "label": "想事情",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 858,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     143
+    ],
+    "loop": true
+   }
+  },
+  "cat": {
+   "idle": {
+    "file": "cat/idle.webp",
+    "label": "安靜陪伴",
+    "source": "R2",
+    "unique_frames": 6,
+    "duration_ms": 1560,
+    "durations": [
+     260,
+     260,
+     260,
+     260,
+     260,
+     260
+    ],
+    "loop": true
+   },
+   "notice": {
+    "file": "cat/notice.webp",
+    "label": "看向你",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 858,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     143
+    ],
+    "loop": true
+   },
+   "success": {
+    "file": "cat/success.webp",
+    "label": "完成慶祝",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 858,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     143
+    ],
+    "loop": true
+   },
+   "rest": {
+    "file": "cat/rest.webp",
+    "label": "趴下休息",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 1920,
+    "durations": [
+     320,
+     320,
+     320,
+     320,
+     320,
+     320
+    ],
+    "loop": true
+   },
+   "acknowledge": {
+    "file": "cat/acknowledge.webp",
+    "label": "了解、收到",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 1287,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     572
+    ],
+    "loop": false
+   },
+   "cheer": {
+    "file": "cat/cheer.webp",
+    "label": "幫你打氣",
+    "source": "R2",
+    "unique_frames": 6,
+    "duration_ms": 858,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     143
+    ],
+    "loop": true
+   },
+   "listen": {
+    "file": "cat/listen.webp",
+    "label": "專心聆聽",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 858,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     143
+    ],
+    "loop": true
+   },
+   "note": {
+    "file": "cat/note.webp",
+    "label": "幫你筆記",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 858,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     143
+    ],
+    "loop": true
+   },
+   "pet": {
+    "file": "cat/pet.webp",
+    "label": "摸摸回應",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 1287,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     572
+    ],
+    "loop": false
+   },
+   "remind": {
+    "file": "cat/remind.webp",
+    "label": "行程到了",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 1287,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     572
+    ],
+    "loop": false
+   },
+   "report": {
+    "file": "cat/report.webp",
+    "label": "數據總結報告",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 1287,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     572
+    ],
+    "loop": false
+   },
+   "rise": {
+    "file": "cat/rise.webp",
+    "label": "起身陪你",
+    "source": "R2",
+    "unique_frames": 6,
+    "duration_ms": 1287,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     572
+    ],
+    "loop": false
+   },
+   "spin": {
+    "file": "cat/spin.webp",
+    "label": "開心轉圈圈",
+    "source": "R2",
+    "unique_frames": 6,
+    "duration_ms": 1287,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     572
+    ],
+    "loop": false
+   },
+   "stretch": {
+    "file": "cat/stretch.webp",
+    "label": "伸展一下",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 1287,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     572
+    ],
+    "loop": false
+   },
+   "task_due": {
+    "file": "cat/task_due.webp",
+    "label": "任務時間到了",
+    "source": "R2",
+    "unique_frames": 6,
+    "duration_ms": 1287,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     572
+    ],
+    "loop": false
+   },
+   "think": {
+    "file": "cat/think.webp",
+    "label": "想事情",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 858,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     143
+    ],
+    "loop": true
+   }
+  },
+  "dog": {
+   "idle": {
+    "file": "dog/idle.webp",
+    "label": "安靜陪伴",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 1560,
+    "durations": [
+     260,
+     260,
+     260,
+     260,
+     260,
+     260
+    ],
+    "loop": true
+   },
+   "notice": {
+    "file": "dog/notice.webp",
+    "label": "看向你",
+    "source": "R2",
+    "unique_frames": 6,
+    "duration_ms": 858,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     143
+    ],
+    "loop": true
+   },
+   "success": {
+    "file": "dog/success.webp",
+    "label": "完成慶祝",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 858,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     143
+    ],
+    "loop": true
+   },
+   "rest": {
+    "file": "dog/rest.webp",
+    "label": "趴下休息",
+    "source": "R2",
+    "unique_frames": 6,
+    "duration_ms": 1920,
+    "durations": [
+     320,
+     320,
+     320,
+     320,
+     320,
+     320
+    ],
+    "loop": true
+   },
+   "acknowledge": {
+    "file": "dog/acknowledge.webp",
+    "label": "了解、收到",
+    "source": "R2",
+    "unique_frames": 6,
+    "duration_ms": 1287,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     572
+    ],
+    "loop": false
+   },
+   "cheer": {
+    "file": "dog/cheer.webp",
+    "label": "幫你打氣",
+    "source": "R2",
+    "unique_frames": 6,
+    "duration_ms": 858,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     143
+    ],
+    "loop": true
+   },
+   "listen": {
+    "file": "dog/listen.webp",
+    "label": "專心聆聽",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 858,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     143
+    ],
+    "loop": true
+   },
+   "note": {
+    "file": "dog/note.webp",
+    "label": "幫你筆記",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 858,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     143
+    ],
+    "loop": true
+   },
+   "pet": {
+    "file": "dog/pet.webp",
+    "label": "摸摸回應",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 1287,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     572
+    ],
+    "loop": false
+   },
+   "remind": {
+    "file": "dog/remind.webp",
+    "label": "行程到了",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 1287,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     572
+    ],
+    "loop": false
+   },
+   "report": {
+    "file": "dog/report.webp",
+    "label": "數據總結報告",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 1287,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     572
+    ],
+    "loop": false
+   },
+   "rise": {
+    "file": "dog/rise.webp",
+    "label": "起身陪你",
+    "source": "R2",
+    "unique_frames": 6,
+    "duration_ms": 1287,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     572
+    ],
+    "loop": false
+   },
+   "spin": {
+    "file": "dog/spin.webp",
+    "label": "開心轉圈圈",
+    "source": "R2",
+    "unique_frames": 6,
+    "duration_ms": 1287,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     572
+    ],
+    "loop": false
+   },
+   "stretch": {
+    "file": "dog/stretch.webp",
+    "label": "伸展一下",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 1287,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     572
+    ],
+    "loop": false
+   },
+   "task_due": {
+    "file": "dog/task_due.webp",
+    "label": "任務時間到了",
+    "source": "R2",
+    "unique_frames": 6,
+    "duration_ms": 1287,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     572
+    ],
+    "loop": false
+   },
+   "think": {
+    "file": "dog/think.webp",
+    "label": "想事情",
+    "source": "R2",
+    "unique_frames": 6,
+    "duration_ms": 858,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     143
+    ],
+    "loop": true
+   }
+  },
+  "robot": {
+   "idle": {
+    "file": "robot/idle.webp",
+    "label": "安靜陪伴",
+    "source": "R2",
+    "unique_frames": 6,
+    "duration_ms": 1560,
+    "durations": [
+     260,
+     260,
+     260,
+     260,
+     260,
+     260
+    ],
+    "loop": true
+   },
+   "notice": {
+    "file": "robot/notice.webp",
+    "label": "看向你",
+    "source": "R2",
+    "unique_frames": 6,
+    "duration_ms": 858,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     143
+    ],
+    "loop": true
+   },
+   "success": {
+    "file": "robot/success.webp",
+    "label": "完成慶祝",
+    "source": "R2",
+    "unique_frames": 6,
+    "duration_ms": 858,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     143
+    ],
+    "loop": true
+   },
+   "rest": {
+    "file": "robot/rest.webp",
+    "label": "趴下休息",
+    "source": "R2",
+    "unique_frames": 6,
+    "duration_ms": 1920,
+    "durations": [
+     320,
+     320,
+     320,
+     320,
+     320,
+     320
+    ],
+    "loop": true
+   },
+   "acknowledge": {
+    "file": "robot/acknowledge.webp",
+    "label": "了解、收到",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 1287,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     572
+    ],
+    "loop": false
+   },
+   "cheer": {
+    "file": "robot/cheer.webp",
+    "label": "幫你打氣",
+    "source": "R2",
+    "unique_frames": 6,
+    "duration_ms": 858,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     143
+    ],
+    "loop": true
+   },
+   "listen": {
+    "file": "robot/listen.webp",
+    "label": "專心聆聽",
+    "source": "R2",
+    "unique_frames": 6,
+    "duration_ms": 858,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     143
+    ],
+    "loop": true
+   },
+   "note": {
+    "file": "robot/note.webp",
+    "label": "幫你筆記",
+    "source": "R2",
+    "unique_frames": 6,
+    "duration_ms": 858,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     143
+    ],
+    "loop": true
+   },
+   "pet": {
+    "file": "robot/pet.webp",
+    "label": "摸摸回應",
+    "source": "R2",
+    "unique_frames": 6,
+    "duration_ms": 1287,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     572
+    ],
+    "loop": false
+   },
+   "remind": {
+    "file": "robot/remind.webp",
+    "label": "行程到了",
+    "source": "R2",
+    "unique_frames": 6,
+    "duration_ms": 1287,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     572
+    ],
+    "loop": false
+   },
+   "report": {
+    "file": "robot/report.webp",
+    "label": "數據總結報告",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 1287,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     572
+    ],
+    "loop": false
+   },
+   "rise": {
+    "file": "robot/rise.webp",
+    "label": "起身陪你",
+    "source": "R2",
+    "unique_frames": 6,
+    "duration_ms": 1287,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     572
+    ],
+    "loop": false
+   },
+   "spin": {
+    "file": "robot/spin.webp",
+    "label": "開心轉圈圈",
+    "source": "R2",
+    "unique_frames": 6,
+    "duration_ms": 1287,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     572
+    ],
+    "loop": false
+   },
+   "stretch": {
+    "file": "robot/stretch.webp",
+    "label": "伸展一下",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 1287,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     572
+    ],
+    "loop": false
+   },
+   "task_due": {
+    "file": "robot/task_due.webp",
+    "label": "任務時間到了",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 1287,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     572
+    ],
+    "loop": false
+   },
+   "think": {
+    "file": "robot/think.webp",
+    "label": "想事情",
+    "source": "R3",
+    "unique_frames": 6,
+    "duration_ms": 858,
+    "durations": [
+     143,
+     143,
+     143,
+     143,
+     143,
+     143
+    ],
+    "loop": true
+   }
+  }
+ }
+}

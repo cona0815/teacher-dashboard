@@ -156,7 +156,7 @@ assert.match(installerHtml, /主要工作身分/, "安裝介面應改為選擇�
 
 const indexHtml = fs.readFileSync(path.join(projectRoot, "Index.html"), "utf8");
 assert.match(indexHtml, /#apiEndpointField\[hidden\] \{ display: none !important; \}/, "Gemini 預設端點應隱藏，只有自訂服務才顯示端點欄位");
-assert.match(indexHtml, /github\.com\/cona0815\/teacher-dashboard\/releases\/download\/xiaomianzhu-v2\.3\/xiaomianzhu-windows-portable\.zip/, "小綿助設定頁應提供免 Python 可攜版下載入口");
+assert.match(indexHtml, /github\.com\/cona0815\/teacher-dashboard\/releases\/download\/xiaomianzhu-v2\.4\/xiaomianzhu-windows-portable\.zip/, "小綿助設定頁應提供免 Python 可攜版下載入口");
 assert.doesNotMatch(indexHtml, /先安裝 Python 3/, "一般老師的小綿助下載說明不應要求安裝 Python");
 assert.match(indexHtml, /id="checkPetDownloadBridgeButton"/, "小綿助下載卡片應提供本機連線檢查");
 assert.match(indexHtml, /let previewTasks = loadLocalPreviewTasks\(\)/, "公開版第一次開啟應載入空白本機任務，而非示範任務");
@@ -562,7 +562,7 @@ assert.match(installHtml, /小綿助 v2\.\d/, "安裝更新指南應介紹小綿
   const aboutText = fs.readFileSync(path.join(projectRoot, "About.html"), "utf8");
   const introText = fs.readFileSync(path.join(projectRoot, "Intro.html"), "utf8");
   assert.match(aboutText, /新畫風[\s\S]{0,400}全螢幕/, "About 應介紹 v2.3 新畫風與投影／全螢幕時睡覺");
-  assert.match(introText, /新畫風（v2\.3 新）/, "Intro 應列出 v2.3 新畫風");
+  assert.match(introText, /v2\.4 新動畫/, "Intro 應列出 v2.4 新動畫");
   assert.match(installHtml, /投影或全螢幕<\/strong>時牠會自己睡覺/, "安裝教學應提醒投影時小綿助會睡覺");
   for (const state of ["drag", "idle", "listen", "sleep", "success", "think", "walk_left", "walk_right", "warning"]) {
     const size = fs.statSync(path.join(projectRoot, "assets", "pet", `pet_${state}.webp`)).size;
@@ -1255,3 +1255,7 @@ assert.match(studioHtml, /addMonthEventChips\('ntSubject'/, "家長通知單應�
   for (const m of guide.matchAll(/src="(assets\/guide\/[^"]+)"/g)) assert.ok(fs.existsSync(path.join(projectRoot, m[1])), `手冊圖片 ${m[1]} 應存在`);
   assert.match(guide, /<script src="assets\/version\.js"><\/script>/, "手冊左下角也顯示網站版本");
 }
+// 2026-11-11 小綿助 v2.4：PET-03 六格新動畫（assets/pet/v6），網頁小綿助也換；打包放 v6
+assert.match(indexHtml, /v6\/lamb\/idle\.webp/, "網頁小綿助應使用 v6 新動畫");
+assert.ok(fs.existsSync(path.join(projectRoot, "assets", "pet", "v6", "manifest.json")), "應有 v6 動畫包");
+assert.match(fs.readFileSync(path.join(projectRoot, ".github", "workflows", "build-xiaomianzhu.yml"), "utf8"), /--add-data "assets\/pet\/v6;assets\/pet\/v6"/, "打包應包含 v6 動畫包");

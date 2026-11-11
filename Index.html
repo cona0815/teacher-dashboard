@@ -1957,7 +1957,7 @@
     <section class="secretary-notes" id="secretaryNotesSection" aria-labelledby="secretaryNotesTitle">
       <div class="secretary-notes-head">
         <div class="secretary-notes-title">
-          <img src="assets/pet/pet_idle.webp" alt="">
+          <img src="assets/pet/v6/lamb/idle.webp" alt="">
           <div>
             <h2 id="secretaryNotesTitle">小綿助記事 <span class="secretary-note-count" id="secretaryNoteCount">0</span></h2>
             <p>網頁記事保存在目前瀏覽器；也可以匯入桌面小綿助的 secretary_data.json。</p>
@@ -2536,7 +2536,7 @@
             <div class="pet-download-meta"><span>Windows 可攜版</span><span>免安裝 Python</span><span>免系統管理員權限</span><span>資料只存在本機</span></div>
           </div>
           <div class="pet-download-buttons">
-            <a class="button button-dark" href="https://github.com/cona0815/teacher-dashboard/releases/download/xiaomianzhu-v2.3/xiaomianzhu-windows-portable.zip" target="_blank" rel="noopener">下載小綿助 v2.3</a>
+            <a class="button button-dark" href="https://github.com/cona0815/teacher-dashboard/releases/download/xiaomianzhu-v2.4/xiaomianzhu-windows-portable.zip" target="_blank" rel="noopener">下載小綿助 v2.3</a>
             <button class="button button-light" type="button" id="checkPetDownloadBridgeButton">檢查是否已連線</button>
           </div>
           <details class="pet-install-guide">
@@ -2846,7 +2846,7 @@
   <div class="deskpet" id="deskpet">
     <div class="deskpet-bubble" id="deskpetBubble">想到事情就交給我吧！</div>
     <button class="deskpet-button" type="button" id="deskpetButton" aria-label="開啟政好夥伴小綿助">
-      <img id="deskpetImage" src="assets/pet/pet_idle.webp" alt="小綿助桌面寵物">
+      <img id="deskpetImage" src="assets/pet/v6/lamb/idle.webp" alt="小綿助桌面寵物">
       <span class="deskpet-count" id="deskpetCount">0</span>
     </button>
   </div>
@@ -3745,16 +3745,17 @@
     };
     // 一律用本站相對路徑：Netlify 上就有 assets/pet/，外連 GitHub 會被 CSP img-src 'self' 擋下（GAS 託管時代的舊邏輯）
     const deskpetAssetRoot = 'assets/pet/';
+    // 2026-11-11 換成 PET-03 六格新動畫（v6 小綿羊；手腳全部重畫正確）
     const deskpetImages = {
-      drag: `${deskpetAssetRoot}pet_drag.webp`,
-      idle: `${deskpetAssetRoot}pet_idle.webp`,
-      listening: `${deskpetAssetRoot}pet_listen.webp`,
-      sleep: `${deskpetAssetRoot}pet_sleep.webp`,
-      success: `${deskpetAssetRoot}pet_success.webp`,
-      thinking: `${deskpetAssetRoot}pet_think.webp`,
-      walkLeft: `${deskpetAssetRoot}pet_walk_left.webp`,
-      walkRight: `${deskpetAssetRoot}pet_walk_right.webp`,
-      warning: `${deskpetAssetRoot}pet_warning.webp`,
+      drag: `${deskpetAssetRoot}v6/lamb/notice.webp`,
+      idle: `${deskpetAssetRoot}v6/lamb/idle.webp`,
+      listening: `${deskpetAssetRoot}v6/lamb/listen.webp`,
+      sleep: `${deskpetAssetRoot}v6/lamb/rest.webp`,
+      success: `${deskpetAssetRoot}v6/lamb/success.webp`,
+      thinking: `${deskpetAssetRoot}v6/lamb/think.webp`,
+      walkLeft: `${deskpetAssetRoot}v6/lamb/idle.webp`,
+      walkRight: `${deskpetAssetRoot}v6/lamb/idle.webp`,
+      warning: `${deskpetAssetRoot}v6/lamb/remind.webp`,
     };
 
     Object.values(deskpetImages).forEach(source => {

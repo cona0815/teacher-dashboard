@@ -15,7 +15,9 @@ from pathlib import Path
 
 from PIL import Image, ImageChops
 
-PACK_ROOT = Path(__file__).resolve().parent / "assets" / "pet" / "v5"
+# v6＝PET-03 六格精靈圖（2026-11-11 換上，手腳數量全部重畫正確）；沒有 v6 時退回 v5
+_PET_DIR = Path(__file__).resolve().parent / "assets" / "pet"
+PACK_ROOT = _PET_DIR / "v6" if (_PET_DIR / "v6" / "manifest.json").is_file() else _PET_DIR / "v5"
 CHARACTERS = {"lamb": "小綿羊", "cat": "橘貓", "dog": "薩摩耶", "robot": "小機器人"}
 DEFAULT_CHARACTER = "lamb"
 

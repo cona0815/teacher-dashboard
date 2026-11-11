@@ -27,6 +27,28 @@ from PIL import Image, ImageGrab
 
 from desktop_pet_preview import ERROR_LOG, PET_TOP, DesktopPetPreview
 from desktop_pet_v5 import CHARACTERS
+
+# 久坐計時：鍵盤滑鼠閒置超過這麼久，就當作老師起身離開座位了，計時歸零
+AWAY_RESET_SECONDS = 5 * 60
+
+
+def user_idle_seconds() -> float:
+    """Windows：距離最後一次鍵盤／滑鼠操作幾秒；其他平台或讀不到時回 0（不影響計時）。"""
+    if sys.platform != "win32":
+        return 0.0
+    try:
+        import ctypes
+
+        class LASTINPUTINFO(ctypes.Structure):
+            _fields_ = [("cbSize", ctypes.c_uint), ("dwTime", ctypes.c_uint)]
+
+        info = LASTINPUTINFO()
+        info.cbSize = ctypes.sizeof(LASTINPUTINFO)
+        if not ctypes.windll.user32.GetLastInputInfo(ctypes.byref(info)):
+            return 0.0
+        return max(0.0, (ctypes.windll.kernel32.GetTickCount() - info.dwTime) / 1000.0)
+    except Exception:  # noqa: BLE001 - 讀不到就不判斷
+        return 0.0
 from desktop_pet_ui import BadgeCanvas, BubbleWindow, HoverCard, Notice, NoticeQueue, PopupMenu
 from desktop_pet_cloud import CloudLink, DEFAULT_FOCUS_KEYWORDS, FocusTracker, ForegroundMonitor, cloud_url_allowed
 from desktop_pet_voice import (
@@ -650,6 +672,7 @@ class SecretaryPet(DesktopPetPreview):
         for widget in (self.root, self.pet_label):
             widget.bind("<Double-Button-1>", lambda _e: self.open_secretary_page())
         self.root.after(4000, self._visibility_heartbeat)
+        self._reset_sitting_clock(save=False)
         self.root.after(1000, self._health_tick)
         self.root.after(1000, self._health_animation_tick)
         if settings.get("opening_brief", True):
@@ -2653,11 +2676,37 @@ class SecretaryPet(DesktopPetPreview):
             self._save_data()
             self._render_medicine_list()
 
+    def _reset_sitting_clock(self, save: bool = True) -> None:
+        """久坐與喝水從現在重新計時（剛開啟、換日、離開座位回來）。"""
+        now_text = now_iso()
+        health = self.data.setdefault("health", {})
+        health["last_move"] = now_text
+        health["last_water"] = now_text
+        if hasattr(self, "health_alerted"):
+            self.health_alerted["move"] = False
+            self.health_alerted["water"] = False
+        if save:
+            self._save_data()
+
     def _health_tick(self) -> None:
         health = self.data["health"]
         now = datetime.now()
+        # 鍵盤滑鼠閒置 5 分鐘以上＝起身離開了：久坐計時歸零（不然下班、關機的時間也會被算成「沒起身」）
+        if user_idle_seconds() >= AWAY_RESET_SECONDS:
+            try:
+                last_move = datetime.fromisoformat(str(health.get("last_move")))
+            except (TypeError, ValueError):
+                last_move = now
+            if now - last_move >= timedelta(seconds=AWAY_RESET_SECONDS):
+                health["last_move"] = now_iso()
+                self.health_alerted["move"] = False
+                self._save_data()
         if health.get("date") != date.today().isoformat():
             health["date"] = date.today().isoformat()
+            health["last_move"] = now_iso()
+            health["last_water"] = now_iso()
+            self.health_alerted["move"] = False
+            self.health_alerted["water"] = False
             health["water_count"] = 0
             health["medicine_done_times"] = []
             health["medicine_alerted_times"] = []
