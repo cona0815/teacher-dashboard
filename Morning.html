@@ -25,7 +25,7 @@
       --primary: #1f514a; --primary-strong: #173f3a;
       --ok: #1d9e5f; --ok-soft: #e3f6ec;
       --blank: #aebbb5;
-      --absent-sick: #e07b1f; --absent-personal: #d4a900; --missing: #cf4433; --resub: #2273c9;
+      --absent-sick: #e07b1f; --absent-personal: #d4a900; --absent-official: #7b5cc4; --missing: #cf4433; --resub: #2273c9;
       --correcting: #6b3fb5; --correcting-soft: #f0ebfa;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -87,6 +87,7 @@
     .seat[data-status="到"] { background: var(--ok); }
     .seat[data-status="病假"] { background: var(--absent-sick); }
     .seat[data-status="事假"] { background: var(--absent-personal); }
+    .seat[data-status="公假"] { background: var(--absent-official); }
     .seat[data-status="未到"] { background: var(--missing); }
     .seat .seat-state { display: block; font-size: 14px; font-weight: 700; margin-top: 2px; }
     .counts { margin-top: 8px; font-size: clamp(14px, 1.8vh, 18px); font-weight: 800; color: var(--primary-strong); }
@@ -381,6 +382,7 @@
       border: 3px solid var(--cozy-wood); border-radius: 16px; background: var(--cozy-paper); color: var(--ink); }
     html[data-board-style="cozy"] .submit-bar { background: var(--surface); border-top: 0; box-shadow: 0 -4px 0 var(--cozy-wood), 0 -10px 18px -12px rgba(91,70,54,.35); }
   </style>
+  <script src="assets/attendance-term.js"></script>
 </head>
 <body>
   <header>
@@ -454,8 +456,9 @@
               <span><span class="dot" style="background:var(--ok)"></span>到校</span>
               <span><span class="dot" style="background:var(--absent-sick)"></span>病假</span>
               <span><span class="dot" style="background:var(--absent-personal)"></span>事假</span>
+              <span><span class="dot" style="background:var(--absent-official)"></span>公假</span>
               <span><span class="dot" style="background:var(--missing)"></span>未到</span>
-              <span class="status-text" id="rollcallHint">預設全部未填；點座號依序切換 到校→病假→事假→未到→未填。</span>
+              <span class="status-text" id="rollcallHint">預設全部未填；點座號依序切換 到校→病假→事假→公假→未到→未填。</span>
             </div>
             <div class="seat-grid" id="rollcallGrid"></div>
             <div class="counts" id="rollcallCounts"></div>
@@ -1378,6 +1381,12 @@
           <div class="field"><label>補交回溯天數（接雲端最多 60）</label><input id="setupLookbackDays" type="number" min="1" max="180" value="30"></div>
           </div>
         </section>
+        <section class="setup-block sb-time" id="termBlock">
+          <h3 class="setup-block-title">📊 學期出缺席統計</h3>
+          <div class="status-text" id="termCloudNote" hidden>已存到雲端：學期出缺席統計請到「教師工作台 → 教師工具箱 → 出缺席統計」看、設定放假日與轉入轉出、匯出 Word／Excel（換電腦也看得到，學生看不到）。</div>
+          <div class="status-text" id="termLocalNote">資料只在這台電腦。只用座號；有開大屏點名的日子才算上課日（沒開大屏的那天不會算）。</div>
+          <div id="termPanel" style="margin-top:8px"></div>
+        </section>
         <section class="setup-block sb-safe">
           <h3 class="setup-block-title">🔒 設定頁密碼</h3>
           <div class="form-grid">
@@ -1456,7 +1465,7 @@
     const LOCAL_KEEP_DAYS = 180;   // 點名、作業、聯絡本在這台電腦留 180 天，第 1 級的補交靠它
     const CONTACT_LOCAL_PREFIX = 'morningContactLocal:';   // 第 1 級的聯絡本，一天一筆
     const CLOUD_MAX_DAYS = 60;   // GAS 的 classroom_missing 最多回溯 60 天
-    const VISIBLE_CYCLE = ['', '到', '病假', '事假', '未到'];
+    const VISIBLE_CYCLE = ['', '到', '病假', '事假', '公假', '未到'];   // 2026-11-11 加公假
     const BUILTIN_SUBJECTS = ['國語', '數學', '英語', '自然', '社會', '生活', '健康與體育', '音樂', '視覺藝術', '綜合', '本土語', '聯絡簿', '通知單'];
     const DEFAULT_ENABLED = ['國語', '數學', '英語', '自然', '社會', '聯絡簿', '通知單'];
     // 各科內建的作業項目（版面名稱上限 20 字，要留給補充的頁數，所以每項都短）
@@ -1629,6 +1638,38 @@
       });
       document.dispatchEvent(new Event('boardstylechange'));
     }
+    // ---------- 一鍵連線（2026-11-12）：老師從試算表「🏫 連接教室大屏」寄給自己的連結 #connect=… ----------
+    // 只收教室金鑰 🔑B；讀到就從網址列清掉；換掉原本的設定前一定先問。
+    async function applyConnectLink() {
+      const matched = String(location.hash || '').match(/^#connect=([A-Za-z0-9_-]{20,2000})$/);
+      if (!matched) return;
+      try { history.replaceState(null, '', location.pathname + location.search); } catch (error) { location.hash = ''; }
+      let url = '', key = '';
+      try {
+        const data = JSON.parse(decodeURIComponent(escape(atob(matched[1].replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((matched[1].length + 3) % 4)))));
+        url = String(data.u || ''); key = String(data.b || '');
+        if (data.v !== 1 || !/^https:\/\/script\.google\.com\/macros\/s\/[\w-]{10,200}\/exec$/.test(url) || !/^[a-f0-9]{32}$/.test(key)) throw new Error('bad');
+      } catch (error) { showToast('這個連結格式不對，請回試算表重新按「🏫 連接教室大屏」。', true); return; }
+      const deployId = url.split('/s/')[1].slice(0, 10);
+      const replacing = state.settings.gasUrl && state.settings.gasUrl !== url;
+      const ok = await askDialog({ message: `${replacing ? '要把這台大屏改連到這個雲端嗎？原本的設定會被取代。' : '要把這台大屏連到你的雲端嗎？'}
+（部署代號 ${deployId}…）
+
+只有在這是你自己從試算表寄出的連結時，才按「確定」。` });
+      if (!ok) { showToast('沒有變更設定。'); return; }
+      state.settings.storageMode = 'cloud';
+      state.settings.gasUrl = url;
+      state.settings.classroomToken = key;
+      saveSettings();
+      applySettingsToUi();
+      try {
+        const result = await callGas({ action: 'ping', token: key });
+        showToast(result.role === 'classroom' ? (state.settings.className ? '✅ 晨間大屏已連上雲端，可以開始點名了。' : '✅ 已連上雲端！還差一步：到「設定」填班級名稱，按儲存。') : '⚠️ 已填好，但這把不是教室金鑰，請回試算表按「🏫 連接教室大屏」。', result.role !== 'classroom');
+        loadContactBook();
+      } catch (error) {
+        showToast(`已填好，但現在連不上雲端：${error.message}（請確認試算表已部署，存取權選「任何人」）`, true);
+      }
+    }
     function saveSettings() {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(state.settings));
     }
@@ -1697,6 +1738,97 @@
     function saveTodayState() {
       state.dirty = true;   // 有異動就標記；autoCloudSaveTick 會在 5 分鐘內存到雲端（不推播）
           setLocalRecord(STATE_PREFIX + todayKey(), JSON.stringify({ attendance: state.attendance, boards: state.boards, flags: state.flags }));
+      logAttendanceDay(todayKey(), state.attendance);
+    }
+
+    // ---------- 學期出缺席（本機）：每天只記「有點名」與異常的座號，不跟 180 天清理一起刪 ----------
+    var TERM_KEY = 'morningTermSettings';
+    function readAttLog() {
+      try { const log = JSON.parse(localStorage.getItem('morningAttendanceLog') || 'null'); return log && typeof log.days === 'object' ? log : { v: 1, days: {} }; } catch (error) { return { v: 1, days: {} }; }
+    }
+    function writeAttLog(log) {
+      const keys = Object.keys(log.days).sort();
+      keys.slice(0, Math.max(0, keys.length - 400)).forEach(key => delete log.days[key]);   // 最多留 400 天（約兩個學年）
+      try { localStorage.setItem('morningAttendanceLog', JSON.stringify(log)); } catch (error) {}
+    }
+    function attDayEntry(attendance) {
+      const entries = Object.entries(attendance || {}).filter(([seat, status]) => Number(seat) >= 1 && status);
+      if (!entries.length) return null;   // 一個都沒點＝那天沒點名，不算上課日
+      const s = {};
+      entries.forEach(([seat, status]) => { if (['病假', '事假', '公假', '遲到', '未到'].includes(status)) s[seat] = status; });
+      return { s };
+    }
+    function logAttendanceDay(date, attendance) {
+      const log = readAttLog();
+      const entry = attDayEntry(attendance);
+      if (entry) log.days[date] = entry; else delete log.days[date];
+      writeAttLog(log);
+    }
+    /** 潔牙點名：每天記下已潔牙的座號（班級工具那邊按一下就呼叫） */
+    function logToothDay(date, done) {
+      const log = readAttLog();
+      if (!log.tooth || typeof log.tooth !== 'object') log.tooth = {};
+      const seats = Object.keys(done || {}).filter(seat => done[seat]).map(Number).filter(n => n >= 1 && n <= 99).sort((a, b) => a - b);
+      if (seats.length) log.tooth[date] = seats; else delete log.tooth[date];
+      const keys = Object.keys(log.tooth).sort();
+      keys.slice(0, Math.max(0, keys.length - 400)).forEach(key => delete log.tooth[key]);
+      writeAttLog(log);
+    }
+    /** 今天的潔牙座號（送雲端用） */
+    function todayToothSeats() {
+      try {
+        const done = (JSON.parse(localStorage.getItem('morningToolsDay:' + todayKey()) || 'null') || {}).tooth || {};
+        return Object.keys(done).filter(seat => done[seat]).map(Number).filter(n => n >= 1 && n <= 99);
+      } catch (error) { return []; }
+    }
+    /** 第一次用：把這台電腦留著的舊點名（最多 180 天）補進紀錄 */
+    function backfillAttLog() {
+      const log = readAttLog();
+      if (!log.tooth || typeof log.tooth !== 'object') log.tooth = {};
+      let changed = false;
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('morningToolsDay:')) {   // 潔牙（班級工具只留 30 天）
+          const tDate = key.slice('morningToolsDay:'.length);
+          if (log.tooth[tDate]) continue;
+          try {
+            const done = (JSON.parse(localStorage.getItem(key) || 'null') || {}).tooth || {};
+            const seats = Object.keys(done).filter(seat => done[seat]).map(Number).filter(n => n >= 1 && n <= 99);
+            if (seats.length) { log.tooth[tDate] = seats; changed = true; }
+          } catch (error) {}
+          continue;
+        }
+        if (!key || !key.startsWith(STATE_PREFIX)) continue;
+        const date = key.slice(STATE_PREFIX.length);
+        if (log.days[date]) continue;
+        try {
+          const entry = attDayEntry((JSON.parse(localStorage.getItem(key) || 'null') || {}).attendance);
+          if (entry) { log.days[date] = entry; changed = true; }
+        } catch (error) {}
+      }
+      if (changed) writeAttLog(log);
+    }
+    var termPanel = null;
+    function openTermBlock() {
+      const cloud = hasCloud();
+      $('termCloudNote').hidden = !cloud;
+      $('termLocalNote').hidden = cloud;
+      $('termPanel').hidden = cloud;
+      if (cloud || !window.AttendanceTerm) return;
+      if (termPanel) { termPanel.reload(); return; }
+      termPanel = AttendanceTerm.mountPanel($('termPanel'), {
+        title: `${state.settings.className || '班級'}出缺席`,
+        load: async () => {
+          backfillAttLog();
+          const log = readAttLog();
+          const records = [];
+          Object.entries(log.days).forEach(([date, day]) => Object.entries(day.s || {}).forEach(([seat, status]) => records.push({ date, seat: Number(seat), status })));
+          let term = null;
+          try { term = JSON.parse(localStorage.getItem(TERM_KEY) || 'null'); } catch (error) {}
+          return { term, seats: activeSeats(), schoolDays: Object.keys(log.days), records, tooth: log.tooth || {}, className: state.settings.className || '', source: '資料來自這台電腦' };
+        },
+        save: term => { localStorage.setItem(TERM_KEY, JSON.stringify(term)); }
+      });
     }
 
     // ---------- 頁面內的輸入／確認視窗 ----------
@@ -1901,7 +2033,7 @@
         return `<button class="seat" type="button" data-seat="${seat}" data-status="${display}">${seat}<span class="seat-state">${display || '未填'}</span></button>`;
       });
       $('rollcallGrid').innerHTML = cells.join('');
-      const counts = { 到: 0, 病假: 0, 事假: 0, 未到: 0, 未填: 0 };
+      const counts = { 到: 0, 病假: 0, 事假: 0, 公假: 0, 未到: 0, 未填: 0 };
       activeSeats().forEach(seat => {
         const stored = state.attendance[seat] || '';
         if (!stored) counts.未填 += 1;
@@ -1909,7 +2041,7 @@
         else if (counts[stored] !== undefined) counts[stored] += 1;
       });
       $('rollcallCounts').textContent =
-        `應到 ${activeSeats().length} 人｜實到 ${counts.到}｜病假 ${counts.病假}・事假 ${counts.事假}・未到 ${counts.未到}・未填 ${counts.未填}`;
+        `應到 ${activeSeats().length} 人｜實到 ${counts.到}｜病假 ${counts.病假}・事假 ${counts.事假}・公假 ${counts.公假}・未到 ${counts.未到}・未填 ${counts.未填}`;
     }
     function cycleAttendance(seat) {
       const stored = state.attendance[seat] || '';
@@ -2760,7 +2892,7 @@
           const seatsNow = new Set(activeSeats());
           const attendance = Object.entries(state.attendance)
         .filter(([seat]) => seatsNow.has(Number(seat)))
-        .filter(([, status]) => ['病假', '事假', '遲到', '未到'].includes(status))
+        .filter(([, status]) => ['病假', '事假', '公假', '遲到', '未到'].includes(status))
         .map(([seat, status]) => ({ seat: Number(seat), status }));
           const homework = state.boards.map(board => {
         const missing = [];
@@ -2776,7 +2908,9 @@
         });
         return { subject: board.subject, assignment: board.assignment, missing, resubmitted, correcting, corrected };
       });
-      return { action: 'rollcall_submit', token: state.settings.classroomToken, date: todayKey(), className: currentClass(), attendance, homework, push };
+      const marked = activeSeats().filter(seat => state.attendance[seat]).length;   // 有點名的人數（雲端靠它記「這天有上課」）
+      const tooth = todayToothSeats();   // 潔牙點名（有記才送）
+      return { action: 'rollcall_submit', token: state.settings.classroomToken, date: todayKey(), className: currentClass(), attendance, homework, push, marked, tooth };
     }
     async function callGas(payload) {
       const gasUrl = state.settings.gasUrl.trim();
@@ -3047,7 +3181,7 @@
     function computeStats(data) {
       const attendanceBySeat = {};
       data.attendance.forEach(row => {
-        if (!attendanceBySeat[row.seat]) attendanceBySeat[row.seat] = { 病假: 0, 事假: 0, 遲到: 0, 未到: 0 };
+        if (!attendanceBySeat[row.seat]) attendanceBySeat[row.seat] = { 病假: 0, 事假: 0, 公假: 0, 遲到: 0, 未到: 0 };
         if (attendanceBySeat[row.seat][row.status] !== undefined) attendanceBySeat[row.seat][row.status] += 1;
       });
       const subjects = [...new Set(data.homework.map(row => row.subject))];
@@ -3067,9 +3201,9 @@
       const stats = computeStats(data);
       const attendanceRows = Object.keys(stats.attendanceBySeat).map(Number).sort((a, b) => a - b).map(seat => {
         const entry = stats.attendanceBySeat[seat];
-        return `<tr><th>${seat}號</th><td>${entry.病假}</td><td>${entry.事假}</td><td>${entry.遲到}</td><td>${entry.未到}</td></tr>`;
+        return `<tr><th>${seat}號</th><td>${entry.病假}</td><td>${entry.事假}</td><td>${entry.公假}</td><td>${entry.遲到}</td><td>${entry.未到}</td></tr>`;
       });
-      $('attendanceStats').innerHTML = `<h3>👥 出缺勤天數累計（只列有紀錄者；遲到僅此處與 LINE 顯示）</h3><table class="summary-table"><tr><th>座號</th><th>病假</th><th>事假</th><th>遲到</th><th>未到</th></tr>${attendanceRows.join('') || '<tr><td colspan="5">區間內全勤 🎉</td></tr>'}</table>`;
+      $('attendanceStats').innerHTML = `<h3>👥 出缺勤天數累計（只列有紀錄者；遲到僅此處與 LINE 顯示）</h3><table class="summary-table"><tr><th>座號</th><th>病假</th><th>事假</th><th>公假</th><th>遲到</th><th>未到</th></tr>${attendanceRows.join('') || '<tr><td colspan="6">區間內全勤 🎉</td></tr>'}</table>`;
       const homeworkRows = Object.keys(stats.homeworkBySeat).map(Number).sort((a, b) => a - b).map(seat => {
         const cells = stats.subjects.map(subject => {
           const entry = stats.homeworkBySeat[seat][subject];
@@ -3147,10 +3281,10 @@
       rows.push([`${state.settings.className || ''} 出缺勤與作業統計`, `${data.from} ～ ${data.to}`]);
       rows.push([]);
       rows.push(['【出缺勤天數累計】']);
-      rows.push(['座號', '病假', '事假', '遲到', '未到']);
+      rows.push(['座號', '病假', '事假', '公假', '遲到', '未到']);
       Object.keys(stats.attendanceBySeat).map(Number).sort((a, b) => a - b).forEach(seat => {
         const entry = stats.attendanceBySeat[seat];
-        rows.push([seat, entry.病假, entry.事假, entry.遲到, entry.未到]);
+        rows.push([seat, entry.病假, entry.事假, entry.公假, entry.遲到, entry.未到]);
       });
       rows.push([]);
       rows.push(['【各科作業狀況次數】']);
@@ -3355,6 +3489,7 @@
       document.querySelectorAll('.tab-button').forEach(item => item.classList.toggle('active', item === button));
       document.querySelectorAll('.page').forEach(page => page.classList.toggle('active', page.id === `page-${button.dataset.page}`));
       if (button.dataset.page === 'makeup' && !state.makeup.loaded) loadMakeup();
+      if (button.dataset.page === 'setup') openTermBlock();
       if (button.dataset.page === 'correct') {
         // 重新進到這個分頁＝新的一輪，上次留著的已完成版面收起來
         state.correct.sticky = [];
@@ -3653,6 +3788,7 @@
     loadSettings();
     loadTodayState();
     applySettingsToUi();
+    applyConnectLink();
     $('queryTo').value = todayKey();
     $('queryFrom').value = shiftDate(todayKey(), -6);
     tickClock();
@@ -4122,7 +4258,7 @@
     const countMissing = rollcallTaken();
     activeSeats().forEach(seat => {
       const status = state.attendance[seat] || '';
-      if (status === '病假' || status === '事假' || (status === '未到' && countMissing)) absent.add(seat);
+      if (status === '病假' || status === '事假' || status === '公假' || (status === '未到' && countMissing)) absent.add(seat);
     });
     return absent;
   }
@@ -4785,12 +4921,14 @@
     </div>`;
   }
   $('toothWall').addEventListener('click', event => {
-    if (event.target.closest('#toothResetButton')) { day.tooth = {}; saveDay(); renderToothWall(); return; }
+    if (event.target.closest('#toothResetButton')) { day.tooth = {}; saveDay(); logToothDay(todayKey(), {}); renderToothWall(); return; }
     const button = event.target.closest('[data-tooth-seat]');
     if (!button) return;
     const done = toothDone(), seat = button.dataset.toothSeat;
     if (done[seat]) delete done[seat]; else done[seat] = true;
     saveDay();
+    logToothDay(todayKey(), done);   // 學期潔牙統計（不跟班級工具 30 天清理一起刪）
+    state.dirty = true;              // 接雲端時 5 分鐘內一起存上去
     renderToothWall();
   });
   document.querySelector('.tool-tab[data-tool="tooth"]').addEventListener('click', renderToothWall);

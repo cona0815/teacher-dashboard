@@ -1283,3 +1283,43 @@ assert.match(lineBotSource, /function resetForTemplate\(\)/, "範本擁有者要
   assert.ok(lineBotSource.split('\n')[1].includes(`版本 ${botVersion}`), "LineBot.gs 第 2 行標題要寫版本與日期，且跟 BOT_VERSION 一樣");
   assert.ok(fs.readFileSync(path.join(__dirname, '..', 'assets', 'version.js'), 'utf8').includes(`TD_VERSION = '${botVersion}'`), "網頁版本號要跟 LineBot.gs 一樣");
 }
+
+// 2026-11-11 老師反應：學期出缺席統計（轉入轉出、公假、放假日事後設定、學期初重設、匯出 Word／Excel）
+{
+  const termJs = fs.readFileSync(path.join(__dirname, '..', 'assets', 'attendance-term.js'), 'utf8');
+  assert.match(termJs, /STATUSES = \['病假', '事假', '公假', '遲到', '未到'\]/, "學期統計要有公假");
+  for (const fn of ['compute', 'exportXlsx', 'exportDocx', 'newTerm', 'mountPanel']) assert.match(termJs, new RegExp(`function ${fn}\\(`), `學期統計要有 ${fn}`);
+  assert.match(morningHtml, /const VISIBLE_CYCLE = \['', '到', '病假', '事假', '公假', '未到'\]/, "大屏點名要能點出公假");
+  assert.match(morningHtml, /\['病假', '事假', '公假', '遲到', '未到'\]\.includes\(status\)\)\s*\n?\s*\.map/, "大屏送雲端要帶公假");
+  assert.match(morningHtml, /id="termPanel"/, "大屏設定頁要有學期出缺席（存本機時）");
+  assert.match(morningHtml, /logAttendanceDay\(todayKey\(\), state\.attendance\)/, "大屏每天記點名到學期紀錄（不跟 180 天清理刪掉）");
+  assert.match(morningHtml, /push, marked, tooth \};/, "大屏送雲端要附有點名的人數（記上課日）");
+  assert.match(indexHtml, /data-toolbox-target="attendanceTermSection"/, "工作台工具箱要有出缺席統計（接雲端時）");
+  assert.match(indexHtml, /callLineBridge\('term_save', \{ term \}\)/, "工作台的學期設定存到雲端");
+  assert.match(indexHtml, /const HW_LEAVE_STATUS = \['病假', '事假', '公假'\]/, "公假那天沒交作業不算缺交");
+  assert.match(lineBotSource, /ATTENDANCE_STATUSES: \['病假', '事假', '公假', '遲到', '未到'\]/, "GAS 要收公假");
+  assert.match(lineBotSource, /if \(action === 'term_get'\)/, "GAS 要有 term_get");
+  assert.doesNotMatch(lineBotSource, /var classroomActions = \[[^\]]*term_/, "學期統計只有老師金鑰能讀寫（教室金鑰不行）");
+  assert.match(lineBotSource, /markSchoolDay_\(date, className/, "大屏回報時要記上課日");
+}
+
+// 2026-11-11 老師：潔牙統計也加入學期統計（請假、放假、不在籍那天不算應潔牙）
+{
+  const termJs = fs.readFileSync(path.join(__dirname, '..', 'assets', 'attendance-term.js'), 'utf8');
+  assert.match(termJs, /\['應潔牙', r => r\.toothExpected\], \['已潔牙', r => r\.toothDone\], \['潔牙率'/, "學期統計要有潔牙三欄");
+  assert.match(termJs, /if \(s && s !== '遲到'\) return;   \/\/ 請假、未到那天不用潔牙/, "請假、未到那天不算應潔牙");
+  assert.match(morningHtml, /logToothDay\(todayKey\(\), done\)/, "大屏潔牙點名要記進學期紀錄（不隨 30 天清理刪掉）");
+  assert.match(morningHtml, /attendance, homework, push, marked, tooth \}/, "大屏送雲端要帶潔牙座號");
+  assert.match(lineBotSource, /if \(Array\.isArray\(body\.tooth\)\) saveToothDay_\(date, className, body\.tooth\);/, "GAS 要存潔牙紀錄（舊版大屏沒帶就不動）");
+  assert.match(lineBotSource, /return \{ ok: true, term: term, schoolDays: schoolDays, attendance: data\.attendance, tooth: tooth \};/, "term_get 要回傳潔牙紀錄");
+}
+
+// 2026-11-12 一鍵連線：試算表選單產生連結，工作台／大屏打開自動填好（金鑰放 # 後面、讀完清掉、先問老師）
+assert.match(lineBotSource, /\.addItem\('💻 連接我的工作台（自動填好）', 'menuConnectWorkbench'\)/, "試算表選單要有連接工作台");
+assert.match(lineBotSource, /\.addItem\('🏫 連接教室大屏（寄連結給自己）', 'menuConnectClassroom'\)/, "試算表選單要有連接教室大屏");
+assert.match(lineBotSource, /Morning\.html#connect=' \+ connectPayload_\(\{ v: 1, u: url, b: classroom \}\)/, "教室連結只能帶 🔑B");
+assert.match(indexHtml, /readConnectHash\('c'\)/, "工作台只收 🔑C 的連結");
+assert.match(indexHtml, /history\.replaceState\(null, '', location\.pathname \+ location\.search\)/, "工作台讀到連結要立刻清掉網址列");
+assert.match(indexHtml, /if \(!window\.confirm\(ask\)\)/, "工作台換雲端前要先問老師");
+assert.match(morningHtml, /url = String\(data\.u \|\| ''\); key = String\(data\.b \|\| ''\);/, "大屏只收 🔑B 的連結");
+assert.match(morningHtml, /const ok = await askDialog\(\{ message: `\$\{replacing/, "大屏換雲端前要先問");

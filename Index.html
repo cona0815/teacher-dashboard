@@ -794,6 +794,7 @@
     .today-seat[data-st="遲到"] { background: #fff2cc; color: #85600a; border-color: #e9cf83; }
     .today-seat[data-st="病假"] { background: #fde3cf; color: #a3500f; border-color: #efb586; }
     .today-seat[data-st="事假"] { background: #f8efc0; color: #776000; border-color: #ddc969; }
+    .today-seat[data-st="公假"] { background: #e8e0f8; color: #4e3a8f; border-color: #b6a3e3; }
     .today-seat[data-st="未到"] { background: #f9d9d3; color: #a33a2c; border-color: #e7a296; }
     .today-seat[data-st="還沒點"] { background: transparent; color: var(--muted); border-style: dashed; border-color: var(--line); }
     .today-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); margin-top: 8px; }
@@ -801,6 +802,7 @@
     .today-legend .dot.late { background: #e9cf83; }
     .today-legend .dot.sick { background: #efb586; }
     .today-legend .dot.personal { background: #ddc969; }
+    .today-legend .dot.official { background: #b6a3e3; }
     .today-legend .dot.absent { background: #e7a296; }
     .today-legend .dot.blank { background: transparent; border: 1.5px dashed var(--line); }
     .today-hw { margin-bottom: 10px; }
@@ -1290,6 +1292,7 @@
       .calendar-controls { align-items: flex-start; flex-direction: column; }
     }
   </style>
+  <script src="assets/attendance-term.js"></script>
 </head>
 <body>
   <div class="help-overlay" id="helpOverlay" hidden>
@@ -1608,7 +1611,7 @@
       <div class="today-cols">
         <div class="today-col">
           <article class="today-card"><h3>🙋 出缺席<small id="todayAttendSub"></small></h3><div class="today-seats" id="todaySeats"></div>
-            <div class="today-legend"><span><i class="dot ok"></i>到</span><span><i class="dot late"></i>遲到</span><span><i class="dot sick"></i>病假</span><span><i class="dot personal"></i>事假</span><span><i class="dot absent"></i>未到</span><span><i class="dot blank"></i>還沒點</span></div></article>
+            <div class="today-legend"><span><i class="dot ok"></i>到</span><span><i class="dot late"></i>遲到</span><span><i class="dot sick"></i>病假</span><span><i class="dot personal"></i>事假</span><span><i class="dot official"></i>公假</span><span><i class="dot absent"></i>未到</span><span><i class="dot blank"></i>還沒點</span></div></article>
           <article class="today-card"><h3>👀 要多關心<small>近 30 天還沒補交、還沒訂正</small></h3><div id="todayWatch"></div></article>
           <article class="today-card"><h3>📒 今天的聯絡本</h3><div id="todayContact"></div></article>
         </div>
@@ -1650,6 +1653,7 @@
           <div class="toolbox-group"><span class="toolbox-group-label">級務</span>
             <button class="toolbox-button" type="button" data-toolbox-target="contactBookSection" data-line-only data-role-only="homeroom" aria-expanded="false" hidden>聯絡本</button>
             <button class="toolbox-button" type="button" data-toolbox-target="homeworkReportSection" aria-expanded="false">作業統計</button>
+            <button class="toolbox-button" type="button" data-toolbox-target="attendanceTermSection" aria-expanded="false">出缺席統計</button>
             <button class="toolbox-button" type="button" data-toolbox-target="parentReplySection" aria-expanded="false">💬 回覆家長</button>
           </div>
           <div class="toolbox-group"><span class="toolbox-group-label">備課</span>
@@ -2114,6 +2118,22 @@
           <label class="check-row"><input type="checkbox" id="hwPrintNeedOnly">只印還有作業要完成的</label>
         </div>
         <div class="hw-note">統計的是缺交、補交、訂正的項數。全班都交的作業不會留下紀錄，所以不計算繳交率。請假那天沒交的作業不列入。今天的狀況要等大屏存檔後才會算進來。</div>
+      </div>
+    </section>
+
+    <section class="secretary-notes" id="attendanceTermSection" aria-labelledby="attendanceTermTitle" style="display:none">
+      <div class="secretary-notes-head">
+        <div class="secretary-notes-title">
+          <img data-cozy-icon="contact_book" src="assets/ipas/book-contact.webp" alt="">
+          <div>
+            <h2 id="attendanceTermTitle">學期出缺席統計</h2>
+            <p>整學期每位學生的應到天數、出席、遲到、病假、事假、公假、未到，有記潔牙的話也算潔牙率。可設放假日、轉入轉出，匯出 Word／Excel。只使用座號。</p>
+          </div>
+        </div>
+      </div>
+      <div class="secretary-notes-body">
+        <div class="secretary-note-meta" id="attendanceTermLocal" hidden>還沒接雲端：出缺席紀錄只存在教室那台電腦。請到<strong>晨間大屏「設定 → 📊 學期出缺席統計」</strong>看與匯出。接上雲端（設定 → ① 雲端／LINE 小幫手）後，這裡就能直接看。</div>
+        <div id="attendanceTermPanel"></div>
       </div>
     </section>
 
@@ -4586,6 +4606,52 @@
 
     function lineSyncToken() {
       return localStorage.getItem(LINE_SYNC_TOKEN_KEY) || sessionStorage.getItem(LINE_SYNC_TOKEN_KEY) || '';
+    }
+
+    // ---- 一鍵連線（2026-11-12）：試算表選單「💻 連接我的工作台」開出的連結 #connect=… ----
+    // 網址與金鑰在「#」後面（不會送到網站伺服器），讀到就從網址列清掉；換掉原本的雲端前一定先問老師。
+    function readConnectHash(expectKey) {
+      const matched = String(location.hash || '').match(/^#connect=([A-Za-z0-9_-]{20,2000})$/);
+      if (!matched) return null;
+      try { history.replaceState(null, '', location.pathname + location.search); } catch (error) { location.hash = ''; }
+      try {
+        const json = decodeURIComponent(escape(atob(matched[1].replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((matched[1].length + 3) % 4))));
+        const data = JSON.parse(json);
+        const url = String(data.u || '');
+        const key = String(data[expectKey] || '');
+        if (data.v !== 1 || !/^https:\/\/script\.google\.com\/macros\/s\/[\w-]{10,200}\/exec$/.test(url) || !/^[a-f0-9]{32}$/.test(key)) return { error: '這個連結格式不對，請回試算表重新按一次。' };
+        return { url, key };
+      } catch (error) { return { error: '這個連結壞掉了，請回試算表重新按一次。' }; }
+    }
+    async function applyConnectLink() {
+      const link = readConnectHash('c');
+      if (!link) return;
+      if (link.error) { showToast(link.error, true); return; }
+      const deployId = link.url.split('/s/')[1].slice(0, 10);
+      const current = lineBridgeState.settings.gasUrl;
+      const ask = current && current !== link.url
+        ? `要把工作台改連到這個雲端嗎？
+（部署代號 ${deployId}…）
+
+原本連的雲端會被取代。只有在你剛剛從「自己的試算表」按出這個連結時，才按「確定」。`
+        : `要把工作台連到你的雲端嗎？
+（部署代號 ${deployId}…）
+
+只有在你剛剛從「自己的試算表」按出這個連結時，才按「確定」。`;
+      if (!window.confirm(ask)) { showToast('沒有變更雲端設定。'); return; }
+      lineBridgeState.settings.enabled = true;
+      lineBridgeState.settings.gasUrl = link.url;
+      lineBridgeState.settings.remember = true;
+      saveLineBridgeSettings();
+      persistLineSyncToken(link.key);
+      if ($('lineGasUrl')) $('lineGasUrl').value = link.url;
+      try {
+        const result = await callLineBridge('ping');
+        showToast(result.role === 'teacher' ? '✅ 已連上你的雲端：網址和金鑰都自動填好了。' : '⚠️ 已填好，但這把不是工作台金鑰，請回試算表按「💻 連接我的工作台」。', result.role !== 'teacher');
+        if (result.role === 'teacher') syncLineBridge({ silent: true });
+      } catch (error) {
+        showToast(`已填好，但現在連不上雲端：${error.message}（請確認試算表已「部署」，存取權選「任何人」）`, true);
+      }
     }
 
     function saveLineBridgeSettings() {
@@ -8634,7 +8700,7 @@ ${cleanBase}`;
     function setTeacherToolbox(targetId) {
       const content = $('teacherToolboxContent');
       const buttons = [...document.querySelectorAll('[data-toolbox-target]')];
-      const panels = ['teachingProgressPanel', 'aiAssistantSection', 'secretaryNotesSection', 'contactBookSection', 'homeworkReportSection', 'messageHubSection', 'parentReplySection'];
+      const panels = ['teachingProgressPanel', 'aiAssistantSection', 'secretaryNotesSection', 'contactBookSection', 'homeworkReportSection', 'attendanceTermSection', 'messageHubSection', 'parentReplySection'];
       const current = buttons.find(button => button.classList.contains('active'))?.dataset.toolboxTarget || '';
       // 三合一面板裡的分頁：點目前這頁不收起（要收起請按上面的「📥 收件與 AI」）
       const shouldCollapse = !targetId || (current === targetId && !content.hidden && !INBOX_HUB_TARGETS.includes(targetId));
@@ -8657,6 +8723,7 @@ ${cleanBase}`;
       if (shouldCollapse) return;
 
       if (targetId === 'homeworkReportSection') loadHomeworkReport();
+      if (targetId === 'attendanceTermSection') openAttendanceTerm();
       if (targetId === 'teachingProgressPanel') {
         $('teachingProgressBody').hidden = false;
         $('toggleTeachingProgressButton').textContent = '收合';
@@ -9218,11 +9285,47 @@ ${cleanBase}`;
     });
     renderMonthEvents();
 
+    // ---- 學期出缺席統計（2026-11-11）：接雲端才在工作台看；只存在教室電腦時請到大屏「設定」看 ----
+    let attendanceTermPanel = null;
+    function openAttendanceTerm() {
+      const cloud = lineBridgeReady();
+      $('attendanceTermLocal').hidden = cloud;
+      $('attendanceTermPanel').hidden = !cloud;
+      if (!cloud || !window.AttendanceTerm) return;
+      if (attendanceTermPanel) { attendanceTermPanel.reload(); return; }
+      attendanceTermPanel = AttendanceTerm.mountPanel($('attendanceTermPanel'), {
+        title: '出缺席', seatControl: true,
+        load: async () => {
+          let saved = null;
+          // 先拿設定的學期起訖，再依起訖讀紀錄（第一次用預設學期）
+          const first = await callLineBridge('term_get', { from: AttendanceTerm.defaultTerm().start, to: AttendanceTerm.defaultTerm().end });
+          saved = AttendanceTerm.normalizeTerm(first.term);
+          const result = (saved.start === AttendanceTerm.defaultTerm().start && saved.end === AttendanceTerm.defaultTerm().end)
+            ? first : await callLineBridge('term_get', { from: saved.start, to: saved.end });
+          const days = Array.isArray(result.schoolDays) ? result.schoolDays : [];
+          const counts = {};
+          days.forEach(day => { counts[day.className] = (counts[day.className] || 0) + 1; });
+          const className = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0] || '';
+          const fallbackSeats = Number(localStorage.getItem(HW_SEATS_KEY)) || Number(morningSettings().seatCount) || 26;
+          const empty = (morningSettings().emptySeats || []).map(Number);
+          return {
+            term: first.term ? saved : { ...saved, seatCount: fallbackSeats, emptySeats: empty },
+            seats: Array.from({ length: fallbackSeats }, (_, i) => i + 1).filter(seat => !empty.includes(seat)),
+            schoolDays: days.filter(day => day.className === className).map(day => day.date),
+            records: (Array.isArray(result.attendance) ? result.attendance : []).filter(row => row.className === className),
+            tooth: Object.fromEntries((Array.isArray(result.tooth) ? result.tooth : []).filter(row => row.className === className).map(row => [row.date, row.seats])),
+            className, source: `資料來自雲端${className ? `｜班級 ${className}` : ''}`
+          };
+        },
+        save: term => callLineBridge('term_save', { term })
+      });
+    }
+
     // ---- 作業統計：每週／學期，只用座號；資料來自雲端或這台電腦的大屏紀錄 ----
     const HW_STATUS_KEY = { '缺交': 'missing', '補交': 'resub', '待訂正': 'correcting', '已訂正': 'corrected' };
     const HW_BOARD_MARK = { resub: '補交', correcting: '待訂正', corrected: '已訂正' };
     const HW_SEATS_KEY = 'grade6HomeworkReportSeats';
-    const HW_LEAVE_STATUS = ['病假', '事假'];   // 請假那天沒交的作業不列入通知
+    const HW_LEAVE_STATUS = ['病假', '事假', '公假'];   // 請假那天沒交的作業不列入通知
     const homeworkReport = { mode: 'week', weekOffset: 0, rows: [], selectedSeat: 0 };
 
     const hwMonthDay = date => `${date.getMonth() + 1}/${date.getDate()}`;
@@ -9352,7 +9455,7 @@ ${cleanBase}`;
       renderHomeworkReport();
     }
     // ---- 今日看板：今天的出缺席、作業繳交、訂正、待辦與聯絡本（資料來自晨間大屏；只用座號）----
-    const TODAY_ABSENT = ['病假', '事假', '未到'];
+    const TODAY_ABSENT = ['病假', '事假', '公假', '未到'];
     const TODAY_LOOKBACK_DAYS = 30;
     const TODAY_MARK = { submitted: '已交', resub: '補交', correcting: '待訂正', corrected: '已訂正' };
     const todayBoard = { request: 0, timer: 0 };
@@ -9440,7 +9543,7 @@ ${cleanBase}`;
     function renderTodayBoard({ today, seats, attendance, homework, todayKnown, todayComplete, contactText, contactNote }) {
       const seatSet = new Set(seats);
       // 請假那天沒交的作業不算缺交
-      const leave = new Set(attendance.filter(row => ['病假', '事假'].includes(row.status)).map(row => `${row.date}|${row.seat}`));
+      const leave = new Set(attendance.filter(row => HW_LEAVE_STATUS.includes(row.status)).map(row => `${row.date}|${row.seat}`));
       const rows = homework.filter(row => seatSet.has(row.seat) && !(row.status === '缺交' && leave.has(`${row.date}|${row.seat}`)));
 
       // ① 出缺席
@@ -9455,7 +9558,7 @@ ${cleanBase}`;
       const absentSeats = seats.filter(seat => TODAY_ABSENT.includes(statusOf(seat)));
       const blankSeats = listOf('還沒點');
       const present = seats.length - absentSeats.length - blankSeats.length;
-      const attendParts = [['病假', listOf('病假')], ['事假', listOf('事假')], ['未到', listOf('未到')], ['遲到', listOf('遲到')]].filter(([, list]) => list.length);
+      const attendParts = [['病假', listOf('病假')], ['事假', listOf('事假')], ['公假', listOf('公假')], ['未到', listOf('未到')], ['遲到', listOf('遲到')]].filter(([, list]) => list.length);
       $('todayAttendSub').textContent = !todayKnown ? '大屏今天還沒有存檔' : attendParts.map(([label, list]) => `${label} ${list.join('、')} 號`).join('｜') || '全班到齊 🎉';
 
       // ② 今天的作業（每份作業：交了幾份、誰還沒交）
@@ -9470,7 +9573,7 @@ ${cleanBase}`;
         else if (row.status === '已訂正') group.corrected.push(row.seat);
         else if (row.status === '補交') group.resub.push(row.seat);
       });
-      const leaveToday = new Set(seats.filter(seat => ['病假', '事假'].includes(statusOf(seat))));
+      const leaveToday = new Set(seats.filter(seat => HW_LEAVE_STATUS.includes(statusOf(seat))));
       let todayMissing = 0;
       const hwHtml = [...groups.values()].map(group => {
         const total = seats.filter(seat => !leaveToday.has(seat)).length;
@@ -9521,7 +9624,7 @@ ${cleanBase}`;
       $('todayKpis').innerHTML = [
         kpi('🙋 今天出席', todayKnown && present ? `${present}/${seats.length}` : '—',
           !todayKnown ? '大屏還沒存檔'
-            : [absentSeats.length ? `請假 ${listOf('病假').length + listOf('事假').length}、未到 ${listOf('未到').length}` : '', blankSeats.length ? `${blankSeats.length} 位還沒點名` : ''].filter(Boolean).join('｜') || '全班到齊',
+            : [absentSeats.length ? `請假 ${listOf('病假').length + listOf('事假').length + listOf('公假').length}、未到 ${listOf('未到').length}` : '', blankSeats.length ? `${blankSeats.length} 位還沒點名` : ''].filter(Boolean).join('｜') || '全班到齊',
           todayKnown && listOf('未到').length ? 'need' : (todayKnown && !absentSeats.length && !blankSeats.length ? 'good' : '')),
         kpi('✏️ 今天缺交', todayMissing, groups.size ? `${groups.size} 份作業` : '還沒登記作業', todayMissing ? 'need' : (groups.size ? 'good' : '')),
         kpi('🔁 待訂正', pendingFix.length, fixedToday ? `今天已訂正 ${fixedToday} 份` : `近 ${TODAY_LOOKBACK_DAYS} 天`, pendingFix.length ? 'need' : 'good'),
@@ -11020,6 +11123,7 @@ ${cleanBase}`;
     // 網頁版舊桌寵已退役；只保留資料相容函式，不啟動動畫、健康計時器或舊面板。
     loadSecretaryNotes();
     loadLineBridgeSettings();
+    applyConnectLink();
     loadRollcallStats();
     wireLineBridgeUi();
     maybeAutoCloudBackup();

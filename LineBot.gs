@@ -1,5 +1,5 @@
 /**
- * LINE 小幫手（選用雲端模組）　版本 2026-11-11 10:50
+ * LINE 小幫手（選用雲端模組）　版本 2026-11-12 00:10
  *
  * 這是教師工作台的「選用」LINE Bot 後端：每位老師部署到自己的 Google Apps Script，
  * 搭配自己的 Google 試算表與 LINE 官方帳號。試算表只作為「雲端轉運信箱」：
@@ -26,7 +26,7 @@ var LINE_BOT_CONFIG = {
   INBOX_HEADERS: ['編號', '建立時間', '類型', '原文', '整理標題', '到期日', '工作主軸', '狀態', '來源使用者', '補充JSON'],
   ROLLCALL_HEADERS: ['日期', '班級', '座號', '狀態'],
   HOMEWORK_HEADERS: ['日期', '班級', '科目', '作業名稱', '座號', '狀態'],
-  ATTENDANCE_STATUSES: ['病假', '事假', '遲到', '未到'],
+  ATTENDANCE_STATUSES: ['病假', '事假', '公假', '遲到', '未到'],   // 2026-11-11 加公假
   HOMEWORK_STATUSES: ['缺交', '補交', '待訂正', '已訂正'],
   MAX_TEXT_LENGTH: 3000,
   MAX_PULL_ROWS: 200,
@@ -116,6 +116,9 @@ function onOpen() {
       .addItem('③ 填入我的 LINE userId（👤G，鎖門，第 4 級）', 'menuSetUserId')
       .addItem('④ 填入 Gemini 金鑰（🔑D，第 3 級）', 'menuSetGeminiKey')
       .addItem('⑤ 設定自動化排程（提醒／關懷，第 4 級）', 'menuSetupTriggers')
+      .addSeparator()
+      .addItem('💻 連接我的工作台（自動填好）', 'menuConnectWorkbench')
+      .addItem('🏫 連接教室大屏（寄連結給自己）', 'menuConnectClassroom')
       .addSeparator()
       .addItem('📋 更新安裝總表（看進度與代號）', 'menuBuildSetupSheet')
       .addItem('🔑 顯示我的金鑰', 'menuShowKeys')
@@ -237,6 +240,94 @@ function menuShowDialog_(title, text) {
     '<p style="font:12px sans-serif;color:#666;margin:8px 0 0">請點入框內按 Ctrl+A 全選、Ctrl+C 複製到記事本保存。</p>'
   ).setWidth(580).setHeight(430);
   SpreadsheetApp.getUi().showModalDialog(html, title);
+}
+
+// ---------------------------------------------------------------------------
+// 一鍵連線（2026-11-12）：老師不用再抄 🌐A、🔑B、🔑C。
+// 連結把網址與金鑰放在「#」後面——不會送到網站伺服器、不留在網站紀錄；網頁讀到就從網址列清掉。
+// 工作台連結含 🔑C（只給老師自己）；教室連結只含 🔑B。
+// ---------------------------------------------------------------------------
+var CONNECT_SITE = 'https://t-borad2026.netlify.app';
+function connectExecUrl_() {
+  var url = '';
+  try { url = String(ScriptApp.getService().getUrl() || ''); } catch (error) {}
+  url = url.replace(/^https:\/\/script\.google\.com\/a\/macros\/[^/]+\//, 'https://script.google.com/macros/');   // 學校 Workspace 帳號的網址換成通用格式
+  return /^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(url) ? url : '';
+}
+function connectPayload_(data) {
+  return Utilities.base64EncodeWebSafe(JSON.stringify(data), Utilities.Charset.UTF_8).replace(/=+$/, '');
+}
+/** 回傳 { ok, link } 或 { ok:false, error }（給選單與測試共用） */
+function buildConnectLink_(kind) {
+  var props = PropertiesService.getScriptProperties();
+  var url = connectExecUrl_();
+  if (!url) return { ok: false, error: '還沒部署成網頁應用程式。請先到「擴充功能 → Apps Script → 部署 → 新增部署」（網頁應用程式／執行身分：我／存取權：任何人），再回來按一次。' };
+  if (kind === 'workbench') {
+    var teacher = props.getProperty('LINE_SYNC_TOKEN');
+    if (!teacher) return { ok: false, error: '還沒初始化，請先按選單「① 初始化」。' };
+    return { ok: true, link: CONNECT_SITE + '/Index.html#connect=' + connectPayload_({ v: 1, u: url, c: teacher }) };
+  }
+  var classroom = props.getProperty('CLASSROOM_TOKEN');
+  if (!classroom) return { ok: false, error: '還沒初始化，請先按選單「① 初始化」。' };
+  return { ok: true, link: CONNECT_SITE + '/Morning.html#connect=' + connectPayload_({ v: 1, u: url, b: classroom }) };
+}
+function connectDialogHtml_(title, intro, buttons, note) {
+  return '<div style="font:15px/1.75 \'Microsoft JhengHei\',\'Noto Sans TC\',sans-serif;color:#1f1f1f">'
+    + '<p style="margin:0 0 12px">' + intro + '</p>' + buttons
+    + '<p style="margin:12px 0 0;font-size:13px;color:#5f6368">' + note + '</p>'
+    + '<p id="msg" style="margin:10px 0 0;font-size:14px;font-weight:bold;color:#0d652d"></p></div>';
+}
+var CONNECT_BTN = 'display:block;box-sizing:border-box;width:100%;text-align:center;border-radius:10px;padding:12px;margin:8px 0;font-size:16px;font-weight:bold;text-decoration:none;cursor:pointer;font-family:inherit;';
+function menuConnectWorkbench() {
+  var ui = SpreadsheetApp.getUi();
+  var built = buildConnectLink_('workbench');
+  if (!built.ok) { ui.alert(built.error); return; }
+  var html = connectDialogHtml_('💻 連接我的工作台',
+    '在<b>你自己的電腦</b>按下面的按鈕，工作台會打開，雲端網址和金鑰自動填好，不用再抄。',
+    '<a href="' + built.link + '" target="_blank" rel="noopener" style="' + CONNECT_BTN + 'background:#1d9e5f;color:#fff">💻 開啟工作台並自動連線</a>',
+    '⚠️ 這個連結等於你的工作台鑰匙，只給自己用，不要轉傳或貼到群組。');
+  ui.showModalDialog(HtmlService.createHtmlOutput(html).setWidth(480).setHeight(260), '💻 連接我的工作台');
+}
+function menuConnectClassroom() {
+  var ui = SpreadsheetApp.getUi();
+  var built = buildConnectLink_('classroom');
+  if (!built.ok) { ui.alert(built.error); return; }
+  var hasLine = Boolean(lineBotProperty_('LINE_CHANNEL_ACCESS_TOKEN') && lineBotProperty_('LINE_ALLOWED_USER_IDS'));
+  var safeLink = built.link.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  var buttons = '<button onclick="send(\'mail\')" style="' + CONNECT_BTN + 'background:#1d9e5f;color:#fff;border:0">✉️ 寄到我的 Gmail</button>'
+    + (hasLine ? '<button onclick="send(\'line\')" style="' + CONNECT_BTN + 'background:#fff;color:#1f514a;border:1.5px solid #c9d3cf">💬 傳到我的 LINE</button>' : '')
+    + '<button onclick="copyLink()" style="' + CONNECT_BTN + 'background:#fff;color:#1f514a;border:1.5px solid #c9d3cf">📋 複製連結</button>'
+    + '<textarea id="link" readonly style="width:100%;height:46px;font-size:11px;margin-top:4px;box-sizing:border-box">' + safeLink + '</textarea>'
+    + '<script>'
+    + 'function done(t){document.getElementById("msg").textContent=t;}'
+    + 'function send(k){done("傳送中……");google.script.run.withSuccessHandler(done).withFailureHandler(function(e){done("沒有送出："+e.message);}).sendClassroomConnect(k);}'
+    + 'function copyLink(){var t=document.getElementById("link");t.select();var ok=false;try{ok=document.execCommand("copy");}catch(e){}done(ok?"已複製，貼到教室電腦打開就好。":"請在上面的框按 Ctrl+C 複製。");}'
+    + '</script>';
+  var html = connectDialogHtml_('🏫 連接教室大屏',
+    '把連結傳給自己，到<b>教室電腦</b>打開、點一下，晨間大屏就連好了。',
+    buttons, '連結只有教室金鑰 🔑B，看不到你的工作台。外流時按「🔄 重新產生 🔑B」，舊連結就失效。');
+  ui.showModalDialog(HtmlService.createHtmlOutput(html).setWidth(480).setHeight(hasLine ? 430 : 380), '🏫 連接教室大屏');
+}
+/** 對話框按鈕呼叫：寄信或傳 LINE 給老師自己（只寄給這份試算表的擁有者） */
+function sendClassroomConnect(kind) {
+  var built = buildConnectLink_('classroom');
+  if (!built.ok) throw new Error(built.error);
+  if (kind === 'line') {
+    var users = String(lineBotProperty_('LINE_ALLOWED_USER_IDS') || '').split(',').map(function (id) { return id.trim(); }).filter(Boolean);
+    if (!users.length || !lineBotProperty_('LINE_CHANNEL_ACCESS_TOKEN')) throw new Error('還沒設定 LINE 小幫手，請改用寄信或複製連結。');
+    pushLineMessage_(users[0], '🏫 連接教室大屏\n請在教室電腦打開這個連結，晨間大屏會自動連上雲端：\n' + built.link + '\n\n（連結只含教室金鑰；外流時到試算表選單按「🔄 重新產生 🔑B」）');
+    return '✅ 已傳到你的 LINE。到教室電腦打開 LINE 電腦版，點連結就完成了。';
+  }
+  var email = '';
+  try { email = Session.getEffectiveUser().getEmail(); } catch (error) {}
+  if (!email) throw new Error('找不到你的信箱，請改用「複製連結」。');
+  var body = '老師好：\n\n請在教室那台電腦打開下面的連結，晨間大屏會自動連上你的雲端（不用輸入網址和金鑰）：\n' + built.link
+    + '\n\n・這封信只寄給你自己；連結只含教室金鑰，看不到你的工作台。\n・連好之後可以把這封信刪掉。連結外流時，到試算表選單按「🔄 重新產生 🔑B」。';
+  var htmlBody = '<div style="font:15px/1.8 sans-serif">老師好：<br>請在<b>教室那台電腦</b>點下面的按鈕，晨間大屏會自動連上你的雲端（不用輸入網址和金鑰）。<br>'
+    + '<a href="' + built.link + '" style="display:inline-block;background:#1f514a;color:#fff;border-radius:10px;padding:12px 22px;font-weight:bold;text-decoration:none;margin:12px 0">🏫 開啟晨間大屏並自動連線</a><br>'
+    + '<span style="font-size:13px;color:#5f6368">・這封信只寄給你自己；連結只含教室金鑰，看不到你的工作台。<br>・連好之後可以把這封信刪掉。連結外流時，到試算表選單按「🔄 重新產生 🔑B」。</span></div>';
+  MailApp.sendEmail({ to: email, subject: '【教師工作台】連接教室大屏', body: body, htmlBody: htmlBody, name: 'LINE 小幫手' });
+  return '✅ 已寄到你的 Gmail（' + email.replace(/^(.).*(@.*)$/, '$1***$2') + '），主旨「【教師工作台】連接教室大屏」。到教室電腦打開信，點按鈕就完成了。';
 }
 
 function menuSetupLineBot() {
@@ -517,7 +608,7 @@ function doGet() {
 }
 
 // 程式版本（每次發布都要更新；試算表選單「ℹ️ 程式版本」、LINE 傳「版本」、工作台連線檢查都會顯示）
-var BOT_VERSION = '2026-11-11 10:50';
+var BOT_VERSION = '2026-11-12 00:10';
 
 function lineBotJson_(payload) {
   return ContentService.createTextOutput(JSON.stringify(payload)).setMimeType(ContentService.MimeType.JSON);
@@ -563,6 +654,12 @@ function handleLineSyncApi_(body) {
     if (action === 'classroom_missing') return lineBotJson_(readClassroomMissing_(body));
     if (action === 'homework_resubmit') return lineBotJson_(markHomeworkResubmitted_(body));
     if (action === 'rollcall_query') return lineBotJson_(readRollcallRange_(String(body.from || ''), String(body.to || ''), String(body.className || '')));
+    if (action === 'term_get') return lineBotJson_(readTermAttendance_(body));
+    if (action === 'term_save') {
+      var termLock = LockService.getScriptLock();
+      termLock.waitLock(10000);
+      try { return lineBotJson_(saveTermSettings_(body)); } finally { termLock.releaseLock(); }
+    }
     if (action === 'contactbook_get') return lineBotJson_(getContactBook_(body, isTeacher));
     if (action === 'contactbook_save') return lineBotJson_(saveContactBook_(body, isTeacher));
     if (action === 'contactbook_month') return lineBotJson_(monthContactBook_(body, isTeacher));
@@ -1099,6 +1196,11 @@ function submitRollcall_(body) {
         cleanAttendance.push({ seat: seat, status: status });
       }
     });
+    // 學期出缺席：記下「這天有點名」（全班都到的日子點名紀錄是空的，要靠這張表才知道那天有上課）
+    var marked = parseInt(body.marked, 10) || 0;
+    if (marked > 0 || rollcallRows.length) markSchoolDay_(date, className, marked || rollcallRows.length);
+    // 潔牙點名（新版大屏才會帶 tooth；舊版沒帶就不動）
+    if (Array.isArray(body.tooth)) saveToothDay_(date, className, body.tooth);
     if (rollcallRows.length) {
       var rollcallRange = sheets.rollcall.getRange(sheets.rollcall.getLastRow() + 1, 1, rollcallRows.length, 4);
       rollcallRange.offset(0, 1, rollcallRows.length, 1).setNumberFormat('@');   // 班級欄存成文字：「0601」「6-1」不會被轉成數字或日期而比對不到
@@ -1175,6 +1277,113 @@ function cellDate_(value) {
   return value instanceof Date
     ? Utilities.formatDate(value, Session.getScriptTimeZone(), 'yyyy-MM-dd')
     : String(value);
+}
+
+// ---------------------------------------------------------------------------
+// 學期出缺席（2026-11-11）：上課日表＋學期設定（放假日、轉入轉出）。統計在工作台算，這裡只存資料。
+// ---------------------------------------------------------------------------
+var SCHOOLDAY_SHEET = '上課日';
+var TERM_PROP = 'TERM_SETTINGS';
+function schoolDaySheet_() {
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = spreadsheet.getSheetByName(SCHOOLDAY_SHEET);
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(SCHOOLDAY_SHEET);
+    sheet.getRange(1, 1, 1, 4).setValues([['日期', '班級', '點名人數', '更新時間']]);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+function markSchoolDay_(date, className, marked) {
+  var sheet = schoolDaySheet_();
+  deleteRowsByDateClass_(sheet, date, className, 1);
+  var range = sheet.getRange(sheet.getLastRow() + 1, 1, 1, 4);
+  range.offset(0, 1, 1, 1).setNumberFormat('@');
+  range.setValues([[date, sheetText_(className), Math.min(99, marked), Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm')]]);
+}
+var TOOTH_SHEET = '潔牙紀錄';
+function toothSheet_() {
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = spreadsheet.getSheetByName(TOOTH_SHEET);
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(TOOTH_SHEET);
+    sheet.getRange(1, 1, 1, 4).setValues([['日期', '班級', '已潔牙座號', '更新時間']]);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+function saveToothDay_(date, className, list) {
+  var seats = list.slice(0, 60).map(function (seat) { return parseInt(seat, 10); })
+    .filter(function (seat, index, all) { return seat >= 1 && seat <= 99 && all.indexOf(seat) === index; })
+    .sort(function (a, b) { return a - b; });
+  var sheet = toothSheet_();
+  deleteRowsByDateClass_(sheet, date, className, 1);
+  if (!seats.length) return;
+  var range = sheet.getRange(sheet.getLastRow() + 1, 1, 1, 4);
+  range.offset(0, 1, 1, 2).setNumberFormat('@');
+  range.setValues([[date, sheetText_(className), seats.join(','), Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm')]]);
+}
+
+/** 學期設定只收這些欄位與格式（老師金鑰才能存；存之前一律清理） */
+function cleanTerm_(raw) {
+  var isDate = function (v) { return /^\d{4}-\d{2}-\d{2}$/.test(String(v || '')); };
+  var text = function (v, n) { return String(v || '').replace(/[<>]/g, '').slice(0, n); };
+  var r = raw && typeof raw === 'object' ? raw : {};
+  var cleanEnroll = function (list) {
+    return (Array.isArray(list) ? list : []).slice(0, 80).map(function (e) {
+      return { seat: Math.round(Number(e && e.seat)), from: isDate(e && e.from) ? e.from : '', to: isDate(e && e.to) ? e.to : '', note: text(e && e.note, 20) };
+    }).filter(function (e) { return e.seat >= 1 && e.seat <= 99; });
+  };
+  var cleanDates = function (list) { return (Array.isArray(list) ? list : []).filter(isDate).slice(-200); };
+  return {
+    name: text(r.name, 30), start: isDate(r.start) ? r.start : '', end: isDate(r.end) ? r.end : '',
+    holidays: cleanDates(r.holidays), enroll: cleanEnroll(r.enroll),
+    seatCount: Math.min(60, Math.max(0, Math.round(Number(r.seatCount) || 0))),
+    emptySeats: (Array.isArray(r.emptySeats) ? r.emptySeats : []).map(Number).filter(function (n) { return n >= 1 && n <= 60; }).slice(0, 60),
+    history: (Array.isArray(r.history) ? r.history : []).slice(-6).map(function (h) {
+      return { name: text(h && h.name, 30), start: isDate(h && h.start) ? h.start : '', end: isDate(h && h.end) ? h.end : '', holidays: cleanDates(h && h.holidays), enroll: cleanEnroll(h && h.enroll) };
+    })
+  };
+}
+function saveTermSettings_(body) {
+  var term = cleanTerm_(body.term);
+  var json = JSON.stringify(term);
+  if (json.length > 8500) throw new Error('學期設定太大（放假日或異動太多），請刪掉一些舊的');
+  PropertiesService.getScriptProperties().setProperty(TERM_PROP, json);
+  return { ok: true, term: term };
+}
+/** 工作台讀：學期設定＋學期內的上課日＋點名異常紀錄（只有座號） */
+function readTermAttendance_(body) {
+  var term = null;
+  try { term = JSON.parse(PropertiesService.getScriptProperties().getProperty(TERM_PROP) || 'null'); } catch (error) {}
+  var from = /^\d{4}-\d{2}-\d{2}$/.test(String(body.from || '')) ? String(body.from) : '';
+  var to = /^\d{4}-\d{2}-\d{2}$/.test(String(body.to || '')) ? String(body.to) : '';
+  if (!from || !to || from > to) throw new Error('日期區間格式不正確');
+  var data = readRollcallRange_(from, to, '');
+  var days = {};
+  var sheet = schoolDaySheet_();
+  var last = sheet.getLastRow();
+  if (last > 1) {
+    sheet.getRange(2, 1, last - 1, 2).getValues().forEach(function (row) {
+      var date = cellDate_(row[0]);
+      if (date >= from && date <= to) days[date + '|' + String(row[1])] = true;
+    });
+  }
+  // 這個功能上線前的日子沒有上課日表：有點名或作業紀錄的日子也算上課日
+  data.attendance.forEach(function (row) { days[row.date + '|' + row.className] = true; });
+  data.homework.forEach(function (row) { days[row.date + '|' + row.className] = true; });
+  var schoolDays = Object.keys(days).map(function (key) { var parts = key.split('|'); return { date: parts[0], className: parts.slice(1).join('|') }; });
+  var tooth = [];
+  var toothLast = toothSheet_().getLastRow();
+  if (toothLast > 1) {
+    toothSheet_().getRange(2, 1, toothLast - 1, 3).getValues().forEach(function (row) {
+      var date = cellDate_(row[0]);
+      if (date < from || date > to) return;
+      var seats = String(row[2] || '').split(',').map(function (seat) { return parseInt(seat, 10); }).filter(function (seat) { return seat >= 1 && seat <= 99; });
+      if (seats.length && tooth.length < 400) tooth.push({ date: date, className: String(row[1]), seats: seats });
+    });
+  }
+  return { ok: true, term: term, schoolDays: schoolDays, attendance: data.attendance, tooth: tooth };
 }
 
 function deleteRowsByDateClass_(sheet, date, className, dateColumn) {
