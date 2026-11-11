@@ -6,7 +6,7 @@
  * LINE 傳入的訊息暫存在這裡，等教師在工作台網頁確認後轉為任務或記事；
  * 資料正本永遠保存在教師瀏覽器的 localStorage。
  *
- * 不安裝本模組時，教師工作台與桌面小綿助完全不受影響。
+ * 不安裝本模組時，教師工作台與桌面小助手完全不受影響。
  *
  * 安裝步驟請見 LINE_BOT_INSTALL.md。
  * 授權：MIT（同本專案）。
@@ -63,7 +63,7 @@ function setupLineBot() {
     '【第 2 級：連上大屏和工作台】現在就要用這兩把，抄到記事本：',
     '🔑B 教室大屏金鑰 → 晨間大屏「⚙ 設定」（教室電腦只放這把）',
     '  ' + properties.getProperty('CLASSROOM_TOKEN'),
-    '🔑C 工作台同步金鑰 → 工作台「⚙ 設定 → ① 雲端／LINE 小幫手」、小綿助雲端連線',
+    '🔑C 工作台同步金鑰 → 工作台「⚙ 設定 → ① 雲端／LINE 小幫手」、小助手雲端連線',
     '  ' + properties.getProperty('LINE_SYNC_TOKEN'),
     '下一步：擴充功能 → Apps Script → 部署 → 新增部署（網頁應用程式／執行身分：我／存取權：任何人），拿到 🌐A /exec 網址。',
     '',
@@ -188,7 +188,7 @@ function buildSetupSheet_() {
     ['代號', '這是什麼', '值（可直接複製）', '取得處', '要貼到哪裡', '狀態'],
     ['🌐A', '（第 2 級）機器人網址（/exec）', deployed ? execUrl : '【尚未部署：部署→新增部署→網頁應用程式→任何人】', '部署後產生', '工作台與大屏的「🌐A」欄位', deployed ? '✅ 已部署' : '⬜ 未部署'],
     ['🔑B', '（第 2 級）教室大屏金鑰', String(props.getProperty('CLASSROOM_TOKEN') || '【請先執行選單①】'), '選單① 自動產生', '晨間大屏「⚙ 設定 → 🔑B」（教室電腦只放這把）', props.getProperty('CLASSROOM_TOKEN') ? '✅ 已產生' : '⬜'],
-    ['🔑C', '（第 2 級）工作台同步金鑰', String(props.getProperty('LINE_SYNC_TOKEN') || '【請先執行選單①】'), '選單① 自動產生', '教師工作台「⚙ 設定 → ① 雲端／LINE 小幫手 → 🔑C」、小綿助雲端連線', props.getProperty('LINE_SYNC_TOKEN') ? '✅ 已產生' : '⬜'],
+    ['🔑C', '（第 2 級）工作台同步金鑰', String(props.getProperty('LINE_SYNC_TOKEN') || '【請先執行選單①】'), '選單① 自動產生', '教師工作台「⚙ 設定 → ① 雲端／LINE 小幫手 → 🔑C」、小助手雲端連線', props.getProperty('LINE_SYNC_TOKEN') ? '✅ 已產生' : '⬜'],
     ['🔑D', '（第 3 級）Gemini 金鑰（選填）', hasE ? '（已安全存入，不顯示）' : '【選填：用選單④填入】', 'aistudio.google.com/app/apikey', '本表選單「④ 填入 Gemini 金鑰」＋工作台 AI 設定', hasE ? '✅ 已填' : '⬜ 未填（可先跳過）'],
     ['🔑E', '（第 4 級）LINE Channel Token', hasA ? '（已安全存入，不顯示）' : '【請用選單②填入】', 'LINE Developers → Messaging API → Issue', '本表選單「② 填入 LINE Token」', mask(hasA)],
     ['🔑F', '（第 4 級）Webhook 驗證參數', hookToken || '【請先執行選單①】', '選單① 自動產生', '不用單獨貼；已組進下方 Webhook 網址', hookToken ? '✅ 已產生' : '⬜'],
@@ -242,7 +242,7 @@ function menuShowKeys() {
     '【第 2 級】🔑B 教室大屏金鑰（晨間大屏「⚙ 設定」）：',
     '  ' + properties.getProperty('CLASSROOM_TOKEN'),
     '',
-    '【第 2 級】🔑C 工作台同步金鑰（工作台「① 雲端／LINE 小幫手」、小綿助雲端連線）：',
+    '【第 2 級】🔑C 工作台同步金鑰（工作台「① 雲端／LINE 小幫手」、小助手雲端連線）：',
     '  ' + properties.getProperty('LINE_SYNC_TOKEN'),
     '',
     '【第 4 級】🔑F Webhook 驗證參數（接在 🌐A 後面：?hook=🔑F）：',
@@ -550,7 +550,7 @@ function handleLineSyncApi_(body) {
     }
     if (action === 'prompt_get') return lineBotJson_(getScreenPrompt_());
     if (action === 'snapshot_get') {
-      // 桌面小綿助 v2.0 直連：讀回工作台最近一次上傳的快照（今日/逾期/今日課程）
+      // 桌面小助手 v2.0 直連：讀回工作台最近一次上傳的快照（今日/逾期/今日課程）
       if (!isTeacher) return lineBotJson_({ ok: false, error: '讀取快照需要老師金鑰' });
       return lineBotJson_({ ok: true, snapshot: readWorkspaceSnapshot_() });
     }
@@ -826,13 +826,21 @@ function listWorkspaceFiles_() {
 // 需要在 Apps Script 編輯器左側「服務 ＋」加入「Tasks API」才會生效；
 // 沒加的話會回傳友善說明，不會壞掉其他功能。
 // ---------------------------------------------------------------------------
-var NOTES_TASKLIST_NAME = '小綿助記事';
+var NOTES_TASKLIST_NAME = '小助手記事';
+var OLD_NOTES_TASKLIST_NAME = '小綿' + '助記事';   // 改名前的清單名稱
 
 function ensureNotesTaskList_() {
   var lists = Tasks.Tasklists.list({ maxResults: 100 });
   var items = (lists && lists.items) || [];
   for (var i = 0; i < items.length; i++) {
     if (items[i].title === NOTES_TASKLIST_NAME) return items[i].id;
+  }
+  // 2026-11-11「小綿助」改名「小助手」：舊清單改名沿用，記事不會分成兩邊
+  for (var j = 0; j < items.length; j++) {
+    if (items[j].title === OLD_NOTES_TASKLIST_NAME) {
+      Tasks.Tasklists.patch({ title: NOTES_TASKLIST_NAME }, items[j].id);
+      return items[j].id;
+    }
   }
   return Tasks.Tasklists.insert({ title: NOTES_TASKLIST_NAME }).id;
 }
@@ -1628,7 +1636,7 @@ function handleLineKindPostback_(event, allowedUsers) {
     else if (userId && String(values[index][8]) && String(values[index][8]) !== userId) reply = '這一筆不是你傳的。';
     else if (String(values[index][7]) !== 'new') reply = String(values[index][7]) === 'ignored'
       ? '這一筆已經作廢了。'
-      : '這一筆已經帶進工作台了；要改請到工作台的任務清單或小綿助記事。';
+      : '這一筆已經帶進工作台了；要改請到工作台的任務清單或小助手記事。';
     else {
       var title = String(values[index][4] || values[index][3]).slice(0, 40);
       if (kind === 'skip') {
@@ -1640,7 +1648,7 @@ function handleLineKindPostback_(event, allowedUsers) {
         extra.decided = true;
         sheets.inbox.getRange(index + 2, 3).setValue(kind);
         sheets.inbox.getRange(index + 2, 10).setValue(JSON.stringify(extra));
-        reply = (kind === 'task' ? '✅ 定為任務' : '📌 定為記事') + '：「' + title + '」\n工作台同步時會自動建立' + (kind === 'task' ? '到任務清單。' : '到小綿助記事。');
+        reply = (kind === 'task' ? '✅ 定為任務' : '📌 定為記事') + '：「' + title + '」\n工作台同步時會自動建立' + (kind === 'task' ? '到任務清單。' : '到小助手記事。');
       }
     }
   } finally {
@@ -2912,7 +2920,7 @@ function listContactBook_(body) {
  *
  * 統計最近 7 天各座號缺交次數；達門檻（預設 5 次，可在指令碼屬性設
  * WEEKLY_ALERT_THRESHOLD 調整）時：
- * 1. 為每位學生產生一則「委婉的家長溝通訊息草稿」，工作台同步時自動存進小綿助記事
+ * 1. 為每位學生產生一則「委婉的家長溝通訊息草稿」，工作台同步時自動存進小助手記事
  *    （標籤：家長聯繫）。
  * 2. LINE 推播提醒老師有哪些座號達門檻。
  * 訊息只含座號與缺交明細，不含姓名；請老師在工作台補上稱謂與孩子的優點後再轉發。
@@ -2952,7 +2960,7 @@ function sendWeeklyHomeworkAlerts() {
     '缺交達 ' + threshold + ' 次的座號：',
     flagged.map(function (student) { return '・' + student.className + ' ' + student.seat + '號：' + student.items.length + ' 次'; }).join('\n'),
     '',
-    '已為每位學生準備一則委婉的家長訊息草稿，工作台同步時會存進「小綿助記事」（標籤：家長聯繫）。',
+    '已為每位學生準備一則委婉的家長訊息草稿，工作台同步時會存進「小助手記事」（標籤：家長聯繫）。',
     '補上稱謂與孩子的優點後再轉發給家長。'
   ].join('\n');
   users.forEach(function (userId) { pushLineMessage_(userId, summary); });

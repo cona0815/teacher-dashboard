@@ -1,11 +1,11 @@
-小綿助 Windows 可攜版使用說明
+小助手 Windows 可攜版使用說明
 
 1. 從 GitHub Releases 下載 Windows 可攜版 ZIP，先完整解壓縮。
 2. 開啟解壓縮後資料夾中的 XiaoMianZhu.exe。
 3. 不需要安裝 Python、pip，也不需要系統管理員權限。
 4. 請勿直接在 ZIP 壓縮檔裡執行；整個 XiaoMianZhu 資料夾需一起保留。
 
-小綿助會在本機 127.0.0.1:8767 提供與網頁連動的橋接服務。資料只寫入：
+小助手會在本機 127.0.0.1:8767 提供與網頁連動的橋接服務。資料只寫入：
 %APPDATA%\XiaoMianZhuSecretary\
 
 首次下載的未簽章程式可能出現 Windows SmartScreen 或防毒信譽提示。請只從本專案 GitHub Release 下載並核對 SHA-256；不要關閉防毒，也不要設定防毒排除。

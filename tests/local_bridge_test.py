@@ -41,7 +41,7 @@ class PanelActionStub:
         self.saved += 1
 
     def _pet_name(self):
-        return "小綿助"
+        return "小助手"
 
 
 class DummySecretary:
@@ -272,7 +272,7 @@ class PanelLocalOnlyTest(unittest.TestCase):
 
 
 class VoiceModuleTest(unittest.TestCase):
-    """v2.1 會聽的小綿助：音檔只准送 Gemini／Groq 官方網域；引擎流程用假 opener 驗證。"""
+    """v2.1 會聽的小助手：音檔只准送 Gemini／Groq 官方網域；引擎流程用假 opener 驗證。"""
 
     def test_voice_host_whitelist(self):
         from desktop_pet_voice import voice_url_allowed, VOICE_ALLOWED_HOSTS

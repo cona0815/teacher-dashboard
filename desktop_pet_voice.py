@@ -1,10 +1,10 @@
 """
-小綿助 v2.1「會聽的小綿助」：語音輸入模組（移植自使用者的 EZtype，改為 Tkinter 友善、零 PyQt）。
+小助手 v2.1「會聽的小助手」：語音輸入模組（移植自使用者的 EZtype，改為 Tkinter 友善、零 PyQt）。
 
 責任切分（資安契約）：
 - 只有這個模組會把「音檔」送出電腦，而且只准送到 VOICE_ALLOWED_HOSTS（Gemini／Groq 官方 API）。
 - 錄音只在按住快捷鍵期間進行；音檔只在記憶體，不落地、不備份。
-- 金鑰存在小綿助本機資料檔（與 🔑C 同一個檔），不經本機橋接送到網頁。
+- 金鑰存在小助手本機資料檔（與 🔑C 同一個檔），不經本機橋接送到網頁。
 - 主程式 desktop_pet_secretary.py 不直接 urlopen（既有契約），全部經由這裡的 opener。
 
 流程：按住快捷鍵 → Recorder 收音（16kHz 單聲道 int16）→ 放開 → VoiceEngine.transcribe()
@@ -303,7 +303,7 @@ class VoiceEngine:
             return "groq" if self.groq_key else ""
         if self.provider == "gemini":
             return "gemini" if self.gemini_key else ""
-        # 自動：Gemini 優先（老師只要申請一把 Gemini 金鑰，工作台、教材小工場、小綿助共用）；沒有 Gemini 金鑰才用 Groq
+        # 自動：Gemini 優先（老師只要申請一把 Gemini 金鑰，工作台、教材小工場、小助手共用）；沒有 Gemini 金鑰才用 Groq
         if self.gemini_key:
             return "gemini"
         if self.groq_key:
@@ -638,7 +638,7 @@ def send_ctrl_v() -> None:
 
 
 def classify_spoken_item(text: str) -> str:
-    """「說給小綿助」：判斷是任務還是記事（有日期／期限／動作詞 → 任務）。"""
+    """「說給小助手」：判斷是任務還是記事（有日期／期限／動作詞 → 任務）。"""
     body = str(text or "")
     if re.match(r"^(記事|筆記|備忘)[：:，, ]", body):
         return "note"

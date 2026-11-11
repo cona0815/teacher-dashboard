@@ -62,7 +62,7 @@
 | clasp 憑證 | `.clasp.json`／`.clasprc.json`（含 Google OAuth token）在 `.gitignore` 內，且**從未被 commit 過** |
 | GitHub Actions | 用 `pull_request` 而非 `pull_request_target`（fork PR 拿不到 secrets）；`validate` 只有 `contents: read`，`build` 的 `contents: write` 僅供 tag 發版；未使用任何自訂 secret |
 | npm 供應鏈 | `package.json` **零執行期相依**，`npm test` 只跑本地測試 |
-| `Code.gs` 對外端點 | `doGet` 只吐 HTML 殼，資料函式一律先過 `assertAuthorized_()`；`doPost`（小綿助同步）先驗 `DESKTOP_PET_SYNC_KEY`，單次上限 1000 筆 |
+| `Code.gs` 對外端點 | `doGet` 只吐 HTML 殼，資料函式一律先過 `assertAuthorized_()`；`doPost`（小助手同步）先驗 `DESKTOP_PET_SYNC_KEY`，單次上限 1000 筆 |
 | GAS 頁框設定 | `setXFrameOptionsMode(DEFAULT)`（限同網域），非 `ALLOWALL` |
 | GAS 樣板注入 | 未使用 `<?!= ?>` 這類不跳脫輸出 |
 | PowerShell 指令注入 | `windows_ocr.ps1` 無 `Invoke-Expression`／`iex`／動態指令組裝 |
@@ -101,7 +101,7 @@ LINE 收件匣、檔案備份標題）若以 `=`、`+`、`-`、`@` 開頭，Goog
 ### 2026-11-06 全面稽核（第四輪：8/29 之後新增的功能）
 
 範圍：`Morning.html`、`Screen.html`、`Board.html`、`Index.html`、`Installer.html`、`Studio.html`、`LineBot.gs`、`Code.gs`、
-小綿助全部 `.py`、`netlify.toml`、`.github/workflows/`，以及全部 220 個 commit 的金鑰掃描。
+小助手全部 `.py`、`netlify.toml`、`.github/workflows/`，以及全部 220 個 commit 的金鑰掃描。
 修正處都在程式裡用「資安：」註解標明，主要頁面開頭另有【資安說明】；`tests/profile_config.test.js` 結尾與
 `tests/local_bridge_test.py` 有回歸測試，防止日後改壞。
 
@@ -109,8 +109,8 @@ LINE 收件匣、檔案備份標題）若以 `=`、`+`、`-`、`@` 開頭，Goog
 |---|---|---|
 | 高 | **工作台還原備份可夾帶程式碼**：進度列 `type` 未跳脫就放進 class 屬性；任務連結可為 `javascript:`。別人給的「範本備份」能偷走 🔑C／🔑D | 進度列逐欄白名單、class 跳脫；任務連結一律 `safeUrl()`（還原、本機程式回傳、畫面三處） |
 | 高 | **AI 工作室範文庫匯入可夾帶程式碼**：id 未跳脫放進屬性 | id 只收 `m` 開頭英數，所有欄位轉限長字串；畫面再跳脫 |
-| 高 | **小綿助本機橋接接受 `Origin: null`**：陌生 .html 附件或任何網站的沙箱 iframe 能讀走任務、記事，或改語音金鑰、啟動錄音 | 拒絕 null 來源 |
-| 中 | **外站可不經預檢寫入小綿助**：先寫入資料才回 403；也沒擋 DNS rebinding | POST 先驗 Host、來源與 Content-Type 再處理；回應禁止被嵌入 |
+| 高 | **小助手本機橋接接受 `Origin: null`**：陌生 .html 附件或任何網站的沙箱 iframe 能讀走任務、記事，或改語音金鑰、啟動錄音 | 拒絕 null 來源 |
+| 中 | **外站可不經預檢寫入小助手**：先寫入資料才回 403；也沒擋 DNS rebinding | POST 先驗 Host、來源與 Content-Type 再處理；回應禁止被嵌入 |
 | 中 | **螢幕公告匯入設定檔可夾帶程式碼**（id、背景圖網址） | `cleanImported()` 清理 id 與圖片網址，id 放進 HTML 前跳脫；同步改進 `tools/build_screen_board.py` |
 | 中 | **備份可悄悄關掉去識別化** | 備份只能「打開」去識別化；AI 設定不還原端點網址，服務商限清單 |
 | 中 | **送 AI 前沒去識別化的路徑**：訊息整理（LINE 群組原文）、文字附件與檔名、AI 工作室 | 訊息整理與附件一律 `redactSensitiveText()`；AI 工作室送出前檢查身分證／手機／Email／座位表姓名，發現先問老師 |
@@ -123,7 +123,7 @@ LINE 收件匣、檔案備份標題）若以 `=`、`+`、`-`、`@` 開頭，Goog
 | 低 | 晨間大屏設定密碼：對話框直接寫「預設 1234」、不限次數、解鎖後整天開著 | 不提示預設值；錯 5 次鎖 1 分鐘；離開設定頁就重新上鎖；密碼欄改成遮蔽 |
 | 低 | 安裝摘要把 🔑B／🔑C／🔑F 寫進 Apps Script 執行紀錄 | 拿掉 `Logger.log` |
 | 低 | 收件匣「新增＋裁切」與「已匯入標記」沒上鎖，同時發生會標錯列 | 共用 `LockService` |
-| 低 | 雲端回來的值未跳脫：大屏查詢的日期與狀態、小綿助面板 | 全部跳脫 |
+| 低 | 雲端回來的值未跳脫：大屏查詢的日期與狀態、小助手面板 | 全部跳脫 |
 | 低 | 工作台查詢模型清單時 Gemini 金鑰放網址 | 改放 `x-goog-api-key` 標頭 |
 | 低 | AI 回傳的數字與圖片格式未檢查（可卡死分頁）；超大 PDF | 行數限 1～6、圖片只收 png/jpeg/webp 的 base64；批改 PDF 一次最多 200 頁 |
 | 低 | 晨間大屏、AI 工作室、螢幕公告放在其他主機時可被外站嵌入（點擊劫持） | 加防嵌入備援（同網站嵌入不受影響）。Index／Board 也由 Apps Script 以 iframe 提供，不能加 |
@@ -137,13 +137,13 @@ LINE 收件匣、檔案備份標題）若以 `=`、`+`、`-`、`@` 開頭，Goog
 - LINE 小幫手會把老師傳的文字、照片、語音送 Gemini 分類（第 3、4 級功能）。系統自己的出缺、座號資料不會送；老師傳訊時請不要打學生全名。
 - 試算表「📋 安裝總表」會顯示金鑰，方便老師複製；試算表不要分享給別人。
 - 所有頁面仍允許行內程式（`'unsafe-inline'`），所以「跳脫」是主要防線；新增畫面一律用 `escapeHtml()`／`textContent`。
-- 小綿助允許 `cona0815.github.io` 整個網域與本機任何埠號（瀏覽器的來源不含路徑，無法只限單一專案）。
+- 小助手允許 `cona0815.github.io` 整個網域與本機任何埠號（瀏覽器的來源不含路徑，無法只限單一專案）。
 
-## 小綿助 v2.1 語音輸入的邊界
+## 小助手 v2.1 語音輸入的邊界
 
 - 只有 `desktop_pet_voice.py` 會把音檔送出電腦，且 `default_opener` 只接受 `VOICE_ALLOWED_HOSTS`（`generativelanguage.googleapis.com`、`api.groq.com`）；桌寵主程式仍不直接呼叫 `urlopen`（測試契約看守）。
 - 錄音只在按住快捷鍵期間（`Recorder.start/stop`），上限 120 秒；音檔只存在記憶體，不寫檔、不備份、不經本機橋接送到網頁。
-- 🔑D／Groq 金鑰只存在小綿助本機資料檔（與 🔑C 同檔），面板端點僅限本機來源；面板回傳只有 `hasGeminiKey` 布林，不回傳金鑰本文。
+- 🔑D／Groq 金鑰只存在小助手本機資料檔（與 🔑C 同檔），面板端點僅限本機來源；面板回傳只有 `hasGeminiKey` 布林，不回傳金鑰本文。
 - 「打字模式」用剪貼簿＋Ctrl+V 貼上，0.8 秒後還原原本的剪貼簿內容；全域快捷鍵監聽（pynput）只比對設定的那一兩個鍵，不記錄其他按鍵。
 
 ## 已知限制

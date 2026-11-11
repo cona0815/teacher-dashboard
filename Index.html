@@ -930,7 +930,7 @@
     .toolbox-group { display: inline-flex; align-items: center; gap: 5px; padding: 3px 5px 3px 9px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.55); }
     .toolbox-group:not(:has(.toolbox-button:not([hidden]))) { display: none; }
     .toolbox-group-label { color: var(--muted); font-size: 11px; font-weight: 900; letter-spacing: .04em; margin-right: 2px; }
-    /* 「📥 收件與 AI」打開後上方的分頁：小綿助記事／AI 行政助理 */
+    /* 「📥 收件與 AI」打開後上方的分頁：小助手記事／AI 行政助理 */
     .inbox-hub-tabs { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 16px 0; }
     .inbox-hub-tabs[hidden] { display: none; }
     .inbox-hub-tabs .toolbox-button { min-height: 36px; padding: 6px 14px; font-size: 13.5px; }
@@ -1217,7 +1217,7 @@
     .deskpet-warning { margin-top: 8px; padding: 8px 9px; border-radius: 9px; background: var(--gold-soft); color: #765915; font-size: 12px; font-weight: 850; line-height: 1.45; }
     .deskpet-privacy { margin-top: 9px; color: var(--muted); font-size: 12px; line-height: 1.45; }
     .deskpet-credit { padding: 8px 14px 12px; color: #8a948f; font-size: 8px; text-align: center; }
-    /* 小綿助為獨立 Windows 桌面程式；網頁只保留任務系統與未來同步接口。 */
+    /* 小助手為獨立 Windows 桌面程式；網頁只保留任務系統與未來同步接口。 */
     body .deskpet, body .deskpet-panel { display: none !important; }
     @media (prefers-reduced-motion: reduce) {
       .deskpet { will-change: auto; }
@@ -1297,7 +1297,7 @@
       <div class="help-head"><h2 id="helpTitle">📖 使用說明</h2><button class="mini-button" type="button" id="helpCloseButton">✕ 關閉</button></div>
       <div class="help-cards">
         <a class="help-card" href="Install.html" target="_blank" rel="noopener">
-          <div class="help-emoji">🚀</div><div><strong>部署方法</strong><p>從零開始：工作台、晨間大屏、LINE 小幫手（Google 試算表＋Apps Script）、小綿助桌寵。已在用第 1 版的老師看「第 2 版更新指南」。</p></div></a>
+          <div class="help-emoji">🚀</div><div><strong>部署方法</strong><p>從零開始：工作台、晨間大屏、LINE 小幫手（Google 試算表＋Apps Script）、小助手桌寵。已在用第 1 版的老師看「第 2 版更新指南」。</p></div></a>
         <a class="help-card" href="Guide.html" target="_blank" rel="noopener">
           <div class="help-emoji">📘</div><div><strong>圖文操作手冊</strong><p>每個功能配真實畫面，一步一步教：今日看板、AI 行政助理、LINE 小幫手按鈕、晨間大屏、教材小工場、敏感資料遮蔽……</p></div></a>
         <a class="help-card" href="About.html" target="_blank" rel="noopener">
@@ -1663,7 +1663,7 @@
       </div>
       <div class="teacher-toolbox-content" id="teacherToolboxContent" hidden>
         <div class="inbox-hub-tabs" id="inboxHubTabs" role="tablist" aria-label="收件與 AI" hidden>
-          <button class="toolbox-button" type="button" role="tab" data-toolbox-target="secretaryNotesSection" aria-expanded="false">小綿助記事</button>
+          <button class="toolbox-button" type="button" role="tab" data-toolbox-target="secretaryNotesSection" aria-expanded="false">小助手記事</button>
           <button class="toolbox-button" type="button" role="tab" data-toolbox-target="aiAssistantSection" data-ai-only aria-expanded="false" hidden>AI 行政助理</button>
         </div>
 
@@ -1915,7 +1915,7 @@
               <span class="ai-hint" id="aiDraftBoardCount"></span>
             </div>
             <div class="ai-task-main" id="aiMainTaskTitle"></div>
-            <div class="ai-subtask-note" id="aiSubtaskRecommendation">AI 把跟你有關的事一件件列出來，並先選好建議：每件可改成 <strong>任務</strong>（要動手做、寫進任務清單）、<strong>記事</strong>（只要記得，存到小綿助記事，日期＝提醒日）或 <strong>不要</strong>。名稱、日期、時間都可以直接改；任務<strong>拖到另一個任務上</strong>＝變成它的子任務，拖到虛線區＝解除。最後按下面的按鈕，一次建好。</div>
+            <div class="ai-subtask-note" id="aiSubtaskRecommendation">AI 把跟你有關的事一件件列出來，並先選好建議：每件可改成 <strong>任務</strong>（要動手做、寫進任務清單）、<strong>記事</strong>（只要記得，存到小助手記事，日期＝提醒日）或 <strong>不要</strong>。名稱、日期、時間都可以直接改；任務<strong>拖到另一個任務上</strong>＝變成它的子任務，拖到虛線區＝解除。最後按下面的按鈕，一次建好。</div>
             <div class="ai-draft-unnest" id="aiDraftUnnestZone">⤴ 拖到這裡＝解除子任務、變回獨立任務</div>
             <div class="ai-draft-board" id="aiDraftBoard"></div>
             <div class="ai-actions">
@@ -1959,8 +1959,8 @@
         <div class="secretary-notes-title">
           <img src="assets/pet/v6/lamb/idle.webp" alt="">
           <div>
-            <h2 id="secretaryNotesTitle">小綿助記事 <span class="secretary-note-count" id="secretaryNoteCount">0</span></h2>
-            <p>網頁記事保存在目前瀏覽器；也可以匯入桌面小綿助的 secretary_data.json。</p>
+            <h2 id="secretaryNotesTitle">小助手記事 <span class="secretary-note-count" id="secretaryNoteCount">0</span></h2>
+            <p>網頁記事保存在目前瀏覽器；也可以匯入桌面小助手的 secretary_data.json。</p>
           </div>
         </div>
         <button class="mini-button" type="button" id="toggleSecretaryNotesButton" aria-expanded="false">展開</button>
@@ -1980,7 +1980,7 @@
           <button class="mini-button note-filter-chip" type="button" data-note-filter="dated">有提醒日</button>
           <button class="button button-light" type="button" id="importSecretaryNotesButton">匯入桌面記事</button>
           <button class="button button-light" type="button" id="toggleDoneNotesButton">顯示已完成</button>
-          <button class="button button-light" type="button" id="syncGoogleTasksButton" title="與 Google Tasks「小綿助記事」清單雙向同步（需已設定 LINE 小幫手）">🔄 Google Tasks</button>
+          <button class="button button-light" type="button" id="syncGoogleTasksButton" title="與 Google Tasks「小助手記事」清單雙向同步（需已設定 LINE 小幫手）">🔄 Google Tasks</button>
           <input id="secretaryNotesFileInput" type="file" accept="application/json,.json" hidden>
         </div>
         <div class="secretary-note-list" id="secretaryNoteList"></div>
@@ -2277,7 +2277,7 @@
         </div>
         <button class="filing-banner" type="button" id="filingBanner" hidden></button>
         <details class="today-notes-strip" id="todayNotesStrip" hidden>
-          <summary>📌 今日記事提醒（<span id="todayNotesStripCount">0</span>）｜勾選即完成，管理請到「小綿助記事」</summary>
+          <summary>📌 今日記事提醒（<span id="todayNotesStripCount">0</span>）｜勾選即完成，管理請到「小助手記事」</summary>
           <div id="todayNotesStripList"></div>
         </details>
         <div class="table-wrap" id="taskTableWrap"></div>
@@ -2425,7 +2425,7 @@
         <button class="settings-tab active" type="button" role="tab" aria-selected="true" data-settings-tab="teacher">教師資訊</button>
         <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="linebot">① 雲端／LINE 小幫手</button>
         <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="api">② AI 設定</button>
-        <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="pet">小綿助</button>
+        <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="pet">小助手</button>
         <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="privacy">敏感資料</button>
         <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="backup">備份與還原</button>
         <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="security">資料與資安</button>
@@ -2531,12 +2531,12 @@
       <section class="settings-panel" data-settings-panel="pet">
         <article class="pet-download-card">
           <div>
-            <h3>下載 Windows 桌面版小綿助</h3>
+            <h3>下載 Windows 桌面版小助手</h3>
             <p>安裝後即可常駐桌面，提供今日任務、逾期提醒、快速記事、喝水、久坐與服藥提醒，並透過本機連線與這個工作台交換資料。</p>
             <div class="pet-download-meta"><span>Windows 可攜版</span><span>免安裝 Python</span><span>免系統管理員權限</span><span>資料只存在本機</span></div>
           </div>
           <div class="pet-download-buttons">
-            <a class="button button-dark" href="https://github.com/cona0815/teacher-dashboard/releases/download/xiaomianzhu-v2.4/xiaomianzhu-windows-portable.zip" target="_blank" rel="noopener">下載小綿助 v2.3</a>
+            <a class="button button-dark" href="https://github.com/cona0815/teacher-dashboard/releases/download/xiaomianzhu-v2.4/xiaomianzhu-windows-portable.zip" target="_blank" rel="noopener">下載小助手 v2.3</a>
             <button class="button button-light" type="button" id="checkPetDownloadBridgeButton">檢查是否已連線</button>
           </div>
           <details class="pet-install-guide">
@@ -2545,21 +2545,21 @@
               <li>下載 ZIP 後解壓縮到自己的資料夾，不要直接在壓縮檔內執行。</li>
               <li>開啟解壓縮資料夾中的 <code>XiaoMianZhu.exe</code>；不必安裝 Python、pip，也不必輸入指令。</li>
               <li>回到本頁按「檢查是否已連線」。若 Windows 顯示未簽章程式警告，請先核對 GitHub 發布來源；不要關閉防毒或設定排除。</li>
-              <li>如需套用下方偏好與自動啟動，再下載桌面設定檔並放在小綿助程式旁。</li>
+              <li>如需套用下方偏好與自動啟動，再下載桌面設定檔並放在小助手程式旁。</li>
             </ol>
           </details>
-          <div class="pet-download-hash">小綿助 v2.3 由 GitHub Actions 的乾淨 Windows 主機自動建置（51.3 MB）｜SHA-256：<code>0aae7d11cbda1a77013af8960f9ee808d9b2504f4115f411d54dd9511b651e43</code></div>
+          <div class="pet-download-hash">小助手 v2.3 由 GitHub Actions 的乾淨 Windows 主機自動建置（51.3 MB）｜SHA-256：<code>0aae7d11cbda1a77013af8960f9ee808d9b2504f4115f411d54dd9511b651e43</code></div>
         </article>
-        <p class="settings-note">這裡管理桌面版小綿助的偏好。網頁可以保存設定與控制「小綿助記事」入口；Windows 開機自動執行需下載設定檔，讓桌面版啟動一次後套用。</p>
+        <p class="settings-note">這裡管理桌面版小助手的偏好。網頁可以保存設定與控制「小助手記事」入口；Windows 開機自動執行需下載設定檔，讓桌面版啟動一次後套用。</p>
         <div class="setting-checks">
-          <label class="check-row"><input type="checkbox" id="petEnabled" checked>開啟小綿助功能</label>
+          <label class="check-row"><input type="checkbox" id="petEnabled" checked>開啟小助手功能</label>
           <label class="check-row"><input type="checkbox" id="petAutostart">Windows 登入後自動執行</label>
           <label class="check-row"><input type="checkbox" id="petHealthReminders" checked>開啟喝水、久坐與服藥提醒<span class="api-secret-note" style="display:block;margin-top:2px">詳細設定（喝水／起身間隔、服藥時間）：雙擊桌面小綿羊開啟祕書頁 → 🌿 健康管理 → ⚙ 詳細提醒設定。</span></label>
           <label class="check-row"><input type="checkbox" id="petOpeningBrief" checked>啟動時提示今日與逾期任務</label>
-          <label class="check-row"><input type="checkbox" id="petRememberPosition" checked>記住小綿助在桌面的位置</label>
+          <label class="check-row"><input type="checkbox" id="petRememberPosition" checked>記住小助手在桌面的位置</label>
         </div>
         <div class="form-grid" style="padding:0">
-          <div class="field"><label for="petName">小綿助名稱</label><input class="input" id="petName" maxlength="12" placeholder="小綿助"></div>
+          <div class="field"><label for="petName">小助手名稱</label><input class="input" id="petName" maxlength="12" placeholder="小助手"></div>
           <div class="field"><label for="petCheerInterval">自動打氣話間隔</label><select class="select" id="petCheerInterval"><option value="0">關閉自動打氣話</option><option value="5">每 5 分鐘</option><option value="10">每 10 分鐘</option><option value="15">每 15 分鐘</option><option value="30">每 30 分鐘</option><option value="60">每 60 分鐘</option></select></div>
           <div class="field"><label for="petStartupDelay">開機啟動延遲</label><select class="select" id="petStartupDelay"><option value="0">立即啟動</option><option value="10">延遲 10 秒</option><option value="30">延遲 30 秒</option><option value="60">延遲 1 分鐘</option><option value="120">延遲 2 分鐘</option></select></div>
           <div class="field"><label for="petQuietStart">安靜時段開始</label><input class="input" id="petQuietStart" type="time" value="18:00"></div>
@@ -2567,22 +2567,22 @@
         </div>
         <div class="pet-settings-status">
           <strong>本機連線狀態</strong>
-          <span id="petBridgeStatus">正在確認桌面小綿助是否開啟……</span>
+          <span id="petBridgeStatus">正在確認桌面小助手是否開啟……</span>
           <button class="button button-light" type="button" id="checkPetBridgeButton">重新檢查</button>
-          <span>小綿助只監聽這台電腦的 <code>127.0.0.1:8767</code>。第一次使用正式網站時，請下載一次桌面設定檔並放到小綿助旁邊，以授權目前的網站來源；桌面程式關閉時，網頁仍可完整使用。</span>
+          <span>小助手只監聽這台電腦的 <code>127.0.0.1:8767</code>。第一次使用正式網站時，請下載一次桌面設定檔並放到小助手旁邊，以授權目前的網站來源；桌面程式關閉時，網頁仍可完整使用。</span>
         </div>
         <div class="pet-settings-status">
           <strong>桌面版套用方式</strong>
-          <span>下載後把 <code>xiaomianzhu_settings.json</code> 放在「小綿助.exe」旁邊，再啟動一次小綿助。桌面版會匯入設定，並依選項新增或移除目前 Windows 帳號的自動啟動項目，不需要系統管理員權限。</span>
+          <span>下載後把 <code>xiaomianzhu_settings.json</code> 放在「小助手.exe」旁邊，再啟動一次小助手。桌面版會匯入設定，並依選項新增或移除目前 Windows 帳號的自動啟動項目，不需要系統管理員權限。</span>
         </div>
         <div class="pet-settings-actions">
           <button class="button button-dark" type="button" id="exportPetSettingsButton">下載桌面設定檔</button>
-          <span class="api-secret-note">設定檔只包含小綿助偏好，不包含任務、記事、附件或 AI 金鑰。</span>
+          <span class="api-secret-note">設定檔只包含小助手偏好，不包含任務、記事、附件或 AI 金鑰。</span>
         </div>
       </section>
 
       <section class="settings-panel" data-settings-panel="linebot">
-        <p class="settings-note"><strong>第 2 級（雲端大腦）</strong>：照<a class="settings-link" href="Install.html#level2" target="_blank" rel="noopener">安裝教學第 2 級</a>複製一份 Google 程式後，這裡只要填 🌐A 與 🔑C，就能用晨間大屏、雲端聯絡本、Google 日曆／Tasks／表單／雲端硬碟。<strong>第 4 級（LINE）</strong>的設定在 LINE 與 Google 那邊做，這裡不用填 🔑E；做完後 LINE 訊息會進「LINE 收件匣」由你確認再建立。不設定時，工作台與桌面小綿助完全不受影響。</p>
+        <p class="settings-note"><strong>第 2 級（雲端大腦）</strong>：照<a class="settings-link" href="Install.html#level2" target="_blank" rel="noopener">安裝教學第 2 級</a>複製一份 Google 程式後，這裡只要填 🌐A 與 🔑C，就能用晨間大屏、雲端聯絡本、Google 日曆／Tasks／表單／雲端硬碟。<strong>第 4 級（LINE）</strong>的設定在 LINE 與 Google 那邊做，這裡不用填 🔑E；做完後 LINE 訊息會進「LINE 收件匣」由你確認再建立。不設定時，工作台與桌面小助手完全不受影響。</p>
         <label class="check-row" style="margin-bottom:14px"><input type="checkbox" id="lineBridgeEnabled">啟用雲端同步（第 2 級；做了第 4 級也會收 LINE）</label>
         <div class="form-grid" style="padding:0">
           <div class="field field-wide">
@@ -2603,7 +2603,7 @@
             <button class="button button-light" type="button" id="testLineBridgeButton">測試連線</button>
             <button class="button button-dark" type="button" id="syncLineBridgeButton">立即同步</button>
           </span>
-          <span>同步會做兩件事：把你在 LINE 傳的事自動帶進來（你在 LINE 按了［任務］［記事］的立刻帶入，沒按的 10 分鐘後照 AI 建議；任務進任務清單、記事進小綿助記事），並把「今日任務與課程進度摘要」推上雲端，供 LINE 查詢與晨間簡報使用（摘要不含學生個資與附件）。</span>
+          <span>同步會做兩件事：把你在 LINE 傳的事自動帶進來（你在 LINE 按了［任務］［記事］的立刻帶入，沒按的 10 分鐘後照 AI 建議；任務進任務清單、記事進小助手記事），並把「今日任務與課程進度摘要」推上雲端，供 LINE 查詢與晨間簡報使用（摘要不含學生個資與附件）。</span>
         </div>
         <div class="field field-wide" style="margin-top:14px">
           <label>聯絡本常用項目（可自訂；每行一項，改完自動儲存）</label>
@@ -2667,7 +2667,7 @@
                    <li>開啟試算表後，選擇<strong>擴充功能 → Apps Script</strong>。</li>
                    <li>將預設指令碼改名為 <strong>Code</strong>，清空內容後貼入本專案的 <strong>Code.gs</strong>。</li>
                    <li>按「＋」新增 3 個 HTML 檔，名稱依序為 <strong>Index</strong>、<strong>Board</strong>、<strong>Installer</strong>，貼入對應檔案內容。</li>
-                   <li>儲存後回到試算表並重新整理，從「<strong>校務任務系統 → 安裝教師工作台</strong>」完成資料表初始化；若要連動桌面小綿助，再執行「<strong>設定小綿助同步金鑰</strong>」。</li>
+                   <li>儲存後回到試算表並重新整理，從「<strong>校務任務系統 → 安裝教師工作台</strong>」完成資料表初始化；若要連動桌面小助手，再執行「<strong>設定小助手同步金鑰</strong>」。</li>
                    <li>回 Apps Script 選擇<strong>部署 → 新增部署 → 網頁應用程式</strong>；執行身分選「我」，存取權依學校帳號政策設定。</li>
                    <li>按「部署」並完成 Google 授權，複製產生的 <strong>/exec 網址</strong>。</li>
                    <li>之後請從該 /exec 網址開啟系統；此時雲端備份、Drive 資料庫與跨裝置資料才會真正連到 GAS。</li>
@@ -2715,15 +2715,15 @@
       </section>
 
       <section class="settings-panel" data-settings-panel="security">
-        <p class="settings-note">本系統採本機優先：不需登入、不需 GAS。任務與設定預設留在目前瀏覽器；桌面小綿助資料留在目前 Windows 帳號的 AppData。</p>
+        <p class="settings-note">本系統採本機優先：不需登入、不需 GAS。任務與設定預設留在目前瀏覽器；桌面小助手資料留在目前 Windows 帳號的 AppData。</p>
         <p style="margin:0 0 12px"><a class="settings-link" href="About.html" target="_blank" rel="noopener"><strong>📚 完整版：系統說明與資安（含使用情境教學、每個授權的逐條白話解釋）→</strong></a>　可直接把該頁連結傳給同事或資訊組長。</p>
         <div class="backup-grid">
           <article class="backup-card"><h3>網頁資料</h3><p>任務、教學進度、記事與偏好以瀏覽器本機儲存保存。不同瀏覽器、不同 Windows 帳號或不同網站網域各自獨立；清除網站資料前請先下載 JSON 備份。</p></article>
-          <article class="backup-card"><h3>小綿助本機橋接</h3><p>桌面程式只綁定 <code>127.0.0.1:8767</code>，不接受區域網路或外網直接連入；限制請求來源、方法與 5 MB 大小，且不提供任意檔案路徑讀取。</p></article>
+          <article class="backup-card"><h3>小助手本機橋接</h3><p>桌面程式只綁定 <code>127.0.0.1:8767</code>，不接受區域網路或外網直接連入；限制請求來源、方法與 5 MB 大小，且不提供任意檔案路徑讀取。</p></article>
           <article class="backup-card"><h3>AI 與個人資料</h3><p>去識別化在瀏覽器執行，但自動規則可能漏判。送出 AI 前仍要人工檢查；學生姓名、電話、地址、健康、輔導與性平資料不應交給外部 AI。</p></article>
           <article class="backup-card"><h3>Windows 防毒提示</h3><p>測試版 EXE 若尚未使用受信任的程式碼簽章，Windows SmartScreen 可能顯示「無法辨識的應用程式」；這是信譽／簽章警告，不等同判定為病毒。正式分享建議簽章或上架 Microsoft Store，並提供 SHA-256 驗證碼。</p></article>
           <article class="backup-card"><h3>安全使用原則</h3><p>只從本專案正式 GitHub／Netlify 下載；不要要求使用者關閉防毒或建立整個資料夾的排除規則。若遭誤判，應提交檔案給 Microsoft 分析並重新發布，不能承諾所有學校電腦一定允許執行。</p></article>
-          <article class="backup-card"><h3>目前分享版本</h3><p>v2.0「專注小綿助」可攜版：可直連你自己的 LINE 小幫手（不開瀏覽器也拿得到工作台快照、LINE 待整理、大屏提示遙控）、分心提醒（只讀作用中視窗標題、不截圖不上傳）、專注 25／50 分模式、探頭與蹭滑鼠新行為，並保留 v1.6 起的 DPI 感知、瀏覽器版秘書面板、自癒心跳與單一實例保護，解壓縮後直接開啟 <code>XiaoMianZhu.exe</code>，不必安裝 Python，也不要求系統管理員權限。程式尚未購買商業程式碼簽章，部分防毒軟體仍可能因新程式信譽不足而提示；請只從本專案 Release 下載並核對 SHA-256，不要關閉防毒或設定排除。</p></article>
+          <article class="backup-card"><h3>目前分享版本</h3><p>v2.0「專注小助手」可攜版：可直連你自己的 LINE 小幫手（不開瀏覽器也拿得到工作台快照、LINE 待整理、大屏提示遙控）、分心提醒（只讀作用中視窗標題、不截圖不上傳）、專注 25／50 分模式、探頭與蹭滑鼠新行為，並保留 v1.6 起的 DPI 感知、瀏覽器版秘書面板、自癒心跳與單一實例保護，解壓縮後直接開啟 <code>XiaoMianZhu.exe</code>，不必安裝 Python，也不要求系統管理員權限。程式尚未購買商業程式碼簽章，部分防毒軟體仍可能因新程式信譽不足而提示；請只從本專案 Release 下載並核對 SHA-256，不要關閉防毒或設定排除。</p></article>
         </div>
       </section>
 
@@ -2732,7 +2732,7 @@
           <strong>✓ 本專案採 MIT 開源授權</strong>
           <span>本修改版保留原始專案的授權與著作權資訊，並清楚列出改作來源與第三方素材。依目前使用的程式碼與素材聲明，這裡是開源改作，不是把原作者作品冒充成自己的；正式發布前仍請依你的發布方式確認授權文字完整保留。</span>
         </div>
-        <p class="settings-note">以下分別列出原始校務系統、流程參考、圖示與小綿助素材來源；原作者連結不代表原作者為本修改版背書。</p>
+        <p class="settings-note">以下分別列出原始校務系統、流程參考、圖示與小助手素材來源；原作者連結不代表原作者為本修改版背書。</p>
         <div class="license-list">
           <article class="license-card">
             <h3>介面吉祥物圖示</h3>
@@ -2744,7 +2744,7 @@
           </article>
           <article class="license-card">
             <h3>桌面秘書概念參考</h3>
-            <p>小綿助的「桌面入口、理解、確認、任務追蹤」流程參考 mihozip 的 DeskPet 開源專案；本修改版未使用 DeskPet 白貓圖像。<br><a href="https://github.com/mihozip/DeskPet" target="_blank" rel="noopener noreferrer">開啟 DeskPet 原作者專案</a>・<a href="https://github.com/mihozip/DeskPet/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">查看 DeskPet 授權</a></p>
+            <p>小助手的「桌面入口、理解、確認、任務追蹤」流程參考 mihozip 的 DeskPet 開源專案；本修改版未使用 DeskPet 白貓圖像。<br><a href="https://github.com/mihozip/DeskPet" target="_blank" rel="noopener noreferrer">開啟 DeskPet 原作者專案</a>・<a href="https://github.com/mihozip/DeskPet/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">查看 DeskPet 授權</a></p>
           </article>
           <article class="license-card">
             <h3>Koboyo Icons</h3>
@@ -2755,8 +2755,8 @@
             <p>首頁主視覺與工作標示插圖由本修改版專案擁有者提供或為本專案製作，未取用 Irasutoya、DeskPet、學校吉祥物或其他既有卡通角色；檔案清單與後續替換規則記錄於 THIRD_PARTY_NOTICES.md。</p>
           </article>
           <article class="license-card">
-            <h3>小綿助角色素材</h3>
-            <p>小羊角色設定、原始格與動畫素材由本修改版專案擁有者提供或為本專案製作，與 DeskPet 白貓圖像不同；正式環境只會讀取 cona0815/teacher-dashboard 內的小綿助素材。詳細聲明請參閱 THIRD_PARTY_NOTICES.md。</p>
+            <h3>小助手角色素材</h3>
+            <p>小羊角色設定、原始格與動畫素材由本修改版專案擁有者提供或為本專案製作，與 DeskPet 白貓圖像不同；正式環境只會讀取 cona0815/teacher-dashboard 內的小助手素材。詳細聲明請參閱 THIRD_PARTY_NOTICES.md。</p>
           </article>
         </div>
       </section>
@@ -2770,13 +2770,13 @@
 
   <aside class="deskpet-panel" id="deskpetPanel" aria-labelledby="deskpetTitle" hidden>
     <div class="deskpet-head">
-      <div><h2 id="deskpetTitle">教師秘書・小綿助</h2><p>整理今天、追蹤回覆、照顧健康；所有寫入動作仍由你確認。</p></div>
-      <button class="close-button" type="button" id="closeDeskpetButton" aria-label="關閉小綿助">×</button>
+      <div><h2 id="deskpetTitle">教師秘書・小助手</h2><p>整理今天、追蹤回覆、照顧健康；所有寫入動作仍由你確認。</p></div>
+      <button class="close-button" type="button" id="closeDeskpetButton" aria-label="關閉小助手">×</button>
     </div>
     <div class="deskpet-body">
       <section class="deskpet-brief" aria-labelledby="deskpetBriefTitle">
         <div class="deskpet-brief-head"><strong id="deskpetBriefTitle">☀️ 今日簡報</strong><span class="deskpet-brief-time" id="deskpetBriefTime">更新中</span></div>
-        <p class="deskpet-brief-text" id="deskpetBriefText">小綿助正在整理今天的工作。</p>
+        <p class="deskpet-brief-text" id="deskpetBriefText">小助手正在整理今天的工作。</p>
         <div class="deskpet-brief-actions">
           <button class="button button-dark" type="button" id="deskpetMorningBriefButton">整理今天</button>
           <button class="button button-light" type="button" id="deskpetTomorrowBriefButton">準備明天</button>
@@ -2818,13 +2818,13 @@
           <div class="deskpet-attachment-list" id="deskpetAttachmentList"></div>
         </div>
         <div class="deskpet-actions">
-          <button class="button button-dark" type="button" id="deskpetUnderstandButton">交給小綿助整理</button>
+          <button class="button button-dark" type="button" id="deskpetUnderstandButton">交給小助手整理</button>
           <button class="button button-light" type="button" id="deskpetVoiceButton">🎙 語音交代</button>
           <button class="button button-ghost" type="button" id="deskpetInboxButton">先存為記事</button>
         </div>
       </section>
       <section class="deskpet-draft" id="deskpetDraft" hidden>
-        <div class="deskpet-draft-title">小綿助的建議：<span id="deskpetDraftTitle"></span></div>
+        <div class="deskpet-draft-title">小助手的建議：<span id="deskpetDraftTitle"></span></div>
         <div class="deskpet-draft-grid">
           <div class="deskpet-draft-item">準備執行<strong id="deskpetDraftAction"></strong></div>
           <div class="deskpet-draft-item">建議日期<strong id="deskpetDraftDate"></strong></div>
@@ -2840,13 +2840,13 @@
       </section>
       <div class="deskpet-privacy">附件先保留在本次瀏覽器工作階段；送給 AI 前會提醒檢查姓名、電話與學生資料。建立任務、行程或傳送內容前，都需要老師確認。</div>
     </div>
-    <div class="deskpet-credit">原創教師秘書「小綿助」｜提醒與健康紀錄只保留在本機</div>
+    <div class="deskpet-credit">原創教師秘書「小助手」｜提醒與健康紀錄只保留在本機</div>
   </aside>
 
   <div class="deskpet" id="deskpet">
     <div class="deskpet-bubble" id="deskpetBubble">想到事情就交給我吧！</div>
-    <button class="deskpet-button" type="button" id="deskpetButton" aria-label="開啟政好夥伴小綿助">
-      <img id="deskpetImage" src="assets/pet/v6/lamb/idle.webp" alt="小綿助桌面寵物">
+    <button class="deskpet-button" type="button" id="deskpetButton" aria-label="開啟政好夥伴小助手">
+      <img id="deskpetImage" src="assets/pet/v6/lamb/idle.webp" alt="小助手桌面寵物">
       <span class="deskpet-count" id="deskpetCount">0</span>
     </button>
   </div>
@@ -4001,7 +4001,7 @@
     function addDeskpetAttachments(fileList, source = 'upload') {
       let added = 0;
       for (const file of [...(fileList || [])]) {
-        if (deskpetState.attachments.length >= 10) { showToast('小綿助一次最多整理 10 個附件。', true); break; }
+        if (deskpetState.attachments.length >= 10) { showToast('小助手一次最多整理 10 個附件。', true); break; }
         if (!isAllowedAttachment(file)) { showToast(`不支援「${file.name || '此檔案'}」的格式。`, true); continue; }
         if (file.size > 35 * 1024 * 1024) { showToast(`${file.name || '檔案'} 超過單檔 35 MB。`, true); continue; }
         if (deskpetState.attachments.some(item => item.name === file.name && item.size === file.size && item.lastModified === file.lastModified)) continue;
@@ -4016,7 +4016,7 @@
       }
       renderDeskpetAttachments();
       $('deskpetAttachmentInput').value = '';
-      if (added) showToast(`小綿助已收到 ${added} 個附件；整理前請確認是否含個人資料。`);
+      if (added) showToast(`小助手已收到 ${added} 個附件；整理前請確認是否含個人資料。`);
     }
 
     function clearDeskpetAttachments() {
@@ -4145,7 +4145,7 @@
       clearDeskpetAttachments();
       $('deskpetBubble').textContent = '已存為本機記事，之後再整理也可以。';
       holdDeskpetAnimation('success', 1750, 'idle');
-      showToast('小綿助已將記事保存在本機。');
+      showToast('小助手已將記事保存在本機。');
     }
 
     function appendDeskpetDiary(event) {
@@ -4162,13 +4162,13 @@
       setDeskpetStep('act');
       $('deskpetConfirmButton').disabled = true;
       holdDeskpetAnimation('thinking', 60000, 'idle');
-      setLoading(true, '小綿助正在建立任務……');
+      setLoading(true, '小助手正在建立任務……');
       try {
         let result;
         if (draft.destination === 'calendar') {
           result = await cloudCall('calendar_event_create', {
             title: draft.title, dueDate: draft.dueDate, dueTime: draft.dueTime,
-            description: `由小綿助整理：${draft.safeText}`,
+            description: `由小助手整理：${draft.safeText}`,
           }, '寫入 Google 日曆');
           appendDeskpetDiary({ type: 'calendar-created', title: draft.title, eventId: result.eventId || '', time: new Date().toISOString() });
         } else {
@@ -4177,7 +4177,7 @@
           result = await serverCall('saveTask', {
             taskId: '', name: draft.title, category, status: '未開始', priority: draft.priority,
             dueDate: draft.dueDate, dueTime: draft.dueTime, nextAction: draft.safeText,
-            waitingFor: '', progress: '由小綿助快速記事建立；已經使用者確認',
+            waitingFor: '', progress: '由小助手快速記事建立；已經使用者確認',
             owner: state.settings.DEFAULT_OWNER || '', ownerEmail: state.settings.DEFAULT_OWNER_EMAIL || '',
             boardDisplay: '自動', sortOrder: 100, detailUrl: '', taskType: '一般任務',
             parentTaskId: '', projectId: '', csrfToken: state.csrfToken,
@@ -4194,7 +4194,7 @@
         renderDeskpetDashboard();
         holdDeskpetAnimation('success', 2200, 'idle');
         $('deskpetBubble').textContent = draft.destination === 'calendar' ? '完成！已加入 Google 日曆。' : '完成！任務已正式建立。';
-        showToast(draft.destination === 'calendar' ? '經你確認後，小綿助已建立 Google 日曆事件。' : '經你確認後，小綿助已建立任務。');
+        showToast(draft.destination === 'calendar' ? '經你確認後，小助手已建立 Google 日曆事件。' : '經你確認後，小助手已建立任務。');
       } catch (error) {
         setDeskpetStep('confirm');
         holdDeskpetAnimation('warning', 3200, 'idle');
@@ -4318,7 +4318,7 @@
         toggleButton.hidden = !doneNotes.length && !secretaryNotesState.showDone;
       }
       let html = activeNotes.map(secretaryNoteRowHtml).join('')
-        || '<div class="secretary-note-empty">目前沒有符合條件的記事。可直接新增，或匯入桌面小綿助的資料檔。</div>';
+        || '<div class="secretary-note-empty">目前沒有符合條件的記事。可直接新增，或匯入桌面小助手的資料檔。</div>';
       if (secretaryNotesState.showDone && doneNotes.length) {
         html += `<div class="secretary-note-meta" style="margin-top:8px">已完成（${doneNotes.length}）</div>` + doneNotes.map(secretaryNoteRowHtml).join('');
       }
@@ -4414,7 +4414,7 @@
         if (file.size > 5 * 1024 * 1024) throw new Error('記事檔超過 5 MB，已停止匯入。');
         const payload = JSON.parse(await file.text());
         const sourceNotes = payload && Array.isArray(payload.notes) ? payload.notes : [];
-        if (!sourceNotes.length) throw new Error('找不到可匯入的記事。請選擇桌面小綿助的 secretary_data.json 或網頁記事匯出檔。');
+        if (!sourceNotes.length) throw new Error('找不到可匯入的記事。請選擇桌面小助手的 secretary_data.json 或網頁記事匯出檔。');
         const imported = sourceNotes.map(note => normalizeSecretaryNote(note, 'desktop')).filter(Boolean).slice(0, 500);
         const existing = new Set(secretaryNotesState.notes.map(note => `${note.createdAt}|${note.text}`));
         const additions = imported.filter(note => !existing.has(`${note.createdAt}|${note.text}`));
@@ -4434,7 +4434,7 @@
       const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }));
       const link = document.createElement('a');
       link.href = url;
-      link.download = `小綿助記事-${new Date().toISOString().slice(0, 10)}.json`;
+      link.download = `小助手記事-${new Date().toISOString().slice(0, 10)}.json`;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -4473,7 +4473,7 @@
 
     function clearLocalPreviewData() {
       if (!IS_LOCAL_PREVIEW || !window.localPreviewStorage) return;
-      if (!window.confirm('確定清理本機離線任務、備份、檔案索引與小綿助記事嗎？請先下載 JSON 備份；清理後會重新載入空白工作台。')) return;
+      if (!window.confirm('確定清理本機離線任務、備份、檔案索引與小助手記事嗎？請先下載 JSON 備份；清理後會重新載入空白工作台。')) return;
       try {
         window.localPreviewStorage.removePreviewData();
         window.location.reload();
@@ -4551,12 +4551,12 @@
           renderSecretaryNotes();
         }
         petBridgeState.lastSync = payload.syncedAt || new Date().toISOString();
-        setPetBridgeStatus(`已連接桌面小綿助｜最後交換 ${new Date(petBridgeState.lastSync).toLocaleTimeString('zh-TW')}`, true);
-        if (!silent) showToast(`已連接小綿助${desktopTasks.length || desktopNotes.length ? `，帶入 ${desktopTasks.length} 項任務、${desktopNotes.length} 則記事` : ''}。`);
+        setPetBridgeStatus(`已連接桌面小助手｜最後交換 ${new Date(petBridgeState.lastSync).toLocaleTimeString('zh-TW')}`, true);
+        if (!silent) showToast(`已連接小助手${desktopTasks.length || desktopNotes.length ? `，帶入 ${desktopTasks.length} 項任務、${desktopNotes.length} 則記事` : ''}。`);
         return true;
       } catch (error) {
-        setPetBridgeStatus('桌面小綿助目前未開啟；網頁仍以本機模式正常使用。', false);
-        if (!silent) showToast('找不到桌面小綿助。請先啟動小綿助，再按一次重新檢查。', true);
+        setPetBridgeStatus('桌面小助手目前未開啟；網頁仍以本機模式正常使用。', false);
+        if (!silent) showToast('找不到桌面小助手。請先啟動小助手，再按一次重新檢查。', true);
         return false;
       } finally {
         window.clearTimeout(timeout);
@@ -4752,7 +4752,7 @@
         lineBridgeState.lastSync = new Date().toISOString();
         renderLineInbox();
         setLineBridgeStatus(`已連線｜最後同步 ${new Date(lineBridgeState.lastSync).toLocaleTimeString('zh-TW')}｜LINE 待定 ${lineBridgeState.inbox.length} 則`);
-        if (brought.tasks || brought.notes) showToast(`📥 從 LINE 帶入 ${[brought.tasks ? `${brought.tasks} 個任務` : '', brought.notes ? `${brought.notes} 則記事（小綿助記事）` : ''].filter(Boolean).join('、')}。`);
+        if (brought.tasks || brought.notes) showToast(`📥 從 LINE 帶入 ${[brought.tasks ? `${brought.tasks} 個任務` : '', brought.notes ? `${brought.notes} 則記事（小助手記事）` : ''].filter(Boolean).join('、')}。`);
         else if (!silent) showToast(lineBridgeState.inbox.length ? `LINE 同步完成；${lineBridgeState.inbox.length} 則等你在 LINE 按按鈕（10 分鐘後照 AI 建議自動帶入）。` : 'LINE 同步完成，沒有新訊息。');
         schedulePetBridgeSync();
         return true;
@@ -5901,7 +5901,7 @@
               ${note.done ? `<button class="mini-button" type="button" data-delete-secretary-note="${escapeHtml(note.id)}">刪除</button>` : `<button class="mini-button" type="button" data-note-to-task="${escapeHtml(note.id)}">轉任務</button>`}
             </span>
           </div>`).join('')}
-        <div class="secretary-note-meta">完整管理請到「教師工具箱 → 📥 收件與 AI → 小綿助記事」。</div>`;
+        <div class="secretary-note-meta">完整管理請到「教師工具箱 → 📥 收件與 AI → 小助手記事」。</div>`;
       popover.hidden = false;
       const dayCell = document.querySelector(`.calendar-day[data-date="${calendarNotePopoverDate}"]`);
       const rect = dayCell?.getBoundingClientRect();
@@ -6404,7 +6404,7 @@
       teacher: { name: '', title: '', subjects: '', grade: '6', className: '', committees: '' },
       privacy: { phone: true, email: true, id: true, address: true, names: true, auto: true, customTerms: '' },
       api: { enabled: IS_LOCAL_PREVIEW, provider: 'gemini', model: '', endpoint: 'https://generativelanguage.googleapis.com/v1beta/models', rememberKey: true },
-      pet: { enabled: true, autostart: false, petName: '小綿助', cheerIntervalMinutes: 5, startupDelaySeconds: 30, healthReminders: true, openingBrief: true, rememberPosition: true, quietStart: '18:00', quietEnd: '07:30' }
+      pet: { enabled: true, autostart: false, petName: '小助手', cheerIntervalMinutes: 5, startupDelaySeconds: 30, healthReminders: true, openingBrief: true, rememberPosition: true, quietStart: '18:00', quietEnd: '07:30' }
     };
     function escapeRegExp(value) {
       return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -8344,7 +8344,7 @@ ${cleanBase}`;
     async function createAiSuggestedTasks() {
       const board = aiAssistantState.draftBoard || [];
       const pending = board.filter(item => item.kind === 'task' && !item.created && item.name.trim());
-      // 記事：存到小綿助記事（日期＝提醒日），本機就完成
+      // 記事：存到小助手記事（日期＝提醒日），本機就完成
       let savedNotes = 0;
       board.filter(item => item.kind === 'note' && !item.created && item.name.trim()).forEach(item => {
         const text = `【提醒】${item.name.trim()}${item.link ? ` 🔗 ${item.link}` : ''}`;
@@ -8356,7 +8356,7 @@ ${cleanBase}`;
       if (savedNotes) saveSecretaryNotes('');
       if (!pending.length) {
         renderDraftBoard();
-        return showToast(savedNotes ? `📌 已存 ${savedNotes} 則記事到「小綿助記事」。` : '清單裡沒有要建立的任務或記事。', !savedNotes);
+        return showToast(savedNotes ? `📌 已存 ${savedNotes} 則記事到「小助手記事」。` : '清單裡沒有要建立的任務或記事。', !savedNotes);
       }
       const roots = pending.filter(item => !item.parentId || !pending.some(other => other.id === item.parentId));
       const existingNames = new Set(state.tasks.map(task => task.name.trim()));
@@ -8394,7 +8394,7 @@ ${cleanBase}`;
         }
         if (result) applyTaskResult(result);
         renderDraftBoard();
-        showToast(`✅ 已寫入任務清單：${created} 個任務（${parents} 個主任務、${children} 個子任務）${skipped ? `，${skipped} 個同名已存在略過` : ''}${savedNotes ? `；📌 ${savedNotes} 則記事已存到小綿助記事` : ''}。`);
+        showToast(`✅ 已寫入任務清單：${created} 個任務（${parents} 個主任務、${children} 個子任務）${skipped ? `，${skipped} 個同名已存在略過` : ''}${savedNotes ? `；📌 ${savedNotes} 則記事已存到小助手記事` : ''}。`);
         $('taskTableWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (error) { showToast(error.message || '建立任務失敗。', true); }
       finally { setLoading(false); }
@@ -8479,7 +8479,7 @@ ${cleanBase}`;
       link.download = 'xiaomianzhu_settings.json';
       link.click();
       URL.revokeObjectURL(url);
-      showToast('小綿助桌面設定檔已下載；請放到小綿助.exe 旁邊並啟動一次。');
+      showToast('小助手桌面設定檔已下載；請放到小助手.exe 旁邊並啟動一次。');
     }
 
     function updateApiFieldVisibility() {
@@ -8601,7 +8601,8 @@ ${cleanBase}`;
       $('rememberApiKey').checked = assistantSettings.api.rememberKey !== false;
       $('petEnabled').checked = assistantSettings.pet.enabled !== false;
       $('petAutostart').checked = assistantSettings.pet.autostart === true;
-      $('petName').value = assistantSettings.pet.petName || '小綿助';
+      if (assistantSettings.pet.petName === '小綿' + '助') assistantSettings.pet.petName = '小助手';   // 改名前的預設名字
+      $('petName').value = assistantSettings.pet.petName || '小助手';
       $('petCheerInterval').value = String(assistantSettings.pet.cheerIntervalMinutes ?? 5);
       $('petStartupDelay').value = String(assistantSettings.pet.startupDelaySeconds ?? 30);
       $('petHealthReminders').checked = assistantSettings.pet.healthReminders !== false;
@@ -8614,7 +8615,7 @@ ${cleanBase}`;
       } catch (error) { $('apiKey').value = ''; }
     }
 
-    // 「📥 收件與 AI」：小綿助記事、AI 行政助理，用分頁切換（LINE 傳來的事同步時自動帶入，不用再確認）
+    // 「📥 收件與 AI」：小助手記事、AI 行政助理，用分頁切換（LINE 傳來的事同步時自動帶入，不用再確認）
     const INBOX_HUB_TARGETS = ['secretaryNotesSection', 'aiAssistantSection'];
     let inboxHubLast = '';
     function inboxHubTabs() {
@@ -8752,7 +8753,7 @@ ${cleanBase}`;
         pet: {
           enabled: $('petEnabled').checked,
           autostart: $('petAutostart').checked,
-          petName: $('petName').value.trim().slice(0, 12) || '小綿助',
+          petName: $('petName').value.trim().slice(0, 12) || '小助手',
           cheerIntervalMinutes: Math.max(0, Number($('petCheerInterval').value) || 0),
           startupDelaySeconds: Math.max(0, Number($('petStartupDelay').value) || 0),
           healthReminders: $('petHealthReminders').checked,
@@ -10555,7 +10556,7 @@ ${cleanBase}`;
           const result = await serverCall('saveTask', {
             taskId: '', name: note.text.replace(/^【[^】]{1,10}】/, '').slice(0, 60), category: '', status: '未開始', priority: '中',
             dueDate: '', dueTime: '', nextAction: note.text, waitingFor: '',
-            progress: '由小綿助記事轉為任務', owner: state.settings.DEFAULT_OWNER || '', ownerEmail: state.settings.DEFAULT_OWNER_EMAIL || '',
+            progress: '由小助手記事轉為任務', owner: state.settings.DEFAULT_OWNER || '', ownerEmail: state.settings.DEFAULT_OWNER_EMAIL || '',
             boardDisplay: '自動', sortOrder: 100, detailUrl: '', taskType: '一般任務',
             parentTaskId: '', projectId: '', workAxis: '行政', csrfToken: state.csrfToken
           });

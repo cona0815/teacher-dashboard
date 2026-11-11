@@ -1,5 +1,5 @@
 """
-小綿助 v2.2 資訊顯示層（參考 Clippy.js 的泡泡擺位與 VPet／DyberPet 的狀態顯示做法，程式為本專案原創）。
+小助手 v2.2 資訊顯示層（參考 Clippy.js 的泡泡擺位與 VPet／DyberPet 的狀態顯示做法，程式為本專案原創）。
 
 - NoticeQueue：純邏輯的訊息分級排隊（可單元測試，不依賴 Tk）
     urgent（吃藥、逾期、LINE 新訊息）不會被蓋掉；normal（喝水、起身、分心）；

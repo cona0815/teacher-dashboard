@@ -1,4 +1,4 @@
-"""小綿助 v5 動畫：四隻角色（lamb、cat、dog、robot）× 16 種動作的動態 WebP 動畫包。
+"""小助手 v5 動畫：四隻角色（lamb、cat、dog、robot）× 16 種動作的動態 WebP 動畫包。
 
 - assets/pet/v5/manifest.json＋<角色>/<動作>.webp（tools/build_pet_pack.py 產生）
 - 用到的動作才解碼；最近用過的幾個動作留在記憶體，其餘釋放

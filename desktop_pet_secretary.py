@@ -1,4 +1,4 @@
-"""小綿助 Windows 桌面秘書。
+"""小助手 Windows 桌面秘書。
 
 平時只有透明桌寵常駐；左鍵會說打氣話，右鍵選單可開啟秘書首頁。所有本機健康紀錄、
 快速記事與尚未同步的任務均保存在使用者 AppData，不寫入網頁 localStorage。
@@ -57,7 +57,7 @@ from desktop_pet_voice import (
 )
 
 
-APP_NAME = "小綿助教師秘書"
+APP_NAME = "小助手教師秘書"
 DATA_ROOT = Path(os.getenv("APPDATA", Path.home())) / "XiaoMianZhuSecretary"
 DATA_FILE = DATA_ROOT / "secretary_data.json"
 ATTACHMENT_ROOT = DATA_ROOT / "attachments"
@@ -316,9 +316,9 @@ details summary{cursor:pointer;font-weight:800;color:var(--strong)}
         　🚶 起身提醒間隔
         <select id="cfgMoveInterval" onchange="actx({action:'set_move_interval',minutes:this.value})"><option>15</option><option>30</option><option>45</option><option>60</option><option>90</option><option>120</option></select> 分鐘
       </div>
-      <div class="row">💊 新增服藥時間 <input id="cfgMedTime" type="time" style="max-width:140px"> <button onclick="addMed()">＋新增</button><span class="note-meta">每一筆時間到了小綿助都會提醒；點時間旁的 ✖ 可移除。</span></div>
+      <div class="row">💊 新增服藥時間 <input id="cfgMedTime" type="time" style="max-width:140px"> <button onclick="addMed()">＋新增</button><span class="note-meta">每一筆時間到了小助手都會提醒；點時間旁的 ✖ 可移除。</span></div>
       <div class="row" id="medManage"></div>
-      <div class="note-meta">提醒的總開關與安靜時段，在教師工作台「設定 → 小綿助」。</div>
+      <div class="note-meta">提醒的總開關與安靜時段，在教師工作台「設定 → 小助手」。</div>
     </details>
   </section>
 
@@ -329,7 +329,7 @@ details summary{cursor:pointer;font-weight:800;color:var(--strong)}
       <div class="row"><input id="clToken" type="password" placeholder="🔑C 老師金鑰（與工作台「設定 → LINE 小幫手」同一把；已存過可留白）" style="flex:1">
         每 <select id="clPoll"><option>1</option><option selected>2</option><option>5</option><option>10</option></select> 分鐘拉一次</div>
       <div class="row"><button onclick="saveCloudLink(true)">儲存並啟用</button><button class="light" onclick="testCloudLink()">測試連線</button><button class="light" onclick="saveCloudLink(false)">停用</button>
-        <span class="note-meta">金鑰只存在這台電腦的小綿助資料檔；桌寵程式只允許連 script.google.com。</span></div>
+        <span class="note-meta">金鑰只存在這台電腦的小助手資料檔；桌寵程式只允許連 script.google.com。</span></div>
     </details></section>
 
   <section class="card"><h2>📣 大屏提示遙控</h2>
@@ -337,7 +337,7 @@ details summary{cursor:pointer;font-weight:800;color:var(--strong)}
     <div class="row"><input id="promptCustom" placeholder="或自訂一句…" style="flex:1"><button onclick="sendPrompt()">送到大屏</button><button class="light" onclick="actx({action:'prompt_set',clear:true})">清除</button></div>
     <div class="note-meta">教室大屏開著「📣 大屏提示」時，約 20 秒內切換（需雲端連線）。</div></section>
 
-  <section class="card"><h2>🍅 專注小綿助</h2>
+  <section class="card"><h2>🍅 專注小助手</h2>
     <div>今日 <span class="num" id="focusMin">0</span> 分專注・<span class="num" id="driftMin" style="color:var(--danger)">0</span> 分分心　<span class="tag" id="focusStatus">—</span></div>
     <div class="row"><button onclick="actx({action:'focus_session',minutes:25})">專注 25 分</button><button onclick="actx({action:'focus_session',minutes:50})">專注 50 分</button><button class="light" onclick="actx({action:'focus_session',minutes:0})">結束</button><span class="note-meta" id="sessionHint"></span></div>
     <div class="row" id="recentDrift"></div>
@@ -350,14 +350,14 @@ details summary{cursor:pointer;font-weight:800;color:var(--strong)}
     <div id="voiceStatus" class="empty">載入中……</div>
     <div class="row" style="margin-top:6px">
       <button onclick="testVoice()">🎤 測試 3 秒錄音</button>
-      <span class="note-meta">先把游標放在任何要打字的地方，<b>按住</b><span id="voHotkeyName">右 Ctrl</span>說話、放開就貼上；<b>按住</b><span id="voPetHotkeyName">右 Alt</span>說話＝直接變成小綿助的記事或任務。</span>
+      <span class="note-meta">先把游標放在任何要打字的地方，<b>按住</b><span id="voHotkeyName">右 Ctrl</span>說話、放開就貼上；<b>按住</b><span id="voPetHotkeyName">右 Alt</span>說話＝直接變成小助手的記事或任務。</span>
     </div>
     <details id="voiceSetup" style="margin-top:8px"><summary>⚙ 設定（金鑰、快捷鍵、風格）</summary>
       <div class="row"><input id="voGemini" type="password" placeholder="🔑D Gemini 金鑰（與工作台 AI 設定同一把；已存過可留白）" style="flex:1"><button class="light" onclick="clearKey('gemini')">清除</button></div>
       <div class="row"><input id="voGroq" type="password" placeholder="（選填，不填也可以）Groq 金鑰 gsk_…：Gemini 額度用完時當備援" style="flex:1"><button class="light" onclick="clearKey('groq')">清除</button></div>
       <div class="row">Gemini 模型 <input id="voModel" placeholder="留空＝自動（3.5 Flash-Lite，用完自動換）" style="max-width:260px"><span class="note-meta">留空最好：先用 3.5 Flash-Lite，被停用或今天額度用完會自動換 3.1 Flash-Lite、3.8 Flash。</span></div>
       <div class="row">辨識服務 <select id="voProvider"><option value="auto">自動（Gemini 優先，Groq 只當備援）</option><option value="gemini">Gemini</option><option value="groq">Groq</option></select>
-        　打字快捷鍵 <select id="voHotkey"></select>　說給小綿助 <select id="voPetHotkey"></select></div>
+        　打字快捷鍵 <select id="voHotkey"></select>　說給小助手 <select id="voPetHotkey"></select></div>
       <div class="row">潤飾風格 <select id="voStyle"></select>　詞庫 <select id="voVocab"></select>　<input id="voCustom" placeholder="自訂常用詞（頓號分隔）" style="flex:1"></div>
       <div class="row"><label><input type="checkbox" id="voOn" checked> 啟用語音輸入</label><button onclick="saveVoice()">儲存</button>
         <span class="note-meta">只在按住快捷鍵時錄音；音檔只送 Gemini 或 Groq 官方 API、不存檔；金鑰只存在這台電腦。</span></div>
@@ -373,7 +373,7 @@ details summary{cursor:pointer;font-weight:800;color:var(--strong)}
 
   <section class="card"><h2>💬 快速記事</h2>
     <textarea id="noteInput" rows="3" placeholder="先記下臨時交代、等待回覆或稍後要整理的事情……"></textarea>
-    <div class="row"><button onclick="addNote()">儲存記事</button><span class="note-meta">保存在小綿助本機資料；工作台開啟時會自動帶入。</span></div>
+    <div class="row"><button onclick="addNote()">儲存記事</button><span class="note-meta">保存在小助手本機資料；工作台開啟時會自動帶入。</span></div>
   </section>
 
   <section class="card"><h2>📱 LINE 待整理</h2><ul id="lineInbox"></ul><div class="note-meta">在 LINE 按［任務］［記事］［不要］就定案；教師工作台同步時自動建立。</div></section>
@@ -383,7 +383,7 @@ details summary{cursor:pointer;font-weight:800;color:var(--strong)}
   <section class="card" style="grid-column:1/-1"><h2>🐑 桌寵控制</h2>
     <div class="row">
       <button class="light" onclick="act('toggle_pause')">⏸ 暫停／繼續走動</button>
-      <button class="light" style="color:var(--danger);border-color:var(--danger)" onclick="if(confirm('確定關閉小綿助？（提醒與本機連線都會停止）'))act('quit')">❌ 關閉小綿助</button>
+      <button class="light" style="color:var(--danger);border-color:var(--danger)" onclick="if(confirm('確定關閉小助手？（提醒與本機連線都會停止）'))act('quit')">❌ 關閉小助手</button>
       <span class="note-meta">開啟本頁：對桌面上的小綿羊按右鍵或雙擊。</span>
     </div>
   </section>
@@ -426,7 +426,7 @@ function renderCloud(c){
   if(document.activeElement!==$('clUrl'))$('clUrl').value=c.url||'';
   if(document.activeElement!==$('clPoll'))$('clPoll').value=String(c.pollMinutes||2);
   const st=c.state||{};
-  if(!c.enabled){$('cloudStatus').textContent=c.url&&!c.hasToken?'已填網址，還缺 🔑C 老師金鑰。':'尚未啟用——點下方「⚙ 設定」貼上網址與 🔑C，小綿助就能自己去拿工作台快照、LINE 待整理與大屏提示。';$('cloudLinkSetup').open=!c.url;return;}
+  if(!c.enabled){$('cloudStatus').textContent=c.url&&!c.hasToken?'已填網址，還缺 🔑C 老師金鑰。':'尚未啟用——點下方「⚙ 設定」貼上網址與 🔑C，小助手就能自己去拿工作台快照、LINE 待整理與大屏提示。';$('cloudLinkSetup').open=!c.url;return;}
   // 雲端回傳的值一律 esc() 後才放進 innerHTML（資安：防雲端資料夾帶 HTML）
   let html=`<div>✅ 已啟用，每 ${esc(c.pollMinutes)} 分鐘同步`+(st.fetchedAt?`｜最近 ${esc(st.fetchedAt)}`:'｜等待第一次同步')+`</div>`;
   const snap=st.snapshot;
@@ -536,7 +536,7 @@ def default_data() -> dict:
         "settings": {
             "enabled": True,
             "autostart": False,
-            "pet_name": "小綿助",
+            "pet_name": "小助手",
             "pet_character": "lamb",
             "cheer_interval_minutes": 5,
             "startup_delay_seconds": 30,
@@ -554,12 +554,12 @@ def default_data() -> dict:
             "cloud_url": "",
             "cloud_token": "",
             "cloud_poll_minutes": 2,
-            # v2.0 專注小綿助：作用中視窗標題偵測（純本機、不截圖）
+            # v2.0 專注小助手：作用中視窗標題偵測（純本機、不截圖）
             "focus_enabled": True,
             "focus_keywords": list(DEFAULT_FOCUS_KEYWORDS),
             "focus_threshold_minutes": 3,
             "focus_cooldown_minutes": 10,
-            # v2.1 會聽的小綿助：按住說話（右 Ctrl＝打字到游標處；右 Alt＝說給小綿助變記事／任務）
+            # v2.1 會聽的小助手：按住說話（右 Ctrl＝打字到游標處；右 Alt＝說給小助手變記事／任務）
             "voice_enabled": True,
             "voice_provider": "auto",
             "voice_gemini_key": "",
@@ -701,7 +701,7 @@ class SecretaryPet(DesktopPetPreview):
         self.root.after(3000, self._rest_tick)
         self.root.after(15_000, self._idle_variety_tick)
         self.root.after(1500, self._mouse_tick)
-        # ---- v2.1：會聽的小綿助 ----
+        # ---- v2.1：會聽的小助手 ----
         self.voice = VoiceEngine()
         self.recorder = Recorder()
         self.hotkeys: HotkeyListener | None = None
@@ -945,7 +945,7 @@ class SecretaryPet(DesktopPetPreview):
             *([(f"🔄 換角色（現在：{CHARACTERS[self.character]}）", self._next_character)] if self.pack is not None else []),
             ("▶ 繼續" if self.paused else ("⏸ 暫停走動" if self.has_state("walk_right") else "⏸ 暫停動作"), self.toggle_pause),
             None,
-            ("✖ 關閉小綿助", self.root.destroy),
+            ("✖ 關閉小助手", self.root.destroy),
         ]
         return items
 
@@ -958,7 +958,7 @@ class SecretaryPet(DesktopPetPreview):
             self.play("notice", 1, "idle", f"換成{CHARACTERS[nxt]}陪你囉！", level="feedback")
 
     def _pet_name(self) -> str:
-        return str(self.data.get("settings", {}).get("pet_name") or "小綿助")
+        return str(self.data.get("settings", {}).get("pet_name") or "小助手")
 
     def _in_quiet_hours(self) -> bool:
         settings = self.data.get("settings", {})
@@ -989,7 +989,9 @@ class SecretaryPet(DesktopPetPreview):
         settings = default_data()["settings"]
         settings.update(base.get("settings") or {})
         settings.update(load_external_settings())
-        settings["pet_name"] = str(settings.get("pet_name") or "小綿助").strip()[:12] or "小綿助"
+        settings["pet_name"] = str(settings.get("pet_name") or "小助手").strip()[:12] or "小助手"
+        if settings["pet_name"] == "小綿" + "助":   # 改名前的預設名字 → 新名字（老師自己取的名字不動）
+            settings["pet_name"] = "小助手"
         settings["pet_character"] = settings.get("pet_character") if settings.get("pet_character") in CHARACTERS else "lamb"
         try:
             settings["cheer_interval_minutes"] = min(120, max(0, int(settings.get("cheer_interval_minutes", 5))))
@@ -1285,7 +1287,7 @@ class SecretaryPet(DesktopPetPreview):
         bridge.pack(fill="x", pady=(0, 6))
         tk.Label(
             bridge,
-            text="小綿助開啟時，Netlify 或本機教師工作台會透過這台電腦的 127.0.0.1 自動交換任務與記事；資料不會經過第三方伺服器。",
+            text="小助手開啟時，Netlify 或本機教師工作台會透過這台電腦的 127.0.0.1 自動交換任務與記事；資料不會經過第三方伺服器。",
             bg=c["surface"], fg=c["muted"], justify="left", anchor="w", wraplength=int(500 * self.dpi_scale),
             font=("Microsoft JhengHei", 8),
         ).pack(fill="x", pady=(0, 8))
@@ -1432,7 +1434,7 @@ class SecretaryPet(DesktopPetPreview):
         med_box = ttk.Combobox(medicine_control, textvariable=med_var, values=med_values, state="readonly", width=8, style="Secretary.TCombobox", height=10)
         med_box.pack(side="left")
         ttk.Button(medicine_control, text="＋新增時間", style="Secretary.TButton", command=self._add_medicine_time).pack(side="left", padx=5)
-        tk.Label(medicine_body, text="可設定多個提醒時間；每一筆都由小綿助提醒。", bg=c["soft"], fg=c["muted"], anchor="w", font=("Microsoft JhengHei", 8)).pack(fill="x")
+        tk.Label(medicine_body, text="可設定多個提醒時間；每一筆都由小助手提醒。", bg=c["soft"], fg=c["muted"], anchor="w", font=("Microsoft JhengHei", 8)).pack(fill="x")
         medicine_list = tk.Frame(medicine_body, bg=c["soft"])
         medicine_list.pack(fill="x", pady=(3, 0))
         self.panel_widgets["health_medicine"] = medicine_list
@@ -1464,7 +1466,7 @@ class SecretaryPet(DesktopPetPreview):
     def _save_personalization(self) -> None:
         name_var: tk.StringVar = self.panel_widgets["pet_name_var"]  # type: ignore[assignment]
         interval_var: tk.StringVar = self.panel_widgets["cheer_interval_var"]  # type: ignore[assignment]
-        name = name_var.get().strip()[:12] or "小綿助"
+        name = name_var.get().strip()[:12] or "小助手"
         try:
             interval = min(120, max(1, int(interval_var.get())))
         except (TypeError, ValueError):
@@ -1513,7 +1515,7 @@ class SecretaryPet(DesktopPetPreview):
 
     def open_secretary_page(self) -> None:
         if self.bridge_error:
-            self.notify("本機服務未啟動，秘書頁開不了；請重新啟動小綿助。", "normal")
+            self.notify("本機服務未啟動，秘書頁開不了；請重新啟動小助手。", "normal")
             return
         import webbrowser
 
@@ -1581,7 +1583,7 @@ class SecretaryPet(DesktopPetPreview):
         return {"ok": True}
 
     # ------------------------------------------------------------------
-    # v2.0 專注小綿助：作用中視窗標題偵測（純本機、不截圖、不上傳）
+    # v2.0 專注小助手：作用中視窗標題偵測（純本機、不截圖、不上傳）
     # ------------------------------------------------------------------
     def _focus_tick(self) -> None:
         try:
@@ -1827,7 +1829,7 @@ class SecretaryPet(DesktopPetPreview):
         if self.recorder.active:
             return
         if not self.voice.ready:
-            self.voice_state.update({"status": "idle", "lastError": "尚未填入 🔑D Gemini 金鑰：雙擊小綿助 → 🎙 語音輸入"})
+            self.voice_state.update({"status": "idle", "lastError": "尚未填入 🔑D Gemini 金鑰：雙擊小助手 → 🎙 語音輸入"})
             self.play("warning", 2, "idle", "還沒有金鑰，先到秘書頁「🎙 語音輸入」貼 🔑D。", level="feedback")
             return
         try:
@@ -1911,7 +1913,7 @@ class SecretaryPet(DesktopPetPreview):
             self.root.after(800, restore)
 
     def _voice_to_secretary(self, text: str) -> None:
-        """說給小綿助：有日期／期限／動作詞 → 任務，否則記事；工作台開啟時會經本機橋接帶入。"""
+        """說給小助手：有日期／期限／動作詞 → 任務，否則記事；工作台開啟時會經本機橋接帶入。"""
         kind = classify_spoken_item(text)
         body = strip_spoken_prefix(text)
         with self.data_lock:
@@ -2233,7 +2235,7 @@ class SecretaryPet(DesktopPetPreview):
                     self.root.after(150, self.root.destroy)
                 except tk.TclError:
                     pass
-                return {"ok": True, "message": "小綿助即將關閉"}
+                return {"ok": True, "message": "小助手即將關閉"}
             else:
                 return {"ok": False, "error": f"未知動作：{action}"}
             self._save_data()
@@ -2274,17 +2276,17 @@ class SecretaryPet(DesktopPetPreview):
             self.bridge_thread = threading.Thread(target=self.bridge_server.serve_forever, name="xiaomianzhu-local-bridge", daemon=True)
             self.bridge_thread.start()
         except OSError as error:
-            # 8767 被占用最常見的原因是「已有另一個小綿助在執行」。多個實例會疊在
+            # 8767 被占用最常見的原因是「已有另一個小助手在執行」。多個實例會疊在
             # 同一位置、面板互相干擾，看起來像壞掉；直接提示並結束，避免殭屍實例。
             self.bridge_error = str(error)
             try:
                 messagebox.showwarning(
                     APP_NAME,
                     "偵測到本機連接埠 8767 已被使用。\n\n"
-                    "最可能的原因：小綿助已經在執行中（請看工作列或桌面角落，"
+                    "最可能的原因：小助手已經在執行中（請看工作列或桌面角落，"
                     "或用工作管理員結束多餘的 XiaoMianZhu／python 程序後再開一次）。\n\n"
-                    "若是其他程式占用了 8767，關閉該程式後重新啟動小綿助即可。\n"
-                    "本次啟動將結束，以免出現多隻小綿助互相干擾。",
+                    "若是其他程式占用了 8767，關閉該程式後重新啟動小助手即可。\n"
+                    "本次啟動將結束，以免出現多隻小助手互相干擾。",
                 )
             except tk.TclError:
                 pass
@@ -2353,7 +2355,7 @@ class SecretaryPet(DesktopPetPreview):
             "dueTime": str(task.get("due_time") or raw.get("dueTime") or ""),
             "nextAction": str(raw.get("nextAction") or task.get("title") or ""),
             "waitingFor": str(task.get("waiting_for") or raw.get("waitingFor") or ""),
-            "owner": str(raw.get("owner") or "桌面小綿助"),
+            "owner": str(raw.get("owner") or "桌面小助手"),
             "boardDisplay": str(raw.get("boardDisplay") or "自動"),
             "sortOrder": sort_order,
             "source": "desktop" if task.get("source") != "web" else "web",
@@ -2472,10 +2474,10 @@ class SecretaryPet(DesktopPetPreview):
             return
         target = filedialog.asksaveasfilename(
             parent=self.panel,
-            title="匯出小綿助記事給教師工作台",
+            title="匯出小助手記事給教師工作台",
             defaultextension=".json",
             filetypes=[("JSON 檔案", "*.json")],
-            initialfile=f"小綿助記事-{date.today().isoformat()}.json",
+            initialfile=f"小助手記事-{date.today().isoformat()}.json",
         )
         if not target:
             return
@@ -2500,7 +2502,7 @@ class SecretaryPet(DesktopPetPreview):
         Path(target).write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
         messagebox.showinfo(
             APP_NAME,
-            f"已匯出 {len(safe_notes)} 則記事。\n請到教師工作台的「小綿助記事」按「匯入桌面記事」。",
+            f"已匯出 {len(safe_notes)} 則記事。\n請到教師工作台的「小助手記事」按「匯入桌面記事」。",
             parent=self.panel,
         )
 
@@ -2770,7 +2772,7 @@ class SecretaryPet(DesktopPetPreview):
 
     def _choose_attachments(self) -> None:
         paths = filedialog.askopenfilenames(
-            title="交給小綿助整理",
+            title="交給小助手整理",
             filetypes=[("支援的檔案", "*.png *.jpg *.jpeg *.webp *.bmp *.tif *.tiff *.pdf *.txt *.md *.csv *.json *.html *.docx *.xlsx *.xlsm *.pptx"), ("所有檔案", "*.*")],
             parent=self.panel,
         )

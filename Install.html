@@ -286,7 +286,7 @@
 <path class="d-line" d="M356,324 L406,324" marker-end="url(#ar-road)"/>
 <path class="d-line" d="M182,364 L182,376" marker-end="url(#ar-road)"/>
 <a href="#level5"><rect class="d-tp" x="10" y="378" width="344" height="76" rx="12"/>
-<text class="d-title" x="24" y="402" text-anchor="start">🟣 第 5 級｜再加桌寵小綿助</text>
+<text class="d-title" x="24" y="402" text-anchor="start">🟣 第 5 級｜再加桌寵小助手</text>
 <text class="d-small" x="24" y="422" text-anchor="start">約 3 分・下載解壓（Windows）</text>
 <text class="d-small" x="24" y="442" text-anchor="start">沿用 🌐A 🔑C 🔑D</text>
 <text class="d-small" x="344" y="442" text-anchor="end">看教學 →</text></a>
@@ -301,7 +301,7 @@
         <tr><td>在家用手機或電腦寫聯絡本，隔天大屏自動出現；查詢統計、任務清單、Google 日曆</td><td><a href="#level2">🔵 第 2 級</a></td><td>20 分鐘</td></tr>
         <tr><td>請 AI 拆公文、回覆家長、做學習單、改作文</td><td><a href="#level3">🟡 第 3 級</a></td><td>3 分鐘</td></tr>
         <tr><td>在 LINE 傳一句話就建任務、每天早上收到點名回報</td><td><a href="#level4">🟠 第 4 級</a></td><td>30 分鐘</td></tr>
-        <tr><td>桌面小綿助陪伴與健康提醒、按住說話就出字</td><td><a href="#level5">🟣 第 5 級</a></td><td>3 分鐘</td></tr>
+        <tr><td>桌面小助手陪伴與健康提醒、按住說話就出字</td><td><a href="#level5">🟣 第 5 級</a></td><td>3 分鐘</td></tr>
       </table></div>
 
       <h3>你只需要準備</h3>
@@ -339,10 +339,10 @@
       <details class="box"><summary style="cursor:pointer;font-weight:900">🗝 代號對照表（每一把在哪裡拿到、貼到哪裡）</summary>
       <div class="tablebox"><table>
         <tr><th>代號</th><th>第幾級</th><th>這是什麼</th><th>哪裡拿到</th><th>貼到哪裡</th></tr>
-        <tr><td><strong>🌐A</strong></td><td>🔵 第 2 級</td><td>機器人網址（/exec 結尾）</td><td>第 2 級第 3 步，部署後產生</td><td>大屏設定、工作台「① 雲端／LINE 小幫手」、小綿助雲端連線；（第 4 級）Webhook</td></tr>
+        <tr><td><strong>🌐A</strong></td><td>🔵 第 2 級</td><td>機器人網址（/exec 結尾）</td><td>第 2 級第 3 步，部署後產生</td><td>大屏設定、工作台「① 雲端／LINE 小幫手」、小助手雲端連線；（第 4 級）Webhook</td></tr>
         <tr><td><strong>🔑B</strong></td><td>🔵 第 2 級</td><td>教室大屏金鑰（教室專用，只能報當天）</td><td rowspan="2">第 2 級第 2 步「① 初始化」彈窗<br><span class="lead">隨時可用選單「🔑 顯示我的金鑰」再看</span></td><td>晨間大屏「設定」的 🔑B 欄（教室電腦只放這把）</td></tr>
-        <tr><td><strong>🔑C</strong></td><td>🔵 第 2 級</td><td>工作台同步金鑰（老師專用，可查歷史）</td><td>工作台「① 雲端／LINE 小幫手」、小綿助雲端連線、大屏「查詢統計」</td></tr>
-        <tr><td><strong>🔑D</strong></td><td>🟡 第 3 級</td><td>AI 金鑰（Gemini）</td><td><a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a> 免費申請</td><td>工作台「② AI 設定」、小綿助「🎙 語音輸入」；（第 4 級）試算表選單「④ 填入 Gemini 金鑰」</td></tr>
+        <tr><td><strong>🔑C</strong></td><td>🔵 第 2 級</td><td>工作台同步金鑰（老師專用，可查歷史）</td><td>工作台「① 雲端／LINE 小幫手」、小助手雲端連線、大屏「查詢統計」</td></tr>
+        <tr><td><strong>🔑D</strong></td><td>🟡 第 3 級</td><td>AI 金鑰（Gemini）</td><td><a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a> 免費申請</td><td>工作台「② AI 設定」、小助手「🎙 語音輸入」；（第 4 級）試算表選單「④ 填入 Gemini 金鑰」</td></tr>
         <tr><td><strong>🔑E</strong></td><td>🟠 第 4 級</td><td>LINE Channel access token</td><td>LINE Developers 按 Issue 發行</td><td>試算表選單「② 填入 LINE Token（🔑E）」</td></tr>
         <tr><td><strong>🔑F</strong></td><td>🟠 第 4 級</td><td>Webhook 驗證參數</td><td>第 2 級初始化時已一起產生（先不用）</td><td>接在 🌐A 後面：<code>🌐A?hook=🔑F</code>，貼到 LINE 的 Webhook URL</td></tr>
         <tr><td><strong>👤G</strong></td><td>🟠 第 4 級</td><td>LINE userId（U 開頭，用來鎖門）</td><td>對機器人傳「我的ID」</td><td>試算表選單「③ 填入我的 LINE userId」</td></tr>
@@ -691,7 +691,7 @@
     <section id="level3" class="tier2 bg">
       <span id="tier2"></span><span id="lv3"></span>
       <div class="sec-head"><div class="sec-icon">🟡</div><div class="sec-titles"><div class="tier-head"><h2><span class="sec-num">4.</span>第 3 級：加上 AI（🔑D，Gemini）</h2><span class="pill">約 3 分鐘</span><span class="pill">免費申請</span></div></div></div>
-      <p class="lead">申請一串免費金鑰貼進設定，就打開 AI 行政助理（PDF、訊息拆成任務與記事）、回覆家長（依內容起草）、教材小工場的 AI 工具（學習單、作文批改、數學類似題…）、小綿助語音輸入。</p>
+      <p class="lead">申請一串免費金鑰貼進設定，就打開 AI 行政助理（PDF、訊息拆成任務與記事）、回覆家長（依內容起草）、教材小工場的 AI 工具（學習單、作文批改、數學類似題…）、小助手語音輸入。</p>
       <div class="gets"><span>會拿到：🔑D</span></div>
       <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="第 3 級操作畫面">
 <defs><marker id="ar-t2" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
@@ -711,7 +711,7 @@
 <text class="d-cap" x="687" y="200" text-anchor="middle">④ 工作台「② AI 設定」</text>
 <text class="d-small" x="687" y="218" text-anchor="middle">貼上 → 取得清單 → 儲存</text>
 </svg>
-<figcaption>同一把 🔑D 還可以貼到小綿助（按住說話）與 LINE（聽語音），不用重新申請。</figcaption>
+<figcaption>同一把 🔑D 還可以貼到小助手（按住說話）與 LINE（聽語音），不用重新申請。</figcaption>
 </figure>
 
       <div class="bstep"><label><input type="checkbox"><span class="bno">第 1 步</span><span class="btt">拿一把免費的 AI 金鑰（🔑D）</span></label><div class="bbody">
@@ -736,13 +736,13 @@
         <div class="warn">🔒 用 AI 時，請不要把學生的全名、身分證字號、電話貼進去；送出前工作台會先遮蔽電話、身分證、Email。</div>
       </div></div>
 
-      <div class="bstep"><label><input type="checkbox"><span class="bno">選用</span><span class="btt">貼到小綿助、LINE 小幫手</span></label><div class="bbody">
+      <div class="bstep"><label><input type="checkbox"><span class="bno">選用</span><span class="btt">貼到小助手、LINE 小幫手</span></label><div class="bbody">
         <ul class="plain">
-          <li><b>小綿助</b>：見<a href="#level5">第 5 級</a>，貼進去後按住右 Ctrl 說話就出字。</li>
+          <li><b>小助手</b>：見<a href="#level5">第 5 級</a>，貼進去後按住右 Ctrl 說話就出字。</li>
           <li><b>LINE 小幫手</b>（做到第 4 級才需要）：試算表選單「🤖 LINE 小幫手 → <strong>④ 填入 Gemini 金鑰</strong>」貼 🔑D，LINE 就聽得懂語音、看得懂照片。</li>
         </ul>
       </div></div>
-      <div class="ok">🎉 <b>第 3 級完成！</b>AI 只在你按「分析」「生成」時才呼叫；金鑰只存在這台電腦（瀏覽器與小綿助資料檔），不進備份、不進 GitHub。</div>
+      <div class="ok">🎉 <b>第 3 級完成！</b>AI 只在你按「分析」「生成」時才呼叫；金鑰只存在這台電腦（瀏覽器與小助手資料檔），不進備份、不進 GitHub。</div>
     </section>
 
     <section id="level4" class="tier3">
@@ -926,14 +926,14 @@
         </div>
         <p><strong>看到這 8 項與本月用量，就代表全部設定成功。</strong>想調整就傳「<code>開啟 放學小結</code>」或「<code>關閉 作業推播</code>」。</p>
       </div></div>
-      <div class="ok">✅ <strong>第 4 級完成！</strong>在 LINE 傳一件事給小幫手，回覆下面會有［任務］［記事］［不要］按鈕，按一下就定案（沒按的 10 分鐘後照 AI 建議）；工作台同步時自動建立：任務進任務清單、記事進「📥 收件與 AI → 小綿助記事」。傳「<code>說明</code>」看全部指令。</div>
+      <div class="ok">✅ <strong>第 4 級完成！</strong>在 LINE 傳一件事給小幫手，回覆下面會有［任務］［記事］［不要］按鈕，按一下就定案（沒按的 10 分鐘後照 AI 建議）；工作台同步時自動建立：任務進任務清單、記事進「📥 收件與 AI → 小助手記事」。傳「<code>說明</code>」看全部指令。</div>
     </section>
 
     <section id="level5" class="tierp">
       <span id="pet"></span>
-      <div class="sec-head"><div class="sec-icon">🟣</div><div class="sec-titles"><div class="tier-head"><h2><span class="sec-num">6.</span>第 5 級：再加桌寵小綿助（Windows）</h2><span class="pill">3 分鐘</span></div></div></div>
+      <div class="sec-head"><div class="sec-icon">🟣</div><div class="sec-titles"><div class="tier-head"><h2><span class="sec-num">6.</span>第 5 級：再加桌寵小助手（Windows）</h2><span class="pill">3 分鐘</span></div></div></div>
       <p class="lead">免安裝的桌面小夥伴：健康提醒、分心提醒、專注模式；接上第 2 級可以直連你的資料（用 🌐A＋🔑C），有第 3 級的 🔑D 可以按住說話就出字。</p>
-      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="小綿助安裝操作畫面">
+      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="小助手安裝操作畫面">
 <defs><marker id="ar-peta" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
 <rect class="d-win" x="8" y="8" width="236" height="170" rx="8"/><rect class="d-wbar" x="9" y="9" width="234" height="19" rx="7"/><rect class="d-wbar" x="9" y="20" width="234" height="8" rx="0"/><circle cx="18" cy="18" r="3" fill="#e0766a"/><circle cx="27" cy="18" r="3" fill="#e8c15a"/><circle cx="36" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="46" y="22" text-anchor="start">檔案總管 ｜ 下載</text><rect class="d-sel" x="18" y="40" width="216" height="22" rx="4"/><text class="d-text" x="24" y="55" text-anchor="start">🗜 xiaomianzhu-…zip</text><rect class="d-menu" x="48" y="68" width="182" height="84" rx="6"/><text class="d-small" x="58" y="88" text-anchor="start">開啟</text><rect class="d-sel" x="51" y="96" width="176" height="20" rx="3"/><text class="d-mtxt" x="58" y="110" text-anchor="start">解壓縮全部…</text><rect class="d-hl" x="50" y="95" width="178" height="22" rx="4"/><text class="d-small" x="58" y="134" text-anchor="start">複製</text><path class="d-cursor" d="M204,106 l0,17 l4.5,-4 l3,7 l3,-1.3 l-3,-6.7 l6,0 z"/>
 <text class="d-cap" x="126" y="200" text-anchor="middle">① ZIP 按右鍵</text>
@@ -949,22 +949,22 @@
 </svg>
 <figcaption>Windows 對所有沒有購買簽章的新程式都會跳第 ② 步，這是正常的；請只從本專案 GitHub 下載。</figcaption>
 </figure>
-      <div class="step"><div class="step-no">1</div><div class="step-body">下載 <a href="https://github.com/cona0815/teacher-dashboard/releases/latest/download/xiaomianzhu-windows-portable.zip" target="_blank" rel="noopener">最新版小綿助 ZIP</a>（或工作台「⚙ 設定 → 小綿助」的下載按鈕）。</div></div>
-      <div class="step"><div class="step-no">2</div><div class="step-body">打開「下載」資料夾 → 對 ZIP 按<strong>右鍵 →「解壓縮全部」</strong>→ 選一個固定的位置（例：<code>文件\小綿助</code>）→ 解壓縮。<br><span class="lead">⚠ 不要直接在 ZIP 裡面點兩下執行，會跑不起來。</span></div></div>
+      <div class="step"><div class="step-no">1</div><div class="step-body">下載 <a href="https://github.com/cona0815/teacher-dashboard/releases/latest/download/xiaomianzhu-windows-portable.zip" target="_blank" rel="noopener">最新版小助手 ZIP</a>（或工作台「⚙ 設定 → 小助手」的下載按鈕）。</div></div>
+      <div class="step"><div class="step-no">2</div><div class="step-body">打開「下載」資料夾 → 對 ZIP 按<strong>右鍵 →「解壓縮全部」</strong>→ 選一個固定的位置（例：<code>文件\小助手</code>）→ 解壓縮。<br><span class="lead">⚠ 不要直接在 ZIP 裡面點兩下執行，會跑不起來。</span></div></div>
       <div class="step"><div class="step-no">3</div><div class="step-body">打開解壓後的資料夾 → 點兩下 <code>XiaoMianZhu.exe</code> → 若跳藍色「Windows 已保護您的電腦」：點「<strong>其他資訊</strong>」→「<strong>仍要執行</strong>」。<br><span class="lead">請只從本專案 GitHub 下載；不要關閉防毒或設定排除。</span></div></div>
-      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="小綿助設定操作畫面">
+      <figure class="diagram steps"><svg viewBox="0 0 780 228" role="img" aria-label="小助手設定操作畫面">
 <defs><marker id="ar-petb" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f514a"/></marker></defs>
-<rect class="d-win" x="8" y="8" width="368" height="170" rx="8"/><rect class="d-wbar" x="9" y="9" width="366" height="19" rx="7"/><rect class="d-wbar" x="9" y="20" width="366" height="8" rx="0"/><circle cx="18" cy="18" r="3" fill="#e0766a"/><circle cx="27" cy="18" r="3" fill="#e8c15a"/><circle cx="36" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="46" y="22" text-anchor="start">小綿助秘書頁</text><text class="d-title2" x="20" y="52" text-anchor="start">☁️ 雲端連線</text><rect class="d-field" x="18" y="62" width="348" height="20" rx="4"/><text class="d-mono" x="24" y="76" text-anchor="start">🌐A …/exec</text><rect class="d-hl" x="15" y="59" width="354" height="26" rx="5"/><rect class="d-field" x="18" y="92" width="348" height="20" rx="4"/><text class="d-mono" x="24" y="106" text-anchor="start">🔑C ••••••</text><rect class="d-hl" x="15" y="89" width="354" height="26" rx="5"/><rect class="d-btn-p" x="18" y="124" width="86" height="22" rx="5"/><text class="d-btxt" x="61" y="139" text-anchor="middle">儲存並啟用</text><rect class="d-btn-l" x="110" y="124" width="70" height="22" rx="5"/><text class="d-btxt-d" x="145" y="139" text-anchor="middle">測試連線</text><text class="d-small" x="20" y="168" text-anchor="start">只連 script.google.com</text>
+<rect class="d-win" x="8" y="8" width="368" height="170" rx="8"/><rect class="d-wbar" x="9" y="9" width="366" height="19" rx="7"/><rect class="d-wbar" x="9" y="20" width="366" height="8" rx="0"/><circle cx="18" cy="18" r="3" fill="#e0766a"/><circle cx="27" cy="18" r="3" fill="#e8c15a"/><circle cx="36" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="46" y="22" text-anchor="start">小助手秘書頁</text><text class="d-title2" x="20" y="52" text-anchor="start">☁️ 雲端連線</text><rect class="d-field" x="18" y="62" width="348" height="20" rx="4"/><text class="d-mono" x="24" y="76" text-anchor="start">🌐A …/exec</text><rect class="d-hl" x="15" y="59" width="354" height="26" rx="5"/><rect class="d-field" x="18" y="92" width="348" height="20" rx="4"/><text class="d-mono" x="24" y="106" text-anchor="start">🔑C ••••••</text><rect class="d-hl" x="15" y="89" width="354" height="26" rx="5"/><rect class="d-btn-p" x="18" y="124" width="86" height="22" rx="5"/><text class="d-btxt" x="61" y="139" text-anchor="middle">儲存並啟用</text><rect class="d-btn-l" x="110" y="124" width="70" height="22" rx="5"/><text class="d-btxt-d" x="145" y="139" text-anchor="middle">測試連線</text><text class="d-small" x="20" y="168" text-anchor="start">只連 script.google.com</text>
 <text class="d-cap" x="192" y="200" text-anchor="middle">①（第 2 級）☁️ 雲端連線</text>
 <text class="d-small" x="192" y="218" text-anchor="middle">貼 🌐A＋🔑C</text>
 <path class="d-line" d="M380,93 L399,93" marker-end="url(#ar-petb)"/>
-<rect class="d-win" x="404" y="8" width="368" height="170" rx="8" stroke-dasharray="6 4"/><rect class="d-wbar" x="405" y="9" width="366" height="19" rx="7"/><rect class="d-wbar" x="405" y="20" width="366" height="8" rx="0"/><circle cx="414" cy="18" r="3" fill="#e0766a"/><circle cx="423" cy="18" r="3" fill="#e8c15a"/><circle cx="432" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="442" y="22" text-anchor="start">小綿助秘書頁（選用）</text><text class="d-title2" x="416" y="54" text-anchor="start">🎙 語音輸入</text><text class="d-small" x="416" y="74" text-anchor="start">⚙ 設定</text><rect class="d-field" x="414" y="82" width="348" height="22" rx="4"/><text class="d-text" x="420" y="97" text-anchor="start">🔑D ••••••</text><rect class="d-hl" x="411" y="79" width="354" height="28" rx="5"/><rect class="d-btn-p" x="712" y="112" width="50" height="22" rx="5"/><text class="d-btxt" x="737" y="127" text-anchor="middle">儲存</text><text class="d-small" x="416" y="152" text-anchor="start">按住右 Ctrl 說話</text><text class="d-small" x="416" y="168" text-anchor="start">放開就打字</text>
+<rect class="d-win" x="404" y="8" width="368" height="170" rx="8" stroke-dasharray="6 4"/><rect class="d-wbar" x="405" y="9" width="366" height="19" rx="7"/><rect class="d-wbar" x="405" y="20" width="366" height="8" rx="0"/><circle cx="414" cy="18" r="3" fill="#e0766a"/><circle cx="423" cy="18" r="3" fill="#e8c15a"/><circle cx="432" cy="18" r="3" fill="#7cc48a"/><text class="d-wtxt" x="442" y="22" text-anchor="start">小助手秘書頁（選用）</text><text class="d-title2" x="416" y="54" text-anchor="start">🎙 語音輸入</text><text class="d-small" x="416" y="74" text-anchor="start">⚙ 設定</text><rect class="d-field" x="414" y="82" width="348" height="22" rx="4"/><text class="d-text" x="420" y="97" text-anchor="start">🔑D ••••••</text><rect class="d-hl" x="411" y="79" width="354" height="28" rx="5"/><rect class="d-btn-p" x="712" y="112" width="50" height="22" rx="5"/><text class="d-btxt" x="737" y="127" text-anchor="middle">儲存</text><text class="d-small" x="416" y="152" text-anchor="start">按住右 Ctrl 說話</text><text class="d-small" x="416" y="168" text-anchor="start">放開就打字</text>
 <text class="d-cap" x="588" y="200" text-anchor="middle">②（第 3 級）🎙 語音輸入</text>
 <text class="d-small" x="588" y="218" text-anchor="middle">貼 🔑D</text>
 </svg>
 </figure>
-      <div class="step"><div class="step-no">4</div><div class="step-body"><span class="lead">小綿助怎麼跟你說話：頭上冒出對話泡泡（附「打開／晚點」按鈕，滑鼠移上去不會消失）；頭上的紅色數字＝逾期＋LINE 待整理；<strong>滑鼠停在羊上</strong>看今日狀態；<strong>右鍵</strong>是小選單（喝水、起身、專注 25 分、語音記事、勿擾 1 小時）；<strong>雙擊</strong>開秘書頁。上課<strong>投影或全螢幕</strong>時牠會自己睡覺，不跳泡泡、不亮紅點。</span><br>（做了第 2 級）<strong>雙擊</strong>桌面上的小綿羊開秘書頁 →「<strong>☁️ 雲端連線 → ⚙ 設定</strong>」貼 🌐A＋🔑C →「儲存並啟用」→「測試連線」。</div></div>
-      <div class="step"><div class="step-no">5</div><div class="step-body">（做了第 3 級）秘書頁「<strong>🎙 語音輸入 → ⚙ 設定</strong>」貼 🔑D → 儲存 → 按「測試 3 秒錄音」。之後按住<strong>右 Ctrl</strong> 說話＝打字到游標處；按住<strong>右 Alt</strong> 說話＝直接變成小綿助的記事或任務。</div></div>
+      <div class="step"><div class="step-no">4</div><div class="step-body"><span class="lead">小助手怎麼跟你說話：頭上冒出對話泡泡（附「打開／晚點」按鈕，滑鼠移上去不會消失）；頭上的紅色數字＝逾期＋LINE 待整理；<strong>滑鼠停在羊上</strong>看今日狀態；<strong>右鍵</strong>是小選單（喝水、起身、專注 25 分、語音記事、勿擾 1 小時）；<strong>雙擊</strong>開秘書頁。上課<strong>投影或全螢幕</strong>時牠會自己睡覺，不跳泡泡、不亮紅點。</span><br>（做了第 2 級）<strong>雙擊</strong>桌面上的小綿羊開秘書頁 →「<strong>☁️ 雲端連線 → ⚙ 設定</strong>」貼 🌐A＋🔑C →「儲存並啟用」→「測試連線」。</div></div>
+      <div class="step"><div class="step-no">5</div><div class="step-body">（做了第 3 級）秘書頁「<strong>🎙 語音輸入 → ⚙ 設定</strong>」貼 🔑D → 儲存 → 按「測試 3 秒錄音」。之後按住<strong>右 Ctrl</strong> 說話＝打字到游標處；按住<strong>右 Alt</strong> 說話＝直接變成小助手的記事或任務。</div></div>
     </section>
 
     <section id="part4">
@@ -1033,7 +1033,7 @@
           <br><span class="lead">整塊清完的版面會自己收起來不佔畫面（要補標時按下方「顯示已完成的 N 個版面」叫回來）；正在點的那塊不會在手指底下消失，離開分頁再進來才收。</span>
           <br><span class="lead">下方「訂正統計」三種看法：<strong>依座號</strong>（誰身上還有幾筆）→<strong>按科目</strong>（科目 → 進度兩層，點進度旁的 ▲ 直接跳到上面的版面）→<strong>日曆</strong>（哪一天還沒清完）。統計是<strong>近 30 天</strong>、跨日累計，不是只有今天。</span></td></tr>
         <tr><td>下課</td><td>大屏「<strong>作業補交</strong>」分頁：前幾天沒交的，學生補來了就把號碼點掉。<strong>操作方式與「作業訂正」完全一致</strong>——一樣是依座號／按科目／日曆三種看法，一樣是科目 → 進度兩層，一樣點號碼＝完成。待訂正的項目也會一起列出來。</td></tr>
-        <tr><td>週五下午<br><span class="lead">第 4 級</span></td><td>缺交達 5 次的學生，LINE 自動送上委婉家長訊息草稿（同步後在小綿助記事，補上孩子優點再轉發）</td></tr>
+        <tr><td>週五下午<br><span class="lead">第 4 級</span></td><td>缺交達 5 次的學生，LINE 自動送上委婉家長訊息草稿（同步後在小助手記事，補上孩子優點再轉發）</td></tr>
         <tr><td>期末<br><span class="lead">第 2 級</span></td><td>大屏「查詢統計」輸入 🔑C → 查區間 → 「⬇ 匯出 Excel」變輔導紀錄素材（含各科<strong>缺交／補交／待訂正／已訂正</strong>次數）</td></tr>
       </table>
       <div class="box">
@@ -1099,7 +1099,7 @@
         <tr><td>機器人已讀不回</td><td>🟠 4</td><td>①網址結尾少了 <code>?hook=🔑F</code> ②「Use webhook」沒開 ③「自動回應訊息」沒關 ④ 🔑E 沒用選單②填入</td></tr>
         <tr><td>機器人只回一串 U 開頭的字</td><td>🟠 4</td><td>還沒鎖門：把那串用選單「③ 填入我的 LINE userId」貼上</td></tr>
         <tr><td>語音／照片沒反應</td><td>🟠 4</td><td>沒用選單「④ 填入 Gemini 金鑰」貼 🔑D</td></tr>
-        <tr><td>小綿助點兩下沒反應</td><td>—</td><td>還在 ZIP 裡面：先「解壓縮全部」再執行；或被「Windows 已保護您的電腦」擋住，按「其他資訊 → 仍要執行」</td></tr>
+        <tr><td>小助手點兩下沒反應</td><td>—</td><td>還在 ZIP 裡面：先「解壓縮全部」再執行；或被「Windows 已保護您的電腦」擋住，按「其他資訊 → 仍要執行」</td></tr>
         <tr><td>換了電腦資料不見</td><td>—</td><td>資料存在各電腦的瀏覽器裡：舊電腦「下載 JSON 備份」→ 新電腦「從備份還原」（第 2 級可用雲端備份）</td></tr>
       </table>
     </section>
@@ -1136,16 +1136,16 @@
       <table>
         <tr><th>在哪裡</th><th>新功能</th></tr>
         <tr><td>🎨 教材小工場<br>（工作台「教師工具箱 → 備課」）</td><td><strong>📝 出題備課</strong>：學習單、數學出題（也能拍課本題目出類似題，系統自動驗算）、段考複習講義、心智圖（可直接在大屏心智圖打開）。<strong>✍️ 語文寫作</strong>：生詞本、作文引導單、作文批改、作文範文庫、閱讀分級改寫（找最新兒童適讀新聞，一鍵做成中文或英文的三種難度）。<strong>📣 親師溝通</strong>：家長通知單（Gemini 真的生圖）、Google 表單、LINE 圖文選單。<strong>🧰 班務工具</strong>：座位表、敏感資料遮蔽、📎 PDF 工具（加入 PDF 或照片後看到每一頁，直接刪除、轉向、拖曳排順序；可輸出成 PDF、圖片或 Word；還能多頁合一、加頁碼、加浮水印、拆成多份、掃描檔瘦身，全部本機處理不上傳）。所有選檔都可 📷 拍照／📋 貼上／Ctrl+V；產出可下載 Word／Excel／PDF。</td></tr>
-        <tr><td>🧭 AI 行政助理<br>（整理成任務／記事）</td><td>AI 把跟你有關的事列成<strong>一張清單</strong>，每件先選好「任務／記事／不要」並抓原文日期時間，可直接改；任務用<strong>拖曳</strong>決定主／子（拖到另一任務上＝子任務、拖到虛線區＝解除），按一次「確認建立」，任務寫進任務清單、記事存到小綿助記事。任務清單的列也能拖曳分組。原文／附件裡的網址自動附上（🔗 連結按鈕）；點任務名稱彈出完整說明、來源附件與 AI 摘要。</td></tr>
+        <tr><td>🧭 AI 行政助理<br>（整理成任務／記事）</td><td>AI 把跟你有關的事列成<strong>一張清單</strong>，每件先選好「任務／記事／不要」並抓原文日期時間，可直接改；任務用<strong>拖曳</strong>決定主／子（拖到另一任務上＝子任務、拖到虛線區＝解除），按一次「確認建立」，任務寫進任務清單、記事存到小助手記事。任務清單的列也能拖曳分組。原文／附件裡的網址自動附上（🔗 連結按鈕）；點任務名稱彈出完整說明、來源附件與 AI 摘要。</td></tr>
         <tr><td>📊 今日看板<br>（2026-11）</td><td>工作台右上角「📊 今日看板」取代舊的電子紙看板：今天出席、缺交、待訂正、前幾天還沒補、要多關心的座號、今天的聯絡本一頁看完（資料來自晨間大屏）；按「↩ 回工作台」回原畫面。圖文說明見 <a href="Guide.html#today">圖文操作手冊</a>。</td></tr>
         <tr><td>🎨 教材小工場<br>（2026-11 更新）</td><td>🛡 敏感資料遮蔽可直接放 Word／Excel／PowerPoint，勾選要遮的項目自動遮好；AI 讀檔收拍照、PDF、Word、PPT、Excel；作文引導單「內容簡述」、範文評語對應原文句子；空白欄位按 Tab 帶入範例。</td></tr>
         <tr><td>📅 學校常見活動<br>（2026-11）</td><td>依學校行事曆：任務清單上方每月出現「本月學校常見活動」，點一下就新增成任務（月底順便列下個月）；AI 行政助理會用學校慣用的活動名稱；教材小工場的通知單、作文、學習單主題下面有本月活動按鈕；研習心得／簽呈可選 16 項研習，自動寫成「115 學年度 ○○研習」。</td></tr>
-        <tr><td>🧰 教師工具箱<br>（2026-11）</td><td>按鈕排成一行、分三組：<strong>級務</strong>（聯絡本、作業統計、💬 回覆家長）、<strong>備課</strong>（🎨 教材小工場）、<strong>溝通</strong>（📥 收件與 AI：小綿助記事、AI 行政助理兩個分頁；LINE 傳來的事同步時自動帶入｜📂 雲端資料夾：一鍵打開 LINE 存檔的雲端硬碟資料夾，LINE 傳「雲端資料夾」也會回連結）。聯絡本多了「📅 日曆」一次看整個月、「直橫・間距」；<strong>回覆家長</strong>：貼上家長的話、寫重點，就寫成一則可以直接傳的訊息。</td></tr>
+        <tr><td>🧰 教師工具箱<br>（2026-11）</td><td>按鈕排成一行、分三組：<strong>級務</strong>（聯絡本、作業統計、💬 回覆家長）、<strong>備課</strong>（🎨 教材小工場）、<strong>溝通</strong>（📥 收件與 AI：小助手記事、AI 行政助理兩個分頁；LINE 傳來的事同步時自動帶入｜📂 雲端資料夾：一鍵打開 LINE 存檔的雲端硬碟資料夾，LINE 傳「雲端資料夾」也會回連結）。聯絡本多了「📅 日曆」一次看整個月、「直橫・間距」；<strong>回覆家長</strong>：貼上家長的話、寫重點，就寫成一則可以直接傳的訊息。</td></tr>
         <tr><td>🧰 大屏班級工具</td><td>🍅 番茄鐘（呼吸動畫＋LO-FI 音樂角：匯入 MP3、貼 YouTube）、📣 大屏提示（22 句班級經營句＋插圖，在教室直接點選；LINE 傳「提示 排隊」也能遠端切換，但教室電腦要開著大屏網頁並切到「📣 大屏提示」分頁才收得到）、安靜偵測角色互動（安靜集 ⭐）、計分板改為手動歸零</td></tr>
         <tr><td>🖥 大屏<br>（2026-11）</td><td>「設定」新增<strong>💾 資料要存在哪裡</strong>（只存這台電腦／存到雲端，雲端可以跟工作台連線），底部存檔列拿掉、改成右上角「☁️」自動存；上方選單直接有<strong>檢核板、螢幕公告、心智圖</strong>；螢幕公告多了 🔖 書籤；新的 🧠 心智圖有 8 種圖型（心智圖、邏輯圖、樹狀圖、括號圖、流程圖、時間軸、魚骨圖、泡泡圖）</td></tr>
-        <tr><td>📅 Google 整合</td><td>任務一鍵加入 Google 日曆、小綿助記事 ↔ Google Tasks 雙向同步</td></tr>
+        <tr><td>📅 Google 整合</td><td>任務一鍵加入 Google 日曆、小助手記事 ↔ Google Tasks 雙向同步</td></tr>
         <tr><td>☁️ 工作台雲端功能<br>（以前只是模擬）</td><td>教學進度「同步到 Google 日曆」、Drive 資料庫上傳、AI 助理「建立 Google 表單」——第 1 版在網頁上只會顯示假的成功訊息，第 2 版起<strong>真的寫進你的 Google 日曆／雲端硬碟「LINE小幫手備份／工作台檔案」／表單</strong>（需已安裝 LINE 小幫手；沒裝會明確告訴你）</td></tr>
-        <tr><td>🐑 小綿助 v2.4<br>（桌面程式）</td><td><strong>v2.4 新動畫</strong>：小綿羊、橘貓、薩摩耶、小機器人四個角色、各 16 個動作全部重畫（拿東西時手腳數量正確）；「沒起身」計時離開電腦 5 分鐘就重算；語音輸入只要 Gemini 金鑰。<strong>直連你自己的 LINE 小幫手</strong>（不開瀏覽器也拿得到工作台快照、LINE 待整理，還能遙控大屏提示）、<strong>分心提醒</strong>（只讀作用中視窗標題、不截圖不上傳；滑 YouTube／IG 連續 3 分鐘會跑出來提醒）、專注 25／50 分模式、探頭與蹭滑鼠新行為。工作台「⚙ 設定 → 小綿助」下載新版，解壓覆蓋舊資料夾即可，設定與記事都在 AppData 不會消失<br><strong>v2.1 會聽的小綿助</strong>：秘書頁貼一次 🔑D → 任何程式按住右 Ctrl 說話、放開就貼上整理好的繁體中文；按住右 Alt 說給小綿助變記事／任務。只要 Gemini 金鑰一把，Groq 金鑰選填當備援。升級方式同下（換新 ZIP）。</td></tr>
+        <tr><td>🐑 小助手 v2.4<br>（桌面程式）</td><td><strong>v2.4 新動畫</strong>：小綿羊、橘貓、薩摩耶、小機器人四個角色、各 16 個動作全部重畫（拿東西時手腳數量正確）；「沒起身」計時離開電腦 5 分鐘就重算；語音輸入只要 Gemini 金鑰。<strong>直連你自己的 LINE 小幫手</strong>（不開瀏覽器也拿得到工作台快照、LINE 待整理，還能遙控大屏提示）、<strong>分心提醒</strong>（只讀作用中視窗標題、不截圖不上傳；滑 YouTube／IG 連續 3 分鐘會跑出來提醒）、專注 25／50 分模式、探頭與蹭滑鼠新行為。工作台「⚙ 設定 → 小助手」下載新版，解壓覆蓋舊資料夾即可，設定與記事都在 AppData 不會消失<br><strong>v2.1 會聽的小助手</strong>：秘書頁貼一次 🔑D → 任何程式按住右 Ctrl 說話、放開就貼上整理好的繁體中文；按住右 Alt 說給小助手變記事／任務。只要 Gemini 金鑰一把，Groq 金鑰選填當備援。升級方式同下（換新 ZIP）。</td></tr>
       </table>
 
 
@@ -1185,7 +1185,7 @@
           </ol></li>
         <li><strong>重新授權一次（正常現象，不是壞掉）</strong>：第 2 版多了「建立表單、寄信、圖文選單、寫入 Google 日曆、存檔到雲端硬碟」等能力，<strong>第一次使用這些新功能</strong>時 Google 會再跳一次授權——照<a href="#level2">第 2 級授權圖</a>允許並勾「選取全部」，只會問這一次。</li>
       </ol>
-      <div class="box"><strong>🐑 有裝小綿助的老師</strong>：關掉舊版（工作列右下角小綿羊圖示按右鍵結束，或工作管理員結束 <code>XiaoMianZhu.exe</code>）→ 下載新版 ZIP 解壓覆蓋舊資料夾（記事與設定在 <code>%APPDATA%\XiaoMianZhuSecretary</code>，不受影響）→ 打開新版，照<a href="#level5">小綿助</a>第 4、5 步設定。</div>
+      <div class="box"><strong>🐑 有裝小助手的老師</strong>：關掉舊版（工作列右下角小綿羊圖示按右鍵結束，或工作管理員結束 <code>XiaoMianZhu.exe</code>）→ 下載新版 ZIP 解壓覆蓋舊資料夾（記事與設定在 <code>%APPDATA%\XiaoMianZhuSecretary</code>，不受影響）→ 打開新版，照<a href="#level5">小助手</a>第 4、5 步設定。</div>
       <div class="box"><strong>🔒 第 2 版的保護機制</strong>：如果還沒用選單③填 userId，機器人<strong>不會執行任何指令</strong>，只會回你的 userId 請你填——貼進選單③就通了。</div>
       <div class="warn">🧹 <strong>從很舊的版本升上來？</strong>如果曾遇到「同一天點名被記很多筆」，升級後按選單「🤖 LINE 小幫手 → 🧹 清理重複資料（修統計）」一次。</div>
       <div class="ok">✅ 升級驗收：對機器人傳「<code>版本</code>」回覆的日期跟本頁一樣、傳「<code>說明</code>」有回覆，就代表新版部署成功。</div>

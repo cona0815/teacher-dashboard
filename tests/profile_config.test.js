@@ -156,14 +156,14 @@ assert.match(installerHtml, /主要工作身分/, "安裝介面應改為選擇�
 
 const indexHtml = fs.readFileSync(path.join(projectRoot, "Index.html"), "utf8");
 assert.match(indexHtml, /#apiEndpointField\[hidden\] \{ display: none !important; \}/, "Gemini 預設端點應隱藏，只有自訂服務才顯示端點欄位");
-assert.match(indexHtml, /github\.com\/cona0815\/teacher-dashboard\/releases\/download\/xiaomianzhu-v2\.4\/xiaomianzhu-windows-portable\.zip/, "小綿助設定頁應提供免 Python 可攜版下載入口");
-assert.doesNotMatch(indexHtml, /先安裝 Python 3/, "一般老師的小綿助下載說明不應要求安裝 Python");
-assert.match(indexHtml, /id="checkPetDownloadBridgeButton"/, "小綿助下載卡片應提供本機連線檢查");
+assert.match(indexHtml, /github\.com\/cona0815\/teacher-dashboard\/releases\/download\/xiaomianzhu-v2\.4\/xiaomianzhu-windows-portable\.zip/, "小助手設定頁應提供免 Python 可攜版下載入口");
+assert.doesNotMatch(indexHtml, /先安裝 Python 3/, "一般老師的小助手下載說明不應要求安裝 Python");
+assert.match(indexHtml, /id="checkPetDownloadBridgeButton"/, "小助手下載卡片應提供本機連線檢查");
 assert.match(indexHtml, /let previewTasks = loadLocalPreviewTasks\(\)/, "公開版第一次開啟應載入空白本機任務，而非示範任務");
 assert.match(indexHtml, /isLegacyPreviewDemoTask/, "更新後應自動辨識並移除舊版內建示範任務");
 assert.match(indexHtml, /tasks, \[\]/, "本機任務找不到已存資料時應使用空陣列");
 assert.doesNotMatch(indexHtml, /readLocalPreviewArray\(LOCAL_PREVIEW_STORAGE_KEYS\.tasks, previewSeedTasks\)/, "不得再將內建示範任務顯示給新使用者");
-assert.match(indexHtml, /body \.deskpet, body \.deskpet-panel \{ display: none !important; \}/, "小綿助是桌面程式，不應顯示在網頁內");
+assert.match(indexHtml, /body \.deskpet, body \.deskpet-panel \{ display: none !important; \}/, "小助手是桌面程式，不應顯示在網頁內");
 assert.match(indexHtml, /id="schoolHolidayList"/, "學校自訂假日應使用可新增的列式編輯器");
 assert.match(indexHtml, /type="date" data-school-holiday-field="date"/, "每筆學校自訂假日應使用日期選擇器");
 assert.match(indexHtml, /data-school-holiday-field="reason"/, "每筆學校自訂假日應可自行填寫原因");
@@ -176,8 +176,8 @@ assert.match(indexHtml, /github\.com\/mihozip\/DeskPet/, "授權分頁應標示 
 assert.match(indexHtml, /本修改版介面插圖/, "授權分頁應記錄本修改版介面插圖來源");
 // 2026-09-04 契約反轉：Netlify 上本站就有 assets/pet/，外連 GitHub 會被
 // CSP img-src 'self' 擋下刷 console 錯誤——素材一律走本站相對路徑。
-assert.doesNotMatch(indexHtml, /raw\.githubusercontent\.com/, "小綿助素材不得外連 GitHub（CSP 只允許本站圖片）");
-assert.match(indexHtml, /deskpetAssetRoot = 'assets\/pet\/'/, "小綿助素材應使用本站相對路徑");
+assert.doesNotMatch(indexHtml, /raw\.githubusercontent\.com/, "小助手素材不得外連 GitHub（CSP 只允許本站圖片）");
+assert.match(indexHtml, /deskpetAssetRoot = 'assets\/pet\/'/, "小助手素材應使用本站相對路徑");
 assert.match(indexHtml, /project-child \.task-name\.is-completed/, "完成的子任務應以刪除線標示該項目");
 assert.match(indexHtml, /子任務.*已完成；主任務狀態維持不變/, "完成子任務時應保留主任務狀態");
 assert.match(indexHtml, /主任務與下面的 .*項子任務/, "封存主任務前應明確提示會連同子任務處理");
@@ -213,7 +213,7 @@ assert.match(source, /隨主任務封存子任務/, "GAS 封存主任務時應�
 assert.doesNotMatch(
   indexHtml,
   /raw\.githubusercontent\.com\/mihozip\/school-admin-daily-dashboard\/main\/assets\/pet\//,
-  "不得再從原作者 repository 讀取小綿助素材",
+  "不得再從原作者 repository 讀取小助手素材",
 );
 const thirdPartyNotices = fs.readFileSync(path.join(projectRoot, "THIRD_PARTY_NOTICES.md"), "utf8");
 for (const projectOwnedAsset of [
@@ -228,17 +228,17 @@ for (const projectOwnedAsset of [
 }
 const desktopSecretary = fs.readFileSync(path.join(projectRoot, "desktop_pet_secretary.py"), "utf8");
 for (const secretaryFeature of ["今日簡報", "今日重要", "已逾期", "待追蹤", "健康管理", "快速交代"]) {
-  assert.match(desktopSecretary, new RegExp(secretaryFeature), `桌面小綿助缺少「${secretaryFeature}」`);
+  assert.match(desktopSecretary, new RegExp(secretaryFeature), `桌面小助手缺少「${secretaryFeature}」`);
 }
-assert.match(desktopSecretary, /ImageGrab\.grabclipboard\(\)/, "桌面小綿助必須支援貼上圖片或檔案");
-assert.match(desktopSecretary, /BRIDGE_HOST = "127\.0\.0\.1"/, "桌面小綿助橋接只能綁定本機回環位址");
-assert.match(desktopSecretary, /BRIDGE_MAX_BODY = 5 \* 1024 \* 1024/, "桌面小綿助橋接應限制請求大小");
-assert.match(desktopSecretary, /ThreadingHTTPServer/, "桌面小綿助應提供本機橋接服務");
-assert.match(desktopSecretary, /目前還沒有任務/, "桌面小綿助在空白資料時應顯示清楚的空狀態");
+assert.match(desktopSecretary, /ImageGrab\.grabclipboard\(\)/, "桌面小助手必須支援貼上圖片或檔案");
+assert.match(desktopSecretary, /BRIDGE_HOST = "127\.0\.0\.1"/, "桌面小助手橋接只能綁定本機回環位址");
+assert.match(desktopSecretary, /BRIDGE_MAX_BODY = 5 \* 1024 \* 1024/, "桌面小助手橋接應限制請求大小");
+assert.match(desktopSecretary, /ThreadingHTTPServer/, "桌面小助手應提供本機橋接服務");
+assert.match(desktopSecretary, /目前還沒有任務/, "桌面小助手在空白資料時應顯示清楚的空狀態");
 assert.match(desktopSecretary, /box\.pack\(fill="x", expand=False\)/, "桌面清單不應在高 DPI 畫面撐成大片空白");
-assert.match(desktopSecretary, /bridge_origin_allowed/, "桌面小綿助應限制可存取的網頁來源");
+assert.match(desktopSecretary, /bridge_origin_allowed/, "桌面小助手應限制可存取的網頁來源");
 assert.match(desktopSecretary, /temporary\.replace\(DATA_FILE\)/, "桌面資料應以暫存檔原子替換保存");
-// 2026-09-04 契約改版（使用者核定小綿助 v2.0「方案 B」）：桌寵可直連老師自己的
+// 2026-09-04 契約改版（使用者核定小助手 v2.0「方案 B」）：桌寵可直連老師自己的
 // Apps Script，但只能透過 desktop_pet_cloud 模組、只允許 script.google.com 網域、只讀＋prompt_set。
 assert.doesNotMatch(desktopSecretary, /urllib\.request\.urlopen/, "桌寵主程式不得自行開網路連線，一律經 desktop_pet_cloud");
 assert.match(desktopSecretary, /from desktop_pet_cloud import CloudLink/, "桌寵應透過 CloudLink 模組連雲端");
@@ -247,11 +247,11 @@ assert.match(desktopCloud, /ALLOWED_HOSTS = \("script\.google\.com", "script\.go
 assert.match(desktopCloud, /READ_ACTIONS = \("ping", "snapshot_get", "pull", "prompt_get"\)/, "雲端模組的讀取動作應為固定白名單");
 assert.match(desktopCloud, /PROMPT_SET_ACTION = "prompt_set"/, "桌寵唯一的寫入動作是大屏提示遙控");
 assert.doesNotMatch(desktopCloud, /ImageGrab|screenshot|grab\(/i, "專注偵測不得截圖");
-for (const v2Feature of ["☁️ 雲端連線", "🍅 專注小綿助", "📣 大屏提示遙控", "這是備課用", "只讀作用中視窗標題、不截圖、不上傳"]) {
-  assert.match(desktopSecretary, new RegExp(v2Feature), `小綿助 v2.0 秘書頁缺少「${v2Feature}」`);
+for (const v2Feature of ["☁️ 雲端連線", "🍅 專注小助手", "📣 大屏提示遙控", "這是備課用", "只讀作用中視窗標題、不截圖、不上傳"]) {
+  assert.match(desktopSecretary, new RegExp(v2Feature), `小助手 v2.0 秘書頁缺少「${v2Feature}」`);
 }
 assert.match(fs.readFileSync(path.join(projectRoot, "LineBot.gs"), "utf8"), /action === 'snapshot_get'/, "GAS 應提供桌寵讀取工作台快照的動作");
-assert.match(indexHtml, /const PET_BRIDGE_URL = 'http:\/\/127\.0\.0\.1:8767'/, "網頁應自動連接本機小綿助");
+assert.match(indexHtml, /const PET_BRIDGE_URL = 'http:\/\/127\.0\.0\.1:8767'/, "網頁應自動連接本機小助手");
 assert.match(indexHtml, /data-settings-panel="security"/, "網頁應提供資料與資安說明");
 assert.match(indexHtml, /Content-Security-Policy/, "網頁應宣告內容安全政策");
 
@@ -273,14 +273,14 @@ assert.match(lineBotSource, /function handleLineKindPostback_\(event, allowedUse
 assert.match(lineBotSource, /decided: extra\.decided === true/, "工作台拉資料時帶「老師已按過」");
 assert.match(indexHtml, /grade6LineInbox/, "LINE 收件匣應保存於瀏覽器本機");
 assert.match(indexHtml, /https:\/\/script\.google\.com/, "CSP 應允許連線老師自己的 Apps Script");
-assert.match(indexHtml, /lineInbox: lineInboxItemsForPet\(\)/, "本機橋接應把 LINE 待整理清單帶給桌面小綿助");
+assert.match(indexHtml, /lineInbox: lineInboxItemsForPet\(\)/, "本機橋接應把 LINE 待整理清單帶給桌面小助手");
 assert.doesNotMatch(
   JSON.stringify(indexHtml.match(/function buildBackupPayload\(\) \{[\s\S]*?\n    \}/)?.[0] || ""),
   /grade6LineSyncToken|lineSyncToken|lineGasUrl/,
   "JSON 備份不得包含 LINE 同步金鑰或 GAS 網址",
 );
-assert.match(desktopSecretary, /line_inbox/, "桌面小綿助應保存 LINE 待整理鏡像");
-assert.match(desktopSecretary, /LINE 待整理/, "桌面小綿助面板應顯示 LINE 待整理");
+assert.match(desktopSecretary, /line_inbox/, "桌面小助手應保存 LINE 待整理鏡像");
+assert.match(desktopSecretary, /LINE 待整理/, "桌面小助手面板應顯示 LINE 待整理");
 assert.match(desktopSecretary, /sanitize_line_inbox/, "LINE 清單必須經過欄位淨化");
 
 // 晨間大屏（模組 B）契約
@@ -310,7 +310,7 @@ assert.match(lineBotSource, /sendRollcallReminder/, "GAS 應提供未點名雲�
 assert.match(lineBotSource, /作業名稱/, "作業紀錄表應含作業名稱欄");
 assert.match(lineBotSource, /sendWeeklyHomeworkAlerts/, "GAS 應提供每週缺交達門檻的家長訊息草稿");
 assert.match(lineBotSource, /WEEKLY_ALERT_THRESHOLD/, "每週關懷門檻應可由指令碼屬性調整");
-assert.match(lineBotSource, /家長聯繫/, "家長訊息草稿應帶家長聯繫標籤（同步後進小綿助記事）");
+assert.match(lineBotSource, /家長聯繫/, "家長訊息草稿應帶家長聯繫標籤（同步後進小助手記事）");
 // 聯絡本（大屏黑板 ⇄ 工作台管理）契約
 assert.match(lineBotSource, /contactbook_get/, "GAS 應提供聯絡本讀取");
 assert.match(lineBotSource, /contactbook_save/, "GAS 應提供聯絡本儲存");
@@ -555,15 +555,15 @@ for (const fake of ["createGoogleCalendarEvent:", "syncTeachingProgressCalendar:
 }
 assert.doesNotMatch(indexHtml, /serverCall\('(createGoogleCalendarEvent|syncTeachingProgressCalendar|uploadWorkspaceFile|listWorkspaceFiles)'/, "雲端功能不得再走 google.script.run");
 
-// 2026-09-06 文件同步契約：小綿助 v2.0、雲端功能改真、PDF 工具、作文批改不限張數、允許名單新行為
-assert.match(installHtml, /小綿助 v2\.\d/, "安裝更新指南應介紹小綿助 v2.x 與升級步驟");
-// 2026-09-28 小綿助 v2.3 新畫風：文件要講到新畫風與投影時睡覺；網頁版動畫也換新（新檔每個 < 200KB）
+// 2026-09-06 文件同步契約：小助手 v2.0、雲端功能改真、PDF 工具、作文批改不限張數、允許名單新行為
+assert.match(installHtml, /小助手 v2\.\d/, "安裝更新指南應介紹小助手 v2.x 與升級步驟");
+// 2026-09-28 小助手 v2.3 新畫風：文件要講到新畫風與投影時睡覺；網頁版動畫也換新（新檔每個 < 200KB）
 {
   const aboutText = fs.readFileSync(path.join(projectRoot, "About.html"), "utf8");
   const introText = fs.readFileSync(path.join(projectRoot, "Intro.html"), "utf8");
   assert.match(aboutText, /新畫風[\s\S]{0,400}全螢幕/, "About 應介紹 v2.3 新畫風與投影／全螢幕時睡覺");
   assert.match(introText, /v2\.4 新動畫/, "Intro 應列出 v2.4 新動畫");
-  assert.match(installHtml, /投影或全螢幕<\/strong>時牠會自己睡覺/, "安裝教學應提醒投影時小綿助會睡覺");
+  assert.match(installHtml, /投影或全螢幕<\/strong>時牠會自己睡覺/, "安裝教學應提醒投影時小助手會睡覺");
   for (const state of ["drag", "idle", "listen", "sleep", "success", "think", "walk_left", "walk_right", "warning"]) {
     const size = fs.statSync(path.join(projectRoot, "assets", "pet", `pet_${state}.webp`)).size;
     assert.ok(size < 200000, `網頁版 pet_${state}.webp 應為 v3 新畫風（舊版約 600KB）`);
@@ -580,10 +580,10 @@ assert.match(installHtml, /以前只是模擬/, "更新指南應說明雲端功�
 assert.match(installHtml, /📎 PDF 工具/, "更新指南應列出 PDF 工具");
 assert.match(installHtml, /不會執行任何指令/, "安裝教學應說明允許名單未填時的新行為");
 assert.match(aboutHtml, /不限張數/, "About 作文批改應更新為不限張數");
-assert.match(aboutHtml, /桌面小綿助會看我的螢幕嗎/, "About 應回答桌寵螢幕隱私問題");
-assert.match(aboutHtml, /桌面小綿助 v2\.0 陪你專注/, "About 應有桌寵 v2.0 情境");
+assert.match(aboutHtml, /桌面小助手會看我的螢幕嗎/, "About 應回答桌寵螢幕隱私問題");
+assert.match(aboutHtml, /桌面小助手 v2\.0 陪你專注/, "About 應有桌寵 v2.0 情境");
 assert.match(aboutHtml, /XiaoMianZhuSecretary/, "About 資料存放表應含桌寵資料位置");
-assert.match(introHtml, /小綿助 v2\.[01]「(專注|會聽的)小綿助」/, "Intro 應有小綿助 v2.x 功能卡");
+assert.match(introHtml, /小助手 v2\.[01]「(專注|會聽的)小助手」/, "Intro 應有小助手 v2.x 功能卡");
 assert.match(introHtml, /PDF 工具/, "Intro 教材小工場卡應含 PDF 工具");
 
 // 2026-09-07 教材小工場 v3：拍照／貼上元件、真 PDF 下載、海報改 Gemini 生圖與風格庫
@@ -753,7 +753,7 @@ assert.ok((installHtml.match(/class="diagram steps"/g) || []).length >= 16, "每
 assert.match(installHtml, /選取全部/, "授權步驟應提醒勾「選取全部」");
 assert.match(installHtml, /預設 <code>1234<\/code>/, "大屏設定應提醒設定頁密碼");
 assert.match(installHtml, /data-kiosk="edge"/, "應可直接下載開機啟動 .bat");
-assert.match(installHtml, /其他資訊<\/strong>」→「<strong>仍要執行/, "小綿助應說明 SmartScreen");
+assert.match(installHtml, /其他資訊<\/strong>」→「<strong>仍要執行/, "小助手應說明 SmartScreen");
 assert.match(installHtml, /id="keyNotes"/, "應提供金鑰記錄表範本");
 assert.doesNotMatch(installHtml, /📤 送出/, "大屏按鈕是「💾 存到雲端」，不是「📤 送出」");
 
@@ -1139,7 +1139,7 @@ assert.match(indexHtml, /function cbConfirmLeave\(\)/, "換日期前應提醒尚
 {
   const groups = [...indexHtml.matchAll(/<div class="toolbox-group"><span class="toolbox-group-label">([^<]+)<\/span>/g)].map(m => m[1]);
   assert.deepStrictEqual(groups, ['級務', '備課', '溝通'], "工具箱分組應為級務、備課、溝通（溝通＝📥 收件與 AI）");
-  assert.match(indexHtml, /id="inboxHubButton" data-toolbox-hub[^>]*>📥 收件與 AI/, "LINE 收件匣、小綿助記事、AI 行政助理合成「📥 收件與 AI」一顆");
+  assert.match(indexHtml, /id="inboxHubButton" data-toolbox-hub[^>]*>📥 收件與 AI/, "LINE 收件匣、小助手記事、AI 行政助理合成「📥 收件與 AI」一顆");
   const hubTabs = indexHtml.slice(indexHtml.indexOf('id="inboxHubTabs"'), indexHtml.indexOf('</div>', indexHtml.indexOf('id="inboxHubTabs"')));
   for (const target of ['secretaryNotesSection', 'aiAssistantSection']) assert.match(hubTabs, new RegExp(`data-toolbox-target="${target}"`), `收件與 AI 的分頁應有 ${target}`);
   assert.match(indexHtml, /\.teacher-toolbox-actions \{[^}]*flex-wrap: nowrap/, "工具箱按鈕應保持一行");
@@ -1255,7 +1255,7 @@ assert.match(studioHtml, /addMonthEventChips\('ntSubject'/, "家長通知單應�
   for (const m of guide.matchAll(/src="(assets\/guide\/[^"]+)"/g)) assert.ok(fs.existsSync(path.join(projectRoot, m[1])), `手冊圖片 ${m[1]} 應存在`);
   assert.match(guide, /<script src="assets\/version\.js"><\/script>/, "手冊左下角也顯示網站版本");
 }
-// 2026-11-11 小綿助 v2.4：PET-03 六格新動畫（assets/pet/v6），網頁小綿助也換；打包放 v6
-assert.match(indexHtml, /v6\/lamb\/idle\.webp/, "網頁小綿助應使用 v6 新動畫");
+// 2026-11-11 小助手 v2.4：PET-03 六格新動畫（assets/pet/v6），網頁小助手也換；打包放 v6
+assert.match(indexHtml, /v6\/lamb\/idle\.webp/, "網頁小助手應使用 v6 新動畫");
 assert.ok(fs.existsSync(path.join(projectRoot, "assets", "pet", "v6", "manifest.json")), "應有 v6 動畫包");
 assert.match(fs.readFileSync(path.join(projectRoot, ".github", "workflows", "build-xiaomianzhu.yml"), "utf8"), /--add-data "assets\/pet\/v6;assets\/pet\/v6"/, "打包應包含 v6 動畫包");

@@ -1,4 +1,4 @@
-"""Windows desktop preview for the 小綿助 animation set.
+"""Windows desktop preview for the 小助手 animation set.
 
 有 assets/pet/v5/ 動畫包時用 v5（四隻角色、分層視窗透明）；沒有時用舊的 v3 單格圖。
 """
@@ -100,7 +100,7 @@ class DesktopPetPreview:
 
     def __init__(self) -> None:
         self.root = tk.Tk()
-        self.root.title("小綿助桌面預覽")
+        self.root.title("小助手桌面預覽")
         # pythonw.exe 沒有主控台；記錄 Tk callback 例外，避免操作時看起來像閃退。
         self.root.report_callback_exception = self._report_callback_exception
         self.root.overrideredirect(True)
@@ -179,7 +179,7 @@ class DesktopPetPreview:
         self.menu.add_command(label="睡覺", command=lambda: self.play("sleep", 5, "idle", "先休息一下……"))
         self.menu.add_separator()
         self.menu.add_command(label="暫停／繼續", command=self.toggle_pause)
-        self.menu.add_command(label="關閉小綿助", command=self.root.destroy)
+        self.menu.add_command(label="關閉小助手", command=self.root.destroy)
 
         self.root.bind("<Escape>", lambda _event: self.root.destroy())
         self.root.protocol("WM_DELETE_WINDOW", self.root.destroy)
@@ -388,7 +388,7 @@ class DesktopPetPreview:
         self.drag_origin = None
         self.play("idle")
         if not moved:
-            self.show_bubble("我是小綿助，右鍵可以試動作！", 2600)
+            self.show_bubble("我是小助手，右鍵可以試動作！", 2600)
         self.root.after(4200, self.start_walking)
 
     def _show_menu(self, event: tk.Event) -> None:

@@ -334,7 +334,7 @@ function onOpen() {
     .addItem("整理格式與下拉選單", "refreshSheetDesign")
     .addSeparator()
     .addItem("開啟管理台與看板", "showWebAppLinks")
-    .addItem("設定小綿助同步金鑰", "showDesktopPetSyncKeyDialog")
+    .addItem("設定小助手同步金鑰", "showDesktopPetSyncKeyDialog")
     .addItem("系統診斷", "showDiagnosis")
     .addToUi();
 }
@@ -496,7 +496,7 @@ function getTasks() {
   };
 }
 
-/** 小綿助桌面程式專用 JSON 入口。為避免金鑰出現在網址紀錄，只接受 POST。 */
+/** 小助手桌面程式專用 JSON 入口。為避免金鑰出現在網址紀錄，只接受 POST。 */
 function doPost(e) {
   try {
     const payload = JSON.parse((e && e.postData && e.postData.contents) || "{}");
@@ -504,9 +504,9 @@ function doPost(e) {
     verifyDesktopPetSyncKey_(payload.key);
     const action = String(payload.action || "ping");
     if (action === "ping") {
-      return desktopPetJsonResponse_({ ok: true, message: "小綿助 GAS 連線正常", serverTime: new Date().toISOString() });
+      return desktopPetJsonResponse_({ ok: true, message: "小助手 GAS 連線正常", serverTime: new Date().toISOString() });
     }
-    if (action !== "sync") throw new Error("不支援的小綿助操作。");
+    if (action !== "sync") throw new Error("不支援的小助手操作。");
     const pushed = syncDesktopPetTasks_(Array.isArray(payload.tasks) ? payload.tasks : []);
     return desktopPetJsonResponse_({ ok: true, pushed, tasks: listTasks_({ includeArchived: false }), serverTime: new Date().toISOString() });
   } catch (error) {
@@ -523,8 +523,8 @@ function showDesktopPetSyncKeyDialog() {
   assertSpreadsheetUiContext_();
   const ui = SpreadsheetApp.getUi();
   const response = ui.prompt(
-    "設定小綿助同步金鑰",
-    "輸入至少 16 個字元的自訂金鑰；留空會自動產生。請把結果填入小綿助，勿傳給不信任的人。",
+    "設定小助手同步金鑰",
+    "輸入至少 16 個字元的自訂金鑰；留空會自動產生。請把結果填入小助手，勿傳給不信任的人。",
     ui.ButtonSet.OK_CANCEL,
   );
   if (response.getSelectedButton() !== ui.Button.OK) return;
@@ -532,13 +532,13 @@ function showDesktopPetSyncKeyDialog() {
   if (!key) key = Utilities.getUuid().replace(/-/g, "") + Utilities.getUuid().replace(/-/g, "").slice(0, 16);
   if (key.length < 16) return ui.alert("同步金鑰至少需要 16 個字元。");
   PropertiesService.getScriptProperties().setProperty("DESKTOP_PET_SYNC_KEY", key);
-  ui.alert(`小綿助同步金鑰已設定：\n\n${key}\n\n請複製到小綿助；關閉後系統不再顯示舊金鑰。`);
+  ui.alert(`小助手同步金鑰已設定：\n\n${key}\n\n請複製到小助手；關閉後系統不再顯示舊金鑰。`);
 }
 
 function verifyDesktopPetSyncKey_(candidate) {
   const expected = PropertiesService.getScriptProperties().getProperty("DESKTOP_PET_SYNC_KEY");
-  if (!expected) throw new Error("尚未在試算表設定小綿助同步金鑰。");
-  if (!candidate || String(candidate) !== expected) throw new Error("小綿助同步金鑰不正確。");
+  if (!expected) throw new Error("尚未在試算表設定小助手同步金鑰。");
+  if (!candidate || String(candidate) !== expected) throw new Error("小助手同步金鑰不正確。");
 }
 
 function syncDesktopPetTasks_(incoming) {
@@ -572,17 +572,17 @@ function syncDesktopPetTasks_(incoming) {
         dueDate: normalizeDateString_(item.due_date || item.dueDate),
         dueTime: normalizeTimeString_(item.due_time || item.dueTime),
         waitingFor: cleanText_(item.waiting_for || item.waitingFor, 200),
-        nextAction: cleanText_(item.source, 500) || "由小綿助建立",
-        owner: (before && before.owner) || "本機小綿助",
+        nextAction: cleanText_(item.source, 500) || "由小助手建立",
+        owner: (before && before.owner) || "本機小助手",
         boardDisplay: (before && before.boardDisplay) || "自動",
-        archived: (before && before.archived === "是") ? "是" : "否",   // 已封存的任務不會被小綿助同步復活
+        archived: (before && before.archived === "是") ? "是" : "否",   // 已封存的任務不會被小助手同步復活
         updatedAt: now,
         createdAt: before && before.createdAt ? parseDateTime_(before.createdAt) : now,
       });
       if (task.status === "已完成" && !task.completedAt) task.completedAt = now;
       sheet.getRange(rowNumber, 1, 1, TASK_HEADERS.length).setValues([taskObjectToRow_(task, headerMap, TASK_HEADERS.length)]);
       applyRowFormats_(sheet, rowNumber, headerMap);
-      appendLog_(ss, taskId, before ? "小綿助同步更新" : "小綿助同步新增", before, task, "desktop-pet");
+      appendLog_(ss, taskId, before ? "小助手同步更新" : "小助手同步新增", before, task, "desktop-pet");
       pushed++;
     });
     SpreadsheetApp.flush();
@@ -1678,7 +1678,7 @@ function assertAuthorized_() {
     PropertiesService.getScriptProperties().getProperty("DESKTOP_PET_SYNC_KEY"),
   );
   if (desktopSyncEnabled && !user.email) {
-    throw new Error("此部署只允許小綿助使用同步 API；管理台請使用限制登入的 GAS 部署網址。");
+    throw new Error("此部署只允許小助手使用同步 API；管理台請使用限制登入的 GAS 部署網址。");
   }
   const allowedDomain = String(settings.ALLOWED_DOMAIN || "")
     .trim()
