@@ -42,12 +42,34 @@ var LINE_BOT_CONFIG = {
   NOTE_TAGS: ['家長聯繫', '學生概況', '作業缺交', '備課靈感', '生活雜事']
 };
 
+// 資安（2026-11-11）：金鑰綁定「這一份」試算表。若指令碼屬性跟著副本被帶過來
+// （例如範本擁有者曾在範本按過 ①），副本第一次初始化時全部清掉、重新產生自己的金鑰，
+// 不會沿用範本或別人的 🔑B／🔑C／🔑F，也不會帶到別人的 LINE Token、Gemini 金鑰。
+var BOUND_SHEET_PROP = 'BOUND_SPREADSHEET_ID';
+function resetKeysIfCopied_(spreadsheet, properties) {
+  var bound = properties.getProperty(BOUND_SHEET_PROP);
+  if (bound && bound !== spreadsheet.getId()) properties.deleteAllProperties();
+  properties.setProperty(BOUND_SHEET_PROP, spreadsheet.getId());
+}
+
+/**
+ * 範本擁有者專用（在 Apps Script 編輯器選這個函式按「執行」）：
+ * 把範本的金鑰與設定全部清空，安裝總表改回「【請先執行選單①】」，範本才能公開給大家複製。
+ * 資料表內容不會刪；範本裡若有測試用的 LINE 收件、記事，請自己檢查後再分享。
+ */
+function resetForTemplate() {
+  PropertiesService.getScriptProperties().deleteAllProperties();
+  buildSetupSheet_();
+  return '已清空範本的金鑰與設定（安裝總表顯示「請先執行選單①」）。範本不要再按 ① 初始化。';
+}
+
 /** 第一次安裝時於 Apps Script 編輯器手動執行：建立資料表並產生金鑰。 */
 function setupLineBot() {
   var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   if (!spreadsheet) throw new Error('請先把這份指令碼綁定到一份 Google 試算表（擴充功能 → Apps Script）。');
   ensureLineBotSheets_(spreadsheet);
   var properties = PropertiesService.getScriptProperties();
+  resetKeysIfCopied_(spreadsheet, properties);
   if (!properties.getProperty('LINE_WEBHOOK_TOKEN')) {
     properties.setProperty('LINE_WEBHOOK_TOKEN', Utilities.getUuid().replace(/-/g, ''));
   }
@@ -495,7 +517,7 @@ function doGet() {
 }
 
 // 程式版本（每次發布都要更新；試算表選單「ℹ️ 程式版本」、LINE 傳「版本」、工作台連線檢查都會顯示）
-var BOT_VERSION = '2026-11-11 08:06';
+var BOT_VERSION = '2026-11-11 10:45';
 
 function lineBotJson_(payload) {
   return ContentService.createTextOutput(JSON.stringify(payload)).setMimeType(ContentService.MimeType.JSON);

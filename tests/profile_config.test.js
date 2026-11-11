@@ -1270,3 +1270,8 @@ assert.match(studioHtml, /addMonthEventChips\('ntSubject'/, "家長通知單應�
 assert.match(indexHtml, /v6\/lamb\/idle\.webp/, "網頁小助手應使用 v6 新動畫");
 assert.ok(fs.existsSync(path.join(projectRoot, "assets", "pet", "v6", "manifest.json")), "應有 v6 動畫包");
 assert.match(fs.readFileSync(path.join(projectRoot, ".github", "workflows", "build-xiaomianzhu.yml"), "utf8"), /--add-data "assets\/pet\/v6;assets\/pet\/v6"/, "打包應包含 v6 動畫包");
+
+// 2026-11-11 資安：範本的金鑰不可跟著副本走；範本擁有者有清空函式
+assert.match(lineBotSource, /function resetKeysIfCopied_\(spreadsheet, properties\)[\s\S]{0,200}deleteAllProperties\(\)/, "副本初始化時要清掉從範本帶來的金鑰");
+assert.match(lineBotSource, /resetKeysIfCopied_\(spreadsheet, properties\);\s*\n\s*if \(!properties\.getProperty\('LINE_WEBHOOK_TOKEN'\)\)/, "初始化先檢查是不是別人的副本，再產生金鑰");
+assert.match(lineBotSource, /function resetForTemplate\(\)/, "範本擁有者要能一鍵清空範本的金鑰");
