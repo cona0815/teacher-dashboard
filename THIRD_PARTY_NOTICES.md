@@ -64,13 +64,15 @@ The following interface illustrations were created or generated specifically for
 
 These files are distributed as part of this application, not as a standalone illustration or stock-image collection. If any file is replaced with third-party artwork in the future, its source and license must be added to this notice before publication.
 
-## 小綿助
+## 小助手（2026-11-11 前名為「小綿助」）
 
 The original sheep character design, source frames and animation files under `assets/pet/` were created or generated specifically for this modified project and supplied by the project owner. They replace the former DeskPet white-cat artwork. No DeskPet white-cat artwork is included or loaded by the current interface, and the production fallback URL points only to this project's own `cona0815/teacher-dashboard` repository.
 
 The v5 animation pack under `assets/pet/v5/` (lamb, cat, dog and robot; 16 actions each) was produced for the project owner from the owner's own character designs (originally drawn for the owner's computer-classroom desktop pet) and is project-owned artwork. It contains no third-party characters.
 
-## 小綿助 v2.1 voice input
+The v6 pack under `assets/pet/v6/` (same four characters × 16 actions, six frames each; built by `tools/build_pet_pack_six.py`) was redrawn from the same owner-supplied character designs as image-generation work commissioned by the project owner (PET-03). It is project-owned artwork and contains no third-party characters.
+
+## 小助手（小綿助）v2.1 voice input
 
 `desktop_pet_voice.py` is an original implementation written for this project (MIT). It reuses Traditional-Chinese polishing prompts, the teaching vocabulary list and the Whisper hallucination-marker list that the project owner authored in their own EZtype tool; no code from whisper-writer (GPL-3.0), of which EZtype is a fork, is included.
 
@@ -120,3 +122,10 @@ images / Word and to shrink scanned PDFs, entirely in the browser.
 v0.10.1 (MIT), which bundles [html2canvas](https://github.com/niklasvh/html2canvas) (MIT)
 and [jsPDF](https://github.com/parallax/jsPDF) (MIT). Used for client-side PDF/PNG export
 of generated worksheets and posters in Studio.html; nothing is uploaded.
+
+## Promo video, guide screenshots and generated styles
+
+- `assets/video/teacher-dashboard-48s.mp4`: screen recordings of this project with fictional data; the background music and transition sounds were synthesized by the project's own script (no stock music), and the narration uses the Microsoft Windows built-in text-to-speech voice.
+- `assets/guide/*.webp` (Guide.html, About.html, Intro.html): screenshots of this project's own interface filled with fictional test data (seat numbers only, fake names, self-made test PDFs). The いらすとや illustrations visible in morning-board screenshots are the same 12 files listed above.
+- Studio image/poster styles are generic art-style descriptions (watercolor, flat vector, pixel art, etc.); no prompt names a living artist, studio, brand or existing character.
+- The 作文範文庫 and LINE 圖文選單 tools are hidden from the menu since 2026-11-11 (code retained).

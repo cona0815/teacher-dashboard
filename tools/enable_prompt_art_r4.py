@@ -23,7 +23,7 @@ def rep(old, new):
     s = s.replace(old, new)
 
 
-rep('''    // 新插圖（動森風）交件驗收後，把 id 加進來就會改用新圖；沒列的繼續用舊圖
+rep('''    // 新插圖（可愛溫暖風）交件驗收後，把 id 加進來就會改用新圖；沒列的繼續用舊圖
     const PROMPT_ART_READY = new Set([]);''',
     '''    // 原創插圖「溫暖繪本」（ART-02 R4 驗收通過）；列在這裡的 id 用新圖，沒列的繼續用舊圖
     const PROMPT_ART_READY = new Set([

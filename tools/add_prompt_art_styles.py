@@ -1,6 +1,6 @@
 """大屏提示插圖兩套風格可切換（設定頁「大屏提示插圖風格」）：
 - 溫暖繪本（ART-02 R4，33 張）搬到 assets/art/storybook/prompt/
-- 可愛動森風放 assets/art/cozy/prompt/（ART-03 製作中；交件驗收後把 id 加進 cozy.ready）
+- 可愛溫暖風放 assets/art/cozy/prompt/（ART-03 製作中；交件驗收後把 id 加進 cozy.ready）
 - 選的風格還沒畫好的句子先用溫暖繪本，再沒有才用舊圖
 先 git mv assets/art/cozy/prompt assets/art/storybook/prompt，再執行：
 python tools/add_prompt_art_styles.py
@@ -24,7 +24,7 @@ def rep(old, new):
 # 設定值
 rep("""    const CONTACT_FONTS = ['default', 'huninn', 'iansui', 'bpmf', 'bpmfhuninn'];""",
     """    const CONTACT_FONTS = ['default', 'huninn', 'iansui', 'bpmf', 'bpmfhuninn'];
-    const PROMPT_ART_STYLE_KEYS = ['storybook', 'cozy'];   // 大屏提示插圖：溫暖繪本／可愛動森風""")
+    const PROMPT_ART_STYLE_KEYS = ['storybook', 'cozy'];   // 大屏提示插圖：溫暖繪本／可愛溫暖風""")
 rep("""boardTitle: '晨間大屏', contactFont: 'default', correctColor: 'brown',""",
     """boardTitle: '晨間大屏', contactFont: 'default', promptArt: 'storybook', correctColor: 'brown',""")
 rep("""          s.contactFont = CONTACT_FONTS.includes(saved.contactFont) ? saved.contactFont : 'default';
@@ -37,8 +37,8 @@ rep("""          s.contactFont = CONTACT_FONTS.includes(saved.contactFont) ? sav
 rep("""          <div class="field"><label>「待訂正」的顏色</label><select id="setupCorrectColor">""",
     """          <div class="field"><label>大屏提示插圖風格</label><select id="setupPromptArt">
             <option value="storybook">溫暖繪本（手繪水彩感）</option>
-            <option value="cozy">可愛動森風（圓潤小島玩具感）</option>
-          </select><div class="status-text" style="margin-top:4px">兩套都是原創插圖，存好馬上換。可愛動森風還在畫，沒畫好的句子先用溫暖繪本。</div></div>
+            <option value="cozy">可愛溫暖風（圓潤小島玩具感）</option>
+          </select><div class="status-text" style="margin-top:4px">兩套都是原創插圖，存好馬上換。可愛溫暖風還在畫，沒畫好的句子先用溫暖繪本。</div></div>
           <div class="field"><label>「待訂正」的顏色</label><select id="setupCorrectColor">""")
 rep("""      $('setupContactFont').value = s.contactFont;
 """,
@@ -62,7 +62,7 @@ s = s[:m.start()] + """    // 原創插圖兩套，設定頁「大屏提示插�
     const PROMPT_ART_STYLES = {
       storybook: { dir: 'assets/art/storybook/prompt/', ready: new Set([   // 溫暖繪本（ART-02 R4）
 """ + m.group(1).replace("      '", "        '") + """      ]) },
-      cozy: { dir: 'assets/art/cozy/prompt/', ready: new Set([]) }   // 可愛動森風（ART-03 製作中）
+      cozy: { dir: 'assets/art/cozy/prompt/', ready: new Set([]) }   // 可愛溫暖風（ART-03 製作中）
     };
     function promptArtFile(id) {
       const chosen = PROMPT_ART_STYLES[state.settings.promptArt] || PROMPT_ART_STYLES.storybook;

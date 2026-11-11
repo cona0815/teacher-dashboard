@@ -2715,16 +2715,14 @@
       </section>
 
       <section class="settings-panel" data-settings-panel="security">
-        <p class="settings-note">本系統採本機優先：不需登入、不需 GAS。任務與設定預設留在目前瀏覽器；桌面小助手資料留在目前 Windows 帳號的 AppData。</p>
-        <p style="margin:0 0 12px"><a class="settings-link" href="About.html" target="_blank" rel="noopener"><strong>📚 完整版：系統說明與資安（含使用情境教學、每個授權的逐條白話解釋）→</strong></a>　可直接把該頁連結傳給同事或資訊組長。</p>
+        <p class="settings-note">資料預設只存在這台電腦的瀏覽器，不用登入；接雲端或 LINE 時，存在你自己的 Google 帳號。</p>
         <div class="backup-grid">
-          <article class="backup-card"><h3>網頁資料</h3><p>任務、教學進度、記事與偏好以瀏覽器本機儲存保存。不同瀏覽器、不同 Windows 帳號或不同網站網域各自獨立；清除網站資料前請先下載 JSON 備份。</p></article>
-          <article class="backup-card"><h3>小助手本機橋接</h3><p>桌面程式只綁定 <code>127.0.0.1:8767</code>，不接受區域網路或外網直接連入；限制請求來源、方法與 5 MB 大小，且不提供任意檔案路徑讀取。</p></article>
-          <article class="backup-card"><h3>AI 與個人資料</h3><p>去識別化在瀏覽器執行，但自動規則可能漏判。送出 AI 前仍要人工檢查；學生姓名、電話、地址、健康、輔導與性平資料不應交給外部 AI。</p></article>
-          <article class="backup-card"><h3>Windows 防毒提示</h3><p>測試版 EXE 若尚未使用受信任的程式碼簽章，Windows SmartScreen 可能顯示「無法辨識的應用程式」；這是信譽／簽章警告，不等同判定為病毒。正式分享建議簽章或上架 Microsoft Store，並提供 SHA-256 驗證碼。</p></article>
-          <article class="backup-card"><h3>安全使用原則</h3><p>只從本專案正式 GitHub／Netlify 下載；不要要求使用者關閉防毒或建立整個資料夾的排除規則。若遭誤判，應提交檔案給 Microsoft 分析並重新發布，不能承諾所有學校電腦一定允許執行。</p></article>
-          <article class="backup-card"><h3>目前分享版本</h3><p>v2.0「專注小助手」可攜版：可直連你自己的 LINE 小幫手（不開瀏覽器也拿得到工作台快照、LINE 待整理、大屏提示遙控）、分心提醒（只讀作用中視窗標題、不截圖不上傳）、專注 25／50 分模式、探頭與蹭滑鼠新行為，並保留 v1.6 起的 DPI 感知、瀏覽器版秘書面板、自癒心跳與單一實例保護，解壓縮後直接開啟 <code>XiaoMianZhu.exe</code>，不必安裝 Python，也不要求系統管理員權限。程式尚未購買商業程式碼簽章，部分防毒軟體仍可能因新程式信譽不足而提示；請只從本專案 Release 下載並核對 SHA-256，不要關閉防毒或設定排除。</p></article>
+          <article class="backup-card"><h3>資料放哪裡</h3><p>任務、設定、記事存在這個瀏覽器。換電腦或清瀏覽器資料前，先在「備份」下載一份。</p></article>
+          <article class="backup-card"><h3>學生個資</h3><p>學生只用座號。送 AI 前會自動遮掉或提醒身分證、電話、地址等；健康、輔導、性平資料不要交給 AI。</p></article>
+          <article class="backup-card"><h3>金鑰</h3><p>AI 金鑰存在這台電腦（用 LINE 小幫手時存在你自己的 Apps Script），不要貼給別人或放進共用文件。</p></article>
+          <article class="backup-card"><h3>桌面小助手</h3><p>只從本站下載。只在這台電腦內部和網頁溝通，外面連不進來。Windows 第一次可能提醒「無法辨識」，按「其他資訊 → 仍要執行」即可。</p></article>
         </div>
+        <p style="margin:12px 0 0"><a class="settings-link" href="About.html" target="_blank" rel="noopener">📚 想看詳細說明（可傳給資訊組長）→</a></p>
       </section>
 
       <section class="settings-panel" data-settings-panel="license">

@@ -1,7 +1,7 @@
-"""ART-01 R4（Codex 交件、Claude 2026-11-02 驗收）：可愛動森風介面圖示 35 張＋安靜偵測 4 張整合
+"""ART-01 R4（Codex 交件、Claude 2026-11-02 驗收）：可愛溫暖風介面圖示 35 張＋安靜偵測 4 張整合
 - 轉 WebP：圖示 256×256 → assets/art/cozy/icon/，安靜偵測 800×800 → assets/art/cozy/quiet/
-- 大屏：COZY_ICON_READY 填入 16 個 id；安靜偵測在動森風改用原創學生插圖與對應文字
-- 工作台：圖示加 data-cozy-icon，選「可愛動森風」配色時換圖，換回其他配色恢復原圖
+- 大屏：COZY_ICON_READY 填入 16 個 id；安靜偵測在可愛溫暖風改用原創學生插圖與對應文字
+- 工作台：圖示加 data-cozy-icon，選「可愛溫暖風」配色時換圖，換回其他配色恢復原圖
 python tools/integrate_art01_cozy_icons.py <交件_R4 資料夾> [--convert-only 只重新轉檔]
 """
 import sys
@@ -61,7 +61,7 @@ patch('Morning.html', [
       else if (level < threshold - 12) { setCharacter('quiet_cat.png', 'is-calm'); face.textContent = '🐱 噓——保持這個音量'; }
       else if (level < threshold) { setCharacter('quiet_kuma.png', 'is-warn'); face.textContent = '🐻 有點聲音囉，小心！'; }
       else { setCharacter('too_noisy.png', 'is-loud'); face.textContent = '😫 太吵了！教室要翻掉啦！'; }""",
-     """      // 動森風改用原創學生插圖（assets/art/cozy/quiet/）；標準維持いらすとや動物
+     """      // 可愛溫暖風改用原創學生插圖（assets/art/cozy/quiet/）；標準維持いらすとや動物
       const cozy = state.settings.boardStyle === 'cozy';
       const setCharacter = (src, cozyId, cls) => {
         const want = cozy ? 'assets/art/cozy/quiet/' + cozyId + '.webp' : 'assets/irasutoya/' + src;
@@ -76,7 +76,7 @@ patch('Morning.html', [
      """          <div class="status-text" id="quietCredit" style="text-align:center;display:block">安靜就換可愛動物站崗、"""),
     ("""  $('quietStartButton').addEventListener('click', () => { quietStream ? stopQuiet() : startQuiet(); });""",
      """  $('quietStartButton').addEventListener('click', () => { quietStream ? stopQuiet() : startQuiet(); });
-  // 動森風的安靜偵測是原創插圖，說明與出處跟著換
+  // 可愛溫暖風的安靜偵測是原創插圖，說明與出處跟著換
   const quietCreditHtml = $('quietCredit').innerHTML;
   function updateQuietCredit() {
     $('quietCredit').innerHTML = state.settings.boardStyle === 'cozy'
@@ -126,7 +126,7 @@ pairs += [
     }""", """      document.querySelectorAll('[data-theme-choice]').forEach(button => {
         button.setAttribute('aria-pressed', String(button.dataset.themeChoice === safeTheme));
       });
-      // 可愛動森風換成原創圖示（assets/art/cozy/icon/），其他配色用原圖
+      // 可愛溫暖風換成原創圖示（assets/art/cozy/icon/），其他配色用原圖
       document.querySelectorAll('img[data-cozy-icon]').forEach(img => {
         if (!img.dataset.origSrc) img.dataset.origSrc = img.getAttribute('src');
         const want = safeTheme === 'cozy' ? 'assets/art/cozy/icon/' + img.dataset.cozyIcon + '.webp' : img.dataset.origSrc;
@@ -134,7 +134,7 @@ pairs += [
       });
     }"""),
     ("""    :root[data-theme="cozy"] .input, :root[data-theme="cozy"] .select, :root[data-theme="cozy"] .textarea {""",
-     """    /* 動森風圖示本身就有白貼紙邊與顏色：不再套灰階與底色；身分沒選的維持淡灰 */
+     """    /* 可愛溫暖風圖示本身就有白貼紙邊與顏色：不再套灰階與底色；身分沒選的維持淡灰 */
     :root[data-theme="cozy"] .summary-icon { width: 40px; height: 40px; padding: 0; background: transparent; filter: none; opacity: 1; }
     :root[data-theme="cozy"] .title-icon { padding: 2px; background: var(--cozy-paper); border-color: var(--cozy-wood); }
     :root[data-theme="cozy"] .role-person img { width: 32px; height: 32px; padding: 0; background: transparent; filter: grayscale(.85); opacity: .7; }

@@ -153,7 +153,7 @@ NEW_GROUPS = '''    // id＝新插圖檔名（assets/art/cozy/prompt/<id>.webp�
         { id: 'go_home_line', text: '放學路隊，跟著路隊長走', img: 'line_up.png' }
       ] }
     ];
-    // 新插圖（動森風）交件驗收後，把 id 加進來就會改用新圖；沒列的繼續用舊圖
+    // 新插圖（可愛溫暖風）交件驗收後，把 id 加進來就會改用新圖；沒列的繼續用舊圖
     const PROMPT_ART_READY = new Set([]);
     const PROMPT_ART_DIR = 'assets/art/cozy/prompt/';
     function promptImgSrc(item) {

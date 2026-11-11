@@ -1,4 +1,4 @@
-"""工作台新增介面配色「可愛動森風」（設定 → 介面配色），跟晨間大屏的動森風同一套：
+"""工作台新增介面配色「可愛溫暖風」（設定 → 介面配色），跟晨間大屏的可愛溫暖風同一套：
 奶油底、木頭邊、草綠／天空藍、圓潤玩具感按鈕、粉圓字型（assets/fonts，只有選這套才載入）
 python tools/add_index_cozy_theme.py
 """
@@ -20,7 +20,7 @@ rep("""    const INTERFACE_THEMES = ['forest', 'apricot', 'lavender', 'tech', 'm
     """    const INTERFACE_THEMES = ['forest', 'apricot', 'lavender', 'tech', 'minimal', 'cozy'];""")
 rep("""<strong>極簡霧灰</strong><small>低彩度・專注閱讀</small></button>""",
     """<strong>極簡霧灰</strong><small>低彩度・專注閱讀</small></button>
-              <button class="theme-choice" type="button" data-theme-choice="cozy" aria-pressed="false"><span class="theme-swatches" aria-hidden="true"><span></span><span></span><span></span></span><strong>可愛動森風</strong><small>奶油草綠・圓潤玩具感</small></button>""")
+              <button class="theme-choice" type="button" data-theme-choice="cozy" aria-pressed="false"><span class="theme-swatches" aria-hidden="true"><span></span><span></span><span></span></span><strong>可愛溫暖風</strong><small>奶油草綠・圓潤玩具感</small></button>""")
 rep("""    .theme-picker { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 9px; }""",
     """    .theme-picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }""")
 rep("""    @media (max-width: 900px) { .theme-picker { grid-template-columns: repeat(3, minmax(0, 1fr)); } }""",
@@ -30,7 +30,7 @@ rep("""    @media (max-width: 900px) { .theme-picker { grid-template-columns: re
     @media (max-width: 900px) { .theme-picker { grid-template-columns: repeat(3, minmax(0, 1fr)); } }""")
 
 COZY = """
-    /* 可愛動森風：跟晨間大屏的動森風同一套（奶油底、木頭邊、圓潤玩具感按鈕、粉圓字型） */
+    /* 可愛溫暖風：跟晨間大屏的可愛溫暖風同一套（奶油底、木頭邊、圓潤玩具感按鈕、粉圓字型） */
     :root[data-theme="cozy"] {
       --bg: #fbf5e6;
       --surface: #fffaf0;

@@ -1,7 +1,7 @@
-"""大屏風格：標準／可愛動森風（設定 → 大屏風格），介面與提示插圖一起換
+"""大屏風格：標準／可愛溫暖風（設定 → 大屏風格），介面與提示插圖一起換
 - 取代上一版只換插圖的「大屏提示插圖風格」（promptArt → boardStyle：standard／cozy）
-- 動森風介面：奶油底、木頭邊、圓潤玩具感按鈕、粉圓字型（assets/fonts，只有選動森風才載入）
-- 動森風圖示（ART-01 cozy）交件驗收後，把 id 加進 COZY_ICON_READY；沒列的維持原圖示
+- 可愛溫暖風介面：奶油底、木頭邊、圓潤玩具感按鈕、粉圓字型（assets/fonts，只有選可愛溫暖風才載入）
+- 可愛溫暖風圖示（ART-01 cozy）交件驗收後，把 id 加進 COZY_ICON_READY；沒列的維持原圖示
 python tools/add_board_style_cozy.py
 """
 import re
@@ -20,20 +20,20 @@ def rep(old, new, count=1):
 
 
 # ---------- 設定值 ----------
-rep("""    const PROMPT_ART_STYLE_KEYS = ['storybook', 'cozy'];   // 大屏提示插圖：溫暖繪本／可愛動森風""",
-    """    const BOARD_STYLES = ['standard', 'cozy'];   // 大屏風格：標準（提示插圖＝溫暖繪本）／可愛動森風（介面＋插圖）""")
+rep("""    const PROMPT_ART_STYLE_KEYS = ['storybook', 'cozy'];   // 大屏提示插圖：溫暖繪本／可愛溫暖風""",
+    """    const BOARD_STYLES = ['standard', 'cozy'];   // 大屏風格：標準（提示插圖＝溫暖繪本）／可愛溫暖風（介面＋插圖）""")
 rep("""contactFont: 'default', promptArt: 'storybook', correctColor""",
     """contactFont: 'default', boardStyle: 'standard', correctColor""")
 rep("""          s.promptArt = PROMPT_ART_STYLE_KEYS.includes(saved.promptArt) ? saved.promptArt : 'storybook';""",
     """          s.boardStyle = BOARD_STYLES.includes(saved.boardStyle) ? saved.boardStyle : 'standard';""")
 rep("""          <div class="field"><label>大屏提示插圖風格</label><select id="setupPromptArt">
             <option value="storybook">溫暖繪本（手繪水彩感）</option>
-            <option value="cozy">可愛動森風（圓潤小島玩具感）</option>
-          </select><div class="status-text" style="margin-top:4px">兩套都是原創插圖，存好馬上換。可愛動森風還在畫，沒畫好的句子先用溫暖繪本。</div></div>""",
+            <option value="cozy">可愛溫暖風（圓潤小島玩具感）</option>
+          </select><div class="status-text" style="margin-top:4px">兩套都是原創插圖，存好馬上換。可愛溫暖風還在畫，沒畫好的句子先用溫暖繪本。</div></div>""",
     """          <div class="field"><label>大屏風格</label><select id="setupBoardStyle">
             <option value="standard">標準（現在的樣子，提示插圖用溫暖繪本）</option>
-            <option value="cozy">可愛動森風（介面與提示插圖一起換）</option>
-          </select><div class="status-text" style="margin-top:4px">存好馬上換，都是原創美術。動森風的圖示與插圖還在畫，沒畫好的先用標準版的圖。</div></div>""")
+            <option value="cozy">可愛溫暖風（介面與提示插圖一起換）</option>
+          </select><div class="status-text" style="margin-top:4px">存好馬上換，都是原創美術。可愛溫暖風的圖示與插圖還在畫，沒畫好的先用標準版的圖。</div></div>""")
 rep("""      $('setupPromptArt').value = s.promptArt;
       document.dispatchEvent(new Event('promptartchange'));""",
     """      $('setupBoardStyle').value = s.boardStyle;
@@ -43,7 +43,7 @@ rep("""      s.promptArt = PROMPT_ART_STYLE_KEYS.includes($('setupPromptArt').va
 
 # ---------- 套用風格：介面、圖示，再通知提示插圖換圖 ----------
 rep("""    function saveSettings() {""",
-    """    // 動森風圖示（ART-01 cozy）：驗收後把 id 加進來就會換成 assets/art/cozy/icon/<id>.webp；沒列的維持原圖示
+    """    // 可愛溫暖風圖示（ART-01 cozy）：驗收後把 id 加進來就會換成 assets/art/cozy/icon/<id>.webp；沒列的維持原圖示
     const COZY_ICON_READY = new Set([]);
     const TAB_ICON_IDS = { rollcall: 'tab_rollcall', homework: 'tab_homework', makeup: 'tab_makeup', correct: 'tab_correct', query: 'tab_query', tools: 'tab_tools', setup: 'tab_setup' };
     function applyBoardStyle() {
@@ -77,9 +77,9 @@ rep("""    // 設定頁換插圖風格：提示分頁與正在顯示的跳出畫
     """    // 設定頁換大屏風格：提示分頁與正在顯示的跳出畫面馬上換圖
     document.addEventListener('boardstylechange', () => {""")
 
-# ---------- 動森風介面 CSS（放在第一個 style 的最後） ----------
+# ---------- 可愛溫暖風介面 CSS（放在第一個 style 的最後） ----------
 COZY_CSS = """
-    /* ===== 大屏風格：可愛動森風（設定 → 大屏風格）。只換外觀，功能顏色（到校綠、病假橘…）保留原意 ===== */
+    /* ===== 大屏風格：可愛溫暖風（設定 → 大屏風格）。只換外觀，功能顏色（到校綠、病假橘…）保留原意 ===== */
     html[data-board-style="cozy"] {
       --bg: #fbf5e6; --surface: #fffaf0; --ink: #5b4636; --muted: #8f7b63; --line: #ecdcbc;
       --primary: #4f9e45; --primary-strong: #3c7f35;

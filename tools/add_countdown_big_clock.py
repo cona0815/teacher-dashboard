@@ -19,8 +19,8 @@ def rep(old, new):
     s = s.replace(old, new)
 
 
-# ---------- CSS（放在第一個 style 的動森風規則前面） ----------
-rep("""    /* ===== 大屏風格：可愛動森風""", """    /* ===== 倒數大時鐘（右上角按 5分／10分／開始 跳出） ===== */
+# ---------- CSS（放在第一個 style 的可愛溫暖風規則前面） ----------
+rep("""    /* ===== 大屏風格：可愛溫暖風""", """    /* ===== 倒數大時鐘（右上角按 5分／10分／開始 跳出） ===== */
     .countdown-display { cursor: pointer; }
     .cd-pop { position: fixed; inset: 0; z-index: 99990; display: flex; align-items: center; justify-content: center; background: rgba(20, 36, 32, .42); }
     .cd-pop[hidden] { display: none !important; }
@@ -42,7 +42,7 @@ rep("""    /* ===== 大屏風格：可愛動森風""", """    /* ===== 倒數大
     html[data-board-style="cozy"] .cd-card { border: 4px solid var(--cozy-wood); border-radius: 44px; box-shadow: 0 8px 0 var(--cozy-wood), 0 30px 60px -20px rgba(91,70,54,.45); }
     html[data-board-style="cozy"] .cd-pop { background: rgba(91, 70, 54, .38); }
 
-    /* ===== 大屏風格：可愛動森風""")
+    /* ===== 大屏風格：可愛溫暖風""")
 
 # ---------- HTML ----------
 rep("""      <button class="ghost-button" type="button" id="countdownReset">歸零</button>
