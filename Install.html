@@ -1122,6 +1122,23 @@
     <section id="partv2">
       <div class="sec-head"><div class="sec-icon">🆕</div><div class="sec-titles"><h2><span class="sec-num">10.</span>已經在用舊版？升級看這裡</h2></div></div>
       <p class="lead">怎麼知道自己的版本？網站每頁左下角有「版本 日期 時間」；雲端大腦在試算表選單「🤖 LINE 小幫手 → ℹ️ 程式版本」或對機器人傳「版本」。<strong>本段下方會顯示網站上最新的 LineBot.gs 版本</strong>，比你的新就照下面更新。全新安裝的老師照上面做就是最新版，這段可以跳過。</p>
+      <div id="upgrade-1112" style="border:2.5px solid #1d9e5f;background:#f1faf4;border-radius:14px;padding:16px 20px;margin:14px 0 22px">
+        <h3 style="margin-top:0">🔄 2026-11-12 更新：舊使用者要做什麼？</h3>
+        <p class="lead" style="margin-top:0">這次新增：點名的<strong>公假</strong>、<strong>學期出缺席與潔牙統計</strong>（放假日、轉入轉出、匯出 Word／Excel）、<strong>一鍵連線</strong>（不用再抄金鑰）、LINE 傳來的事附［任務］［記事］［不要］按鈕、「雲端資料夾」指令。</p>
+        <table>
+          <tr><th>你是哪一種？</th><th>要做的事</th></tr>
+          <tr><td>只用<strong>晨間大屏</strong>，資料存在這台電腦（沒接雲端）</td><td><strong>什麼都不用做。</strong>網頁會自己更新；教室電腦按一次 <kbd style="border:1px solid #bbb;border-bottom-width:2px;border-radius:5px;padding:0 6px;background:#fff;font-size:.9em">Ctrl</kbd>＋<kbd style="border:1px solid #bbb;border-bottom-width:2px;border-radius:5px;padding:0 6px;background:#fff;font-size:.9em">F5</kbd> 重新整理就是新版。</td></tr>
+          <tr><td>有接雲端（工作台、LINE 小幫手、大屏存雲端）</td><td>網頁一樣會自己更新，<strong>另外要更新一次 LINE 小幫手程式</strong>（下面 4 步，約 3 分鐘）。沒更新的話，舊功能照常能用，但雲端記不到公假、上課日和潔牙，也沒有一鍵連線。</td></tr>
+        </table>
+        <h4 style="margin:16px 0 6px">更新 LINE 小幫手程式（4 步）</h4>
+        <ol class="steps">
+          <li><strong>拿新程式：</strong>按下面「<a href="#copy-linebot">📋 一鍵複製最新 LineBot.gs</a>」的綠色按鈕（版本要顯示 <strong>2026-11-12 00:10</strong> 或更新）。</li>
+          <li><strong>貼上：</strong>打開<strong>你自己的</strong>試算表 → 擴充功能 → Apps Script → 左邊點 <strong>LineBot.gs</strong> → 點進程式碼區按 <kbd style="border:1px solid #bbb;border-bottom-width:2px;border-radius:5px;padding:0 6px;background:#fff;font-size:.9em">Ctrl</kbd>＋<kbd style="border:1px solid #bbb;border-bottom-width:2px;border-radius:5px;padding:0 6px;background:#fff;font-size:.9em">A</kbd> 全選 → <kbd style="border:1px solid #bbb;border-bottom-width:2px;border-radius:5px;padding:0 6px;background:#fff;font-size:.9em">Ctrl</kbd>＋<kbd style="border:1px solid #bbb;border-bottom-width:2px;border-radius:5px;padding:0 6px;background:#fff;font-size:.9em">V</kbd> 貼上 → 按 💾 儲存（不應出現紅字）。<br><span style="font-size:13px;color:#666">只換 LineBot.gs；左邊如果還有 Code.gs 或 appsscript.json，都不要動。</span></li>
+          <li><strong>發布新版本（最重要）：</strong>右上「部署 → 管理部署」→ 按 ✏️ 編輯 → 「版本」選<strong>新版本</strong> → 部署。<br><span style="font-size:13px;color:#b3261e">⚠️ 千萬不要按「新增部署」——網址會變，工作台和大屏就連不上。</span></li>
+          <li><strong>確認：</strong>回到試算表按重新整理 → 選單「🤖 LINE 小幫手 → ℹ️ 程式版本」要顯示 2026-11-12 00:10；選單裡也會多出「💻 連接我的工作台」「🏫 連接教室大屏」。第一次按這兩顆，Google 會再問一次授權（因為可以寄信給你自己），允許就好。</li>
+        </ol>
+        <p class="lead" style="margin-bottom:0">✅ <strong>不用</strong>重新初始化、<strong>不用</strong>改任何金鑰、網址也<strong>不會變</strong>。所有電腦（自己的、教室的）各按一次 <kbd style="border:1px solid #bbb;border-bottom-width:2px;border-radius:5px;padding:0 6px;background:#fff;font-size:.9em">Ctrl</kbd>＋<kbd style="border:1px solid #bbb;border-bottom-width:2px;border-radius:5px;padding:0 6px;background:#fff;font-size:.9em">F5</kbd> 重新整理網頁就完成了。想看新功能怎麼用：<a href="Guide.html#attendance">📊 出缺席與潔牙統計</a>、<a href="#level2">一鍵連線（第 2 級第 4、5 步）</a>。</p>
+      </div>
       <h3>🔤 金鑰代號換了（金鑰本身沒變，不用重貼）</h3>
       <p class="lead">為了配合五級，代號改成照用到的先後排。你記事本裡那幾串字完全不用動，只是名字不一樣；舊代號只出現在舊的教學和舊的記錄表。</p>
       <table>
@@ -1178,7 +1195,7 @@
         <li><strong>更新雲端大腦程式（有做第 2 級的老師才要做）</strong>：
           <ol>
             <li>開你的試算表 → 擴充功能 → Apps Script</li>
-            <li>按這顆按鈕取得最新程式碼：<br>
+            <li id="copy-linebot">按這顆按鈕取得最新程式碼：<br>
               <button type="button" id="copyLineBotButton" style="font-size:16px;font-weight:900;padding:10px 22px;border-radius:10px;border:2px solid #1f514a;background:#1f514a;color:#fff;cursor:pointer;font-family:inherit;margin:6px 0">📋 一鍵複製最新 LineBot.gs 程式碼</button>
               <span id="copyLineBotStatus" style="font-weight:700"></span><br>
               <span class="lead">網站上的最新 LineBot.gs 版本：<strong id="siteBotVersion">讀取中…</strong>（跟你的「ℹ️ 程式版本」比，舊了才要更新；一樣就不用動）</span><br>
