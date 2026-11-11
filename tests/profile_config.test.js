@@ -368,26 +368,26 @@ const boardHtml = fs.readFileSync(path.join(projectRoot, "Board.html"), "utf8");
 assert.match(boardHtml, /grade6PreviewTasks/, "每日看板離線時應讀取工作台真實任務");
 assert.doesNotMatch(boardHtml, /（模擬）/, "每日看板不得再顯示模擬資料戳記");
 
-// 教材小工場（Studio.html）
+// 教材工作坊（Studio.html）
 const studioHtml = fs.readFileSync(path.join(projectRoot, "Studio.html"), "utf8");
-assert.match(studioHtml, /grade6AssistantApiKey/, "教材小工場應沿用工作台已存的 Gemini 金鑰");
-assert.match(studioHtml, /generativelanguage\.googleapis\.com/, "教材小工場應直連 Gemini（不經任何中繼伺服器）");
-assert.match(studioHtml, /data-page="ws"/, "教材小工場應有學習單分頁");
+assert.match(studioHtml, /grade6AssistantApiKey/, "教材工作坊應沿用工作台已存的 Gemini 金鑰");
+assert.match(studioHtml, /generativelanguage\.googleapis\.com/, "教材工作坊應直連 Gemini（不經任何中繼伺服器）");
+assert.match(studioHtml, /data-page="ws"/, "教材工作坊應有學習單分頁");
 assert.match(studioHtml, /差異化雙版本/, "學習單應支援基礎＋進階差異化");
 assert.match(studioHtml, /教師解答卷/, "學習單應可附教師解答卷");
 assert.match(studioHtml, /家長回條/, "家長通知單應含裁切回條");
-assert.match(studioHtml, /data-page="mm"/, "教材小工場應有心智圖分頁");
-assert.match(studioHtml, /data-page="cm"/, "教材小工場應有評語小幫手分頁");
-assert.match(studioHtml, /data-page="mask"/, "教材小工場應有敏感資料遮蔽分頁");
+assert.match(studioHtml, /data-page="mm"/, "教材工作坊應有心智圖分頁");
+assert.match(studioHtml, /data-page="cm"/, "教材工作坊應有評語小幫手分頁");
+assert.match(studioHtml, /data-page="mask"/, "教材工作坊應有敏感資料遮蔽分頁");
 assert.match(studioHtml, /100% 本機處理，不會上傳/, "遮蔽工具應標明純本機處理");
 assert.match(studioHtml, /\[A-Z\]\[12\]\\d\{8\}/, "文字遮蔽應能辨識身分證字號");
-assert.match(studioHtml, /data-page="poster"/, "教材小工場應有海報宣傳單分頁");
+assert.match(studioHtml, /data-page="poster"/, "教材工作坊應有海報宣傳單分頁");
 assert.doesNotMatch(studioHtml, /data-page="award"/, "獎狀已依使用者指示移除");
-assert.match(studioHtml, /data-page="seat"/, "教材小工場應有座位表分頁");
+assert.match(studioHtml, /data-page="seat"/, "教材工作坊應有座位表分頁");
 assert.match(studioHtml, /island4/, "座位表應支援小組島排法（分組座位）");
 assert.match(studioHtml, /兩人一組（雙併桌）/, "座位表應支援兩人雙併排法");
-assert.match(indexHtml, /href="Studio\.html"/, "教師工具箱應有教材小工場入口");
-assert.match(indexHtml, /toolbox-button" href="Studio\.html"/, "教材小工場應放在教師工具箱按鈕列");
+assert.match(indexHtml, /href="Studio\.html"/, "教師工具箱應有教材工作坊入口");
+assert.match(indexHtml, /toolbox-button" href="Studio\.html"/, "教材工作坊應放在教師工具箱按鈕列");
 
 // Google 生態整合：日曆方案①、記事↔Tasks、表單產生器
 assert.match(indexHtml, /calendar\.google\.com\/calendar\/render\?action=TEMPLATE/, "任務應提供免授權的 Google 日曆預填連結");
@@ -398,18 +398,18 @@ assert.match(lineBotSource, /notes_tasks_sync/, "GAS 應提供記事與 Google T
 assert.match(lineBotSource, /function createGoogleForm_/, "GAS 應提供建立 Google 表單動作");
 assert.match(lineBotSource, /function lineBotFormSubmitCopy/, "表單提交後應能寄回覆副本給填表者");
 assert.match(lineBotSource, /尚未啟用 Tasks 服務/, "未啟用 Tasks 服務時應回傳友善的啟用教學");
-assert.match(studioHtml, /data-page="gform"/, "教材小工場應有 Google 表單產生器分頁");
+assert.match(studioHtml, /data-page="gform"/, "教材工作坊應有 Google 表單產生器分頁");
 assert.match(studioHtml, /form_create/, "表單產生器應透過 GAS form_create 建立");
 assert.match(studioHtml, /https:\/\/script\.google\.com/, "Studio CSP 應放行 GAS 連線");
 
 // 2026-09-04 驗收前批次：作文批改、圖文選單、座位表升級、文件匯出、提示遙控
-assert.match(studioHtml, /data-page="essay"/, "教材小工場應有作文批改分頁");
-assert.match(studioHtml, /data-page="guide"/, "教材小工場應有作文引導單分頁");
+assert.match(studioHtml, /data-page="essay"/, "教材工作坊應有作文批改分頁");
+assert.match(studioHtml, /data-page="guide"/, "教材工作坊應有作文引導單分頁");
 assert.match(studioHtml, /function buildMindmapSvg/, "心智圖繪製應為共用函式（引導單重用）");
 assert.match(studioHtml, /四格情境漫畫/, "作文引導單應含四格情境漫畫頁");
 assert.match(studioHtml, /段落鷹架|段落設計圖/, "作文引導單應含段落鷹架");
 assert.match(studioHtml, /名言佳句/, "作文引導單應含名言佳句");
-assert.match(studioHtml, /data-page="richmenu"/, "教材小工場應有 LINE 圖文選單分頁");
+assert.match(studioHtml, /data-page="richmenu"/, "教材工作坊應有 LINE 圖文選單分頁");
 assert.match(studioHtml, /richmenu_apply/, "圖文選單應透過 GAS richmenu_apply 套用");
 assert.match(studioHtml, /data-page="cm" hidden/, "評語小幫手分頁暫時收起（使用者指示先不用）");
 assert.match(studioHtml, /function downloadPreview/, "文件產出應可下載 Word／Excel");
@@ -444,17 +444,17 @@ assert.match(installHtml, /id="partv2"/, "安裝教學應有第 2 版更新指�
 assert.match(installHtml, /管理部署 → ✏️ 編輯 → 版本選「新版本」/, "更新指南應強調管理部署而非新增部署");
 assert.match(installHtml, /重新授權一次/, "更新指南應預告新權限的重新授權");
 assert.match(installHtml, /Tasks API/, "更新指南應說明 Tasks 服務選配啟用");
-assert.match(aboutHtml, /教材小工場一條龍/, "About 應新增備課夜情境");
+assert.match(aboutHtml, /教材工作坊一條龍/, "About 應新增備課夜情境");
 assert.match(aboutHtml, /會考寫作六級分規準/, "About 應說明作文批改採會考規準");
 assert.match(aboutHtml, /提示 排隊/, "About 應示範大屏提示 LINE 遙控");
 const introHtml = fs.readFileSync(path.join(projectRoot, "Intro.html"), "utf8");
-assert.match(introHtml, /教材小工場（第 2 版新登場）/, "Intro 應介紹教材小工場");
+assert.match(introHtml, /教材工作坊（第 2 版新登場）/, "Intro 應介紹教材工作坊");
 assert.match(introHtml, /大屏提示/, "Intro 班級工具應含大屏提示");
-assert.match(introHtml, /教材小工場一站生成/, "Intro 轉貼文案應含第 2 版痛點");
+assert.match(introHtml, /教材工作坊一站生成/, "Intro 轉貼文案應含第 2 版痛點");
 assert.match(installHtml, /copyLineBotButton/, "更新指南應提供一鍵複製最新程式碼（不依賴分享包）");
 
 // 📎 PDF 工具（pdf-lib 純本機）
-assert.match(studioHtml, /data-page="pdf"/, "教材小工場應有 PDF 工具分頁");
+assert.match(studioHtml, /data-page="pdf"/, "教材工作坊應有 PDF 工具分頁");
 assert.match(studioHtml, /assets\/vendor\/pdf-lib\.min\.js/, "PDF 工具應載入本站自帶的 pdf-lib");
 assert.ok(fs.existsSync(path.join(projectRoot, "assets", "vendor", "pdf-lib.min.js")), "pdf-lib 函式庫檔案應存在");
 assert.match(studioHtml, /setCropBox/, "PDF 工具應支援裁切");
@@ -495,8 +495,8 @@ assert.match(source, /verifyInstallToken_\(installToken\)/, "安裝寫入必須�
 assert.match(source, /assertSpreadsheetUiContext_\(\)/, "安裝端點必須限制在試算表 UI");
 assert.match(source, /LockService/, "共享寫入必須保留鎖");
 
-// Gemini 沒指定模型時的順序（工作台、教材小工場、LINE 小幫手要一致）
-for (const [name, text] of [["工作台", indexHtml], ["教材小工場", studioHtml], ["LINE 小幫手", lineBotSource]]) {
+// Gemini 沒指定模型時的順序（工作台、教材工作坊、LINE 小幫手要一致）
+for (const [name, text] of [["工作台", indexHtml], ["教材工作坊", studioHtml], ["LINE 小幫手", lineBotSource]]) {
   assert.match(text, /\['gemini-3\.5-flash-lite', 'gemini-3\.1-flash-lite', 'gemini-3\.8-flash'\]/, `${name}的 Gemini 自動順序應為 3.5 Flash-Lite → 3.1 Flash-Lite → 3.8 Flash`);
 }
 
@@ -584,9 +584,9 @@ assert.match(aboutHtml, /桌面小助手會看我的螢幕嗎/, "About 應回答
 assert.match(aboutHtml, /桌面小助手 v2\.0 陪你專注/, "About 應有桌寵 v2.0 情境");
 assert.match(aboutHtml, /XiaoMianZhuSecretary/, "About 資料存放表應含桌寵資料位置");
 assert.match(introHtml, /小助手 v2\.[01]「(專注|會聽的)小助手」/, "Intro 應有小助手 v2.x 功能卡");
-assert.match(introHtml, /PDF 工具/, "Intro 教材小工場卡應含 PDF 工具");
+assert.match(introHtml, /PDF 工具/, "Intro 教材工作坊卡應含 PDF 工具");
 
-// 2026-09-07 教材小工場 v3：拍照／貼上元件、真 PDF 下載、海報改 Gemini 生圖與風格庫
+// 2026-09-07 教材工作坊 v3：拍照／貼上元件、真 PDF 下載、海報改 Gemini 生圖與風格庫
 assert.match(studioHtml, /function attachZone/, "每個檔案輸入都應有拍照／貼上元件");
 assert.match(studioHtml, /\['wsImage', 'ntImage', 'mmImage'\]\.forEach\(id => attachZone\(id\)\)/, "學習單／通知單／心智圖的檔案輸入應掛上拍照／貼上");
 for (const zoneId of ["esImages", "pdfFiles", "maskImageInput"]) {
@@ -628,8 +628,8 @@ assert.match(studioHtml, /我的自我評量/, "學習單應有自我評量");
 assert.match(studioHtml, /例：中秋節/, "作文引導示範主題應為中秋節");
 
 // 段考複習講義／閱讀分級改寫
-assert.match(studioHtml, /data-page="review"/, "教材小工場應有段考複習講義分頁");
-assert.match(studioHtml, /data-page="reading"/, "教材小工場應有閱讀分級改寫分頁");
+assert.match(studioHtml, /data-page="review"/, "教材工作坊應有段考複習講義分頁");
+assert.match(studioHtml, /data-page="reading"/, "教材工作坊應有閱讀分級改寫分頁");
 assert.match(studioHtml, /易錯/, "複習講義應含易錯提醒");
 assert.match(studioHtml, /🟢 基礎/, "閱讀分級應有三級版本選項");
 assert.ok(studioHtml.includes("attachZone('rvImages'") && studioHtml.includes("attachZone('rdImages'"), "兩個新工具的檔案輸入應掛上拍照／貼上");
@@ -758,7 +758,7 @@ assert.match(installHtml, /id="keyNotes"/, "應提供金鑰記錄表範本");
 assert.doesNotMatch(installHtml, /📤 送出/, "大屏按鈕是「💾 存到雲端」，不是「📤 送出」");
 
 // ===== 組B 行政文書 =====
-// 2026-11-01 升級規格書組 B：教材小工場「🗂 行政文書」分頁群
+// 2026-11-01 升級規格書組 B：教材工作坊「🗂 行政文書」分頁群
 const groupBPage = id => {
   const start = studioHtml.indexOf(`id="page-${id}"`);
   assert.ok(start > 0, `Studio 應有 page-${id}`);
@@ -1135,7 +1135,7 @@ assert.match(indexHtml, /callLineBridge\('contactbook_month', \{ month \}\)/, "�
 assert.match(indexHtml, /const CB_LAYOUT_KEY = 'morningDisplayScale'/, "工作台黑板排版應與大屏共用 morningDisplayScale");
 assert.match(indexHtml, /function cbConfirmLeave\(\)/, "換日期前應提醒尚未儲存的聯絡本");
 
-// 2026-11-10 工具箱改成一行四組；大屏提示搬到級務；回覆家長；教材小工場只留 15 個並分四組
+// 2026-11-10 工具箱改成一行四組；大屏提示搬到級務；回覆家長；教材工作坊只留 15 個並分四組
 {
   const groups = [...indexHtml.matchAll(/<div class="toolbox-group"><span class="toolbox-group-label">([^<]+)<\/span>/g)].map(m => m[1]);
   assert.deepStrictEqual(groups, ['級務', '備課', '溝通'], "工具箱分組應為級務、備課、溝通（溝通＝📥 收件與 AI）");
@@ -1150,13 +1150,24 @@ assert.match(indexHtml, /function cbConfirmLeave\(\)/, "換日期前應提醒尚
   assert.match(indexHtml, /\['parent-learning', \/[^\n]*作業沒/, "「作業沒寫」應配到學習狀況溝通");
   const tabs = studioHtml.slice(studioHtml.indexOf('<div class="tabs">'), studioHtml.indexOf('</div>', studioHtml.indexOf('<div class="tabs">')));
   const shown = [...tabs.matchAll(/data-page="(\w+)">/g)].map(m => m[1]);
-  assert.deepStrictEqual(shown, ['ws', 'math', 'review', 'mm', 'vocab', 'guide', 'essay', 'library', 'reading', 'notice', 'gform', 'richmenu', 'seat', 'mask', 'pdf'], "教材小工場選單只留 15 個");
+  // 2026-11-11 老師：作文範文庫、LINE 圖文選單先收起來（程式保留）；PDF 工具移到出題備課最前面
+  assert.deepStrictEqual(shown, ['pdf', 'ws', 'math', 'review', 'mm', 'vocab', 'guide', 'essay', 'reading', 'notice', 'gform', 'seat', 'mask'], "教材工作坊選單只留 13 個");
+  assert.match(studioHtml, /data-page="library" hidden/, "作文範文庫程式保留，只是不放選單");
+  assert.match(studioHtml, /data-page="richmenu" hidden/, "LINE 圖文選單程式保留，只是不放選單");
 }
 
-// 2026-11-10 教材小工場：配色跟工作台同步、數學照課本出類似題、心智圖送大屏、閱讀分級中英文；工作台大屏提示＝大屏清單
-assert.match(studioHtml, /localStorage\.getItem\('grade6AssistantSettings'\)[\s\S]{0,200}workspace\.theme/, "教材小工場應讀工作台的介面配色");
+// 2026-11-11 貼上 NotebookLM 整理：多一個選擇，原本的打字／拍照／放檔案都保留
+assert.match(studioHtml, /function cleanNotebookLm\(/, "應能清掉 NotebookLM 的引用編號與來源");
+for (const page of ['ws', 'rv', 'mm', 'vb']) assert.match(studioHtml, new RegExp(`addNotebookPaste\\('${page}'`), `${page} 應有貼上 NotebookLM 的框`);
+for (const page of ['ws', 'rv', 'mm']) assert.match(studioHtml, new RegExp(`const nlm = nlmPromptPart\\('${page}'\\)`), `${page} 生成時應帶入貼上的整理`);
+assert.match(studioHtml, /id="mmNlmConvert"/, "心智圖應能把 NotebookLM 大綱直接轉成心智圖（不用 AI）");
+assert.match(studioHtml, /id="vbNlmConvert"/, "生詞本應能從 NotebookLM 清單抓出生字");
+for (const id of ['wsTopic', 'rvScope', 'mmTopic', 'vbChars', 'wsImage', 'rvImages', 'mmImage']) assert.match(studioHtml, new RegExp(`id="${id}"`), `原本的輸入 ${id} 要保留`);
+
+// 2026-11-10 教材工作坊：配色跟工作台同步、數學照課本出類似題、心智圖送大屏、閱讀分級中英文；工作台大屏提示＝大屏清單
+assert.match(studioHtml, /localStorage\.getItem\('grade6AssistantSettings'\)[\s\S]{0,200}workspace\.theme/, "教材工作坊應讀工作台的介面配色");
 for (const theme of ["forest", "apricot", "lavender", "tech", "minimal", "cozy"]) {
-  assert.ok(studioHtml.includes(`:root[data-theme="${theme}"] { --bg:`), `教材小工場應有「${theme}」配色`);
+  assert.ok(studioHtml.includes(`:root[data-theme="${theme}"] { --bg:`), `教材工作坊應有「${theme}」配色`);
 }
 assert.match(studioHtml, /id="mqSimButton"/, "數學出題應能照課本出類似題");
 assert.match(studioHtml, /function mqSimCheck/, "類似題應驗算，不能驗算的要請老師核對");
@@ -1172,7 +1183,7 @@ assert.match(studioHtml, /Pre-A1/, "英文閱讀應依 CEFR 分級");
 }
 
 // 畫面上的元件 id 不可重複（重複時程式只抓得到第一個，另一個會「按了沒反應」）
-for (const [name, html] of [["工作台", indexHtml], ["教材小工場", studioHtml]]) {
+for (const [name, html] of [["工作台", indexHtml], ["教材工作坊", studioHtml]]) {
   const ids = [...html.replace(/<script[\s\S]*?<\/script>/g, "").matchAll(/\sid="([^"$]+)"/g)].map(m => m[1]);
   const dup = [...new Set(ids.filter((id, i) => ids.indexOf(id) !== i))];
   assert.deepStrictEqual(dup, [], `${name}有重複的 id：${dup.join("、")}`);
@@ -1184,17 +1195,17 @@ assert.match(indexHtml, /id="checkApiButton">✓ 測試金鑰</, "AI 設定應�
 assert.match(indexHtml, /id="apiCheckResult"/, "測試結果應留在畫面上");
 assert.match(indexHtml, /function explainAiError/, "AI 錯誤要翻成白話（金鑰錯／額度用完／模型不能用）");
 assert.match(indexHtml, /response\.status !== 404 && response\.status !== 429/, "工作台：額度用完（429）也換下一個模型");
-assert.match(studioHtml, /response\.status !== 404 && response\.status !== 429/, "教材小工場：額度用完（429）也換下一個模型");
+assert.match(studioHtml, /response\.status !== 404 && response\.status !== 429/, "教材工作坊：額度用完（429）也換下一個模型");
 
-// Gemini 模型自動跟上 Google：記住上次成功的、試「最新版」別名、全部停用時問 Google 現有模型（工作台、教材小工場、LINE 小幫手）
-for (const [name, text] of [["工作台", indexHtml], ["教材小工場", studioHtml]]) {
+// Gemini 模型自動跟上 Google：記住上次成功的、試「最新版」別名、全部停用時問 Google 現有模型（工作台、教材工作坊、LINE 小幫手）
+for (const [name, text] of [["工作台", indexHtml], ["教材工作坊", studioHtml]]) {
   assert.match(text, /async function discoverGeminiModels/, `${name}應能問 Google 現有模型`);
   assert.match(text, /const GEMINI_LAST_GOOD_KEY = 'grade6GeminiLastGood'/, `${name}應記住上次成功的模型`);
   assert.match(text, /'gemini-flash-lite-latest'/, `${name}應試最新版別名`);
 }
 // 其他用金鑰的地方也不寫死模型：生圖模型、OpenAI／Grok 選的模型被停用要自動換
-assert.match(studioHtml, /async function discoverImageModels/, "教材小工場生圖應能問 Google 現有生圖模型");
-assert.doesNotMatch(studioHtml, /gemini-2\.0-flash-preview-image-generation|gemini-3-flash-image'/, "教材小工場生圖不應再寫死一串舊模型名稱");
+assert.match(studioHtml, /async function discoverImageModels/, "教材工作坊生圖應能問 Google 現有生圖模型");
+assert.doesNotMatch(studioHtml, /gemini-2\.0-flash-preview-image-generation|gemini-3-flash-image'/, "教材工作坊生圖不應再寫死一串舊模型名稱");
 assert.match(indexHtml, /async function fetchOpenAiAuto/, "工作台 OpenAI／Grok 應能在模型停用時自動換");
 assert.equal((indexHtml.match(/\/chat\/completions`/g) || []).length, 1, "工作台所有 OpenAI 相容呼叫都要經過 fetchOpenAiAuto");
 assert.match(lineBotSource, /function discoverGeminiModels_/, "LINE 小幫手應能問 Google 現有模型");
@@ -1227,7 +1238,7 @@ assert.doesNotMatch(studioHtml, /<b>為什麼是這個程度：<\/b>/, "範文�
 assert.match(studioHtml, /class="lb-mark"/, "範文評語要在文章裡標出對應的句子");
 assert.match(studioHtml, /function rdVocabList/, "詞彙小幫手要容錯，空的不印");
 // 2026-11-11 AI 讀文件：上傳欄位收 PDF、Word、PPT、Excel；Office 檔本機取文字、PDF 直接給 Gemini；文件文字也做個資檢查
-assert.match(studioHtml, /async function docFileToPart\(file\)/, "教材小工場應能把 Word／PPT／Excel 轉成文字給 AI");
+assert.match(studioHtml, /async function docFileToPart\(file\)/, "教材工作坊應能把 Word／PPT／Excel 轉成文字給 AI");
 assert.match(studioHtml, /id="mmImage" accept="image\/\*,\.pdf,application\/pdf,\.docx,\.pptx,\.xlsx/, "心智圖上傳應收 PDF 與 Office 檔");
 assert.match(studioHtml, /async function fetchGemini\(key, body\) \{[\s\S]{0,400}?const privacyHits = aiPrivacyHits\(outgoing\)/, "每一條 AI 路徑都要做個資檢查（含文件取出的文字）");
 assert.doesNotMatch(lineBotSource, /[?&]key=/, "LINE 小幫手的 Gemini 金鑰不放網址");
@@ -1237,11 +1248,11 @@ assert.match(studioHtml, /id="maskRemember"/, "遮蔽字詞可以選擇不記住
 assert.match(indexHtml, /id="driveFolderButton" data-line-only/, "工具箱應有「📂 雲端資料夾」");
 assert.match(lineBotSource, /\(雲端資料夾\|雲端硬碟\|資料夾\|備份資料夾\|雲端\)/, "LINE 傳「雲端資料夾」應回連結");
 assert.match(lineBotSource, /if \(body && body\.folder === true\)/, "工作台同步時可順便拿資料夾連結");
-// 2026-11-11 學校常見活動（老師提供的行事曆）：AI 提示、本月活動小卡、研習名稱、教材小工場主題按鈕
+// 2026-11-11 學校常見活動（老師提供的行事曆）：AI 提示、本月活動小卡、研習名稱、教材工作坊主題按鈕
 const schoolEvents = fs.readFileSync(path.join(projectRoot, "assets", "school-events.js"), "utf8");
 assert.match(schoolEvents, /國家防災日複合式防災演練/, "活動清單應含 9 月防災演練");
 assert.match(schoolEvents, /'兒少保護與責任通報研習'/, "研習清單應含 16 項研習");
-for (const [name, html] of [["工作台", indexHtml], ["教材小工場", studioHtml]]) assert.match(html, /<script src="assets\/school-events\.js"><\/script>/, `${name}應載入學校活動清單`);
+for (const [name, html] of [["工作台", indexHtml], ["教材工作坊", studioHtml]]) assert.match(html, /<script src="assets\/school-events\.js"><\/script>/, `${name}應載入學校活動清單`);
 assert.match(indexHtml, /function schoolEventsHint/, "AI 行政助理應知道本月學校活動");
 assert.match(indexHtml, /id="monthEventsCard"/, "工作台應有本月學校常見活動小卡");
 assert.match(indexHtml, /id="aiDocTraining"/, "研習心得／簽呈應有研習名稱選單");

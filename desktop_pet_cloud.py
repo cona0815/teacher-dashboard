@@ -27,7 +27,7 @@ DEFAULT_FOCUS_KEYWORDS = [
     "youtube", "facebook", "instagram", "threads", "蝦皮", "shopee", "momo",
     "netflix", "shorts", "reels", "tiktok", "抖音",
 ]
-BIG_SCREEN_MARKERS = ("晨間大屏", "教材小工場")
+BIG_SCREEN_MARKERS = ("晨間大屏", "教材工作坊", "教材小" + "工場")   # 後者＝2026-11-11 改名前的分頁標題（舊網頁快取）
 
 
 def cloud_url_allowed(url: str) -> bool:

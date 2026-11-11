@@ -303,7 +303,7 @@ class VoiceEngine:
             return "groq" if self.groq_key else ""
         if self.provider == "gemini":
             return "gemini" if self.gemini_key else ""
-        # 自動：Gemini 優先（老師只要申請一把 Gemini 金鑰，工作台、教材小工場、小助手共用）；沒有 Gemini 金鑰才用 Groq
+        # 自動：Gemini 優先（老師只要申請一把 Gemini 金鑰，工作台、教材工作坊、小助手共用）；沒有 Gemini 金鑰才用 Groq
         if self.gemini_key:
             return "gemini"
         if self.groq_key:

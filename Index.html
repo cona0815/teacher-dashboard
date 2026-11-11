@@ -1299,7 +1299,7 @@
         <a class="help-card" href="Install.html" target="_blank" rel="noopener">
           <div class="help-emoji">🚀</div><div><strong>部署方法</strong><p>從零開始：工作台、晨間大屏、LINE 小幫手（Google 試算表＋Apps Script）、小助手桌寵。已在用第 1 版的老師看「第 2 版更新指南」。</p></div></a>
         <a class="help-card" href="Guide.html" target="_blank" rel="noopener">
-          <div class="help-emoji">📘</div><div><strong>圖文操作手冊</strong><p>每個功能配真實畫面，一步一步教：今日看板、AI 行政助理、LINE 小幫手按鈕、晨間大屏、教材小工場、敏感資料遮蔽……</p></div></a>
+          <div class="help-emoji">📘</div><div><strong>圖文操作手冊</strong><p>每個功能配真實畫面，一步一步教：今日看板、AI 行政助理、LINE 小幫手按鈕、晨間大屏、教材工作坊、敏感資料遮蔽……</p></div></a>
         <a class="help-card" href="About.html" target="_blank" rel="noopener">
           <div class="help-emoji">🧭</div><div><strong>系統使用方法</strong><p>依情境的日常用法（早自習、備課夜、批改作文、LINE 河道整合……），以及你的資料存在哪裡、每個授權在做什麼。</p></div></a>
         <a class="help-card" href="Intro.html" target="_blank" rel="noopener">
@@ -1653,7 +1653,7 @@
             <button class="toolbox-button" type="button" data-toolbox-target="parentReplySection" aria-expanded="false">💬 回覆家長</button>
           </div>
           <div class="toolbox-group"><span class="toolbox-group-label">備課</span>
-            <a class="toolbox-button" href="Studio.html" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center">🎨 教材小工場</a>
+            <a class="toolbox-button" href="Studio.html" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center">🎨 教材工作坊</a>
           </div>
           <div class="toolbox-group"><span class="toolbox-group-label">溝通</span>
             <button class="toolbox-button" type="button" id="inboxHubButton" data-toolbox-hub aria-expanded="false">📥 收件與 AI</button>
@@ -7773,7 +7773,7 @@
       if (!draft.title) return showToast('請先填寫表單名稱。', true);
       if (!draft.questions.length) return showToast('表單至少需要一個題目。', true);
       if (!lineBridgeReady()) {
-        $('aiFormStatus').textContent = '建立 Google 表單需要 LINE 小幫手：請到「⚙ 設定 → LINE 小幫手」填好 GAS 網址與 🔑C（或改用「🎨 教材小工場 → 📋 Google 表單」）。';
+        $('aiFormStatus').textContent = '建立 Google 表單需要 LINE 小幫手：請到「⚙ 設定 → LINE 小幫手」填好 GAS 網址與 🔑C（或改用「🎨 教材工作坊 → 📋 Google 表單」）。';
         return showToast('請先設定 LINE 小幫手（GAS）才能真的建立表單。', true);
       }
       if (!window.confirm(`確定要在你的 Google 帳號建立表單「${draft.title}」嗎？建立後可再到 Google 表單調整。`)) return;
