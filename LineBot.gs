@@ -1,5 +1,5 @@
 /**
- * LINE 小幫手（選用雲端模組）
+ * LINE 小幫手（選用雲端模組）　版本 2026-11-11 10:50
  *
  * 這是教師工作台的「選用」LINE Bot 後端：每位老師部署到自己的 Google Apps Script，
  * 搭配自己的 Google 試算表與 LINE 官方帳號。試算表只作為「雲端轉運信箱」：
@@ -517,7 +517,7 @@ function doGet() {
 }
 
 // 程式版本（每次發布都要更新；試算表選單「ℹ️ 程式版本」、LINE 傳「版本」、工作台連線檢查都會顯示）
-var BOT_VERSION = '2026-11-11 10:45';
+var BOT_VERSION = '2026-11-11 10:50';
 
 function lineBotJson_(payload) {
   return ContentService.createTextOutput(JSON.stringify(payload)).setMimeType(ContentService.MimeType.JSON);

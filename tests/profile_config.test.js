@@ -1275,3 +1275,11 @@ assert.match(fs.readFileSync(path.join(projectRoot, ".github", "workflows", "bui
 assert.match(lineBotSource, /function resetKeysIfCopied_\(spreadsheet, properties\)[\s\S]{0,200}deleteAllProperties\(\)/, "副本初始化時要清掉從範本帶來的金鑰");
 assert.match(lineBotSource, /resetKeysIfCopied_\(spreadsheet, properties\);\s*\n\s*if \(!properties\.getProperty\('LINE_WEBHOOK_TOKEN'\)\)/, "初始化先檢查是不是別人的副本，再產生金鑰");
 assert.match(lineBotSource, /function resetForTemplate\(\)/, "範本擁有者要能一鍵清空範本的金鑰");
+
+// 2026-11-11 老師：每次更新都要看得到版本與日期——LineBot.gs 第 2 行標題、BOT_VERSION、網頁版本號三個要一致（用 tools/bump_version.py 改）
+{
+  const botVersion = (lineBotSource.match(/^var BOT_VERSION = '([^']+)';/m) || [])[1];
+  assert.ok(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(botVersion || ''), "BOT_VERSION 要是「日期 時間」");
+  assert.ok(lineBotSource.split('\n')[1].includes(`版本 ${botVersion}`), "LineBot.gs 第 2 行標題要寫版本與日期，且跟 BOT_VERSION 一樣");
+  assert.ok(fs.readFileSync(path.join(__dirname, '..', 'assets', 'version.js'), 'utf8').includes(`TD_VERSION = '${botVersion}'`), "網頁版本號要跟 LineBot.gs 一樣");
+}
