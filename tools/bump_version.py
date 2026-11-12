@@ -23,4 +23,8 @@ def sub(path, pattern, repl):
 sub('LineBot.gs', r"^var BOT_VERSION = '[^']*';", f"var BOT_VERSION = '{v}';")
 sub('LineBot.gs', r"^ \* LINE 小幫手（選用雲端模組）.*$", f" * LINE 小幫手（選用雲端模組）　版本 {v}")
 sub('assets/version.js', r"TD_VERSION = '[^']*'", f"TD_VERSION = '{v}'")
+# 共用的 JS 加版本號，瀏覽器才不會拿舊的快取
+tag = v.replace(' ', '-').replace(':', '')
+for page in ('Morning.html', 'Index.html'):
+    sub(page, r'assets/attendance-term\.js(\?v=[^"]*)?"', f'assets/attendance-term.js?v={tag}"')
 print('版本已更新為', v)

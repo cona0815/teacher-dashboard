@@ -1042,11 +1042,11 @@ assert.match(studioHtml, /section\('代課教師當日簽認'/, "代課包應有
 }
 // ===== 組A 行政文書 end =====
 
-// 科任模式已移除（2026-11-10 老師決定只服務導師）：存檔 key 仍不可改名，舊資料才讀得到
+// 2026-11-12 老師決定做科任版（換班＝整包交換這班的資料，不再用 11-10 前那種「第一班特別處理」的舊做法）：存檔 key 仍不可改名，舊資料才讀得到
 {
   const mh = fs.readFileSync(path.join(projectRoot, "Morning.html"), "utf8");
-  assert.doesNotMatch(mh, /id="setupClasses"|id="classSwitch"|isMultiClass|classKeySuffix/, "大屏不應再有多班模式");
-  assert.doesNotMatch(indexHtml, /data-role="subject"/, "工作台不應再有科任身分");
+  assert.doesNotMatch(mh, /isMultiClass|classKeySuffix/, "不可再用舊的多班做法（第一班特別處理）");
+  assert.doesNotMatch(indexHtml, /data-role="subject"/, "工作台不需要科任身分（雲端有幾班就出現班級選單）");
   assert.match(mh, /const SETTINGS_KEY = 'morningBoardSettings'/, "設定 key 不可改名");
   assert.match(mh, /const STATE_PREFIX = 'morningBoardState:'/, "當日狀態 key 不可改名");
   assert.match(mh, /const CONFIG_KEY = 'morningToolsConfig'/, "班級工具設定 key 不可改名");
@@ -1295,7 +1295,7 @@ assert.match(lineBotSource, /function resetForTemplate\(\)/, "範本擁有者要
   assert.match(morningHtml, /logAttendanceDay\(todayKey\(\), state\.attendance\)/, "大屏每天記點名到學期紀錄（不跟 180 天清理刪掉）");
   assert.match(morningHtml, /push, marked, tooth \};/, "大屏送雲端要附有點名的人數（記上課日）");
   assert.match(indexHtml, /data-toolbox-target="attendanceTermSection"/, "工作台工具箱要有出缺席統計（接雲端時）");
-  assert.match(indexHtml, /callLineBridge\('term_save', \{ term \}\)/, "工作台的學期設定存到雲端");
+  assert.match(indexHtml, /callLineBridge\('term_save', \{ term, className: attendanceTermCurrentClass \}\)/, "工作台的學期設定存到雲端（那一班）");
   assert.match(indexHtml, /const HW_LEAVE_STATUS = \['病假', '事假', '公假'\]/, "公假那天沒交作業不算缺交");
   assert.match(lineBotSource, /ATTENDANCE_STATUSES: \['病假', '事假', '公假', '遲到', '未到'\]/, "GAS 要收公假");
   assert.match(lineBotSource, /if \(action === 'term_get'\)/, "GAS 要有 term_get");
@@ -1323,3 +1323,47 @@ assert.match(indexHtml, /history\.replaceState\(null, '', location\.pathname \+ 
 assert.match(indexHtml, /if \(!window\.confirm\(ask\)\)/, "工作台換雲端前要先問老師");
 assert.match(morningHtml, /url = String\(data\.u \|\| ''\); key = String\(data\.b \|\| ''\);/, "大屏只收 🔑B 的連結");
 assert.match(morningHtml, /const ok = await askDialog\(\{ message: `\$\{replacing/, "大屏換雲端前要先問");
+
+// 2026-11-12 科任版：換班整包交換、換班中不寫入、科任不顯示聯絡本；工作台班級選單；GAS 學期設定一班一份
+assert.match(morningHtml, /const CLASS_STORE_PREFIX = 'morningClassStore:'/, "其他班的資料收在 morningClassStore:班級");
+assert.match(morningHtml, /if \(localStorage\.getItem\(storeKey\) !== text\) throw new Error\('verify'\)/, "換班前要確認這班資料真的存好才刪");
+assert.match(morningHtml, /function saveConfig\(\) \{ if \(classSwitching\) return;/, "換班中班級工具不可寫入");
+assert.match(morningHtml, /if \(isSubjectMode\(\)\) return;   \/\/ 科任模式不顯示聯絡本/, "科任不讀聯絡本（雲端一天只有一份）");
+assert.match(indexHtml, /id="todayClass"/, "今日看板要有班級選單");
+assert.match(indexHtml, /callLineBridge\('term_save', \{ term, className: attendanceTermCurrentClass \}\)/, "學期設定要存到那一班");
+assert.match(lineBotSource, /function termPropKey_\(className\)/, "GAS 學期設定一班一份");
+// 計分板加分版
+assert.match(morningHtml, /data-score-mode="person"/, "計分板要有個人模式");
+assert.match(morningHtml, /function applyTypedSeats\(i\)/, "編組可以打號碼");
+assert.match(morningHtml, /addEventListener\('pointerdown'/, "編組可以拖拉（觸控也能用）");
+assert.match(morningHtml, /id="groupToScoreButton"/, "隨機分組可以帶到計分板");
+
+
+// 2026-11-12 老師實測回饋：科任預設不需潔牙、每天請假明細、刪除／重新統計先確認、小組加分也加給組員
+{
+  const termJs = fs.readFileSync(path.join(__dirname, '..', 'assets', 'attendance-term.js'), 'utf8');
+  assert.match(termJs, /if \(a === 'reload'\) \{ ask\(/, "重新統計前先確認");
+  assert.match(termJs, /if \(a === 'delEnroll'\) \{[\s\S]{0,200}ask\(/, "刪除在籍異動前先確認");
+  assert.match(termJs, /<sheet name="請假明細"/, "Excel 要有請假明細頁");
+  assert.match(termJs, /data-at="daylist"/, "要有每天請假明細");
+  assert.match(morningHtml, /noTooth: \(\) => isSubjectMode\(\)/, "科任預設不算潔牙");
+  assert.match(morningHtml, /config\.shareTeamToMembers !== false/, "小組加分預設也加給組員");
+  assert.match(morningHtml, /function teamTotal\(i\) \{ return config\.teams\[i\]\.score; \}/, "老師決定：個人加分不會加到小組上（只有小組→組員）");
+  assert.doesNotMatch(morningHtml, /scoreIncludePersons/, "不再有「組員個人分算進小組」選項");
+}
+
+// 2026-11-12 老師：個人扣點換禮物、科任上方預設計分板＋隨機分組、組名可改、設定頁預設收起
+assert.match(morningHtml, /data-score-mode="reward"/, "計分板要有兌換模式");
+assert.match(morningHtml, /const personScore = seat => Math\.max\(0, ownScore\(seat\) \+ fromTeamScore\(seat\) - spentScore\(seat\)\)/, "目前點數＝加的－兌換用掉的");
+assert.match(morningHtml, /'prizes', 'personSpent', 'redeemLog'/, "禮物與兌換紀錄要跟著班級");
+assert.match(morningHtml, /const TOP_TOOLS_SUBJECT = \['check', 'score', 'group', 'screen', 'mind'\]/, "科任上方選單預設有計分板、隨機分組");
+assert.match(morningHtml, /data-se-name="\$\{i\}"/, "編組視窗可以改組名");
+assert.match(morningHtml, /#page-setup \.sb-fold:not\(\.open\) > :not\(\.sb-head\) \{ display: none !important; \}/, "設定頁每一類預設收起");
+assert.match(morningHtml, /data-se-act="random">🎲 隨機分/, "計分板編組要有隨機分");
+assert.match(morningHtml, /block\.classList\.add\('sb-fold', 'open'\)/, "設定頁預設打開（老師：用顏色區分就好）");
+assert.match(morningHtml, /background: var\(--sb-ink, var\(--primary, #1f514a\)\); color: #fff !important;/, "設定頁標題用各類別自己的顏色");
+// 2026-11-12 本校作息：預設一般國小、可自訂；每節下課與定評小幫手都跟著
+assert.match(morningHtml, /id="setupPeriods"/, "設定頁要有本校作息時間");
+assert.match(morningHtml, /function schoolBreakTimes\(\)/, "下課時間由本校作息算出");
+assert.match(morningHtml, /const breakTimesText = \(\) => config\.promptBreakTimes \|\| schoolBreakTimes\(\)\.join\(', '\)/, "每節下課預設跟著本校作息，自己改過才用自己的");
+assert.doesNotMatch(morningHtml, /const XD_PERIODS = \[/, "定評小幫手節次時間不可寫死");

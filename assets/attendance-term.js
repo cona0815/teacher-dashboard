@@ -86,11 +86,12 @@
     const toothDays = [...toothMap.keys()].sort();
     const rows = periods.map(p => {
       const from = p.from || t.start, to = p.to || t.end;
-      const row = { seat: p.seat, from: p.from, to: p.to, note: p.note, expected: 0, present: 0, 遲到: 0, 病假: 0, 事假: 0, 公假: 0, 未到: 0, toothExpected: 0, toothDone: 0 };
+      const row = { seat: p.seat, from: p.from, to: p.to, note: p.note, expected: 0, present: 0, 遲到: 0, 病假: 0, 事假: 0, 公假: 0, 未到: 0, toothExpected: 0, toothDone: 0, events: [] };
       days.forEach(d => {
         if (d < from || d > to) return;
         row.expected += 1;
         const s = status.get(`${d}|${p.seat}`);
+        if (s) row.events.push({ date: d, status: s });
         if (!s || s === '遲到') { row.present += 1; if (s) row.遲到 += 1; } else row[s] += 1;
       });
       toothDays.forEach(d => {
@@ -107,8 +108,15 @@
       return row;
     });
     const sum = key => rows.reduce((n, r) => n + r[key], 0);
+    // 每天的明細：那天誰請了什麼假（只算那天在班上的座號）
+    const dayDetail = days.map(d => {
+      const by = { 病假: [], 事假: [], 公假: [], 未到: [], 遲到: [] };
+      rows.forEach(r => r.events.forEach(e => { if (e.date === d && by[e.status] && !by[e.status].includes(r.seat)) by[e.status].push(r.seat); }));
+      Object.values(by).forEach(list => list.sort((a, b) => a - b));
+      return { date: d, by };
+    });
     return {
-      term: t, days, allDays, holidays: allDays.filter(d => holidaySet.has(d)), rows, toothDays,
+      term: t, days, allDays, holidays: allDays.filter(d => holidaySet.has(d)), rows, toothDays, dayDetail,
       toothCount: Object.fromEntries(toothDays.map(d => [d, toothMap.get(d).size])),
       totals: { expected: sum('expected'), present: sum('present'), 遲到: sum('遲到'), 病假: sum('病假'), 事假: sum('事假'), 公假: sum('公假'), 未到: sum('未到'), toothExpected: sum('toothExpected'), toothDone: sum('toothDone') }
     };
@@ -179,12 +187,14 @@
     const hasTooth = result.toothDays && result.toothDays.length;
     const dayRows = [['日期', '星期', '類型', ...(hasTooth ? ['潔牙人數'] : [])], ...result.allDays.map(d => [d, weekday(d), result.holidays.includes(d) ? '放假（不列入）' : '上課',
       ...(hasTooth ? [result.toothCount[d] || 0] : [])])];
-    const wb = `${HEAD}<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="出缺席統計" sheetId="1" r:id="rId1"/><sheet name="上課日" sheetId="2" r:id="rId2"/></sheets></workbook>`;
-    const wbRels = `${HEAD}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/></Relationships>`;
-    const types = `${HEAD}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>`;
+    const leaveRows = [['日期', '星期', '座號', '假別'], ...result.dayDetail.slice().flatMap(day => ['病假', '事假', '公假', '未到', '遲到']
+      .flatMap(st => day.by[st].map(seat => [day.date, weekday(day.date), seat, st])))];
+    const wb = `${HEAD}<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="出缺席統計" sheetId="1" r:id="rId1"/><sheet name="上課日" sheetId="2" r:id="rId2"/><sheet name="請假明細" sheetId="3" r:id="rId3"/></sheets></workbook>`;
+    const wbRels = `${HEAD}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet3.xml"/></Relationships>`;
+    const types = `${HEAD}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet3.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>`;
     const rels = `${HEAD}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`;
     return makeZip([['[Content_Types].xml', types], ['_rels/.rels', rels], ['xl/workbook.xml', wb], ['xl/_rels/workbook.xml.rels', wbRels],
-      ['xl/worksheets/sheet1.xml', sheet(statRows)], ['xl/worksheets/sheet2.xml', sheet(dayRows)]], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      ['xl/worksheets/sheet1.xml', sheet(statRows)], ['xl/worksheets/sheet2.xml', sheet(dayRows)], ['xl/worksheets/sheet3.xml', sheet(leaveRows)]], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
   }
 
   /** Word：A4 直式，標題＋說明＋表格 */
@@ -198,8 +208,11 @@
     const table = `<w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/><w:tblBorders>${border}</w:tblBorders></w:tblPr><w:tblGrid>${widths.map(w => `<w:gridCol w:w="${w}"/>`).join('')}</w:tblGrid>`
       + all.map((row, r) => `<w:tr>${r === 0 ? '<w:trPr><w:tblHeader/></w:trPr>' : ''}${row.map((v, i) => cellXml(v, i, r === 0 || r === all.length - 1)).join('')}</w:tr>`).join('') + '</w:tbl>';
     const holidayText = result.holidays.length ? `放假（不列入）：${result.holidays.map(md).join('、')}` : '';
+    const leaveParas = result.dayDetail.filter(day => Object.values(day.by).some(list => list.length)).map(day =>
+      para(`${md(day.date)}（${weekday(day.date)}）　` + ['病假', '事假', '公假', '未到', '遲到'].filter(st => day.by[st].length).map(st => `${st}：${day.by[st].join('、')} 號`).join('｜'), false, 18)).join('');
     const body = para(title, true, 32, true) + para(summaryText(result), false, 22, true) + table
-      + para('說明：只用座號；遲到算出席；放假日與不在籍的日子不列入應到天數；請假、未到那天不列入應潔牙。', false, 18) + (holidayText ? para(holidayText, false, 18) : '');
+      + para('說明：只用座號；遲到算出席；放假日與不在籍的日子不列入應到天數；請假、未到那天不列入應潔牙。', false, 18) + (holidayText ? para(holidayText, false, 18) : '')
+      + (leaveParas ? para('請假明細（依日期）', true, 22) + leaveParas : '');
     const doc = `${HEAD}<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${body}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1000" w:right="900" w:bottom="1000" w:left="900" w:header="0" w:footer="0" w:gutter="0"/></w:sectPr></w:body></w:document>`;
     const styles = `${HEAD}<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:eastAsia="微軟正黑體" w:cs="Calibri"/><w:sz w:val="22"/></w:rPr></w:rPrDefault></w:docDefaults></w:styles>`;
     const types = `${HEAD}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>`;
@@ -234,6 +247,11 @@
 .at-box{border:1.5px dashed var(--line,#d8d2c4);border-radius:10px;padding:8px 12px}.at-box summary{cursor:pointer;font-weight:800}
 .at-days{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.at-day{border:1.5px solid #9cc5a1;background:#eef8ef;color:#1d5c2a;border-radius:8px;padding:4px 8px;font:inherit;font-size:13px;cursor:pointer}
 .at-day.off{border-color:#c9c2b4;background:#ece8df;color:#77705f;text-decoration:line-through}
+.at-table tbody tr[data-row]{cursor:pointer}.at-table tbody tr[data-row]:hover td{background:var(--surface-2,#f4efe4)}
+.at-detail{border:2px solid var(--primary,#1f514a);border-radius:12px;padding:10px 14px;background:var(--surface,#fff)}
+.at-events{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;margin-top:6px}
+.at-daylist{display:grid;gap:4px;margin-top:8px;max-height:320px;overflow:auto;font-size:14px}
+.at-dayrow{display:flex;flex-wrap:wrap;gap:4px 14px;padding:4px 0;border-bottom:1px dashed var(--line,#e6e0d4)}.at-daydate{font-weight:800;min-width:96px}
 .at-erow{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--line,#e6e0d4)}`;
   function mountPanel(host, opts) {
     if (!document.getElementById('at-style')) { const st = document.createElement('style'); st.id = 'at-style'; st.textContent = STYLE; document.head.appendChild(st); }
@@ -246,7 +264,10 @@
         <label>空號 <input class="at-input" data-at="emptySeats" placeholder="例：4、13" style="width:140px"></label><span class="at-note">（跟教室大屏的設定一樣填）</span></div>` : ''}
       <div class="at-meta" data-at="meta"></div>
       <div class="at-wrap" data-at="table"></div>
+      <div class="at-note">💡 點表格裡的座號，可以看他哪幾天請什麼假。</div>
+      <div class="at-detail" data-at="detail" hidden></div>
       <div class="at-row"><button type="button" class="at-btn at-main" data-at-act="xlsx">⬇ 匯出 Excel</button><button type="button" class="at-btn at-main" data-at-act="docx">⬇ 匯出 Word</button></div>
+      <details class="at-box"><summary>📅 每天請假明細（哪一天、誰、請什麼假）</summary><div class="at-daylist" data-at="daylist"></div></details>
       <details class="at-box"><summary>🗓 上課日與放假（那天放假卻被記成未到，點一下改成放假）</summary><div class="at-days" data-at="days"></div></details>
       <details class="at-box"><summary>👥 在籍異動（轉入、轉出、座號換人）</summary>
         <div class="at-note">只填有變動的座號。轉入日空白＝學期一開始就在；轉出日空白＝現在還在。同一個座號換了人，就填兩列。</div>
@@ -255,6 +276,19 @@
         <div class="at-note">學期初按一次：學期起訖換成新學期，放假日與在籍異動清空重來。舊學期的點名紀錄不會刪，改回舊日期還是查得到。</div>
         <button type="button" class="at-btn at-warn" data-at-act="newTerm">🆕 開始新學期</button></details>`;
     const q = sel => host.querySelector(`[data-at="${sel}"]`);
+    // 刪除、重設、重新統計之前一律先問（大屏用頁面內的確認視窗，工作台用瀏覽器的）
+    const ask = message => Promise.resolve(opts.confirm ? opts.confirm(message) : window.confirm(message));
+    const ST_COLOR = { 病假: '#c76a12', 事假: '#9a7a00', 公假: '#6a4fb3', 未到: '#b3261e', 遲到: '#2f6f9e' };
+    const stTag = st => `<b style="color:${ST_COLOR[st] || 'inherit'}">${st}</b>`;
+    function showSeatDetail(i) {
+      const row = host._lastResult && host._lastResult.rows[i];
+      if (!row) return;
+      const box = q('detail');
+      box.hidden = false;
+      box.innerHTML = `<div class="at-row" style="justify-content:space-between"><b>${esc(row.label)} 的紀錄</b><button type="button" class="at-btn" data-at-act="closeDetail">✕ 關閉</button></div>`
+        + (row.events.length ? `<div class="at-events">${row.events.slice().reverse().map(e => `<span>${md(e.date)}（${weekday(e.date)}）${stTag(e.status)}</span>`).join('')}</div>` : '<div class="at-note">整學期都準時到校 🎉</div>');
+      box.scrollIntoView({ block: 'nearest' });
+    }
     function persist() { term = normalizeTerm(term); return Promise.resolve(opts.save(term)).catch(e => { q('meta').textContent = `⚠️ 設定沒存成功：${e.message || e}`; }); }
     function renderEnroll() {
       q('enroll').innerHTML = term.enroll.length ? term.enroll.map((e, i) => `<div class="at-erow" data-i="${i}">
@@ -269,7 +303,7 @@
       const seats = opts.seatControl && term.seatCount
         ? Array.from({ length: term.seatCount }, (_, i) => i + 1).filter(n => !term.emptySeats.includes(n))
         : data.seats;
-      const result = compute({ term, seats, schoolDays: data.schoolDays, records: data.records, tooth: data.tooth });
+      const result = compute({ term, seats, schoolDays: data.schoolDays, records: data.records, tooth: opts.noTooth && opts.noTooth() ? {} : data.tooth });
       q('name').value = term.name; q('start').value = term.start; q('end').value = term.end;
       if (opts.seatControl) { q('seatCount').value = term.seatCount || (data.seats || []).length || ''; q('emptySeats').value = term.emptySeats.join('、'); }
       q('meta').textContent = `${summaryText(result)}｜${data.source || ''}`;
@@ -280,6 +314,12 @@
       }).join('') : '<div class="at-note">這學期還沒有點名紀錄。</div>';
       renderEnroll();
       host._lastResult = result;
+      q('table').querySelectorAll('tbody tr').forEach((tr, i) => { tr.dataset.row = i; tr.title = '點一下看哪幾天請假'; });
+      const withLeave = result.dayDetail.filter(day => Object.values(day.by).some(list => list.length)).reverse();
+      q('daylist').innerHTML = withLeave.length ? withLeave.map(day => `<div class="at-dayrow"><span class="at-daydate">${md(day.date)}（${weekday(day.date)}）</span>`
+        + ['病假', '事假', '公假', '未到', '遲到'].filter(st => day.by[st].length).map(st => `<span>${stTag(st)} ${day.by[st].join('、')} 號</span>`).join('') + '</div>').join('')
+        : '<div class="at-note">這學期還沒有人請假或缺席。</div>';
+      if (!q('detail').hidden && host._detailRow != null) showSeatDetail(host._detailRow);
     }
     async function reload() {
       q('meta').textContent = '讀取中……';
@@ -316,18 +356,30 @@
         term = normalizeTerm(term); render(); persist(); return;
       }
       const act = event.target.closest('[data-at-act]');
+      const tr = !act && event.target.closest('tbody tr[data-row]');
+      if (tr) { host._detailRow = Number(tr.dataset.row); showSeatDetail(host._detailRow); return; }
       if (!act) return;
       const a = act.dataset.atAct;
-      if (a === 'reload') return reload();
+      if (a === 'closeDetail') { q('detail').hidden = true; host._detailRow = null; return; }
+      if (a === 'reload') { ask('要重新讀取並統計一次嗎？').then(ok => { if (ok) reload(); }); return; }
       if (!term) return;
       const file = `${opts.title || '出缺席'}_${term.name}`.replace(/[\\/:*?"<>|]/g, '_');
       if (a === 'xlsx') return download(exportXlsx(host._lastResult, `${data.className || ''} ${term.name} 出缺席統計`.trim()), `${file}.xlsx`);
       if (a === 'docx') return download(exportDocx(host._lastResult, `${data.className || ''} ${term.name} 出缺席統計`.trim()), `${file}.docx`);
       if (a === 'addEnroll') { term.enroll.push({ seat: 1, from: '', to: '', note: '' }); renderEnroll(); return; }
-      if (a === 'delEnroll') { term.enroll.splice(Number(act.closest('[data-i]').dataset.i), 1); term = normalizeTerm(term); render(); persist(); return; }
+      if (a === 'delEnroll') {
+        const i = Number(act.closest('[data-i]').dataset.i), e = term.enroll[i];
+        ask(`確定刪除這一列在籍異動嗎？\n（${e ? e.seat : ''} 號${e && e.from ? `，${md(e.from)} 轉入` : ''}${e && e.to ? `，${md(e.to)} 轉出` : ''}）`).then(ok => {
+          if (!ok) return;
+          term.enroll.splice(i, 1); term = normalizeTerm(term); render(); persist();
+        });
+        return;
+      }
       if (a === 'newTerm') {
-        if (!window.confirm(`確定開始新學期？\n「${term.name}」的放假日與在籍異動會收進紀錄，統計改從新學期算。點名紀錄不會刪。`)) return;
-        term = newTerm(term); persist().then(reload);
+        ask(`確定開始新學期？\n「${term.name}」的放假日與在籍異動會收進紀錄，統計改從新學期算。點名紀錄不會刪。`).then(ok => {
+          if (!ok) return;
+          term = newTerm(term); persist().then(reload);
+        });
       }
     });
     reload();

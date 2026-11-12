@@ -1,5 +1,5 @@
 /**
- * LINE 小幫手（選用雲端模組）　版本 2026-11-12 00:10
+ * LINE 小幫手（選用雲端模組）　版本 2026-11-12 23:40
  *
  * 這是教師工作台的「選用」LINE Bot 後端：每位老師部署到自己的 Google Apps Script，
  * 搭配自己的 Google 試算表與 LINE 官方帳號。試算表只作為「雲端轉運信箱」：
@@ -608,7 +608,7 @@ function doGet() {
 }
 
 // 程式版本（每次發布都要更新；試算表選單「ℹ️ 程式版本」、LINE 傳「版本」、工作台連線檢查都會顯示）
-var BOT_VERSION = '2026-11-12 00:10';
+var BOT_VERSION = '2026-11-12 23:40';
 
 function lineBotJson_(payload) {
   return ContentService.createTextOutput(JSON.stringify(payload)).setMimeType(ContentService.MimeType.JSON);
@@ -1345,17 +1345,23 @@ function cleanTerm_(raw) {
     })
   };
 }
+/** 科任多班：學期設定一班一份（TERM_SETTINGS:601）；沒指定班級＝導師版舊的那一份 */
+function termPropKey_(className) {
+  var name = String(className || '').replace(/[^\w一-鿿-]/g, '').slice(0, 20);
+  return name ? TERM_PROP + ':' + name : TERM_PROP;
+}
 function saveTermSettings_(body) {
   var term = cleanTerm_(body.term);
   var json = JSON.stringify(term);
   if (json.length > 8500) throw new Error('學期設定太大（放假日或異動太多），請刪掉一些舊的');
-  PropertiesService.getScriptProperties().setProperty(TERM_PROP, json);
+  PropertiesService.getScriptProperties().setProperty(termPropKey_(body.className), json);
   return { ok: true, term: term };
 }
 /** 工作台讀：學期設定＋學期內的上課日＋點名異常紀錄（只有座號） */
 function readTermAttendance_(body) {
   var term = null;
-  try { term = JSON.parse(PropertiesService.getScriptProperties().getProperty(TERM_PROP) || 'null'); } catch (error) {}
+  var props = PropertiesService.getScriptProperties();
+  try { term = JSON.parse(props.getProperty(termPropKey_(body.className)) || props.getProperty(TERM_PROP) || 'null'); } catch (error) {}
   var from = /^\d{4}-\d{2}-\d{2}$/.test(String(body.from || '')) ? String(body.from) : '';
   var to = /^\d{4}-\d{2}-\d{2}$/.test(String(body.to || '')) ? String(body.to) : '';
   if (!from || !to || from > to) throw new Error('日期區間格式不正確');

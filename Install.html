@@ -1124,6 +1124,7 @@
       <p class="lead">怎麼知道自己的版本？網站每頁左下角有「版本 日期 時間」；雲端大腦在試算表選單「🤖 LINE 小幫手 → ℹ️ 程式版本」或對機器人傳「版本」。<strong>本段下方會顯示網站上最新的 LineBot.gs 版本</strong>，比你的新就照下面更新。全新安裝的老師照上面做就是最新版，這段可以跳過。</p>
       <div id="upgrade-1112" style="border:2.5px solid #1d9e5f;background:#f1faf4;border-radius:14px;padding:16px 20px;margin:14px 0 22px">
         <h3 style="margin-top:0">🔄 2026-11-12 更新：舊使用者要做什麼？</h3>
+        <p class="lead" style="margin-top:0"><strong>11-12 晚上再新增：</strong><strong>科任多班</strong>（大屏設定 → 使用方式選「科任」，上方切換班級，每班資料分開；工作台的今日看板、出缺席統計可選班級）、<strong>計分板加分版</strong>（小組／個人、自己編組：拖拉、打號碼 3 5 8、點選）。網頁會自己更新；接雲端的科任老師請把 LINE 小幫手程式更新到 <strong>2026-11-12 23:40</strong> 以後，學期設定才會一班一份。</p>
         <p class="lead" style="margin-top:0">這次新增：點名的<strong>公假</strong>、<strong>學期出缺席與潔牙統計</strong>（放假日、轉入轉出、匯出 Word／Excel）、<strong>一鍵連線</strong>（不用再抄金鑰）、LINE 傳來的事附［任務］［記事］［不要］按鈕、「雲端資料夾」指令。</p>
         <table>
           <tr><th>你是哪一種？</th><th>要做的事</th></tr>
@@ -1132,10 +1133,10 @@
         </table>
         <h4 style="margin:16px 0 6px">更新 LINE 小幫手程式（4 步）</h4>
         <ol class="steps">
-          <li><strong>拿新程式：</strong>按下面「<a href="#copy-linebot">📋 一鍵複製最新 LineBot.gs</a>」的綠色按鈕（版本要顯示 <strong>2026-11-12 00:10</strong> 或更新）。</li>
+          <li><strong>拿新程式：</strong>按下面「<a href="#copy-linebot">📋 一鍵複製最新 LineBot.gs</a>」的綠色按鈕（版本要顯示 <strong>2026-11-12 23:40</strong> 或更新）。</li>
           <li><strong>貼上：</strong>打開<strong>你自己的</strong>試算表 → 擴充功能 → Apps Script → 左邊點 <strong>LineBot.gs</strong> → 點進程式碼區按 <kbd style="border:1px solid #bbb;border-bottom-width:2px;border-radius:5px;padding:0 6px;background:#fff;font-size:.9em">Ctrl</kbd>＋<kbd style="border:1px solid #bbb;border-bottom-width:2px;border-radius:5px;padding:0 6px;background:#fff;font-size:.9em">A</kbd> 全選 → <kbd style="border:1px solid #bbb;border-bottom-width:2px;border-radius:5px;padding:0 6px;background:#fff;font-size:.9em">Ctrl</kbd>＋<kbd style="border:1px solid #bbb;border-bottom-width:2px;border-radius:5px;padding:0 6px;background:#fff;font-size:.9em">V</kbd> 貼上 → 按 💾 儲存（不應出現紅字）。<br><span style="font-size:13px;color:#666">只換 LineBot.gs；左邊如果還有 Code.gs 或 appsscript.json，都不要動。</span></li>
           <li><strong>發布新版本（最重要）：</strong>右上「部署 → 管理部署」→ 按 ✏️ 編輯 → 「版本」選<strong>新版本</strong> → 部署。<br><span style="font-size:13px;color:#b3261e">⚠️ 千萬不要按「新增部署」——網址會變，工作台和大屏就連不上。</span></li>
-          <li><strong>確認：</strong>回到試算表按重新整理 → 選單「🤖 LINE 小幫手 → ℹ️ 程式版本」要顯示 2026-11-12 00:10；選單裡也會多出「💻 連接我的工作台」「🏫 連接教室大屏」。第一次按這兩顆，Google 會再問一次授權（因為可以寄信給你自己），允許就好。</li>
+          <li><strong>確認：</strong>回到試算表按重新整理 → 選單「🤖 LINE 小幫手 → ℹ️ 程式版本」要顯示 2026-11-12 23:40；選單裡也會多出「💻 連接我的工作台」「🏫 連接教室大屏」。第一次按這兩顆，Google 會再問一次授權（因為可以寄信給你自己），允許就好。</li>
         </ol>
         <p class="lead" style="margin-bottom:0">✅ <strong>不用</strong>重新初始化、<strong>不用</strong>改任何金鑰、網址也<strong>不會變</strong>。所有電腦（自己的、教室的）各按一次 <kbd style="border:1px solid #bbb;border-bottom-width:2px;border-radius:5px;padding:0 6px;background:#fff;font-size:.9em">Ctrl</kbd>＋<kbd style="border:1px solid #bbb;border-bottom-width:2px;border-radius:5px;padding:0 6px;background:#fff;font-size:.9em">F5</kbd> 重新整理網頁就完成了。想看新功能怎麼用：<a href="Guide.html#attendance">📊 出缺席與潔牙統計</a>、<a href="#level2">一鍵連線（第 2 級第 4、5 步）</a>。</p>
       </div>
@@ -1158,6 +1159,7 @@
         <tr><td>🧭 AI 行政助理<br>（整理成任務／記事）</td><td>AI 把跟你有關的事列成<strong>一張清單</strong>，每件先選好「任務／記事／不要」並抓原文日期時間，可直接改；任務用<strong>拖曳</strong>決定主／子（拖到另一任務上＝子任務、拖到虛線區＝解除），按一次「確認建立」，任務寫進任務清單、記事存到小助手記事。任務清單的列也能拖曳分組。原文／附件裡的網址自動附上（🔗 連結按鈕）；點任務名稱彈出完整說明、來源附件與 AI 摘要。</td></tr>
         <tr><td>📊 今日看板<br>（2026-11）</td><td>工作台右上角「📊 今日看板」取代舊的電子紙看板：今天出席、缺交、待訂正、前幾天還沒補、要多關心的座號、今天的聯絡本一頁看完（資料來自晨間大屏）；按「↩ 回工作台」回原畫面。圖文說明見 <a href="Guide.html#today">圖文操作手冊</a>。</td></tr>
         <tr><td>🎨 教材工作坊<br>（2026-11 更新）</td><td>🛡 敏感資料遮蔽可直接放 Word／Excel／PowerPoint，勾選要遮的項目自動遮好；AI 讀檔收拍照、PDF、Word、PPT、Excel；作文引導單「內容簡述」；空白欄位按 Tab 帶入範例；學習單、段考複習講義、心智圖、生詞本可多貼「NotebookLM 整理」（選用，原本方式都保留）；選單收起作文範文庫與 LINE 圖文選單，PDF 工具移到「出題備課」。</td></tr>
+        <tr><td>👩‍🏫 科任多班＋🏆 計分板加分版<br>（2026-11-12）</td><td>大屏設定「使用方式」選<strong>科任</strong>、填「我教的班級」，上方出現班級按鈕，每班的座號、點名、作業、抽籤、分組、計分板、潔牙、學期統計都分開（科任不顯示聯絡本）；工作台今日看板、出缺席統計可選班級。計分板可切<strong>小組／個人／🎁 兌換</strong>（個人扣點換禮物，禮物與點數自己設），小組可自己編組（拖拉、打號碼 3 5 8、點一下再點組），小組加分也會加給組員（個人加分不會加到小組），隨機分組可直接帶到計分板。</td></tr>
         <tr><td>📊 學期出缺席統計<br>（2026-11-11）</td><td>點名多一個<strong>公假</strong>；整學期出缺席一張表（應到、出席、遲到、病假、事假、公假、未到），潔牙點名也一起算潔牙率，可設<strong>放假日</strong>（事後補設）、<strong>轉入轉出</strong>，匯出 Word／Excel，學期初一鍵重設。存本機：大屏「設定」裡看；存雲端：工作台「教師工具箱 → 出缺席統計」看。⚠️ 接雲端的老師要把 LINE 小幫手程式更新到 2026-11-12 00:10 以後的版本。</td></tr>
         <tr><td>📅 學校常見活動<br>（2026-11）</td><td>依學校行事曆：任務清單上方每月出現「本月學校常見活動」，點一下就新增成任務（月底順便列下個月）；AI 行政助理會用學校慣用的活動名稱；教材工作坊的通知單、作文、學習單主題下面有本月活動按鈕；研習心得／簽呈可選 16 項研習，自動寫成「115 學年度 ○○研習」。</td></tr>
         <tr><td>🧰 教師工具箱<br>（2026-11）</td><td>按鈕排成一行、分三組：<strong>級務</strong>（聯絡本、作業統計、💬 回覆家長）、<strong>備課</strong>（🎨 教材工作坊）、<strong>溝通</strong>（📥 收件與 AI：小助手記事、AI 行政助理兩個分頁；LINE 傳來的事同步時自動帶入｜📂 雲端資料夾：一鍵打開 LINE 存檔的雲端硬碟資料夾，LINE 傳「雲端資料夾」也會回連結）。聯絡本多了「📅 日曆」一次看整個月、「直橫・間距」；<strong>回覆家長</strong>：貼上家長的話、寫重點，就寫成一則可以直接傳的訊息。</td></tr>

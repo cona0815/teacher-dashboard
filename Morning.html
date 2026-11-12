@@ -174,6 +174,17 @@
     .missing-chip { display: inline-block; background: #fdeee9; color: var(--missing); border: 1.5px solid var(--missing); border-radius: 9px; padding: 2px 11px; font-size: 19px; font-weight: 900; }
     .correcting-chip { display: inline-block; background: var(--correcting-soft); color: var(--correcting); border: 1.5px solid var(--correcting); border-radius: 9px; padding: 2px 11px; font-size: 19px; font-weight: 900; }
     .makeup-cal-day.other { opacity: .35; }
+    /* 科任多班（2026-11-12）：上方班級按鈕；科任不用聯絡本（聯絡本是導師的，雲端一天只有一份） */
+    .class-switch { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 18px 0; }
+    body.projection .class-switch { display: none !important; }
+    .class-switch::before { content: '班級'; font-weight: 900; color: var(--muted); margin-right: 2px; }
+    .teach-mode label { display: inline-flex !important; gap: 6px; align-items: center; font-weight: 800; }
+    .teach-mode input[type="radio"] { width: auto !important; height: auto; margin: 0; flex: none; }
+    .class-switch[hidden] { display: none; }
+    .class-pill { border: 2px solid var(--line); background: var(--surface); color: var(--primary-strong); border-radius: 999px; padding: 3px 14px; font-size: 16px; font-weight: 900; cursor: pointer; font-family: inherit; }
+    .class-pill.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+    html[data-teach="subject"] .rollcall-layout { grid-template-columns: 1fr; }
+    html[data-teach="subject"] .rollcall-layout > div:nth-child(2) { display: none; }
     .rollcall-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(420px, 3fr); gap: 16px; align-items: stretch; }
     /* 座號格尺寸隨螢幕高度縮放，確保點名＋聯絡本剛好一頁不捲動 */
     .rollcall-layout .seat-grid { grid-template-columns: repeat(auto-fill, minmax(clamp(64px, 6.2vw, 92px), 1fr)); gap: clamp(6px, 1vh, 10px); }
@@ -265,6 +276,12 @@
     .sb-menu { --sb-bg: #e6f6f4; --sb-edge: #aadfd9; --sb-ink: #0f7068; }
     .sb-homework { --sb-bg: #edf7e8; --sb-edge: #bfe0ad; --sb-ink: #2f6a2a; }
     .sb-time { --sb-bg: #fff3e3; --sb-edge: #f4d3a3; --sb-ink: #96540a; }
+    .sb-term { --sb-bg: #fcedf5; --sb-edge: #efc0da; --sb-ink: #a3326f; }
+    .sb-bell { --sb-bg: #eaf6fb; --sb-edge: #b3dbea; --sb-ink: #19708f; }
+    .period-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 6px 18px; margin-top: 8px; }
+    .period-row { display: flex; align-items: center; gap: 8px; font-size: 15px; }
+    .period-row b { min-width: 48px; color: var(--sb-ink); }
+    .period-row input { border: 1.5px solid var(--sb-edge); border-radius: 8px; padding: 4px 6px; font: inherit; }
     .sb-safe { --sb-bg: #fbeeee; --sb-edge: #efc6c2; --sb-ink: #a83a30; }
     .sb-storage { --sb-bg: #fff9dc; --sb-edge: #ecdc94; --sb-ink: #6f5a00; }
     .sb-cloud { --sb-bg: #eceffc; --sb-edge: #c2caf0; --sb-ink: #3848a0; }
@@ -272,6 +289,21 @@
     .setup-block, #page-setup .storage-choice, #page-setup .level-box { max-width: none; background: var(--sb-bg); border: 2px solid var(--sb-edge); border-radius: 14px; }
     .setup-block { margin-bottom: 14px; padding: 12px 16px 16px; }
     .setup-block-title { margin: 0 0 10px; font-size: 19px; font-weight: 900; color: var(--sb-ink); }
+    /* 設定頁（2026-11-12 老師：太亂）：每一類預設收起來，點標題才展開；標題用醒目的顏色 */
+    #page-setup .sb-fold:not(.open) > :not(.sb-head) { display: none !important; }
+    #page-setup .sb-fold:not(.open) { padding-bottom: 10px; }
+    #page-setup .sb-head { display: flex !important; align-items: center; gap: 10px; width: 100%; box-sizing: border-box; margin: 0; padding: 10px 16px; border-radius: 12px;
+      background: var(--sb-ink, var(--primary, #1f514a)); color: #fff !important; cursor: pointer; user-select: none; font-size: 19px; font-weight: 900; }
+    #page-setup .sb-head:hover { filter: brightness(1.12); }
+    #page-setup .sb-head:focus-visible { outline: 3px solid #f0b54a; outline-offset: 2px; }
+    #page-setup .sb-fold.open > .sb-head { margin-bottom: 12px; }
+    #page-setup .sb-head .sb-hint { margin-left: auto; font-size: 14px; font-weight: 800; background: rgba(255,255,255,.22); border-radius: 999px; padding: 2px 12px; }
+    #page-setup .sb-fold:not(.open) > .sb-head .sb-hint::before { content: '▸ 展開'; }
+    #page-setup .sb-fold.open > .sb-head .sb-hint::before { content: '▾ 收起'; }
+    #page-setup .storage-choice.sb-fold { display: block; }
+    #page-setup .storage-choice.sb-fold.open { display: grid; }
+    .setup-fold-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 0 0 10px; }
+    .setup-fold-bar .status-text { margin-left: 4px; }
     .setup-block .form-grid { max-width: none; }
     #page-setup .setup-block label, #page-setup .top-tool-options, #page-setup .storage-choice legend, #page-setup .level-box summary, #page-setup .level-box label { color: var(--sb-ink); }
     #page-setup .setup-block .status-text, #page-setup .sb-storage .status-text, #page-setup .level-box .note { color: #5c5a52; }
@@ -382,7 +414,7 @@
       border: 3px solid var(--cozy-wood); border-radius: 16px; background: var(--cozy-paper); color: var(--ink); }
     html[data-board-style="cozy"] .submit-bar { background: var(--surface); border-top: 0; box-shadow: 0 -4px 0 var(--cozy-wood), 0 -10px 18px -12px rgba(91,70,54,.35); }
   </style>
-  <script src="assets/attendance-term.js"></script>
+  <script src="assets/attendance-term.js?v=2026-11-12-2340"></script>
 </head>
 <body>
   <header>
@@ -400,6 +432,7 @@
       <button class="ghost-button" type="button" id="countdownReset">歸零</button>
     </div>
   </header>
+  <div class="class-switch" id="classSwitch" hidden></div>
   <div class="ccal-pop" id="ccalPop" role="dialog" aria-label="聯絡本日曆" hidden>
     <div class="ccal-card">
       <div class="ccal-head">
@@ -641,6 +674,71 @@
         .score-buttons button { border: 0; border-radius: 12px; width: 66px; height: 48px; font-size: 26px; font-weight: 900; cursor: pointer; color: #fff; font-family: inherit; }
         .score-plus { background: var(--ok, #1d9e5f); }
         .score-minus { background: var(--muted, #64756f); }
+        [data-tool-panel="score"] [hidden] { display: none !important; }
+        .score-name-row { display: inline-flex; align-items: center; gap: 2px; }
+        .score-name-edit { border: 0; background: transparent; cursor: pointer; font-size: 16px; padding: 2px 4px; opacity: .55; }
+        .score-name-edit:hover { opacity: 1; }
+        .tool-panel:is(:fullscreen, .fake-fs) .score-name-edit { display: none; }
+        .se-name { font: inherit; font-weight: 900; font-size: 16px; color: var(--team); border: 1.5px dashed var(--team); border-radius: 8px; background: #fff; padding: 2px 8px; width: 9em; max-width: 60%; }
+        .reward-wall { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(300px, 1fr); gap: 16px; align-items: start; }
+        .reward-seats { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; }
+        .person-tile.picked { outline: 4px solid var(--primary); outline-offset: 1px; background: var(--surface, #fff); }
+        .reward-side { border: 2px solid var(--line); border-radius: 16px; padding: 14px; background: #fffefb; display: grid; gap: 12px; position: sticky; top: 8px; }
+        .reward-who { font-size: 22px; font-weight: 800; color: var(--primary-strong); }
+        .reward-points { font-size: 34px; font-weight: 900; color: var(--gold, #b9852f); }
+        .reward-adjust { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-weight: 800; color: var(--muted); }
+        .reward-adjust button { border: 0; border-radius: 10px; min-width: 56px; height: 40px; font: inherit; font-size: 20px; font-weight: 900; color: #fff; cursor: pointer; background: var(--ok, #1d9e5f); }
+        .reward-adjust button[data-reward-delta="-1"] { background: var(--muted, #64756f); }
+        .reward-manage { justify-self: start; }
+        .prize-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+        .prize-card { border: 2px solid #e4c36a; background: #fff8e3; border-radius: 14px; padding: 12px 8px; cursor: pointer; font-family: inherit; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .prize-card:hover { transform: translateY(-2px); }
+        .prize-card .prize-name { font-size: 18px; font-weight: 900; color: #6b4e00; }
+        .prize-card .prize-cost { font-size: 15px; font-weight: 800; color: #9a7000; }
+        .prize-card.lack, .prize-card[aria-disabled="true"] { opacity: .45; }
+        .prize-card .prize-lack { font-size: 12px; color: #b3261e; font-weight: 800; }
+        .prize-editor { border: 2px dashed var(--line); border-radius: 12px; padding: 10px; display: grid; gap: 6px; }
+        .prize-row { display: flex; gap: 6px; align-items: center; }
+        .prize-row input[type="text"] { flex: 1; min-width: 0; }
+        .prize-row input { border: 1.5px solid var(--line); border-radius: 8px; padding: 4px 8px; font: inherit; font-size: 15px; }
+        .prize-row input[type="number"] { width: 72px; }
+        .redeem-log summary { cursor: pointer; font-weight: 800; }
+        .redeem-row { display: grid; grid-template-columns: 50px 52px 1fr 44px auto; gap: 6px; align-items: center; font-size: 14px; padding: 4px 0; border-bottom: 1px dashed var(--line); }
+        .redeem-row .redeem-cost { color: #b3261e; font-weight: 800; }
+        .redeem-row .ghost-button { padding: 2px 8px; font-size: 13px; }
+        @media (max-width: 900px) { .reward-wall { grid-template-columns: 1fr; } }
+        .score-seg { display: inline-flex; border: 2px solid var(--line); border-radius: 12px; overflow: hidden; }
+        .score-seg button { border: 0; background: var(--surface, #fff); color: var(--primary-strong); font: inherit; font-weight: 900; font-size: 16px; padding: 6px 14px; cursor: pointer; }
+        .score-seg button.active { background: var(--primary); color: #fff; }
+        .score-members { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; min-height: 26px; margin: 4px 0 2px; }
+        .score-members span { min-width: 26px; padding: 1px 6px; border-radius: 8px; background: var(--team-soft, #eef3f1); color: var(--team, #1f514a); font-weight: 900; font-size: 15px; border: 1px solid var(--team-line, #cfd9d4); }
+        .score-members em { font-size: 13px; color: var(--muted); font-style: normal; }
+        .score-split { font-size: 13px; font-weight: 800; color: var(--muted); margin-top: -4px; }
+        .person-wall { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
+        .person-tile { position: relative; border: 2px solid var(--line); border-left: 8px solid var(--team, transparent); border-radius: 14px; background: #fffefb; padding: 8px 4px 6px; cursor: pointer; font-family: inherit; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+        .person-tile b { font-size: 30px; line-height: 1.1; color: var(--primary-strong); }
+        .person-tile .person-score { font-size: 26px; font-weight: 900; color: var(--gold, #b9852f); font-variant-numeric: tabular-nums; }
+        .person-tile .person-medal { position: absolute; top: 2px; right: 5px; font-size: 18px; }
+        .person-tile.absent { opacity: .45; }
+        .person-tile.bump { animation: lotPop .35s ease; }
+        .person-tile .score-float { top: 6px; }
+        .score-editor { border: 2px dashed var(--line); border-radius: 16px; padding: 12px; margin-bottom: 14px; background: var(--surface, #fff); }
+        .se-head { font-size: 15px; line-height: 1.7; margin-bottom: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+        .se-tools { display: inline-flex; gap: 8px; flex-wrap: wrap; }
+        .se-pool, .se-team { border: 2px solid var(--line); border-radius: 14px; padding: 8px 10px; background: #fffefb; }
+        .se-pool { margin-bottom: 10px; }
+        .se-teams { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
+        .se-team { border-color: var(--team); background: var(--team-soft); }
+        .se-team-head { display: flex; justify-content: space-between; font-size: 16px; color: var(--team); margin-bottom: 4px; }
+        .se-label { font-weight: 900; color: var(--muted); margin-bottom: 4px; }
+        .se-chips { display: flex; flex-wrap: wrap; gap: 6px; min-height: 38px; align-items: center; }
+        .se-chips em { color: var(--muted); font-size: 13px; font-style: normal; }
+        .se-chip { min-width: 34px; height: 34px; padding: 0 8px; border-radius: 10px; border: 2px solid var(--line); background: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 900; font-size: 17px; cursor: grab; user-select: none; touch-action: none; }
+        .se-chip.selected { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .se-ghost { position: fixed; z-index: 99999; pointer-events: none; transform: translate(-50%, -50%) scale(1.15); box-shadow: 0 8px 20px rgba(0,0,0,.25); }
+        .se-over { outline: 3px solid var(--primary); outline-offset: 2px; }
+        .se-input { display: flex; gap: 6px; margin-top: 6px; }
+        .se-input input { flex: 1; min-width: 0; border: 1.5px solid var(--line); border-radius: 8px; padding: 5px 8px; font: inherit; font-size: 15px; }
         /* 分組 */
         .group-wall { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 12px; }
         .group-card { border: 2px solid var(--line); border-radius: 14px; background: #fffefb; padding: 12px; opacity: 0; transform: translateY(14px); animation: groupIn .45s ease forwards; }
@@ -1099,21 +1197,32 @@
 
         <div class="tool-panel" data-tool-panel="score" hidden>
           <div class="tool-opts">
-            <label>組數
-              <select class="inline-select" id="scoreTeamCount"><option>2</option><option>3</option><option selected>4</option><option>5</option><option>6</option></select>
+            <span class="score-seg" id="scoreModeSeg" role="group" aria-label="計分方式"><button type="button" data-score-mode="team">👥 小組</button><button type="button" data-score-mode="person">🙋 個人</button><button type="button" data-score-mode="reward">🎁 兌換</button></span>
+            <label data-score-only="team">組數
+              <select class="inline-select" id="scoreTeamCount"><option>2</option><option>3</option><option selected>4</option><option>5</option><option>6</option><option>7</option><option>8</option></select>
             </label>
+            <button class="ghost-button" type="button" id="scoreEditButton" data-score-only="team">✏️ 編組</button>
+            <label data-score-only="team" title="小組加分時，組員的個人分也一起加"><input type="checkbox" id="scoreShareMembers" checked>小組加分也加給組員</label>
+            <label data-score-only="person">點一下
+              <select class="inline-select" id="scoreStep"><option value="1">＋1</option><option value="2">＋2</option><option value="5">＋5</option><option value="-1">−1</option></select>
+            </label>
+            <button class="ghost-button" type="button" id="prizeEditButton" data-score-only="reward">✏️ 管理禮物</button>
             <button class="ghost-button" type="button" id="scoreResetButton">🔄 全部歸零</button>
             <label><input type="checkbox" id="scoreSound" checked>音效</label>
             <button class="ghost-button" type="button" data-fs-panel="score">⛶ 投影模式</button>
-            <span class="status-text">組名可直接點著改；分數會一直保留，只有按「🔄 全部歸零」才會歸零。</span>
+            <span class="status-text" id="scoreHint"></span>
           </div>
+          <div class="score-editor" id="scoreEditor" hidden></div>
           <div class="score-wall" id="scoreWall"></div>
+          <div class="person-wall" id="personWall" hidden></div>
+          <div class="reward-wall" id="rewardWall" hidden></div>
         </div>
 
         <div class="tool-panel" data-tool-panel="group" hidden>
           <div class="tool-opts">
             <label>每組 <input class="inline-select" id="groupSize" type="number" min="2" max="10" value="4" style="width:74px"> 人</label>
             <button class="primary-button" type="button" id="groupGoButton" style="font-size:19px;padding:10px 30px">🎲 分組！</button>
+            <button class="ghost-button" type="button" id="groupToScoreButton" hidden>🏆 帶到計分板</button>
             <label><input type="checkbox" id="groupExcludeAbsent" checked>排除今日缺席</label>
             <button class="ghost-button" type="button" data-fs-panel="group">⛶ 投影模式</button>
             <span class="status-text">用座號洗牌均分；除不盡的餘數平均塞進前幾組。</span>
@@ -1255,8 +1364,9 @@
           <details class="prompt-sched" id="promptSched">
             <summary>⏰ 定時自動跳出 <small id="promptSchedSummary"></small></summary>
             <div class="ps-breaks">
-              <label for="promptBreakTimes">本校每節下課時間</label>
+              <label for="promptBreakTimes">本校每節下課時間 <small id="promptBreakNote"></small></label>
               <input id="promptBreakTimes" placeholder="例：09:20, 10:10, 11:10, 14:10, 15:00">
+              <button class="ghost-button" type="button" id="promptBreakFollow" hidden>↺ 跟著本校作息</button>
             </div>
             <div class="status-text">設定的時間一到，提示會自動蓋滿晨間大屏（任何分頁都會跳出），時間到自己收起；按 Esc 或「關閉」可以提早收。晨間大屏要開在投影的畫面上才看得到。</div>
             <div id="promptSchedList"></div>
@@ -1278,7 +1388,7 @@
           <div class="tool-opts">
             <button class="ghost-button" type="button" id="mindFullscreenButton">⛶ 全螢幕</button>
             <a class="ghost-button" href="MindMap.html" target="_blank" rel="noopener" style="text-decoration:none">↗ 開新分頁</a>
-            <span class="status-text">8 種圖型：心智圖、邏輯圖、樹狀圖、括號圖、流程圖、時間軸、魚骨圖、泡泡圖（左上角換）。可加圖示、圖片、換顏色、匯出 PNG。只存在這台電腦。</span>
+            <span class="status-text" title="8 種圖型：心智圖、邏輯圖、樹狀圖、括號圖、流程圖、時間軸、魚骨圖、泡泡圖（左上角換）。可加圖示、圖片、換顏色、匯出 PNG。只存在這台電腦。">8 種圖型（左上角換）・只存在這台電腦</span>
           </div>
           <div class="screen-board" id="mindBoard"><iframe id="mindFrame" title="心智圖"></iframe></div>
         </div>
@@ -1309,7 +1419,14 @@
         <section class="setup-block sb-class">
           <h3 class="setup-block-title">🏫 班級資料</h3>
           <div class="form-grid">
-          <div class="field"><label>班級名稱（例：601）</label><input id="setupClassName" maxlength="20" placeholder="601"></div>
+          <div class="field" style="grid-column:1/-1"><label>使用方式</label>
+            <div class="teach-mode" style="display:flex;gap:16px;flex-wrap:wrap;font-size:16px">
+              <label style="display:flex;gap:6px;align-items:center"><input type="radio" name="teachMode" value="homeroom" checked> 導師（一個班）</label>
+              <label style="display:flex;gap:6px;align-items:center"><input type="radio" name="teachMode" value="subject"> 科任（教好幾個班，資料一班一份）</label>
+            </div></div>
+          <div class="field" id="setupClassesField" style="grid-column:1/-1" hidden><label>我教的班級（用、或逗號分隔，例：601、602、603）</label><input id="setupClasses" maxlength="200" placeholder="601、602、603">
+            <div class="status-text" style="margin-top:4px">存好後，大屏左上角會出現班級按鈕，點一下就換成那一班：座號、點名、作業、抽籤、分組、計分板、潔牙、統計都各班分開。科任模式不顯示聯絡本（聯絡本是導師的）。建議「存到雲端」，換電腦、在工作台都看得到各班資料。</div></div>
+          <div class="field"><label id="setupClassNameLabel">班級名稱（例：601）</label><input id="setupClassName" maxlength="20" placeholder="601"></div>
           <div class="field"><label>班級最大座號（1～N）</label><input id="setupSeatCount" type="number" min="1" max="60" value="26"></div>
           <div class="field"><label>空號（沒有人的座號，以、或逗號分隔）</label><input id="setupEmptySeats" placeholder="例：4、13"></div>
           </div>
@@ -1381,11 +1498,18 @@
           <div class="field"><label>補交回溯天數（接雲端最多 60）</label><input id="setupLookbackDays" type="number" min="1" max="180" value="30"></div>
           </div>
         </section>
-        <section class="setup-block sb-time" id="termBlock">
+        <section class="setup-block sb-term" id="termBlock">
           <h3 class="setup-block-title">📊 學期出缺席統計</h3>
           <div class="status-text" id="termCloudNote" hidden>已存到雲端：學期出缺席統計請到「教師工作台 → 教師工具箱 → 出缺席統計」看、設定放假日與轉入轉出、匯出 Word／Excel（換電腦也看得到，學生看不到）。</div>
           <div class="status-text" id="termLocalNote">資料只在這台電腦。只用座號；有開大屏點名的日子才算上課日（沒開大屏的那天不會算）。</div>
           <div id="termPanel" style="margin-top:8px"></div>
+        </section>
+        <section class="setup-block sb-bell">
+          <h3 class="setup-block-title">🔔 本校作息時間</h3>
+          <div class="status-text">預設是一般國小的作息；<b>每間學校不同，照貴校的上下課時間改就好</b>。大屏提示的「每節下課」、定評小幫手的節次時間都會跟著用。全部班級共用。</div>
+          <div class="period-grid" id="setupPeriods"></div>
+          <div class="status-text" id="setupBreaksPreview" style="margin-top:6px"></div>
+          <button class="ghost-button" type="button" id="periodsResetButton" style="margin-top:8px">↺ 恢復預設作息</button>
         </section>
         <section class="setup-block sb-safe">
           <h3 class="setup-block-title">🔒 設定頁密碼</h3>
@@ -1510,10 +1634,11 @@
     const BOARD_STYLES = ['standard', 'cozy'];   // 大屏風格：標準（提示插圖＝溫暖繪本）／可愛溫暖風（介面＋插圖）
     const state = {
       settings: {
-        className: '', boardTitle: '晨間大屏', contactFont: 'default', boardStyle: 'standard', correctColor: 'brown', seatCount: 26, emptySeats: [],
+        className: '', teachMode: 'homeroom', classes: [], boardTitle: '晨間大屏', contactFont: 'default', boardStyle: 'standard', correctColor: 'brown', seatCount: 26, emptySeats: [],
         setupPin: '1234',
         subjects: [], assignmentTypes: [], homeworkPicks: {}, homeworkExtra: {},
         gasUrl: '', classroomToken: '', teacherToken: '', storageMode: '',
+        periods: null,   // 本校作息 [[節次, 上課, 下課]]；null＝預設
         lateTime: '08:00', autoAbsentTime: '08:05', autoNotifyTime: '08:08', autoHomeworkNotifyTime: '08:40', lookbackDays: 30
       },
       attendance: {},        // {seat: 到|遲到|病假|事假|未到}（遲到畫面顯示為「到」）
@@ -1566,6 +1691,107 @@
     }
 
     function currentClass() { return state.settings.className; }
+
+    // ---------- 本校作息（2026-11-12）：每校上下課時間不同，預設一般國小作息，可以自己改；大屏提示「每節下課」、定評小幫手都用它 ----------
+    const DEFAULT_PERIODS = [['第一節', '08:40', '09:20'], ['第二節', '09:30', '10:10'], ['第三節', '10:30', '11:10'], ['第四節', '11:20', '12:00'],
+      ['第五節', '13:30', '14:10'], ['第六節', '14:20', '15:00'], ['第七節', '15:20', '16:00']];
+    const isHHMM = value => /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(String(value || ''));
+    function cleanPeriods(list) {
+      if (!Array.isArray(list) || list.length !== DEFAULT_PERIODS.length) return null;
+      const out = list.map((row, i) => [DEFAULT_PERIODS[i][0], isHHMM(row && row[1]) ? row[1] : DEFAULT_PERIODS[i][1], isHHMM(row && row[2]) ? row[2] : DEFAULT_PERIODS[i][2]]);
+      return JSON.stringify(out) === JSON.stringify(DEFAULT_PERIODS) ? null : out;
+    }
+    function schoolPeriods() { return (state.settings && state.settings.periods) || DEFAULT_PERIODS; }
+    /** 下課時間＝這一節下課、下一節 30 分鐘內就上課（午休、放學不算「下課」） */
+    function schoolBreakTimes() {
+      const list = schoolPeriods(), toMin = t => Number(t.slice(0, 2)) * 60 + Number(t.slice(3));
+      return list.filter((row, i) => list[i + 1] && toMin(list[i + 1][1]) - toMin(row[2]) <= 30 && toMin(list[i + 1][1]) >= toMin(row[2])).map(row => row[2]);
+    }
+    function renderPeriodsForm() {
+      const host = $('setupPeriods');
+      if (!host) return;
+      host.innerHTML = schoolPeriods().map(([name, start, end], i) => `<div class="period-row"><b>${name}</b>
+        <input type="time" data-period="${i}" data-pf="1" value="${start}" aria-label="${name}上課"> ～ <input type="time" data-period="${i}" data-pf="2" value="${end}" aria-label="${name}下課"></div>`).join('');
+      $('setupBreaksPreview').textContent = `下課時間（大屏提示「每節下課」會用）：${schoolBreakTimes().join('、') || '（沒有）'}`;
+    }
+
+    // ---------- 科任多班（2026-11-12）----------
+    // 做法：畫面上永遠只有「目前這一班」的資料（存檔 key 跟導師版一模一樣），其他班整包收在 morningClassStore:班級。
+    // 換班＝把這班整包收起來、把那班整包放出來、重新整理。所以每個功能（點名、作業、抽籤、計分板、潔牙、統計）自動各班分開。
+    const CLASS_STORE_PREFIX = 'morningClassStore:';
+    const CLASS_KEY_PREFIXES = ['morningBoardState:', 'morningContactLocal:', 'morningToolsDay:'];
+    const CLASS_KEY_EXACT = ['morningAttendanceLog', 'morningTermSettings'];
+    const CLASS_CONFIG_FIELDS = ['scores', 'teamNames', 'teamCount', 'teams', 'personScores', 'personTeamScores', 'shareTeamToMembers', 'prizes', 'personSpent', 'redeemLog', 'scoreMode', 'teamIncludePersons', 'drawn', 'customPool', 'examOverview', 'examSubject', 'examPeriod'];
+    const CLASS_SETTING_FIELDS = ['seatCount', 'emptySeats'];
+    let classSwitching = false;
+    function normalizeClassList(list, first) {
+      const items = (Array.isArray(list) ? list : String(list || '').split(/[、,，;；\s]+/)).map(value => String(value || '').trim().slice(0, 20)).filter(Boolean);
+      const out = [];
+      [String(first || '').trim(), ...items].forEach(name => { if (name && !out.includes(name)) out.push(name); });
+      return out.slice(0, 15);
+    }
+    function isSubjectMode() { return state.settings.teachMode === 'subject' && state.settings.classes.length >= 1; }
+    const isClassKey = key => !!key && (CLASS_KEY_EXACT.includes(key) || CLASS_KEY_PREFIXES.some(prefix => key.startsWith(prefix)));
+    function collectClassData() {
+      const keys = {};
+      for (let i = 0; i < localStorage.length; i += 1) {
+        const key = localStorage.key(i);
+        if (isClassKey(key)) keys[key] = localStorage.getItem(key);
+      }
+      let config = {};
+      try { config = JSON.parse(localStorage.getItem('morningToolsConfig') || '{}') || {}; } catch (error) {}
+      const cfg = {};
+      CLASS_CONFIG_FIELDS.forEach(field => { if (field in config) cfg[field] = config[field]; });
+      const settings = {};
+      CLASS_SETTING_FIELDS.forEach(field => { settings[field] = state.settings[field]; });
+      return { v: 1, savedAt: new Date().toISOString(), keys, config: cfg, settings };
+    }
+    async function switchClass(target) {
+      const s = state.settings;
+      if (!target || target === s.className || classSwitching || !s.classes.includes(target)) return;
+      // 先把這一班還沒存的上雲端（失敗也沒關係，本機資料會整包收好）
+      if (hasCloud() && state.dirty) { try { await submitReport({ silent: true, push: 'none' }); } catch (error) {} }
+      const snapshot = collectClassData();
+      const storeKey = CLASS_STORE_PREFIX + s.className;
+      const text = JSON.stringify(snapshot);
+      try {
+        localStorage.setItem(storeKey, text);
+        if (localStorage.getItem(storeKey) !== text) throw new Error('verify');
+      } catch (error) {
+        try { localStorage.removeItem(storeKey); } catch (e) {}
+        showToast('這台電腦的空間不夠，沒辦法換班。請到「設定」把資料存到雲端，或刪掉一些舊資料。', true);
+        return;
+      }
+      classSwitching = true;   // 從這裡開始，任何存檔都不要寫（避免把這班的資料寫進下一班）
+      Object.keys(snapshot.keys).forEach(key => localStorage.removeItem(key));
+      let config = {};
+      try { config = JSON.parse(localStorage.getItem('morningToolsConfig') || '{}') || {}; } catch (error) {}
+      CLASS_CONFIG_FIELDS.forEach(field => { delete config[field]; });
+      let next = null;
+      try { next = JSON.parse(localStorage.getItem(CLASS_STORE_PREFIX + target) || 'null'); } catch (error) {}
+      if (next && typeof next === 'object') {
+        Object.entries(next.keys || {}).forEach(([key, value]) => { if (isClassKey(key) && typeof value === 'string') localStorage.setItem(key, value); });
+        CLASS_CONFIG_FIELDS.forEach(field => { if (next.config && field in next.config) config[field] = next.config[field]; });
+        if (next.settings) {
+          s.seatCount = Math.min(60, Math.max(1, Number(next.settings.seatCount) || s.seatCount));
+          s.emptySeats = Array.isArray(next.settings.emptySeats) ? next.settings.emptySeats.map(Number).filter(n => n >= 1 && n <= 60) : [];
+        }
+      } else {
+        s.emptySeats = [];   // 第一次切到這一班：座號數先沿用，空號清空（到設定改）
+      }
+      localStorage.setItem('morningToolsConfig', JSON.stringify(config));
+      localStorage.removeItem(CLASS_STORE_PREFIX + target);   // 這班現在在畫面上了
+      s.className = target;
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+      location.reload();
+    }
+    function renderClassSwitch() {
+      const host = $('classSwitch');
+      if (!host) return;
+      if (!isSubjectMode() || state.settings.classes.length < 2) { host.hidden = true; host.innerHTML = ''; return; }
+      host.hidden = false;
+      host.innerHTML = state.settings.classes.map(cls => `<button class="class-pill${cls === state.settings.className ? ' active' : ''}" type="button" data-class-pill="${escapeHtml(cls)}" title="換到 ${escapeHtml(cls)}">${escapeHtml(cls)}</button>`).join('');
+    }
     // 設定頁選「存到雲端」、而且第 2 級的網址和大屏金鑰都填了，才算接上雲端；其他情況都只存這台電腦
     // storageMode 是 2026-11-07 加的：舊設定沒有這欄（''）時照舊看有沒有填金鑰
     const hasCloud = () => state.settings.storageMode !== 'local' && !!(state.settings.gasUrl && state.settings.classroomToken);
@@ -1578,6 +1804,9 @@
         if (saved && typeof saved === 'object') {
           const s = state.settings;
           s.className = String(saved.className || '');
+          s.periods = cleanPeriods(saved.periods);
+          s.teachMode = saved.teachMode === 'subject' ? 'subject' : 'homeroom';
+          s.classes = normalizeClassList(saved.classes, s.className);
           s.boardTitle = String(saved.boardTitle || '').trim().slice(0, 20) || '晨間大屏';
           s.contactFont = CONTACT_FONTS.includes(saved.contactFont) ? saved.contactFont : 'default';
           s.boardStyle = BOARD_STYLES.includes(saved.boardStyle) ? saved.boardStyle : 'standard';
@@ -1671,6 +1900,7 @@
       }
     }
     function saveSettings() {
+      if (classSwitching) return;
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(state.settings));
     }
 
@@ -1719,6 +1949,7 @@
     }
     /** 寫進這台電腦；存滿時從最舊的一天開始清，清到存得下為止。回傳有沒有存到。 */
     function setLocalRecord(key, value) {
+      if (classSwitching) return false;
       for (;;) {
         try {
           localStorage.setItem(key, value);
@@ -1759,6 +1990,7 @@
       return { s };
     }
     function logAttendanceDay(date, attendance) {
+      if (classSwitching) return;
       const log = readAttLog();
       const entry = attDayEntry(attendance);
       if (entry) log.days[date] = entry; else delete log.days[date];
@@ -1766,6 +1998,7 @@
     }
     /** 潔牙點名：每天記下已潔牙的座號（班級工具那邊按一下就呼叫） */
     function logToothDay(date, done) {
+      if (classSwitching) return;
       const log = readAttLog();
       if (!log.tooth || typeof log.tooth !== 'object') log.tooth = {};
       const seats = Object.keys(done || {}).filter(seat => done[seat]).map(Number).filter(n => n >= 1 && n <= 99).sort((a, b) => a - b);
@@ -1827,7 +2060,9 @@
           try { term = JSON.parse(localStorage.getItem(TERM_KEY) || 'null'); } catch (error) {}
           return { term, seats: activeSeats(), schoolDays: Object.keys(log.days), records, tooth: log.tooth || {}, className: state.settings.className || '', source: '資料來自這台電腦' };
         },
-        save: term => { localStorage.setItem(TERM_KEY, JSON.stringify(term)); }
+        save: term => { localStorage.setItem(TERM_KEY, JSON.stringify(term)); },
+        confirm: message => askDialog({ message }),
+        noTooth: () => isSubjectMode()   // 科任預設不需潔牙
       });
     }
 
@@ -2178,6 +2413,7 @@
       try { return JSON.parse(localStorage.getItem(CONTACT_LOCAL_PREFIX + date) || 'null'); } catch (error) { return null; }
     }
     async function loadContactBook({ silent = true } = {}) {
+      if (isSubjectMode()) return;   // 科任模式不顯示聯絡本
       if (!hasCloud()) {
         const saved = contactLocalGet(todayKey());
         state.contact.text = saved ? String(saved.text || '') : '';
@@ -3375,6 +3611,13 @@
       const s = state.settings;
       applyLevelUi();
           $('classNameLabel').textContent = s.className ? `${s.className}｜${s.boardTitle}` : s.boardTitle;
+      document.documentElement.dataset.teach = isSubjectMode() ? 'subject' : 'homeroom';
+      document.querySelectorAll('input[name="teachMode"]').forEach(radio => { radio.checked = radio.value === s.teachMode; });
+      $('setupClassesField').hidden = s.teachMode !== 'subject';
+      $('setupClasses').value = s.classes.join('、');
+      $('setupClassNameLabel').textContent = s.teachMode === 'subject' ? '目前這一班的名稱（換班請按左上角的班級按鈕）' : '班級名稱（例：601）';
+      renderClassSwitch();
+      renderPeriodsForm();
       document.title = `${s.boardTitle}｜點名與作業繳交`;
       $('setupPin').value = s.setupPin;
       $('setupClassName').value = s.className;
@@ -3432,7 +3675,21 @@
     function saveSetupFromForm() {
       const s = state.settings;
       s.setupPin = $('setupPin').value.trim().slice(0, 12);
-      s.className = $('setupClassName').value.trim().slice(0, 20);
+      const teachPick = document.querySelector('input[name="teachMode"]:checked');
+      s.teachMode = teachPick && teachPick.value === 'subject' ? 'subject' : 'homeroom';
+      if (s.teachMode === 'subject') {
+        // 科任：這裡的「班級名稱」就是目前畫面上的班（改名＝這一班改名）；換班請按左上角的班級按鈕
+        const renamed = $('setupClassName').value.trim().slice(0, 20);
+        const list = normalizeClassList($('setupClasses').value, '');
+        if (renamed && renamed !== s.className && s.className) {
+          const oldIndex = list.indexOf(s.className);
+          if (oldIndex >= 0) list[oldIndex] = renamed;
+        }
+        s.className = renamed || list[0] || s.className;
+        s.classes = normalizeClassList(list, s.className);
+      } else {
+        s.className = $('setupClassName').value.trim().slice(0, 20);
+      }
       s.boardTitle = $('setupBoardTitle').value.trim().slice(0, 20) || '晨間大屏';
       s.contactFont = CONTACT_FONTS.includes($('setupContactFont').value) ? $('setupContactFont').value : 'default';
       s.boardStyle = BOARD_STYLES.includes($('setupBoardStyle').value) ? $('setupBoardStyle').value : 'standard';
@@ -3726,6 +3983,56 @@
     $('projectionButton').addEventListener('click', () => toggleProjection());
     document.addEventListener('keydown', event => { if (event.key === 'Escape') toggleProjection(false); });
     $('saveSetupButton').addEventListener('click', saveSetupFromForm);
+    // 設定頁每一類預設收起，點標題展開（Enter／空白鍵也可以）
+    (function initSetupFold() {
+      const blocks = [...document.querySelectorAll('#page-setup .setup-block, #storageChoice')];
+      blocks.forEach(block => {
+        const head = block.querySelector(':scope > .setup-block-title, :scope > legend');
+        if (!head) return;
+        block.classList.add('sb-fold', 'open');   // 老師：預設打開，用顏色色塊區分類別；要收起再點標題
+        head.classList.add('sb-head');
+        head.setAttribute('role', 'button'); head.tabIndex = 0; head.setAttribute('aria-expanded', 'true');
+        const hint = document.createElement('span'); hint.className = 'sb-hint'; head.appendChild(hint);
+        const toggle = () => { const open = !block.classList.contains('open'); block.classList.toggle('open', open); head.setAttribute('aria-expanded', String(open)); };
+        head.addEventListener('click', toggle);
+        head.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggle(); } });
+      });
+      if (!blocks.length) return;
+      const bar = document.createElement('div');
+      bar.className = 'setup-fold-bar';
+      bar.innerHTML = '<button class="ghost-button" type="button" data-fold-all="open">📂 全部展開</button><button class="ghost-button" type="button" data-fold-all="close">📁 全部收起</button><span class="status-text">每一類用不同顏色標示；點標題可以收起或展開。改完記得按最下面的「儲存設定」。</span>';
+      blocks[0].parentNode.insertBefore(bar, blocks[0]);
+      bar.addEventListener('click', event => {
+        const btn = event.target.closest('[data-fold-all]');
+        if (!btn) return;
+        const open = btn.dataset.foldAll === 'open';
+        blocks.forEach(block => { block.classList.toggle('open', open); const head = block.querySelector('.sb-head'); if (head) head.setAttribute('aria-expanded', String(open)); });
+      });
+    })();
+    $('setupPeriods').addEventListener('change', event => {
+      const input = event.target.closest('[data-period]');
+      if (!input || !isHHMM(input.value)) return;
+      const list = schoolPeriods().map(row => row.slice());
+      list[Number(input.dataset.period)][Number(input.dataset.pf)] = input.value;
+      state.settings.periods = cleanPeriods(list);
+      saveSettings(); renderPeriodsForm();
+      document.dispatchEvent(new Event('periodschange'));
+      showToast('本校作息已更新。');
+    });
+    $('periodsResetButton').addEventListener('click', async () => {
+      if (!(await askDialog({ message: '把本校作息恢復成預設（第一節 08:40 開始）嗎？' }))) return;
+      state.settings.periods = null; saveSettings(); renderPeriodsForm();
+      document.dispatchEvent(new Event('periodschange'));
+    });
+    $('classSwitch').addEventListener('click', event => {
+      const pill = event.target.closest('[data-class-pill]');
+      if (pill) switchClass(pill.dataset.classPill);
+    });
+    document.querySelectorAll('input[name="teachMode"]').forEach(radio => radio.addEventListener('change', () => {
+      const subject = document.querySelector('input[name="teachMode"]:checked')?.value === 'subject';
+      $('setupClassesField').hidden = !subject;
+      if (subject && !$('setupClasses').value.trim()) $('setupClasses').value = $('setupClassName').value.trim();
+    }));
     $('setupContactFont').addEventListener('change', chooseContactFont);
     $('subjectManager').addEventListener('click', event => {
       const toggle = event.target.closest('[data-subject-index]');
@@ -3838,8 +4145,8 @@
     try { const v = JSON.parse(localStorage.getItem(key) || 'null'); return v && typeof v === 'object' ? v : fallback; }
     catch (e) { return fallback; }
   }
-  function saveConfig() { try { localStorage.setItem(CONFIG_KEY, JSON.stringify(config)); } catch (e) {} }
-  function saveDay() { try { localStorage.setItem(DAY_PREFIX + todayKey(), JSON.stringify(day)); } catch (e) {} }
+  function saveConfig() { if (classSwitching) return; try { localStorage.setItem(CONFIG_KEY, JSON.stringify(config)); } catch (e) {} }
+  function saveDay() { if (classSwitching) return; try { localStorage.setItem(DAY_PREFIX + todayKey(), JSON.stringify(day)); } catch (e) {} }
   function cleanupOldDays() {
     for (let i = localStorage.length - 1; i >= 0; i -= 1) {
       const key = localStorage.key(i);
@@ -4146,7 +4453,9 @@
   // 班級工具可以放到上面選單（老師自己勾）：開的是班級工具裡同一個面板（資料共用），只是把工具列收起來
   const SOLO_TOOLS = [['lottery', '🎡', '抽籤機'], ['check', '✅', '檢核板'], ['tooth', '🦷', '潔牙點名'], ['score', '🏆', '計分板'], ['group', '👥', '隨機分組'], ['exam', '📝', '定評小幫手'], ['tomato', '🍅', '番茄鐘'], ['prompt', '📣', '大屏提示'], ['screen', '📺', '螢幕公告'], ['mind', '🧠', '心智圖']];
   const TOP_TOOLS_DEFAULT = ['check', 'tooth', 'screen', 'mind'];
-  const topTools = () => (Array.isArray(config.topTools) ? config.topTools : TOP_TOOLS_DEFAULT).filter(tool => SOLO_TOOLS.some(([id]) => id === tool));
+  const TOP_TOOLS_SUBJECT = ['check', 'score', 'group', 'screen', 'mind'];   // 科任預設：不要潔牙，加計分板、隨機分組
+  const topTools = () => (Array.isArray(config.topTools) ? config.topTools : (isSubjectMode() ? TOP_TOOLS_SUBJECT : TOP_TOOLS_DEFAULT))
+    .filter(tool => SOLO_TOOLS.some(([id]) => id === tool));
   const soloTabs = {};
   SOLO_TOOLS.forEach(([tool, emoji, label]) => {
     const btn = document.createElement('button');
@@ -4207,7 +4516,7 @@
     $('page-tools').classList.toggle('solo-tool', tabButton !== toolsTab);
     const tile = document.querySelector(`#toolTabs .tool-tab[data-tool="${tool}"]`);
     if (tile && !tile.classList.contains('active')) tile.click();
-    renderCheckWall(); renderToothWall(); renderScoreWall(); updateLotStatus();
+    renderCheckWall(); renderToothWall(); renderScore(); updateLotStatus();
   }
   toolsTab.addEventListener('click', () => showToolsPage(toolsTab, toolsLastTool));
   document.querySelectorAll('#toolTabs .tool-tab').forEach(tab => tab.addEventListener('click', () => {
@@ -4221,6 +4530,17 @@
   $('screenFullscreenButton').addEventListener('click', () => fsToggle($('screenBoard')));
   // 🧠 心智圖：第一次點才載入
   document.querySelector('.tool-tab[data-tool="mind"]').addEventListener('click', () => { if (!$('mindFrame').getAttribute('src')) $('mindFrame').src = 'MindMap.html'; });
+  // 2026-11-12 老師：心智圖／螢幕公告操作空間太少——畫面多高就給多高（量到視窗底部，留一點邊）
+  function fitScreenBoards() {
+    document.querySelectorAll('.screen-board').forEach(board => {
+      if (board.offsetParent === null || board.matches(':fullscreen, .fake-fs')) return;
+      const top = board.getBoundingClientRect().top + window.scrollY;
+      board.style.height = Math.max(420, Math.round(window.innerHeight - top - 14)) + 'px';
+    });
+  }
+  window.addEventListener('resize', fitScreenBoards);
+  document.addEventListener('click', () => requestAnimationFrame(fitScreenBoards));
+  requestAnimationFrame(fitScreenBoards);
   $('mindFullscreenButton').addEventListener('click', () => fsToggle($('mindBoard')));
   document.addEventListener('fullscreenchange', () => {
     $('mindFullscreenButton').textContent = fsCurrent() === $('mindBoard') ? '⛶ 離開全螢幕' : '⛶ 全螢幕';
@@ -4921,7 +5241,13 @@
     </div>`;
   }
   $('toothWall').addEventListener('click', event => {
-    if (event.target.closest('#toothResetButton')) { day.tooth = {}; saveDay(); logToothDay(todayKey(), {}); renderToothWall(); return; }
+    if (event.target.closest('#toothResetButton')) {
+      askDialog({ message: '確定把今天的潔牙紀錄全部清掉嗎？' }).then(ok => {
+        if (!ok) return;
+        day.tooth = {}; saveDay(); logToothDay(todayKey(), {}); renderToothWall();
+      });
+      return;
+    }
     const button = event.target.closest('[data-tooth-seat]');
     if (!button) return;
     const done = toothDone(), seat = button.dataset.toothSeat;
@@ -5012,8 +5338,11 @@
     const removeBtn = event.target.closest('[data-check-remove]');
     if (removeBtn) {
       if (day.boards.length <= 1) { showToast('至少保留一面檢核板。', true); return; }
-      day.boards.splice(Number(removeBtn.dataset.checkRemove), 1);
-      saveDay(); renderCheckWall();
+      askDialog({ message: '確定移除這一面檢核板嗎？上面打的勾會一起清掉。' }).then(ok => {
+        if (!ok) return;
+        day.boards.splice(Number(removeBtn.dataset.checkRemove), 1);
+        saveDay(); renderCheckWall();
+      });
     }
   });
   $('checkWall').addEventListener('change', async event => {
@@ -5033,24 +5362,87 @@
   });
 
   // ================================================================
-  // 🏆 計分板
+  // 🏆 計分板（2026-11-12 加分版）：小組／個人兩種；小組可以自己編組（拖拉、打號碼、點一下再點組），可把個人分算進小組
   // ================================================================
-  function teamCount() { return Math.min(6, Math.max(2, Number(config.teamCount) || 4)); }
-  function ensureScores() {
-    while (config.scores.length < teamCount()) config.scores.push(0);
+  const SCORE_MAX_TEAMS = 8;
+  function teamCount() { return Math.min(SCORE_MAX_TEAMS, Math.max(2, Number(config.teamCount) || 4)); }
+  function ensureTeams() {
+    if (!Array.isArray(config.teams)) {   // 舊版只有 scores／teamNames：搬過來，分數不會不見
+      config.teams = Array.from({ length: teamCount() }, (_, i) => ({ name: config.teamNames[i] || '', members: [], score: Number(config.scores[i]) || 0 }));
+    }
+    config.teams = config.teams.slice(0, SCORE_MAX_TEAMS).map(t => ({
+      name: String((t && t.name) || '').slice(0, 8),
+      members: [...new Set((Array.isArray(t && t.members) ? t.members : []).map(Number).filter(n => n >= 1 && n <= 99))].sort((a, b) => a - b),
+      score: Math.max(0, Math.round(Number(t && t.score) || 0))
+    }));
+    while (config.teams.length < teamCount()) config.teams.push({ name: '', members: [], score: 0 });
+    if (!config.personScores || typeof config.personScores !== 'object') config.personScores = {};
+    if (!config.personTeamScores || typeof config.personTeamScores !== 'object') config.personTeamScores = {};   // 小組加分分給組員的部分
+    config.scoreMode = ['person', 'reward'].includes(config.scoreMode) ? config.scoreMode : 'team';
+    ensurePrizes();
+  }
+  // 🎁 兌換（2026-11-12 老師：個人可以扣點領禮物）
+  const DEFAULT_PRIZES = [['🍬 小點心', 10], ['🪑 換座位一天', 15], ['✏️ 文具一樣', 20], ['⭐ 當一天小老師', 25]];
+  function ensurePrizes() {
+    if (!Array.isArray(config.prizes)) config.prizes = DEFAULT_PRIZES.map(([name, cost]) => ({ name, cost }));
+    config.prizes = config.prizes.slice(0, 20).map(prize => ({
+      name: String((prize && prize.name) || '').trim().slice(0, 14) || '禮物',
+      cost: Math.min(999, Math.max(1, Math.round(Number(prize && prize.cost) || 1)))
+    }));
+    if (!config.personSpent || typeof config.personSpent !== 'object') config.personSpent = {};
+    if (!Array.isArray(config.redeemLog)) config.redeemLog = [];
+    config.redeemLog = config.redeemLog.slice(0, 300);
+  }
+  function syncLegacyScores() {   // 舊欄位也一起寫（其他地方或舊資料讀得到）
+    config.scores = config.teams.map(t => t.score);
+    config.teamNames = config.teams.map(t => t.name);
+  }
+  function saveScores() { syncLegacyScores(); saveConfig(); }
+  const teamName = i => (config.teams[i] && config.teams[i].name) || `第 ${i + 1} 組`;
+  // 個人分＝自己加的（personScores）＋小組加分分到的（personTeamScores）
+  const ownScore = seat => Math.max(0, Math.round(Number(config.personScores[seat]) || 0));
+  const fromTeamScore = seat => Math.max(0, Math.round(Number(config.personTeamScores[seat]) || 0));
+  const spentScore = seat => Math.max(0, Math.round(Number(config.personSpent[seat]) || 0));
+  // 目前點數＝自己加的＋小組分到的−兌換用掉的
+  const personScore = seat => Math.max(0, ownScore(seat) + fromTeamScore(seat) - spentScore(seat));
+  // 老師決定（2026-11-12）：分數只會「小組 → 組員」，個人加分不會再加到小組上
+  function teamTotal(i) { return config.teams[i].score; }
+  function teamOfSeat(seat) { return config.teams.slice(0, teamCount()).findIndex(t => t.members.includes(seat)); }
+  function scoreSeats() {
+    const set = new Set(activeSeats());
+    config.teams.slice(0, teamCount()).forEach(t => t.members.forEach(seat => set.add(seat)));
+    return [...set].sort((a, b) => a - b);
+  }
+
+  function renderScore() {
+    ensureTeams();
+    const person = config.scoreMode !== 'team';
+    const reward = config.scoreMode === 'reward';
+    $('scoreTeamCount').value = String(teamCount());
+    $('scoreShareMembers').checked = config.shareTeamToMembers !== false;
+    document.querySelectorAll('#scoreModeSeg [data-score-mode]').forEach(b => b.classList.toggle('active', b.dataset.scoreMode === config.scoreMode));
+    document.querySelectorAll('[data-score-only]').forEach(el => { el.hidden = el.dataset.scoreOnly !== config.scoreMode; });
+    $('scoreWall').hidden = person;
+    $('personWall').hidden = !person || reward;
+    $('rewardWall').hidden = !reward;
+    if (reward) { $('scoreEditor').hidden = true; $('scoreEditButton').textContent = '✏️ 編組'; renderRewardWall(); }
+    else if (person) { $('scoreEditor').hidden = true; $('scoreEditButton').textContent = '✏️ 編組'; renderPersonWall(); } else { renderScoreWall(); if (!$('scoreEditor').hidden) renderScoreEditor(); }
+    $('scoreHint').textContent = reward
+      ? '先點左邊的座號，再點右邊的禮物：扣點數換禮物（會先問一次）。換錯了可以在「兌換紀錄」退還。'
+      : person
+      ? '點座號就加分（上面可選 ＋1／＋2／＋5／−1）；個人分＝自己加的＋小組加分分到的（滑鼠移到格子上看拆分）。只有按「全部歸零」才歸零。'
+      : '組名可直接點著改；按「✏️ 編組」可以拖拉或打號碼（例：3 5 8）把人放進各組。';
   }
   function renderScoreWall() {
     const wall = $('scoreWall');
-    if (!wall) return;
-    ensureScores();
-    $('scoreTeamCount').value = String(teamCount());
     wall.innerHTML = Array.from({ length: teamCount() }, (_, i) => {
-      const name = config.teamNames[i] || `第 ${i + 1} 組`;
-      const [team, soft, line] = TEAM_COLORS[i % TEAM_COLORS.length];
-      return `<div class="score-card" id="scoreCard${i}" style="--team:${team};--team-soft:${soft};--team-line:${line}">
+      const team = config.teams[i];
+      const [color, soft, line] = TEAM_COLORS[i % TEAM_COLORS.length];
+      return `<div class="score-card" id="scoreCard${i}" style="--team:${color};--team-soft:${soft};--team-line:${line}">
         <span class="score-crown">👑</span><span class="score-rank" id="scoreRank${i}"></span>
-        <span class="score-name" contenteditable="true" data-score-name="${i}" spellcheck="false">${escapeHtml(name)}</span>
-        <div class="score-value" id="scoreValue${i}">${config.scores[i] || 0}</div>
+        <span class="score-name-row"><span class="score-name" contenteditable="true" data-score-name="${i}" spellcheck="false" title="點一下就可以改組名">${escapeHtml(teamName(i))}</span><button type="button" class="score-name-edit" data-score-rename="${i}" title="改組名" aria-label="改組名">✏️</button></span>
+        <div class="score-members">${team.members.length ? team.members.map(seat => `<span>${seat}</span>`).join('') : '<em>還沒放人（按 ✏️ 編組）</em>'}</div>
+        <div class="score-value" id="scoreValue${i}">${teamTotal(i)}</div>
         <div class="score-bar"><i id="scoreBar${i}"></i></div>
         <div class="score-buttons">
           <button class="score-plus" type="button" data-score-delta="1" data-score-team="${i}">＋1</button>
@@ -5063,19 +5455,124 @@
   }
   // 名次獎牌、領先皇冠、長條比例（同分同名次）
   function decorateScores() {
-    const n = teamCount();
-    const values = Array.from({ length: n }, (_, i) => config.scores[i] || 0);
+    const values = Array.from({ length: teamCount() }, (_, i) => teamTotal(i));
     const max = Math.max(0, ...values);
     const ranked = [...new Set(values)].sort((a, b) => b - a);
     values.forEach((value, i) => {
       const card = $(`scoreCard${i}`);
       if (!card) return;
-      const rank = ranked.indexOf(value);
       card.classList.toggle('leader', max > 0 && value === max);
-      $(`scoreRank${i}`).textContent = max > 0 ? (['🥇', '🥈', '🥉'][rank] || '') : '';
+      $(`scoreRank${i}`).textContent = max > 0 ? (['🥇', '🥈', '🥉'][ranked.indexOf(value)] || '') : '';
       $(`scoreBar${i}`).style.width = max > 0 ? `${Math.round(value / max * 100)}%` : '0%';
     });
   }
+  function renderPersonWall() {
+    const seats = scoreSeats();
+    const absent = absentSeatSet();
+    const values = seats.map(personScore);
+    const ranked = [...new Set(values.filter(v => v > 0))].sort((a, b) => b - a);
+    $('personWall').innerHTML = seats.map(seat => {
+      const value = personScore(seat), t = teamOfSeat(seat);
+      const color = t >= 0 ? TEAM_COLORS[t % TEAM_COLORS.length][0] : 'transparent';
+      const medal = value > 0 ? (['🥇', '🥈', '🥉'][ranked.indexOf(value)] || '') : '';
+      return `<button class="person-tile${absent.has(seat) ? ' absent' : ''}" type="button" data-person-seat="${seat}" style="--team:${color}" title="${seat} 號${t >= 0 ? `（${escapeHtml(teamName(t))}）` : ''}：自己加 ${ownScore(seat)}＋小組分到 ${fromTeamScore(seat)}${spentScore(seat) ? `－兌換用掉 ${spentScore(seat)}` : ''}">
+        <span class="person-medal">${medal}</span><b>${seat}</b><span class="person-score" id="personScore${seat}">${value}</span></button>`;
+    }).join('') || '<div class="status-text">還沒有座號，請先到「設定」填座號數。</div>';
+  }
+  let rwSeat = 0, prizeEditing = false;
+  function renderRewardWall() {
+    ensurePrizes();
+    const seats = scoreSeats();
+    if (!seats.includes(rwSeat)) rwSeat = 0;
+    const absent = absentSeatSet();
+    const tiles = seats.map(seat => {
+      const t = teamOfSeat(seat), color = t >= 0 ? TEAM_COLORS[t % TEAM_COLORS.length][0] : 'transparent';
+      return `<button class="person-tile${seat === rwSeat ? ' picked' : ''}${absent.has(seat) ? ' absent' : ''}" type="button" data-reward-seat="${seat}" style="--team:${color}"><b>${seat}</b><span class="person-score">${personScore(seat)}</span></button>`;
+    }).join('');
+    const points = rwSeat ? personScore(rwSeat) : 0;
+    const prizes = config.prizes.map((prize, i) => {
+      const lack = rwSeat && prize.cost > points ? prize.cost - points : 0;
+      return `<button class="prize-card${lack ? ' lack' : ''}" type="button" data-prize="${i}"${!rwSeat || lack ? ' aria-disabled="true"' : ''}>
+        <span class="prize-name">${escapeHtml(prize.name)}</span><span class="prize-cost">${prize.cost} 點</span>${lack ? `<span class="prize-lack">還差 ${lack} 點</span>` : ''}</button>`;
+    }).join('') || '<div class="status-text">還沒有禮物，按上面的「✏️ 管理禮物」新增。</div>';
+    const editor = prizeEditing ? `<div class="prize-editor"><div class="se-label">✏️ 管理禮物（名稱、要幾點）</div>
+      ${config.prizes.map((prize, i) => `<div class="prize-row"><input type="text" maxlength="14" value="${escapeHtml(prize.name)}" data-prize-name="${i}" aria-label="禮物名稱">
+        <input type="number" min="1" max="999" value="${prize.cost}" data-prize-cost="${i}" aria-label="要幾點"> 點
+        <button class="ghost-button" type="button" data-prize-del="${i}" aria-label="刪除這個禮物">✕</button></div>`).join('')}
+      <button class="ghost-button" type="button" data-prize-add>＋ 新增禮物</button></div>` : '';
+    const log = config.redeemLog.slice(0, 15).map((entry, i) => `<div class="redeem-row"><span>${escapeHtml(String(entry.date || '').slice(5).replace('-', '/'))}</span><b>${entry.seat} 號</b><span>${escapeHtml(entry.name)}</span><span class="redeem-cost">－${entry.cost}</span><button class="ghost-button" type="button" data-redeem-undo="${i}">退還</button></div>`).join('');
+    $('rewardWall').innerHTML = `<div class="reward-seats">${tiles || '<div class="status-text">還沒有座號，請先到「設定」填座號數。</div>'}</div>
+      <div class="reward-side">
+        <div class="reward-who">${rwSeat ? `<b>${rwSeat} 號</b>　目前 <span class="reward-points">${points}</span> 點` : '👈 先點座號'}</div>
+        ${rwSeat ? `<div class="reward-adjust"><span>幫 ${rwSeat} 號加減點：</span><button type="button" data-reward-delta="1">＋1</button><button type="button" data-reward-delta="5">＋5</button><button type="button" data-reward-delta="-1">−1</button></div>` : ''}
+        <div class="prize-grid">${prizes}</div>
+        <button class="ghost-button reward-manage" type="button" data-reward-manage>${prizeEditing ? '✔ 管理完成' : '✏️ 管理禮物（改名稱、點數、新增）'}</button>${editor}
+        <details class="redeem-log"${config.redeemLog.length ? '' : ' hidden'}><summary>📜 兌換紀錄（最近 15 筆）</summary>${log}</details>
+      </div>`;
+  }
+  $('prizeEditButton').addEventListener('click', () => {
+    prizeEditing = !prizeEditing;
+    $('prizeEditButton').textContent = prizeEditing ? '✔ 管理完成' : '✏️ 管理禮物';
+    renderRewardWall();
+  });
+  $('rewardWall').addEventListener('click', async event => {
+    if (event.target.closest('[data-reward-manage]')) { $('prizeEditButton').click(); return; }
+    const adj = event.target.closest('[data-reward-delta]');
+    if (adj && rwSeat) {   // 在兌換畫面直接幫這位加減點（算在「自己加的」）
+      const delta = Number(adj.dataset.rewardDelta), before = personScore(rwSeat);
+      const own = Math.max(0, ownScore(rwSeat) + delta);
+      if (own) config.personScores[rwSeat] = own; else delete config.personScores[rwSeat];
+      saveScores();
+      if (personScore(rwSeat) === before && delta < 0) showToast(`${rwSeat} 號自己加的分數已經是 0，不能再扣（小組分到的、兌換用掉的不在這裡改）。`, true);
+      else if ($('scoreSound').checked) beep(delta > 0 ? (delta >= 5 ? 988 : 740) : 262, .15, delta > 0 ? 'sine' : 'square');
+      renderRewardWall(); return;
+    }
+    const tile = event.target.closest('[data-reward-seat]');
+    if (tile) { rwSeat = Number(tile.dataset.rewardSeat); renderRewardWall(); return; }
+    const card = event.target.closest('[data-prize]');
+    if (card) {
+      if (!rwSeat) { showToast('先點左邊的座號，再選禮物。', true); return; }
+      const prize = config.prizes[Number(card.dataset.prize)], points = personScore(rwSeat);
+      if (!prize) return;
+      if (prize.cost > points) { showToast(`${rwSeat} 號目前 ${points} 點，換「${prize.name}」還差 ${prize.cost - points} 點。`, true); return; }
+      const seat = rwSeat;
+      if (!(await askDialog({ message: `${seat} 號要用 ${prize.cost} 點換「${prize.name}」嗎？\n換完剩 ${points - prize.cost} 點。` }))) return;
+      config.personSpent[seat] = spentScore(seat) + prize.cost;
+      config.redeemLog.unshift({ date: todayKey(), at: new Date().toISOString(), seat, name: prize.name, cost: prize.cost });
+      saveScores(); renderRewardWall();
+      showToast(`🎉 ${seat} 號換到「${prize.name}」！`);
+      if ($('scoreSound').checked) fanfare();
+      return;
+    }
+    const del = event.target.closest('[data-prize-del]');
+    if (del) {
+      const prize = config.prizes[Number(del.dataset.prizeDel)];
+      if (!(await askDialog({ message: `確定刪除禮物「${prize ? prize.name : ''}」嗎？` }))) return;
+      config.prizes.splice(Number(del.dataset.prizeDel), 1); saveScores(); renderRewardWall(); return;
+    }
+    if (event.target.closest('[data-prize-add]')) {
+      if (config.prizes.length >= 20) { showToast('禮物最多 20 種。', true); return; }
+      config.prizes.push({ name: '新禮物', cost: 10 }); saveScores(); renderRewardWall(); return;
+    }
+    const undo = event.target.closest('[data-redeem-undo]');
+    if (undo) {
+      const entry = config.redeemLog[Number(undo.dataset.redeemUndo)];
+      if (!entry || !(await askDialog({ message: `把 ${entry.cost} 點退還給 ${entry.seat} 號（取消「${entry.name}」）嗎？` }))) return;
+      config.personSpent[entry.seat] = Math.max(0, spentScore(entry.seat) - entry.cost);
+      if (!config.personSpent[entry.seat]) delete config.personSpent[entry.seat];
+      config.redeemLog.splice(Number(undo.dataset.redeemUndo), 1);
+      saveScores(); renderRewardWall(); showToast(`已退還 ${entry.cost} 點給 ${entry.seat} 號。`);
+    }
+  });
+  $('rewardWall').addEventListener('change', event => {
+    const nameEl = event.target.closest('[data-prize-name]'), costEl = event.target.closest('[data-prize-cost]');
+    if (nameEl) config.prizes[Number(nameEl.dataset.prizeName)].name = nameEl.value.trim().slice(0, 14) || '禮物';
+    else if (costEl) config.prizes[Number(costEl.dataset.prizeCost)].cost = Math.min(999, Math.max(1, Math.round(Number(costEl.value) || 1)));
+    else return;
+    saveScores();
+    clearTimeout(rewardRenderTimer); rewardRenderTimer = setTimeout(renderRewardWall, 0);
+  });
+  let rewardRenderTimer = 0;
   function animateCount(el, from, to) {
     if (REDUCED_MOTION_ALL || from === to) { el.textContent = to; return; }
     const start = performance.now(), dur = 420;
@@ -5086,48 +5583,241 @@
     };
     requestAnimationFrame(step);
   }
+  function floatDelta(host, delta) {
+    const float = document.createElement('span');
+    float.className = 'score-float';
+    float.textContent = (delta > 0 ? '+' : '') + delta;
+    host.appendChild(float);
+    setTimeout(() => float.remove(), 1000);
+  }
+  document.querySelectorAll('#scoreModeSeg [data-score-mode]').forEach(button => button.addEventListener('click', () => {
+    config.scoreMode = button.dataset.scoreMode; saveScores(); renderScore();
+  }));
   $('scoreTeamCount').addEventListener('change', () => {
-    config.teamCount = Number($('scoreTeamCount').value); saveConfig(); renderScoreWall();
+    config.teamCount = Number($('scoreTeamCount').value); ensureTeams(); saveScores(); renderScore();
   });
+  $('scoreShareMembers').addEventListener('change', () => { config.shareTeamToMembers = $('scoreShareMembers').checked; saveScores(); });
   $('scoreResetButton').addEventListener('click', async () => {
-    if (!(await askDialog({ message: '全部分數歸零？' }))) return;
-    config.scores = config.scores.map(() => 0); saveConfig(); renderScoreWall();
+    const person = config.scoreMode !== 'team';
+    if (!(await askDialog({ message: person ? '確定把全部個人分數歸零嗎？（小組分數不動）\n這個動作不能復原。' : '確定把全部小組分數歸零嗎？（分組名單和個人分數不動）\n這個動作不能復原。' }))) return;
+    if (person) { config.personScores = {}; config.personTeamScores = {}; config.personSpent = {}; } else config.teams.forEach(t => { t.score = 0; });
+    saveScores(); renderScore();
   });
   $('scoreWall').addEventListener('click', event => {
+    const rename = event.target.closest('[data-score-rename]');
+    if (rename) {   // 點 ✏️：游標放進組名、全選，直接打新名字
+      const nameEl = document.querySelector(`[data-score-name="${rename.dataset.scoreRename}"]`);
+      nameEl.focus();
+      const range = document.createRange(); range.selectNodeContents(nameEl);
+      const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+      return;
+    }
     const btn = event.target.closest('[data-score-team]');
     if (!btn) return;
-    const i = Number(btn.dataset.scoreTeam);
-    const delta = Number(btn.dataset.scoreDelta);
-    ensureScores();
-    const before = config.scores[i] || 0;
-    config.scores[i] = Math.max(0, before + delta);
-    saveConfig();
-    const value = $(`scoreValue${i}`);
-    animateCount(value, before, config.scores[i]);
-    value.classList.remove('bump'); void value.offsetWidth; value.classList.add('bump');
-    if (config.scores[i] !== before) {
-      const float = document.createElement('span');
-      float.className = 'score-float';
-      float.textContent = (delta > 0 ? '+' : '') + (config.scores[i] - before);
-      $(`scoreCard${i}`).appendChild(float);
-      setTimeout(() => float.remove(), 1000);
+    const i = Number(btn.dataset.scoreTeam), delta = Number(btn.dataset.scoreDelta);
+    ensureTeams();
+    const team = config.teams[i];
+    const before = teamTotal(i);
+    const applied = Math.max(0, team.score + delta) - team.score;
+    team.score += applied;
+    // 小組加分也加給組員（預設開）：1 號在第一組，第一組＋1，1 號的個人分也＋1
+    if (applied && config.shareTeamToMembers !== false) {
+      team.members.forEach(seat => {
+        const next = Math.max(0, fromTeamScore(seat) + applied);
+        if (next) config.personTeamScores[seat] = next; else delete config.personTeamScores[seat];
+      });
     }
+    saveScores();
+    const after = teamTotal(i);
+    const value = $(`scoreValue${i}`);
+    animateCount(value, before, after);
+    value.classList.remove('bump'); void value.offsetWidth; value.classList.add('bump');
+    if (after !== before) floatDelta($(`scoreCard${i}`), after - before);
     const wasLeader = $(`scoreCard${i}`).classList.contains('leader');
     decorateScores();
     if (!wasLeader && $(`scoreCard${i}`).classList.contains('leader') && delta > 0 && $('scoreSound').checked) fanfare();
     else if ($('scoreSound').checked) beep(delta > 0 ? (delta >= 5 ? 988 : 740) : 262, .2, delta > 0 ? 'sine' : 'square');
   });
+  $('scoreWall').addEventListener('keydown', event => {
+    if (event.key === 'Enter' && event.target.closest('[data-score-name]')) { event.preventDefault(); event.target.blur(); }
+  });
   $('scoreWall').addEventListener('blur', event => {
     const nameEl = event.target.closest('[data-score-name]');
     if (!nameEl) return;
     const i = Number(nameEl.dataset.scoreName);
-    config.teamNames[i] = nameEl.textContent.trim().slice(0, 8) || `第 ${i + 1} 組`;
-    saveConfig();
+    config.teams[i].name = nameEl.textContent.trim().slice(0, 8);
+    saveScores();
   }, true);
+  $('personWall').addEventListener('click', event => {
+    const tile = event.target.closest('[data-person-seat]');
+    if (!tile) return;
+    const seat = Number(tile.dataset.personSeat), delta = Number($('scoreStep').value) || 1;
+    const before = personScore(seat);
+    const own = Math.max(0, ownScore(seat) + delta);
+    if (own) config.personScores[seat] = own; else delete config.personScores[seat];
+    saveScores();
+    const after = personScore(seat);
+    if (after === before) return;
+    const el = $(`personScore${seat}`);
+    animateCount(el, before, after);
+    floatDelta(tile, after - before);
+    tile.classList.remove('bump'); void tile.offsetWidth; tile.classList.add('bump');
+    if ($('scoreSound').checked) beep(delta > 0 ? (delta >= 5 ? 988 : 740) : 262, .15, delta > 0 ? 'sine' : 'square');
+    // 名次獎牌重排（不整個重畫，動畫才看得到）
+    const seats = scoreSeats(), values = seats.map(personScore);
+    const ranked = [...new Set(values.filter(v => v > 0))].sort((a, b) => b - a);
+    seats.forEach(s => {
+      const medalEl = document.querySelector(`[data-person-seat="${s}"] .person-medal`);
+      const v = personScore(s);
+      if (medalEl) medalEl.textContent = v > 0 ? (['🥇', '🥈', '🥉'][ranked.indexOf(v)] || '') : '';
+    });
+  });
+
+  // ---------- ✏️ 編組：拖拉、打號碼、點一下再點組（觸控白板也能用） ----------
+  let seSelected = 0;
+  function moveSeatToTeam(seat, target) {
+    config.teams.forEach(t => { t.members = t.members.filter(s => s !== seat); });
+    if (target >= 0 && config.teams[target]) config.teams[target].members = [...config.teams[target].members, seat].sort((a, b) => a - b);
+  }
+  function renderScoreEditor() {
+    const seats = scoreSeats();
+    const chip = seat => `<span class="se-chip${seat === seSelected ? ' selected' : ''}" data-se-seat="${seat}" tabindex="0">${seat}</span>`;
+    const free = seats.filter(seat => teamOfSeat(seat) < 0);
+    $('scoreEditor').innerHTML = `<div class="se-head"><span>把號碼<b>拖到</b>組裡；或<b>點一下號碼再點一組</b>；也可以在組旁邊<b>打號碼</b>（例：3 5 8）按「放入」。</span>
+        <span class="se-tools"><button class="ghost-button" type="button" data-se-act="random">🎲 隨機分</button><button class="ghost-button" type="button" data-se-act="auto">照座號平均分</button><button class="ghost-button" type="button" data-se-act="clear">全部清空</button><button class="primary-button" type="button" data-se-act="done">✔ 完成</button></span></div>
+      <div class="se-pool" data-drop-team="-1"><div class="se-label">還沒分組（${free.length} 人）</div><div class="se-chips">${free.map(chip).join('') || '<em>全部都分好了 🎉</em>'}</div></div>
+      <div class="se-teams">${Array.from({ length: teamCount() }, (_, i) => {
+        const [color, soft] = TEAM_COLORS[i % TEAM_COLORS.length];
+        const team = config.teams[i];
+        return `<div class="se-team" data-drop-team="${i}" style="--team:${color};--team-soft:${soft}">
+          <div class="se-team-head"><input class="se-name" type="text" maxlength="8" data-se-name="${i}" value="${escapeHtml(team.name)}" placeholder="第 ${i + 1} 組" aria-label="第 ${i + 1} 組的組名" title="組名可以自己改"><span>${team.members.length} 人</span></div>
+          <div class="se-chips">${team.members.map(chip).join('') || '<em>拖號碼進來</em>'}</div>
+          <div class="se-input"><input type="text" inputmode="numeric" data-se-input="${i}" placeholder="打號碼，例：3 5 8" aria-label="${escapeHtml(teamName(i))} 的號碼"><button class="ghost-button" type="button" data-se-apply="${i}">放入</button></div>
+        </div>`;
+      }).join('')}</div>`;
+  }
+  function applyTypedSeats(i) {
+    const input = document.querySelector(`[data-se-input="${i}"]`);
+    if (!input) return;
+    const valid = new Set(scoreSeats());
+    const nums = [...new Set((input.value.match(/\d+/g) || []).map(Number))];
+    const ok = nums.filter(n => valid.has(n)), bad = nums.filter(n => !valid.has(n));
+    if (!nums.length) { showToast('請打號碼，例如：3 5 8', true); return; }
+    ok.forEach(seat => moveSeatToTeam(seat, i));
+    saveScores(); renderScore();
+    showToast(ok.length ? `已把 ${ok.join('、')} 號放進「${teamName(i)}」${bad.length ? `；${bad.join('、')} 號不在名單，略過` : ''}` : `${bad.join('、')} 號不在名單裡`, !ok.length);
+  }
+  $('scoreEditButton').addEventListener('click', () => {
+    const open = $('scoreEditor').hidden;
+    $('scoreEditor').hidden = !open;
+    $('scoreEditButton').textContent = open ? '✔ 編組完成' : '✏️ 編組';
+    seSelected = 0;
+    if (open) renderScoreEditor();
+  });
+  $('scoreEditor').addEventListener('click', async event => {
+    const act = event.target.closest('[data-se-act]');
+    if (act) {
+      const a = act.dataset.seAct;
+      if (a === 'done') { $('scoreEditButton').click(); return; }
+      if (['clear', 'auto', 'random'].includes(a) && config.teams.some(t => t.members.length)) {
+        const ok = await askDialog({ message: a === 'clear' ? '確定把所有組員清空嗎？（分數不會動）' : `${a === 'random' ? '隨機分' : '照座號平均分'}會重新分配，目前的分組會被取代（分數不會動）。確定嗎？` });
+        if (!ok) return;
+      }
+      if (a === 'clear') config.teams.forEach(t => { t.members = []; });
+      if (a === 'random') {   // 全部打亂，輪流放進各組，人數平均
+        const seats = scoreSeats().slice(), n = teamCount();
+        for (let k = seats.length - 1; k > 0; k -= 1) { const j = Math.floor(Math.random() * (k + 1)); [seats[k], seats[j]] = [seats[j], seats[k]]; }
+        config.teams.forEach(t => { t.members = []; });
+        seats.forEach((seat, k) => { config.teams[k % n].members.push(seat); });
+        config.teams.forEach(t => t.members.sort((x, y) => x - y));
+        if ($('scoreSound').checked) fanfare();
+      }
+      if (a === 'auto') {
+        const seats = scoreSeats(), n = teamCount();
+        config.teams.forEach(t => { t.members = []; });
+        seats.forEach((seat, k) => { config.teams[Math.floor(k * n / seats.length)].members.push(seat); });
+      }
+      seSelected = 0; saveScores(); renderScore(); return;
+    }
+    const apply = event.target.closest('[data-se-apply]');
+    if (apply) { applyTypedSeats(Number(apply.dataset.seApply)); return; }
+    const inputEl = event.target.closest('input');
+    // 已經選了號碼：點那一組任何地方（包括組名框）都算「放到這一組」；沒選號碼才是在改組名或打號碼
+    if (inputEl && !(seSelected && inputEl.matches('[data-se-name]'))) return;
+    if (inputEl) inputEl.blur();
+    const chipEl = event.target.closest('[data-se-seat]');
+    if (chipEl && !seDrag.moved) { seSelected = seSelected === Number(chipEl.dataset.seSeat) ? 0 : Number(chipEl.dataset.seSeat); renderScoreEditor(); return; }
+    const zone = event.target.closest('[data-drop-team]');
+    if (zone && seSelected) { moveSeatToTeam(seSelected, Number(zone.dataset.dropTeam)); seSelected = 0; saveScores(); renderScore(); }
+  });
+  $('scoreEditor').addEventListener('change', event => {
+    const nameInput = event.target.closest('[data-se-name]');
+    if (!nameInput) return;
+    config.teams[Number(nameInput.dataset.seName)].name = nameInput.value.trim().slice(0, 8);
+    saveScores(); renderScoreWall();
+  });
+  $('scoreEditor').addEventListener('keydown', event => {
+    if (event.key === 'Enter' && event.target.closest('[data-se-name]')) { event.preventDefault(); event.target.blur(); return; }
+    const input = event.target.closest('[data-se-input]');
+    if (input && event.key === 'Enter') { event.preventDefault(); applyTypedSeats(Number(input.dataset.seInput)); }
+  });
+  // 拖拉（滑鼠、手指、觸控筆都用 pointer 事件；HTML5 拖放在觸控白板上不能用）
+  const seDrag = { seat: 0, ghost: null, x: 0, y: 0, moved: false, id: 0 };
+  $('scoreEditor').addEventListener('pointerdown', event => {
+    const chipEl = event.target.closest('[data-se-seat]');
+    if (!chipEl || event.button > 0) return;
+    Object.assign(seDrag, { seat: Number(chipEl.dataset.seSeat), x: event.clientX, y: event.clientY, moved: false, id: event.pointerId, ghost: null });
+    try { chipEl.setPointerCapture(event.pointerId); } catch (e) {}
+  });
+  $('scoreEditor').addEventListener('pointermove', event => {
+    if (!seDrag.seat || event.pointerId !== seDrag.id) return;
+    if (!seDrag.moved && Math.hypot(event.clientX - seDrag.x, event.clientY - seDrag.y) < 6) return;
+    if (!seDrag.moved) {
+      seDrag.moved = true;
+      seDrag.ghost = document.createElement('span');
+      seDrag.ghost.className = 'se-chip se-ghost';
+      seDrag.ghost.textContent = seDrag.seat;
+      (document.fullscreenElement || document.body).appendChild(seDrag.ghost);
+    }
+    seDrag.ghost.style.left = event.clientX + 'px';
+    seDrag.ghost.style.top = event.clientY + 'px';
+    document.querySelectorAll('.se-over').forEach(el => el.classList.remove('se-over'));
+    seDrag.ghost.style.display = 'none';
+    const zone = document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-drop-team]');
+    seDrag.ghost.style.display = '';
+    if (zone) zone.classList.add('se-over');
+  });
+  const seDragEnd = event => {
+    if (!seDrag.seat || event.pointerId !== seDrag.id) return;
+    const { seat, moved, ghost } = seDrag;
+    if (ghost) ghost.remove();
+    document.querySelectorAll('.se-over').forEach(el => el.classList.remove('se-over'));
+    seDrag.seat = 0;
+    if (!moved || event.type === 'pointercancel') return;
+    const zone = document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-drop-team]');
+    if (zone) { moveSeatToTeam(seat, Number(zone.dataset.dropTeam)); seSelected = 0; saveScores(); renderScore(); }
+    setTimeout(() => { seDrag.moved = false; }, 0);   // 拖完不要被當成「點一下」
+  };
+  $('scoreEditor').addEventListener('pointerup', seDragEnd);
+  $('scoreEditor').addEventListener('pointercancel', seDragEnd);
+  // 隨機分組的結果直接帶到計分板
+  function groupsToScore(groups) {
+    if (!Array.isArray(groups) || !groups.length) { showToast('請先按「🎲 分組！」。', true); return; }
+    config.teamCount = Math.min(SCORE_MAX_TEAMS, Math.max(2, groups.length));
+    ensureTeams();
+    config.teams.forEach(t => { t.members = []; });
+    groups.slice(0, SCORE_MAX_TEAMS).forEach((members, i) => { config.teams[i].members = members.map(Number).filter(n => n >= 1 && n <= 99).sort((a, b) => a - b); });
+    config.scoreMode = 'team';
+    saveScores();
+    showToast(`已把 ${Math.min(groups.length, SCORE_MAX_TEAMS)} 組帶到計分板。${groups.length > SCORE_MAX_TEAMS ? `（計分板最多 ${SCORE_MAX_TEAMS} 組）` : ''}`);
+    const tab = document.querySelector('.tool-tab[data-tool="score"]');
+    if (tab) tab.click();
+  }
 
   // ================================================================
   // 👥 隨機分組
   // ================================================================
+  $('groupToScoreButton').addEventListener('click', () => groupsToScore(day.groups));
   $('groupGoButton').addEventListener('click', () => {
     const pool = seatPool($('groupExcludeAbsent').checked);
     if (pool.length < 2) { showToast('可分組的人數不足。', true); return; }
@@ -5149,6 +5839,7 @@
       cursor += take;
     }
     day.groups = groups; saveDay();
+    $('groupToScoreButton').hidden = false;
     const wall = $('groupWall');
     const renderGroups = () => {
       let order = 0;
@@ -5202,13 +5893,13 @@
     const xdMinutes = value => Number(value.slice(0, 2)) * 60 + Number(value.slice(3));
     const xdHhmm = minutes => `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
     const XD_CUSTOM = '自訂';
-    const XD_PERIODS = [['第一節', '08:40', '09:20'], ['第二節', '09:30', '10:10'], ['第三節', '10:30', '11:10'], ['第四節', '11:20', '12:00'], ['第五節', '13:30', '14:10'], ['第六節', '14:20', '15:00'], ['第七節', '15:20', '16:00']];
+    // 節次時間改用「設定 → 本校作息時間」（schoolPeriods）
     const xdCleanRow = row => ({
-      period: XD_PERIODS.some(([name]) => name === (row && row.period)) ? row.period : XD_CUSTOM,
+      period: schoolPeriods().some(([name]) => name === (row && row.period)) ? row.period : XD_CUSTOM,
       subject: String((row && row.subject) || '').slice(0, 12), start: String((row && row.start) || ''), end: String((row && row.end) || '')
     });
     const xdSaved = config.examOverview && typeof config.examOverview === 'object' ? config.examOverview : {};
-    const xdPeriodRow = (index, subject) => ({ period: XD_PERIODS[index][0], subject, start: XD_PERIODS[index][1], end: XD_PERIODS[index][2] });
+    const xdPeriodRow = (index, subject) => ({ period: schoolPeriods()[index][0], subject, start: schoolPeriods()[index][1], end: schoolPeriods()[index][2] });
     const examDay = {
       layout: xdSaved.layout === 'single' ? 'single' : 'day',
       name: typeof xdSaved.name === 'string' ? xdSaved.name.slice(0, 20) : '第一次定期評量',
@@ -5216,6 +5907,18 @@
     };
     config.examOverview = examDay;
     let xdLastSchedule = null, xdLastAttendance = null;
+    // 改了「本校作息」：還是舊預設時間的考試列跟著換（老師自己改過時間的不動）
+    let xdPrevPeriods = schoolPeriods().map(row => row.slice());
+    document.addEventListener('periodschange', () => {
+      const now = schoolPeriods();
+      examDay.rows.forEach(row => {
+        const i = xdPrevPeriods.findIndex(([name]) => name === row.period);
+        if (i >= 0 && now[i] && row.start === xdPrevPeriods[i][1] && row.end === xdPrevPeriods[i][2]) { row.start = now[i][1]; row.end = now[i][2]; }
+      });
+      xdPrevPeriods = now.map(row => row.slice());
+      saveConfig();
+      try { renderExamDay(); renderExamDayEditor(); } catch (error) {}
+    });
     function xdRowState(row, nowSeconds) {
       if (!xdTimeOk(row.start) || !xdTimeOk(row.end) || xdMinutes(row.end) <= xdMinutes(row.start)) return { cls: 'bad', pill: '時間待確認', pct: 0, note: '請到下方修正時間' };
       const start = xdMinutes(row.start) * 60, end = xdMinutes(row.end) * 60;
@@ -5280,7 +5983,7 @@
       if (current.subject) setExamOption('examSubject', current.subject);
     }
     function renderExamDayEditor() {
-      const periodOptions = selected => [...XD_PERIODS.map(([name]) => name), XD_CUSTOM].map(name => `<option value="${name}"${name === selected ? ' selected' : ''}>${name}</option>`).join('');
+      const periodOptions = selected => [...schoolPeriods().map(([name]) => name), XD_CUSTOM].map(name => `<option value="${name}"${name === selected ? ' selected' : ''}>${name}</option>`).join('');
       $('xdRows').innerHTML = examDay.rows.map((row, index) => `<div class="xd-editor-row" data-xd-row="${index}">
           <select class="inline-select" data-xd-field="period" aria-label="第 ${index + 1} 科節次">${periodOptions(row.period)}</select>
           <input class="inline-select" data-xd-field="subject" list="xdSubjects" maxlength="12" value="${escapeHtml(row.subject)}" placeholder="科目" aria-label="第 ${index + 1} 科科目">
@@ -5308,7 +6011,7 @@
       if (!field || !holder) return;
       const row = examDay.rows[Number(holder.dataset.xdRow)];
       row[field] = event.target.value;
-      const preset = field === 'period' && XD_PERIODS.find(([name]) => name === row.period);
+      const preset = field === 'period' && schoolPeriods().find(([name]) => name === row.period);
       if (preset) { [, row.start, row.end] = preset; renderExamDayEditor(); }
       saveConfig();
       renderExamDay();
@@ -5324,8 +6027,8 @@
     $('xdAddRow').addEventListener('click', () => {
       if (examDay.rows.length >= XD_MAX_ROWS) return;
       const last = examDay.rows[examDay.rows.length - 1];
-      const nextPeriod = last ? XD_PERIODS.findIndex(([name]) => name === last.period) + 1 : 0;
-      if ((!last || nextPeriod > 0) && nextPeriod < XD_PERIODS.length) examDay.rows.push(xdPeriodRow(nextPeriod, ''));
+      const nextPeriod = last ? schoolPeriods().findIndex(([name]) => name === last.period) + 1 : 0;
+      if ((!last || nextPeriod > 0) && nextPeriod < schoolPeriods().length) examDay.rows.push(xdPeriodRow(nextPeriod, ''));
       else {
         const start = last && xdTimeOk(last.end) ? Math.min(xdMinutes(last.end) + 10, 23 * 60) : 8 * 60 + 40;
         examDay.rows.push({ period: XD_CUSTOM, subject: '', start: xdHhmm(start), end: xdHhmm(start + 40) });
@@ -5752,7 +6455,9 @@
     // ⏰ 定時自動跳出：指定時間（可多個）或「每節下課」，選星期重複；時間到蓋滿整個大屏，幾分鐘後自己收
     const presetById = id => PROMPTS.find(item => item.id === id);
     const DAY_NAMES = ['日', '一', '二', '三', '四', '五', '六'];
-    if (typeof config.promptBreakTimes !== 'string') config.promptBreakTimes = '09:20, 10:10, 11:10, 14:10, 15:00';
+    // 舊版預設（沒改過）→ 改成跟著本校作息；老師自己打過的時間照用
+    if (typeof config.promptBreakTimes !== 'string' || config.promptBreakTimes === '09:20, 10:10, 11:10, 14:10, 15:00') config.promptBreakTimes = '';
+    const breakTimesText = () => config.promptBreakTimes || schoolBreakTimes().join(', ');
     if (!Array.isArray(config.promptSchedules)) {
       // 第一次使用給兩個範例（先不啟用，老師勾了才會跳）
       config.promptSchedules = [
@@ -5761,13 +6466,19 @@
       ];
       saveConfig();
     }
-    $('promptBreakTimes').value = config.promptBreakTimes;
+    function showBreakTimes() {
+      $('promptBreakTimes').value = breakTimesText();
+      $('promptBreakFollow').hidden = !config.promptBreakTimes;
+      $('promptBreakNote').textContent = config.promptBreakTimes ? '（自己改過，不跟本校作息）' : '（跟著「設定 → 本校作息時間」）';
+    }
+    showBreakTimes();
+    document.addEventListener('periodschange', () => { showBreakTimes(); if (typeof renderSchedules === 'function') renderSchedules(); });
     function parseTimes(textValue) {
       return String(textValue || '').split(/[,，、\s]+/).map(t => t.trim()).filter(Boolean)
         .map(t => { const m = t.match(/^(\d{1,2})[:：](\d{2})$/); return m && +m[1] < 24 && +m[2] < 60 ? String(+m[1]).padStart(2, '0') + ':' + m[2] : null; })
         .filter(Boolean);
     }
-    function entryTimes(entry) { return parseTimes(entry.mode === 'breaks' ? config.promptBreakTimes : entry.times); }
+    function entryTimes(entry) { return parseTimes(entry.mode === 'breaks' ? breakTimesText() : entry.times); }
     function entryText(entry) { const p = presetById(entry.preset); return entry.text.trim() || (p ? p.text : ''); }
     const presetOptions = PROMPT_GROUPS.map(group => `<optgroup label="${group.label}">${group.items.map(item =>
       `<option value="${item.id}">${escapeHtml(item.text)}</option>`).join('')}</optgroup>`).join('') + '<option value="">（自己打一句）</option>';
@@ -5823,10 +6534,15 @@
     });
     $('promptBreakTimes').addEventListener('change', () => {
       const times = parseTimes($('promptBreakTimes').value);
-      config.promptBreakTimes = times.join(', ');
-      $('promptBreakTimes').value = config.promptBreakTimes;
+      // 跟本校作息算出來的一樣＝不用另外記（之後改作息會跟著變）
+      config.promptBreakTimes = times.join(', ') === schoolBreakTimes().join(', ') ? '' : times.join(', ');
+      showBreakTimes();
       saveConfig(); renderSchedules();
       showToast(times.length ? `下課時間：${times.length} 個` : '沒有讀到時間，請用 09:20 這種格式。', !times.length);
+    });
+    $('promptBreakFollow').addEventListener('click', () => {
+      config.promptBreakTimes = ''; saveConfig(); showBreakTimes(); renderSchedules();
+      showToast('下課時間改回跟著本校作息。');
     });
     $('promptSchedAdd').addEventListener('click', () => {
       config.promptSchedules.push({ id: 's' + Date.now().toString(36), on: true, mode: 'times', times: '', days: [1, 2, 3, 4, 5], preset: 'focus_teacher', text: '', minutes: 3, chime: true });
@@ -5950,7 +6666,7 @@
   setMascot($('tomatoMascot'), 'idle');
   updateLotStatus();
   renderCheckWall();
-  renderScoreWall();
+  renderScore();
 })();
 </script>
   <script src="assets/version.js"></script>

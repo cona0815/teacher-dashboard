@@ -83,7 +83,7 @@
   </div>
 </header>
 <nav class="toc" aria-label="目錄"><div class="wrap">
-  <a href="#newbie">🌱 第一次用</a><a href="#board">🏫 晨間大屏</a><a href="#attendance">📊 出缺席與潔牙統計</a><a href="#studio">🎨 教材工作坊</a><a href="#overview">工作台總覽</a><a href="#task">新增任務</a><a href="#calendar">任務日曆</a><a href="#contact">聯絡本</a><a href="#today">今日看板</a><a href="#month">本月活動</a>
+  <a href="#newbie">🌱 第一次用</a><a href="#board">🏫 晨間大屏</a><a href="#attendance">📊 出缺席與潔牙統計</a><a href="#subject">👩‍🏫 科任多班</a><a href="#score">🏆 計分板</a><a href="#studio">🎨 教材工作坊</a><a href="#overview">工作台總覽</a><a href="#task">新增任務</a><a href="#calendar">任務日曆</a><a href="#contact">聯絡本</a><a href="#today">今日看板</a><a href="#month">本月活動</a>
   <a href="#ai">AI 行政助理</a><a href="#notes">小助手記事</a><a href="#line">LINE 小幫手</a><a href="#hw">作業統計</a>
   <a href="#parent">回覆家長</a><a href="#key">AI 金鑰</a><a href="#settings">其他設定</a><a href="#extra">心智圖／螢幕公告</a><a href="#faq">常見問題</a>
 </div></nav>
@@ -398,16 +398,17 @@
     <h3>11-1. 大屏第一次設定（預設密碼 1234）</h3>
     <div class="cols">
       <ol class="how">
-        <li>上方按 <span class="k">設定</span>，輸入密碼（預設 1234，請改成只有你知道的，學生才不會亂改）。</li>
+        <li>上方按 <span class="k">設定</span>，輸入密碼（預設 1234，請改成只有你知道的，學生才不會亂改）。每一類用不同顏色的標題區分，點標題可以收起或展開。</li>
         <li><b>班級資料</b>：班級名稱、最大座號、空號（沒有人的座號）。</li>
         <li><b>大屏外觀</b>：標題、聯絡本字體（低年級可選注音體）、大屏風格、「待訂正」顏色。</li>
         <li><b>科目與作業</b>：點亮要收的科目和常用作業項目。</li>
         <li><b>點名與補交</b>：遲到界線（幾點後點到校算遲到）、幾點還沒點的自動記未到。</li>
+        <li><b>🔔 本校作息時間</b>：預設一般國小作息（第一節 08:40～09:20…），<b>照貴校的上下課時間改</b>就好；大屏提示的「每節下課」、定評小幫手的節次時間都會跟著用。</li>
         <li><b>資料要存在哪裡</b>：只存這台電腦，或存到雲端（要在家寫聯絡本、在工作台看統計才選雲端）。最後按 <span class="k">儲存設定</span>。</li>
       </ol>
       <figure><a href="assets/guide/b11_setup_look.webp" target="_blank" rel="noopener"><img src="assets/guide/b11_setup_look.webp" alt="設定：班級資料、大屏外觀、上方選單、科目" width="1100" height="739" loading="lazy"></a><figcaption>設定：班級資料、大屏外觀、上方選單、科目</figcaption></figure>
     </div>
-    <div class="grid"><figure><a href="assets/guide/b12_setup_rollcall.webp" target="_blank" rel="noopener"><img src="assets/guide/b12_setup_rollcall.webp" alt="設定：點名時間與學期出缺席" width="1100" height="739" loading="lazy"></a><figcaption>設定：點名時間與學期出缺席</figcaption></figure><figure><a href="assets/guide/b13_setup_cloud.webp" target="_blank" rel="noopener"><img src="assets/guide/b13_setup_cloud.webp" alt="設定：資料存哪裡（本機或雲端）" width="1100" height="739" loading="lazy"></a><figcaption>設定：資料存哪裡（本機或雲端）</figcaption></figure><figure><a href="assets/guide/m07_setup.webp" target="_blank" rel="noopener"><img src="assets/guide/m07_setup.webp" alt="設定頁全貌（各類別分色）" width="1100" height="739" loading="lazy"></a><figcaption>設定頁全貌（各類別分色）</figcaption></figure></div>
+    <div class="grid"><figure><a href="assets/guide/b12_setup_rollcall.webp" target="_blank" rel="noopener"><img src="assets/guide/b12_setup_rollcall.webp" alt="設定：點名時間與學期出缺席" width="1100" height="739" loading="lazy"></a><figcaption>設定：點名時間與學期出缺席</figcaption></figure><figure><a href="assets/guide/b13_setup_cloud.webp" target="_blank" rel="noopener"><img src="assets/guide/b13_setup_cloud.webp" alt="設定：資料存哪裡（本機或雲端）" width="1100" height="739" loading="lazy"></a><figcaption>設定：資料存哪裡（本機或雲端）</figcaption></figure><figure><a href="assets/guide/k07_setup_fold.webp" target="_blank" rel="noopener"><img src="assets/guide/k07_setup_fold.webp" alt="設定頁：每一類用不同顏色的標題區分" width="1100" height="762" loading="lazy"></a><figcaption>設定頁：每一類先收起來，點標題展開</figcaption></figure></div>
   </section>
 
   <section class="step">
@@ -474,7 +475,8 @@
         <li>表格每位學生：應到天數、出席（遲到算出席）、遲到、病假、事假、公假、未到。有紅字的就是有請假或缺席。</li>
         <li><b>潔牙</b>：有用班級工具的 <span class="k">🦷 潔牙點名</span>，表格會多出<b>應潔牙、已潔牙、潔牙率</b>。請假、未到、放假、不在籍的日子不算應潔牙。</li>
         <li><b>上課日</b>＝那天有開大屏點名。學期起訖可以改（預設：8 月～1 月上學期、2～7 月下學期）。</li>
-        <li><span class="k">⬇ 匯出 Excel</span>、<span class="k">⬇ 匯出 Word</span>：直接下載，Excel 第二頁還有每天是上課還是放假。</li>
+        <li><span class="k">⬇ 匯出 Excel</span>、<span class="k">⬇ 匯出 Word</span>：直接下載。Excel 第二頁是每天上課或放假，第三頁是<b>請假明細</b>（日期、座號、假別）。</li>
+        <li><b>那一天誰請什麼假</b>：打開 <span class="k">📅 每天請假明細</span>；或<b>點表格裡的座號</b>，看他哪幾天請什麼假。</li>
       </ol>
       <figure><a href="assets/guide/b15_term_local.webp" target="_blank" rel="noopener"><img src="assets/guide/b15_term_local.webp" alt="大屏設定裡的學期出缺席統計（存本機時）" width="1100" height="936" loading="lazy"></a><figcaption>大屏設定裡的學期出缺席統計（存本機時）</figcaption></figure>
     </div>
@@ -504,12 +506,49 @@
     <div class="grid"><figure><a href="assets/guide/m10_check.webp" target="_blank" rel="noopener"><img src="assets/guide/m10_check.webp" alt="檢核板：誰交了、誰還沒" width="1100" height="739" loading="lazy"></a><figcaption>檢核板：誰交了、誰還沒</figcaption></figure><figure><a href="assets/guide/m11_tooth.webp" target="_blank" rel="noopener"><img src="assets/guide/m11_tooth.webp" alt="潔牙點名" width="1100" height="739" loading="lazy"></a><figcaption>潔牙點名</figcaption></figure><figure><a href="assets/guide/m12_score.webp" target="_blank" rel="noopener"><img src="assets/guide/m12_score.webp" alt="小組計分板" width="1100" height="739" loading="lazy"></a><figcaption>小組計分板</figcaption></figure><figure><a href="assets/guide/m13_group.webp" target="_blank" rel="noopener"><img src="assets/guide/m13_group.webp" alt="隨機分組" width="1100" height="739" loading="lazy"></a><figcaption>隨機分組</figcaption></figure><figure><a href="assets/guide/m15_tomato.webp" target="_blank" rel="noopener"><img src="assets/guide/m15_tomato.webp" alt="番茄鐘＋音樂角" width="1100" height="739" loading="lazy"></a><figcaption>番茄鐘＋音樂角</figcaption></figure><figure><a href="assets/guide/m17_screen.webp" target="_blank" rel="noopener"><img src="assets/guide/m17_screen.webp" alt="螢幕公告" width="1100" height="739" loading="lazy"></a><figcaption>螢幕公告</figcaption></figure><figure><a href="assets/guide/m18_mind.webp" target="_blank" rel="noopener"><img src="assets/guide/m18_mind.webp" alt="心智圖" width="1100" height="739" loading="lazy"></a><figcaption>心智圖</figcaption></figure></div>
   </section>
 
+  <section class="step" id="score">
+    <h3>13-1. 🏆 計分板：小組、個人、兌換禮物</h3>
+    <div class="cols">
+      <ol class="how">
+        <li>班級工具 → <span class="k">🏆 計分板</span>，上方選 <span class="k">👥 小組</span> 或 <span class="k">🙋 個人</span>。</li>
+        <li><b>小組</b>：每組按 <span class="k">＋1</span>、<span class="k">＋5</span>、<span class="k">−</span>；組名直接點著改；組數 2～8 組。</li>
+        <li><b>自己編組</b>：按 <span class="k">✏️ 編組</span>，三種方法都可以——
+          ① 把號碼<b>拖</b>到組裡（觸控白板也能拖）；② <b>點一下號碼、再點一組</b>；③ 在組旁邊<b>打號碼</b>（例：<b>3 5 8</b>）按「放入」。
+          也可以按「🎲 隨機分」（打亂、人數平均）或「照座號平均分」一次分好；隨機分組工具分完也可以按 <span class="k">🏆 帶到計分板</span>。</li>
+        <li><b>個人</b>：每個座號一格，點一下就加分（上面可選 ＋1／＋2／＋5／−1），前三名有獎牌；格子左邊的顏色是他在哪一組。</li>
+        <li><span class="k">小組加分也加給組員</span>（預設打勾）：第一組＋1，第一組每個人的個人分也＋1。不想分給組員就取消勾選。</li>
+        <li>分數只會從<b>小組分給組員</b>；點個人加分<b>不會</b>加到小組上。分數一直保留，按「全部歸零」才歸零（會先問一次）。</li>
+        <li><b>🎁 兌換</b>：先點座號，再點禮物，扣點數換禮物（會先問一次；點數不夠的禮物會寫「還差幾點」）。按 <span class="k">✏️ 管理禮物</span> 可以改名稱、要幾點、新增或刪除。換錯了在「📜 兌換紀錄」按「退還」。</li>
+        <li>組名可以自己取：點小組卡上的組名（或旁邊的 ✏️）直接打字，或在「✏️ 編組」裡改。</li>
+      </ol>
+      <figure><a href="assets/guide/k05_score_team.webp" target="_blank" rel="noopener"><img src="assets/guide/k05_score_team.webp" alt="計分板：小組（顯示組員）" width="1100" height="739" loading="lazy"></a><figcaption>計分板：小組（顯示組員）</figcaption></figure>
+    </div>
+    <div class="grid"><figure><a href="assets/guide/k08_reward.webp" target="_blank" rel="noopener"><img src="assets/guide/k08_reward.webp" alt="🎁 兌換：點座號、點禮物，扣點換禮物" width="1100" height="762" loading="lazy"></a><figcaption>🎁 兌換：點座號、點禮物，扣點換禮物</figcaption></figure><figure><a href="assets/guide/k03_score_editor.webp" target="_blank" rel="noopener"><img src="assets/guide/k03_score_editor.webp" alt="✏️ 編組：拖拉、點選或打號碼" width="1100" height="739" loading="lazy"></a><figcaption>✏️ 編組：拖拉、點選或打號碼</figcaption></figure><figure><a href="assets/guide/k04_score_person.webp" target="_blank" rel="noopener"><img src="assets/guide/k04_score_person.webp" alt="🙋 個人加分" width="1100" height="739" loading="lazy"></a><figcaption>🙋 個人加分</figcaption></figure></div>
+  </section>
+
+  <section class="step" id="subject">
+    <h3>13-2. 👩‍🏫 科任老師：一台大屏切換好幾班</h3>
+    <p class="when"><b>什麼時候用：</b>自然、英語、電腦、音樂等科任老師，在專科教室教好幾個班。<b>每一班的資料各自分開</b>：座號、點名、作業、抽籤、分組、計分板、潔牙、學期統計。</p>
+    <div class="cols">
+      <ol class="how">
+        <li>大屏 <span class="k">設定 → 班級資料 → 使用方式</span> 選 <b>科任（教好幾個班）</b>。</li>
+        <li>「我教的班級」填 <b>601、602、603</b>（用、或逗號分隔），按 <span class="k">儲存設定</span>。</li>
+        <li>大屏上方出現 <b>班級按鈕</b>，學生進教室就點那一班，畫面換成那班的資料（約 1 秒）。</li>
+        <li>每班第一次切過去時，到「設定」填那班的座號數、空號。</li>
+        <li>科任模式不顯示聯絡本（聯絡本是導師的），也預設不用潔牙（上方選單不放、統計不算潔牙）。想換回來，使用方式改回「導師」就好，各班資料都還在。</li>
+      </ol>
+      <figure><a href="assets/guide/k01_subject_setup.webp" target="_blank" rel="noopener"><img src="assets/guide/k01_subject_setup.webp" alt="設定：使用方式選科任、填我教的班級" width="1100" height="739" loading="lazy"></a><figcaption>設定：使用方式選科任、填我教的班級</figcaption></figure>
+    </div>
+    <div class="grid"><figure><a href="assets/guide/k02_class_switch.webp" target="_blank" rel="noopener"><img src="assets/guide/k02_class_switch.webp" alt="上方班級按鈕：點哪班就換哪班" width="1100" height="739" loading="lazy"></a><figcaption>上方班級按鈕：點哪班就換哪班</figcaption></figure><figure><a href="assets/guide/k06_index_class.webp" target="_blank" rel="noopener"><img src="assets/guide/k06_index_class.webp" alt="工作台：出缺席統計、今日看板可選班級" width="1100" height="739" loading="lazy"></a><figcaption>工作台：出缺席統計、今日看板可選班級</figcaption></figure></div>
+    <div class="tip">💡 <b>建議存到雲端</b>：設定 → 資料要存在哪裡 → 存到雲端。各班資料會照班級存好，在<b>工作台</b>的今日看板、作業統計、出缺席統計上方選班級就能看；換電腦也不怕。資料只存在這台電腦的話，<b>只有這台電腦</b>看得到。</div>
+  </section>
+
   <section class="step">
-    <h3>13-1. 倒數計時、大屏提示、定期評量</h3>
+    <h3>13-3. 倒數計時、大屏提示、定期評量</h3>
     <div class="cols">
       <ol class="how">
         <li><b>倒數</b>：右上角 <span class="k">5分</span>、<span class="k">10分</span> 一按就開始，大時鐘蓋在畫面上；可 −1 分、＋1 分、暫停、縮小。</li>
-        <li><b>📣 大屏提示</b>：選一句（例「上課囉！眼睛看老師」）全螢幕顯示。打開 <span class="k">⏰ 定時自動跳出</span>，填本校下課時間，到時間自動跳出「下課先喝水、上廁所」等提示。</li>
+        <li><b>📣 大屏提示</b>：選一句（例「上課囉！眼睛看老師」）全螢幕顯示。打開 <span class="k">⏰ 定時自動跳出</span>，在要用的那一列勾「啟用」：「每節下課」會照<b>設定 → 本校作息時間</b>自動算出下課時間（也可以自己改），到時間自動跳出「下課先喝水、上廁所」等提示，時間到自己收起；「指定時間」可以填 12:35 這種固定時間。教室電腦要開著大屏網頁才會跳。</li>
         <li><b>📝 定評小幫手</b>：考試日總覽顯示每節考什麼；單節時鐘可 <span class="k">從點名帶入</span> 應到、實到、未到人數。</li>
       </ol>
       <figure><a href="assets/guide/b07_countdown.webp" target="_blank" rel="noopener"><img src="assets/guide/b07_countdown.webp" alt="倒數大時鐘" width="1100" height="739" loading="lazy"></a><figcaption>倒數大時鐘</figcaption></figure>
@@ -518,7 +557,7 @@
   </section>
 
   <section class="step">
-    <h3>13-2. 大屏風格：標準／可愛溫暖風</h3>
+    <h3>13-4. 大屏風格：標準／可愛溫暖風</h3>
     <div class="cols">
       <ol class="how">
         <li>設定 → <b>大屏外觀 → 大屏風格</b>，選「可愛溫暖風」，介面和提示插圖一起換，存好馬上生效。</li>

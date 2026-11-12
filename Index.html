@@ -1292,7 +1292,7 @@
       .calendar-controls { align-items: flex-start; flex-direction: column; }
     }
   </style>
-  <script src="assets/attendance-term.js"></script>
+  <script src="assets/attendance-term.js?v=2026-11-12-2340"></script>
 </head>
 <body>
   <div class="help-overlay" id="helpOverlay" hidden>
@@ -1603,6 +1603,7 @@
         <div class="today-title"><h2 id="todayBoardTitle">📊 今日看板</h2><span id="todayBoardDate"></span></div>
         <div class="today-actions">
           <span class="today-meta" id="todayMeta"></span>
+          <select class="select" id="todayClass" aria-label="班級" hidden style="width:auto;min-width:96px"></select>
           <button class="mini-button" type="button" id="todayReload">🔄 重新整理</button>
           <button class="today-back" type="button" id="todayClose">↩ 回工作台</button>
         </div>
@@ -2132,6 +2133,7 @@
         </div>
       </div>
       <div class="secretary-notes-body">
+        <label id="attendanceTermClassRow" hidden style="display:flex;gap:8px;align-items:center;font-weight:800;margin-bottom:8px">班級 <select class="select" id="attendanceTermClass" style="width:auto;min-width:110px"></select><span class="secretary-note-meta">（科任：每班的放假日、轉入轉出各自設定）</span></label>
         <div class="secretary-note-meta" id="attendanceTermLocal" hidden>還沒接雲端：出缺席紀錄只存在教室那台電腦。請到<strong>晨間大屏「設定 → 📊 學期出缺席統計」</strong>看與匯出。接上雲端（設定 → ① 雲端／LINE 小幫手）後，這裡就能直接看。</div>
         <div id="attendanceTermPanel"></div>
       </div>
@@ -9287,29 +9289,45 @@ ${cleanBase}`;
 
     // ---- 學期出缺席統計（2026-11-11）：接雲端才在工作台看；只存在教室電腦時請到大屏「設定」看 ----
     let attendanceTermPanel = null;
+    let attendanceTermCurrentClass = '';
+    const ATTENDANCE_TERM_CLASS_KEY = 'grade6AttendanceTermClass';
+    document.addEventListener('change', event => {
+      if (event.target && event.target.id === 'attendanceTermClass') {
+        try { localStorage.setItem(ATTENDANCE_TERM_CLASS_KEY, event.target.value); } catch (error) {}
+        if (attendanceTermPanel) attendanceTermPanel.reload();
+      }
+    });
     function openAttendanceTerm() {
       const cloud = lineBridgeReady();
       $('attendanceTermLocal').hidden = cloud;
       $('attendanceTermPanel').hidden = !cloud;
+      if (!cloud) $('attendanceTermClassRow').hidden = true;
       if (!cloud || !window.AttendanceTerm) return;
       if (attendanceTermPanel) { attendanceTermPanel.reload(); return; }
       attendanceTermPanel = AttendanceTerm.mountPanel($('attendanceTermPanel'), {
         title: '出缺席', seatControl: true,
         load: async () => {
-          let saved = null;
-          // 先拿設定的學期起訖，再依起訖讀紀錄（第一次用預設學期）
-          const first = await callLineBridge('term_get', { from: AttendanceTerm.defaultTerm().start, to: AttendanceTerm.defaultTerm().end });
-          saved = AttendanceTerm.normalizeTerm(first.term);
-          const result = (saved.start === AttendanceTerm.defaultTerm().start && saved.end === AttendanceTerm.defaultTerm().end)
-            ? first : await callLineBridge('term_get', { from: saved.start, to: saved.end });
-          const days = Array.isArray(result.schoolDays) ? result.schoolDays : [];
+          // 科任多班：先抓一次知道有哪些班，選好班級再用那一班的學期設定與起訖讀資料
+          const def = AttendanceTerm.defaultTerm();
+          let wanted = '';
+          try { wanted = localStorage.getItem(ATTENDANCE_TERM_CLASS_KEY) || ''; } catch (error) {}
+          let result = await callLineBridge('term_get', { from: def.start, to: def.end, className: wanted });
           const counts = {};
-          days.forEach(day => { counts[day.className] = (counts[day.className] || 0) + 1; });
-          const className = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0] || '';
+          (Array.isArray(result.schoolDays) ? result.schoolDays : []).forEach(day => { counts[day.className] = (counts[day.className] || 0) + 1; });
+          const classes = Object.keys(counts).sort();
+          const className = classes.includes(wanted) ? wanted : (classes.slice().sort((a, b) => counts[b] - counts[a])[0] || wanted || '');
+          $('attendanceTermClassRow').hidden = classes.length < 2;
+          $('attendanceTermClass').innerHTML = classes.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');
+          $('attendanceTermClass').value = className;
+          attendanceTermCurrentClass = className;
+          if (className !== wanted) result = await callLineBridge('term_get', { from: def.start, to: def.end, className });
+          const saved = AttendanceTerm.normalizeTerm(result.term);
+          if (saved.start !== def.start || saved.end !== def.end) result = await callLineBridge('term_get', { from: saved.start, to: saved.end, className });
+          const days = Array.isArray(result.schoolDays) ? result.schoolDays : [];
           const fallbackSeats = Number(localStorage.getItem(HW_SEATS_KEY)) || Number(morningSettings().seatCount) || 26;
           const empty = (morningSettings().emptySeats || []).map(Number);
           return {
-            term: first.term ? saved : { ...saved, seatCount: fallbackSeats, emptySeats: empty },
+            term: result.term ? saved : { ...saved, seatCount: fallbackSeats, emptySeats: empty },
             seats: Array.from({ length: fallbackSeats }, (_, i) => i + 1).filter(seat => !empty.includes(seat)),
             schoolDays: days.filter(day => day.className === className).map(day => day.date),
             records: (Array.isArray(result.attendance) ? result.attendance : []).filter(row => row.className === className),
@@ -9317,7 +9335,7 @@ ${cleanBase}`;
             className, source: `資料來自雲端${className ? `｜班級 ${className}` : ''}`
           };
         },
-        save: term => callLineBridge('term_save', { term })
+        save: term => callLineBridge('term_save', { term, className: attendanceTermCurrentClass })
       });
     }
 
@@ -9469,8 +9487,24 @@ ${cleanBase}`;
       return calendarDateKey(new Date(year, month - 1, day + days));
     }
     /** 同一個瀏覽器裡大屏的紀錄：今天的點名與每份作業都完整；前幾天用來算還沒補交、還沒訂正。 */
+    // 科任多班（2026-11-12）：雲端有好幾班時，今日看板上方出現班級選單，只看選到的那一班
+    const TODAY_CLASS_KEY = 'grade6TodayBoardClass';
+    function pickClass(rows, selectId, rememberKey) {
+      const counts = {};
+      rows.forEach(row => { if (row.className) counts[row.className] = (counts[row.className] || 0) + 1; });
+      const classes = Object.keys(counts).sort();
+      let chosen = '';
+      try { chosen = localStorage.getItem(rememberKey) || ''; } catch (error) {}
+      if (!classes.includes(chosen)) chosen = classes.slice().sort((a, b) => counts[b] - counts[a])[0] || '';
+      const select = $(selectId);
+      select.hidden = classes.length < 2;
+      select.innerHTML = classes.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');
+      select.value = chosen;
+      return chosen;
+    }
     function todayLocalData(fromKey, toKey, seats) {
       const attendance = [], homework = [];
+      const localClass = String(morningSettings().className || '');   // 這台電腦大屏目前那一班
       let hasToday = false;
       Object.keys(localStorage).forEach(key => {
         const matched = key.match(/^morningBoardState:(\d{4}-\d{2}-\d{2})$/);
@@ -9481,13 +9515,13 @@ ${cleanBase}`;
         const date = matched[1];
         if (date === toKey) hasToday = true;
         Object.entries(saved.attendance && typeof saved.attendance === 'object' ? saved.attendance : {})
-          .forEach(([seat, status]) => attendance.push({ date, seat: Number(seat), status: String(status) }));
+          .forEach(([seat, status]) => attendance.push({ date, seat: Number(seat), status: String(status), className: localClass }));
         (Array.isArray(saved.boards) ? saved.boards : []).forEach(board => {
           if (!board || !board.subject) return;
           const marks = board.seats && typeof board.seats === 'object' ? board.seats : {};
           seats.forEach(seat => {
             const mark = marks[seat];
-            homework.push({ date, subject: String(board.subject), assignment: String(board.assignment || ''), seat, status: mark ? (TODAY_MARK[mark] || '已交') : '缺交' });
+            homework.push({ date, subject: String(board.subject), assignment: String(board.assignment || ''), seat, status: mark ? (TODAY_MARK[mark] || '已交') : '缺交', className: localClass });
           });
         });
       });
@@ -9500,6 +9534,12 @@ ${cleanBase}`;
     const todaySeatChips = (seats, kind = '') => seats.length
       ? `<div class="today-chips">${seats.map(seat => `<span class="today-chip ${kind}">${Number(seat)}</span>`).join('')}</div>` : '';
 
+    document.addEventListener('change', event => {
+      if (event.target && event.target.id === 'todayClass') {
+        try { localStorage.setItem(TODAY_CLASS_KEY, event.target.value); } catch (error) {}
+        loadTodayBoard();
+      }
+    });
     async function loadTodayBoard() {
       const today = calendarDateKey(new Date());
       const from = todayShiftKey(today, -(TODAY_LOOKBACK_DAYS - 1));
@@ -9518,8 +9558,8 @@ ${cleanBase}`;
         ]);
         if (request !== todayBoard.request) return;
         if (rollcall.status === 'fulfilled') {
-          const cloudAttendance = (Array.isArray(rollcall.value.attendance) ? rollcall.value.attendance : []).map(row => ({ date: String(row.date), seat: Number(row.seat), status: String(row.status) }));
-          const cloudHomework = (Array.isArray(rollcall.value.homework) ? rollcall.value.homework : []).map(row => ({ date: String(row.date), subject: String(row.subject || ''), assignment: String(row.assignment || ''), seat: Number(row.seat), status: String(row.status) }));
+          const cloudAttendance = (Array.isArray(rollcall.value.attendance) ? rollcall.value.attendance : []).map(row => ({ date: String(row.date), seat: Number(row.seat), status: String(row.status), className: String(row.className || '') }));
+          const cloudHomework = (Array.isArray(rollcall.value.homework) ? rollcall.value.homework : []).map(row => ({ date: String(row.date), subject: String(row.subject || ''), assignment: String(row.assignment || ''), seat: Number(row.seat), status: String(row.status), className: String(row.className || '') }));
           // 雲端只存「不是正常到校、不是準時交」的紀錄；今天若這台電腦有完整的大屏紀錄，今天就用這台的
           attendance = [...cloudAttendance.filter(row => !(local.hasToday && row.date === today)), ...local.attendance.filter(row => row.date === today)];
           homework = [...cloudHomework.filter(row => !(local.hasToday && row.date === today)), ...local.homework.filter(row => row.date === today)];
@@ -9535,6 +9575,12 @@ ${cleanBase}`;
         } else contactNote = `聯絡本讀取失敗：${contact.reason?.message || ''}`;
       }
       if (request !== todayBoard.request) return;
+      const chosenClass = pickClass([...attendance, ...homework], 'todayClass', TODAY_CLASS_KEY);
+      if (chosenClass) {
+        const inClass = row => !row.className || row.className === chosenClass;
+        attendance = attendance.filter(inClass);
+        homework = homework.filter(inClass);
+      }
       renderTodayBoard({ today, seats, attendance, homework, todayKnown, todayComplete, contactText, contactNote });
       const time = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
       if (!/失敗/.test($('todayMeta').textContent)) $('todayMeta').textContent = source ? `資料來自${source}｜更新於 ${time}` : `還沒有大屏紀錄｜${time}`;

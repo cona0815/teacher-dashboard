@@ -34,16 +34,18 @@ button{cursor:pointer}
 .btn.danger{color:#c0392b}
 .btn:disabled{opacity:.45;cursor:default}
 .actions{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
-.steps{display:flex;align-items:center;gap:6px;margin:0 14px 8px;padding:8px 12px;background:var(--surface);border:2px solid var(--line);border-radius:var(--radius);overflow-x:auto}
+.steps{display:flex;align-items:center;gap:6px;margin:0 14px 6px;padding:4px 10px;background:var(--surface);border:2px solid var(--line);border-radius:var(--radius);overflow-x:auto}
 .steps div{display:flex;align-items:center;gap:8px;white-space:nowrap;color:var(--muted)}
-.steps b{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--line);color:var(--ink);font-size:15px}
-.steps span{display:flex;flex-direction:column;font-weight:700;font-size:15px;line-height:1.2}
-.steps small{font-size:12px;font-weight:400}
+.steps b{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--line);color:var(--ink);font-size:15px}
+.steps span{display:flex;flex-direction:column;font-weight:700;font-size:14px;line-height:1.2}
+.steps small{display:none}   /* 2026-11-12 老師：操作空間太少，步驟列只留一行 */
 .steps .done{color:var(--ink)}.steps .done b{background:var(--primary-soft);color:var(--primary)}
 .steps .active b{background:var(--primary);color:#fff;box-shadow:0 0 0 4px var(--primary-soft)}
 .steps i{flex:1 1 30px;min-width:20px;height:3px;border-radius:2px;background:var(--line)}
 .steps .done+i{background:var(--primary)}
-.main{flex:1;min-height:0;display:grid;grid-template-columns:230px minmax(0,1fr);gap:10px;padding:0 14px 12px}
+.main{flex:1;min-height:0;display:grid;grid-template-columns:230px minmax(0,1fr);gap:10px;padding:0 14px 10px}
+.main.side-off{grid-template-columns:minmax(0,1fr)}.main.side-off .side{display:none}
+body.compact .top{padding:6px 10px 4px}body.compact .steps{margin:0 10px 4px}body.compact .main{padding:0 10px 8px}
 .side{min-height:0;overflow:auto;display:flex;flex-direction:column;gap:8px;background:var(--surface);border:2px solid var(--line);border-radius:var(--radius);padding:12px}
 .side h2{margin:2px 0;font-size:15px;color:var(--muted)}
 .add{display:flex;align-items:center;gap:10px;text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:14px;padding:8px 10px}
@@ -62,7 +64,10 @@ button{cursor:pointer}
 .check ul{margin:4px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px}
 .tip{font-size:12.5px;color:var(--muted);line-height:1.5}
 .work{min-height:0;display:flex;flex-direction:column;background:var(--surface);border:2px solid var(--line);border-radius:var(--radius);overflow:hidden}
-.bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 10px;border-bottom:2px solid var(--line)}
+.bar{display:flex;flex-wrap:nowrap;align-items:center;gap:6px;padding:6px 10px;border-bottom:2px solid var(--line);min-width:0}
+.bar .name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bar .count{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 1 auto}
+.bar .btn{white-space:nowrap}
+@media (max-width:1100px){.bar .count{display:none}}
 .bar .name{font-weight:900;font-size:17px}
 .bar .count{font-size:13px;color:var(--muted)}
 .bar .zoom{margin-left:auto;display:flex;align-items:center;gap:4px}
@@ -126,6 +131,7 @@ button{cursor:pointer}
   <section class="work">
     <div class="bar">
       <span class="name" id="canvasTitle"></span><span class="count" id="count"></span>
+      <button class="btn" id="sideToggle" type="button" title="收起／打開左邊的工具列，畫布變大">◧ 收起工具</button>
       <span class="zoom"><button class="btn" id="zoomOut" type="button" title="縮小">−</button><span id="zoomLabel">100%</span><button class="btn" id="zoomIn" type="button" title="放大">＋</button><button class="btn" id="fitBtn" type="button">適合畫面</button><button class="btn" id="arrangeBtn" type="button">自動排列</button></span>
     </div>
     <div class="canvas" id="canvas"><svg id="svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="心智圖"></svg><div class="hint">拖曳空白處移動・滾輪縮放</div></div>
@@ -138,6 +144,20 @@ button{cursor:pointer}
 <div class="toast" id="toast" hidden></div>
 <script>
 'use strict';
+// 2026-11-12 老師：放在大屏裡操作空間太少——嵌在大屏時版面更緊湊；左邊工具列可以收起來（記住）
+if (window.self !== window.top) document.body.classList.add('compact');
+(function () {
+  const main = document.querySelector('.main'), btn = document.getElementById('sideToggle');
+  let off = false;
+  try { off = localStorage.getItem('mindSideOff') === '1'; } catch (e) {}
+  const apply = () => {
+    main.classList.toggle('side-off', off);
+    btn.textContent = off ? '◨ 打開工具' : '◧ 收起工具';
+    window.dispatchEvent(new Event('resize'));   // 畫布重新量大小
+  };
+  btn.addEventListener('click', () => { off = !off; try { localStorage.setItem('mindSideOff', off ? '1' : '0'); } catch (e) {} apply(); });
+  apply();
+})();
 const KEY = 'mindmapStudio:v1';
 const $ = id => document.getElementById(id);
 const SVGNS = 'http://www.w3.org/2000/svg';
