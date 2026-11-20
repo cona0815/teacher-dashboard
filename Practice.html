@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex">
+<title>早自修練習</title>
+<!-- 🌅 學生早自修練習頁（2026-11-19）：學生掃自己的練習卡 QR 進來 → 拿老師指定的題目 → 一題一題做、馬上看對錯 → 交卷。
+     網址：Practice.html#g=<老師 GAS 網址 macros/ 後面那段>&c=<練習卡號>
+     資安：卡號讀進來後立刻從網址列拿掉（共用平板的瀏覽紀錄看不到），只存在這個分頁；不記姓名；
+     題目文字一律 textContent 放進畫面，不當 HTML。對錯以雲端重新批改為準。 -->
+<style>
+  :root {
+    --bg: #fff8ec; --card: #ffffff; --ink: #3b2f2a; --muted: #8a776c; --line: #f0dfc8;
+    --brand: #ff8a3d; --brand-ink: #ffffff; --good: #2fae66; --good-bg: #e6f7ec; --bad: #e5484d; --bad-bg: #fdecec;
+    --opt1: #ffb74d; --opt2: #64b5f6; --opt3: #81c784; --opt4: #ba68c8; --opt5: #f06292; --opt6: #4db6ac;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); }
+  body { font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", system-ui, sans-serif; min-height: 100vh; min-height: 100dvh;
+    padding: max(16px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom)); -webkit-tap-highlight-color: transparent; }
+  main { max-width: 720px; margin: 0 auto; }
+  .top { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .top .logo { font-size: 30px; }
+  .top h1 { font-size: 20px; margin: 0; }
+  .top .who { margin-left: auto; font-size: 16px; color: var(--muted); font-weight: 700; }
+  .card { background: var(--card); border: 2px solid var(--line); border-radius: 22px; padding: 22px 20px; box-shadow: 0 6px 0 var(--line); }
+  .center { text-align: center; }
+  .big { font-size: 28px; font-weight: 800; margin: 8px 0; line-height: 1.35; }
+  .mid { font-size: 19px; line-height: 1.6; margin: 8px 0; }
+  .small { font-size: 15px; color: var(--muted); line-height: 1.6; }
+  .emoji { font-size: 64px; line-height: 1.1; }
+  button { font: inherit; color: inherit; cursor: pointer; border: 0; }
+  .go { display: block; width: 100%; max-width: 420px; margin: 18px auto 4px; padding: 18px; border-radius: 18px; background: var(--brand); color: var(--brand-ink);
+    font-size: 24px; font-weight: 800; box-shadow: 0 5px 0 #d96a22; }
+  .go:active { transform: translateY(3px); box-shadow: 0 2px 0 #d96a22; }
+  .go[disabled] { background: #d9cfc6; box-shadow: 0 5px 0 #bfb3a8; cursor: default; }
+  .go.ghost { background: #fff; color: var(--brand); border: 3px solid var(--brand); box-shadow: none; font-size: 20px; padding: 14px; }
+  .progress { display: flex; align-items: center; gap: 10px; margin: 0 2px 12px; font-weight: 700; color: var(--muted); }
+  .bar { flex: 1; height: 14px; background: #f3e6d4; border-radius: 99px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--brand); border-radius: 99px; transition: width .3s; }
+  .q { font-size: 25px; font-weight: 800; line-height: 1.5; margin: 4px 0 18px; overflow-wrap: anywhere; }
+  .opts { display: grid; gap: 12px; }
+  .opts.tf { grid-template-columns: 1fr 1fr; }
+  .opt { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 16px 16px; min-height: 66px; border-radius: 18px;
+    background: #fff; border: 3px solid var(--line); font-size: 21px; line-height: 1.45; overflow-wrap: anywhere; }
+  .opts.tf .opt { justify-content: center; font-size: 28px; font-weight: 800; min-height: 96px; }
+  .opt .tag { flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 20px; }
+  .opt:nth-child(1) .tag { background: var(--opt1); } .opt:nth-child(2) .tag { background: var(--opt2); }
+  .opt:nth-child(3) .tag { background: var(--opt3); } .opt:nth-child(4) .tag { background: var(--opt4); }
+  .opt:nth-child(5) .tag { background: var(--opt5); } .opt:nth-child(6) .tag { background: var(--opt6); }
+  .opt:not([disabled]):active { transform: scale(.98); }
+  .opt[disabled] { cursor: default; opacity: .55; }
+  .opt.right { border-color: var(--good); background: var(--good-bg); opacity: 1; }
+  .opt.wrong { border-color: var(--bad); background: var(--bad-bg); opacity: 1; }
+  .feedback { margin-top: 16px; border-radius: 18px; padding: 16px 18px; font-size: 19px; line-height: 1.6; }
+  .feedback.good { background: var(--good-bg); color: #1d6b40; }
+  .feedback.bad { background: var(--bad-bg); color: #9b2226; }
+  .feedback b { font-size: 23px; }
+  .feedback .exp { margin-top: 6px; color: var(--ink); }
+  .stars { font-size: 48px; letter-spacing: 6px; margin: 6px 0; }
+  .stars .dim { filter: grayscale(1); opacity: .3; }
+  .review { text-align: left; margin-top: 16px; }
+  .review h3 { font-size: 19px; margin: 0 0 8px; }
+  .review li { margin: 0 0 10px; font-size: 17px; line-height: 1.55; }
+  .review .ans { color: var(--good); font-weight: 700; }
+  .status { margin-top: 12px; font-size: 17px; font-weight: 700; }
+  .status.ok { color: var(--good); } .status.err { color: var(--bad); }
+  .spin { width: 46px; height: 46px; margin: 10px auto; border-radius: 50%; border: 6px solid #f3e6d4; border-top-color: var(--brand); animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .spin { animation-duration: 3s; } .bar i { transition: none; } }
+  @media (max-width: 420px) {
+    .q { font-size: 22px; } .opt { font-size: 19px; padding: 14px 12px; } .big { font-size: 24px; }
+  }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <span class="logo" aria-hidden="true">🌅</span>
+    <h1>早自修練習</h1>
+    <span class="who" id="who"></span>
+  </div>
+
+  <section class="card center" id="vLoading">
+    <div class="spin" aria-hidden="true"></div>
+    <p class="mid">正在拿今天的題目……</p>
+  </section>
+
+  <section class="card center" id="vError" hidden>
+    <div class="emoji" aria-hidden="true">🙈</div>
+    <p class="big" id="errTitle">出了一點問題</p>
+    <p class="mid" id="errText"></p>
+    <button class="go" type="button" id="retryLoad">🔄 再試一次</button>
+  </section>
+
+  <section class="card center" id="vReady" hidden>
+    <div class="emoji" aria-hidden="true">👋</div>
+    <p class="big" id="hello"></p>
+    <p class="mid" id="today"></p>
+    <p class="small">不是你嗎？請拿<b>自己的</b>練習卡再掃一次。</p>
+    <button class="go" type="button" id="startBtn">開始 ▶</button>
+    <p class="small" id="usedText"></p>
+  </section>
+
+  <section id="vQuiz" hidden>
+    <div class="progress"><span id="qNo"></span><span class="bar"><i id="qBar"></i></span></div>
+    <div class="card">
+      <p class="q" id="qText"></p>
+      <div class="opts" id="opts"></div>
+      <div class="feedback" id="feedback" hidden></div>
+      <button class="go" type="button" id="nextBtn" hidden>下一題 ▶</button>
+    </div>
+  </section>
+
+  <section class="card center" id="vDone" hidden>
+    <div class="emoji" id="doneEmoji" aria-hidden="true">🎉</div>
+    <p class="big" id="doneTitle">做完了！</p>
+    <div class="stars" id="stars" aria-hidden="true"></div>
+    <p class="mid" id="score"></p>
+    <p class="mid" id="cheer"></p>
+    <p class="status" id="sendStatus" role="status"></p>
+    <button class="go ghost" type="button" id="resendBtn" hidden>📤 再送一次</button>
+    <div class="review" id="review" hidden>
+      <h3>📝 再看一次錯的題目</h3>
+      <ol id="reviewList"></ol>
+    </div>
+    <button class="go" type="button" id="againBtn" hidden>🔁 再練一次</button>
+  </section>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var LET = ['A', 'B', 'C', 'D', 'E', 'F'];
+  var SESSION_KEY = 'practiceCardLink';
+  var state = { gas: '', card: '', data: null, qs: [], i: 0, answers: [], correct: 0, sending: false, payload: null, sent: false };
+
+  // ---- 讀卡：#g=…&c=… → 記在這個分頁，網址列立刻拿掉（共用平板的瀏覽紀錄看不到卡號） ----
+  function readLink() {
+    var hash = String(location.hash || '').replace(/^#/, '');
+    var params = {};
+    hash.split('&').forEach(function (part) {
+      var i = part.indexOf('=');
+      if (i > 0) { try { params[part.slice(0, i)] = decodeURIComponent(part.slice(i + 1)); } catch (e) {} }
+    });
+    if (params.g && params.c) {
+      try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ g: params.g, c: params.c })); } catch (e) {}
+      try { history.replaceState(null, '', location.pathname); } catch (e) {}
+    } else {
+      try { params = JSON.parse(sessionStorage.getItem(SESSION_KEY) || '{}') || {}; } catch (e) { params = {}; }
+    }
+    var g = String(params.g || ''), c = String(params.c || '');
+    if (!/^s\/[A-Za-z0-9_-]{20,120}\/exec$/.test(g) || !/^p[0-9a-f]{20}$/.test(c)) return false;
+    state.gas = 'https://script.google.com/macros/' + g;
+    state.card = c;
+    return true;
+  }
+
+  function show(id) {
+    ['vLoading', 'vError', 'vReady', 'vQuiz', 'vDone'].forEach(function (v) { $(v).hidden = v !== id; });
+    window.scrollTo(0, 0);
+  }
+  function fail(title, text) {
+    $('errTitle').textContent = title;
+    $('errText').textContent = text;
+    show('vError');
+  }
+
+  async function call(payload) {
+    var controller = new AbortController();
+    var timer = setTimeout(function () { controller.abort(); }, 25000);
+    try {
+      var res = await fetch(state.gas, {
+        method: 'POST', cache: 'no-store', redirect: 'follow', credentials: 'omit',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload), signal: controller.signal
+      });
+      if (!res.ok) throw new Error('網路回應 ' + res.status);
+      var data = await res.json();
+      if (!data || !data.ok) { var err = new Error((data && data.error) || '雲端回應怪怪的'); err.server = true; throw err; }
+      return data;
+    } finally { clearTimeout(timer); }
+  }
+
+  // 題目逐欄整理（不信任雲端回來的內容）
+  function cleanQ(q) {
+    if (!q || typeof q !== 'object') return null;
+    var text = String(q.q == null ? '' : q.q).slice(0, 300).trim();
+    if (!text) return null;
+    var exp = String(q.exp == null ? '' : q.exp).slice(0, 300);
+    if (q.kind === 'tf') return { kind: 'tf', q: text, opts: ['○ 對', '✕ 錯'], ans: q.ans === 1 ? 1 : 0, exp: exp };
+    var opts = Array.isArray(q.opts) ? q.opts.slice(0, 6).map(function (o) { return String(o == null ? '' : o).slice(0, 120); }) : [];
+    var ans = Number(q.ans);
+    if (opts.length < 2 || Math.floor(ans) !== ans || ans < 0 || ans >= opts.length) return null;
+    return { kind: 'choice', q: text, opts: opts, ans: ans, exp: exp };
+  }
+
+  async function load() {
+    show('vLoading');
+    try {
+      var data = await call({ action: 'practice_get', card: state.card });
+      state.data = data;
+      var seat = Math.floor(Number(data.seat) || 0);
+      var cls = String(data.className || '').slice(0, 20);
+      $('who').textContent = cls + ' ' + seat + ' 號';
+      $('hello').textContent = '嗨！' + cls + ' ' + seat + ' 號';
+      var bank = data.bank;
+      state.qs = bank && Array.isArray(bank.questions) ? bank.questions.map(cleanQ).filter(Boolean).slice(0, 60) : [];
+      var limit = Math.floor(Number(data.limit) || 5), used = Math.floor(Number(data.used) || 0);
+      if (!bank || !state.qs.length) {
+        $('today').textContent = String(data.message || '老師還沒準備好今天的題目，等一下再掃一次。');
+        $('startBtn').hidden = true;
+        $('usedText').textContent = '';
+      } else {
+        $('today').textContent = '今天練習：「' + String(bank.name || '').slice(0, 30) + '」' + state.qs.length + ' 題';
+        $('startBtn').hidden = false;
+        $('startBtn').disabled = used >= limit;
+        $('usedText').textContent = used >= limit ? '今天已經交了 ' + limit + ' 次，明天再來挑戰！' : (used ? '今天已經練習 ' + used + ' 次（每天最多 ' + limit + ' 次）' : '');
+      }
+      show('vReady');
+    } catch (error) {
+      if (error && error.server) fail('這張卡不能用', String(error.message || ''));
+      else fail('連不上雲端', error && error.name === 'AbortError' ? '等太久了，網路可能比較慢。' : '請確認平板有連上網路。');
+    }
+  }
+
+  function start() {
+    state.i = 0; state.answers = []; state.correct = 0; state.payload = null; state.sent = false;
+    show('vQuiz');
+    renderQ();
+  }
+
+  function renderQ() {
+    var q = state.qs[state.i];
+    $('qNo').textContent = '第 ' + (state.i + 1) + '／' + state.qs.length + ' 題';
+    $('qBar').style.width = Math.round(state.i / state.qs.length * 100) + '%';
+    $('qText').textContent = q.q;
+    var box = $('opts');
+    box.className = 'opts' + (q.kind === 'tf' ? ' tf' : '');
+    box.textContent = '';
+    q.opts.forEach(function (o, i) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'opt';
+      b.dataset.i = String(i);
+      if (q.kind === 'tf') {
+        b.textContent = o;
+      } else {
+        var tag = document.createElement('span');
+        tag.className = 'tag';
+        tag.textContent = LET[i];
+        var t = document.createElement('span');
+        t.textContent = o;
+        b.appendChild(tag); b.appendChild(t);
+      }
+      box.appendChild(b);
+    });
+    $('feedback').hidden = true;
+    $('nextBtn').hidden = true;
+  }
+
+  function answer(pick) {
+    var q = state.qs[state.i];
+    var ok = pick === q.ans;
+    state.answers.push({ q: q.q, pick: pick });
+    if (ok) state.correct += 1;
+    Array.prototype.forEach.call($('opts').children, function (b, i) {
+      b.disabled = true;
+      if (i === q.ans) b.classList.add('right');
+      else if (i === pick) b.classList.add('wrong');
+    });
+    var fb = $('feedback');
+    fb.className = 'feedback ' + (ok ? 'good' : 'bad');
+    fb.textContent = '';
+    var head = document.createElement('b');
+    head.textContent = ok ? '✔ 答對了！' : '✘ 差一點！';
+    fb.appendChild(head);
+    if (!ok) {
+      var right = document.createElement('div');
+      right.textContent = '正確答案：' + (q.kind === 'tf' ? q.opts[q.ans] : LET[q.ans] + '　' + q.opts[q.ans]);
+      fb.appendChild(right);
+    }
+    if (q.exp) {
+      var exp = document.createElement('div');
+      exp.className = 'exp';
+      exp.textContent = '💡 ' + q.exp;
+      fb.appendChild(exp);
+    }
+    fb.hidden = false;
+    $('nextBtn').textContent = state.i + 1 < state.qs.length ? '下一題 ▶' : '看結果 🎉';
+    $('nextBtn').hidden = false;
+    $('nextBtn').focus();
+  }
+
+  function finish() {
+    $('qBar').style.width = '100%';
+    var total = state.qs.length, right = state.correct;
+    var pct = total ? right / total : 0;
+    var stars = pct >= 0.9 ? 3 : pct >= 0.6 ? 2 : 1;
+    $('stars').textContent = '';
+    for (var k = 0; k < 3; k += 1) {
+      var star = document.createElement('span');
+      star.textContent = '⭐';
+      if (k >= stars) star.className = 'dim';
+      $('stars').appendChild(star);
+    }
+    $('doneEmoji').textContent = pct === 1 ? '🏆' : pct >= 0.6 ? '🎉' : '💪';
+    $('score').textContent = '答對 ' + right + '／' + total + ' 題';
+    $('cheer').textContent = pct === 1 ? '全部答對，太厲害了！' : pct >= 0.6 ? '很不錯！看一下錯的題目，下次就會了。' : '沒關係，錯的題目就是要學的地方，慢慢來！';
+    var wrongList = $('reviewList');
+    wrongList.textContent = '';
+    state.answers.forEach(function (a, i) {
+      var q = state.qs[i];
+      if (a.pick === q.ans) return;
+      var li = document.createElement('li');
+      li.appendChild(document.createTextNode(q.q + ' '));
+      var ans = document.createElement('span');
+      ans.className = 'ans';
+      ans.textContent = '→ ' + (q.kind === 'tf' ? q.opts[q.ans] : LET[q.ans] + '　' + q.opts[q.ans]);
+      li.appendChild(ans);
+      wrongList.appendChild(li);
+    });
+    $('review').hidden = !wrongList.children.length;
+    $('againBtn').hidden = true;
+    show('vDone');
+    state.payload = {
+      action: 'practice_submit', card: state.card, bankId: String(state.data.bank.id || ''),
+      id: 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10),
+      answers: state.answers
+    };
+    send(0);
+  }
+
+  async function send(attempt) {
+    if (!state.payload || state.sending || state.sent) return;
+    state.sending = true;
+    $('resendBtn').hidden = true;
+    $('sendStatus').className = 'status';
+    $('sendStatus').textContent = '📤 交給老師中……';
+    try {
+      var res = await call(state.payload);
+      state.sent = true;
+      $('sendStatus').className = 'status ok';
+      $('sendStatus').textContent = '✅ 已經交給老師了！錯的題目老師會幫你整理。';
+      var used = Math.floor(Number(res.used) || 0), limit = Math.floor(Number(res.limit) || 5);
+      state.data.used = used;
+      $('againBtn').hidden = !(used < limit);
+    } catch (error) {
+      state.sending = false;
+      if (error && error.server) {
+        $('sendStatus').className = 'status err';
+        $('sendStatus').textContent = '⚠️ ' + String(error.message || '交卷沒有成功');
+        return;
+      }
+      if (attempt < 2) { setTimeout(function () { send(attempt + 1); }, 2000 * (attempt + 1)); return; }
+      $('sendStatus').className = 'status err';
+      $('sendStatus').textContent = '⚠️ 網路不太穩，還沒交出去。';
+      $('resendBtn').hidden = false;
+      return;
+    }
+    state.sending = false;
+  }
+
+  $('opts').addEventListener('click', function (event) {
+    var b = event.target.closest('.opt');
+    if (!b || b.disabled) return;
+    answer(Number(b.dataset.i));
+  });
+  $('nextBtn').addEventListener('click', function () {
+    if (state.i + 1 < state.qs.length) { state.i += 1; renderQ(); window.scrollTo(0, 0); } else finish();
+  });
+  $('startBtn').addEventListener('click', start);
+  $('retryLoad').addEventListener('click', load);
+  $('resendBtn').addEventListener('click', function () { send(2); });
+  $('againBtn').addEventListener('click', load);
+  window.addEventListener('beforeunload', function (event) {
+    if ((state.answers.length && !$('vQuiz').hidden) || (state.payload && !state.sent)) { event.preventDefault(); event.returnValue = ''; }
+  });
+
+  if (!readLink()) {
+    fail('讀不到練習卡', '請用平板的相機掃練習卡上的 QR Code 進來。');
+    $('retryLoad').hidden = true;
+  } else {
+    load();
+  }
+})();
+</script>
+</body>
+</html>

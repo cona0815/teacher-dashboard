@@ -27,4 +27,7 @@ sub('assets/version.js', r"TD_VERSION = '[^']*'", f"TD_VERSION = '{v}'")
 tag = v.replace(' ', '-').replace(':', '')
 for page in ('Morning.html', 'Index.html'):
     sub(page, r'assets/attendance-term\.js(\?v=[^"]*)?"', f'assets/attendance-term.js?v={tag}"')
+for page in ('Index.html', 'Battle.html'):   # 答題對戰題庫解析（2026-11-17）
+    sub(page, r'assets/battle-bank\.js(\?v=[^"]*)?"', f'assets/battle-bank.js?v={tag}"')
+sub('Index.html', r'assets/studio/qr-encode\.js(\?v=[^"]*)?"', f'assets/studio/qr-encode.js?v={tag}"')   # 早自修練習卡（2026-11-19）
 print('版本已更新為', v)

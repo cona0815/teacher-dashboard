@@ -345,11 +345,14 @@ assert.match(indexHtml, /rollcallBadgeFor\(key\)/, "工作台日曆應顯示出�
 for (const tool of ["抽籤機", "檢核板", "計分板", "隨機分組", "定評小幫手", "排除今日缺席"]) {
   assert.match(morningHtml, new RegExp(tool), `班級工具缺少「${tool}」`);
 }
-// 純本機原則的唯一例外：大屏提示的唯讀輪詢 prompt_get（使用者 2026-09-04 核定的遠端切換功能）
+// 純本機原則的例外：大屏提示的唯讀輪詢 prompt_get（使用者 2026-09-04 核定的遠端切換功能）、
+// 答題對戰唯讀拿工作台題庫 battle_banks（使用者 2026-11-17 要求「題目從工作台匯入，大屏就有題目」）
 const toolsScriptSlice = morningHtml
   .slice(morningHtml.indexOf("班級工具（純本機）＋顯示縮放"))
-  .replace(/callGas\(\{ action: 'prompt_get'[^}]*\}\)/g, "");
-assert.doesNotMatch(toolsScriptSlice, /callGas\(/, "班級工具除 prompt_get 輪詢外不得呼叫雲端");
+  .replace(/callGas\(\{ action: 'prompt_get'[^}]*\}\)/g, "")
+  .replace(/callGas\(\{ action: 'battle_banks'[^}]*\}\)/g, "")
+  .replace(/callGas\(\{ action: 'battle_stats_submit'[^}]*\}\)/g, "");   // 2026-11-18 錯題只新增
+assert.doesNotMatch(toolsScriptSlice, /callGas\(/, "班級工具除 prompt_get、battle_banks 唯讀與 battle_stats_submit 只新增外不得呼叫雲端");
 const aboutHtml = fs.readFileSync(path.join(projectRoot, "About.html"), "utf8");
 for (const aboutFeature of ["使用情境", "授權逐條", "LINE小幫手備份", "只用座號", "DRIVE_BACKUP_TYPES", "金鑰權限邊界"]) {
   assert.match(aboutHtml, new RegExp(aboutFeature), `說明頁缺少「${aboutFeature}」`);
@@ -1367,3 +1370,133 @@ assert.match(morningHtml, /id="setupPeriods"/, "設定頁要有本校作息時�
 assert.match(morningHtml, /function schoolBreakTimes\(\)/, "下課時間由本校作息算出");
 assert.match(morningHtml, /const breakTimesText = \(\) => config\.promptBreakTimes \|\| schoolBreakTimes\(\)\.join\(', '\)/, "每節下課預設跟著本校作息，自己改過才用自己的");
 assert.doesNotMatch(morningHtml, /const XD_PERIODS = \[/, "定評小幫手節次時間不可寫死");
+// 2026-11-17 大屏答題對戰：左右兩隊、8 種玩法、題庫可貼 NotebookLM 表格
+{
+  const battle = fs.readFileSync(path.join(projectRoot, "Battle.html"), "utf8");
+  assert.match(battle, /Content-Security-Policy/, "答題對戰要有安全設定");
+  assert.match(battle, /connect-src 'none'/, "答題對戰不連網（題庫只存這台電腦）");
+  for (const m of ["tug", "buzz", "race", "rocket", "board", "ttt", "potato", "coop", "monster", "boss", "castle", "escape"]) {
+    assert.ok(battle.includes(`MODES.${m} = {`) || battle.includes(`MODES.${m} = Object.assign(`), `答題對戰要有「${m}」玩法`);
+  }
+  // 怪獸大對決：給小學生玩，不流血、不會死、沒有刀槍；體力用完是累到睡著
+  const monsterPart = battle.slice(battle.indexOf("// 9～12. 怪獸大對決"), battle.indexOf("// ================= 流程 ================="));
+  assert.ok(monsterPart.length > 1000, "怪獸大對決要在流程之前定義");
+  assert.doesNotMatch(monsterPart, /血|死|刀|槍|劍|炸彈|武器/, "怪獸大對決不可出現流血、死亡、武器字眼");
+  assert.match(monsterPart, /style: 'turn'/, "怪獸大對決是兩隊輪流");
+  assert.match(monsterPart, /呼呼大睡/, "體力用完是睡著，不是死掉");
+  assert.match(monsterPart, /變成好朋友/, "合力打魔獸：魔獸被打敗是變成好朋友");
+  assert.match(battle, /if \(G\.mode\.winSub\) sub = G\.mode\.winSub\(w\) \|\| sub;/, "結算畫面用玩法自己的說明");
+  // 題庫解析抽成共用檔：大屏 Battle.html 與工作台 Index.html 同一套
+  const bankJs = fs.readFileSync(path.join(projectRoot, "assets", "battle-bank.js"), "utf8");
+  assert.match(battle, /<script src="assets\/battle-bank\.js(\?v=[^"]*)?"><\/script>/, "答題對戰要載入共用題庫程式");
+  assert.match(indexHtml, /<script src="assets\/battle-bank\.js(\?v=[^"]*)?"><\/script>/, "工作台要載入共用題庫程式");
+  assert.match(bankJs, /function cleanBank\(b\)/, "讀題庫存檔要逐欄整理");
+  assert.match(bankJs, /function cleanQ\(q\)/, "每一題都要逐欄整理");
+  assert.match(bankJs, /function parseBankText\(text, asCSV\)/, "題庫要能解析 NotebookLM 表格／CSV／一般題目文字");
+  assert.match(bankJs, /出 \$\{n\} 題給\$\{grade\}學生的選擇題/, "要提供給 NotebookLM 的出題指令");
+  assert.match(bankJs, /不要出「以上皆是」「以上皆非」/, "選擇題指令要避開以上皆是");
+  {
+    // 實際跑一次解析：NotebookLM 表格（含對齊列、引用編號、全形空白）
+    const sandbox = { window: {}, TextDecoder };
+    vm.runInNewContext(bankJs, sandbox);
+    const B = sandbox.window.BattleBank;
+    const r = B.parseBankText([
+      "| 題目 | A | B | C | D | 答案 | 解說 |",
+      "| :--- | :---: | --- | --- | --- | --- | --- |",
+      "| 「（　）」心協力 [1] | 同 | 童 | 銅 | 統 | A | 齊心 [2, 3] |",
+      "| 鯨魚用鰓呼吸 |  |  |  |  | ✕ | 用肺 |",
+    ].join("\n"));
+    assert.equal(r.errs.length, 0, "NotebookLM 表格不應有讀不到的題");
+    assert.equal(r.qs.length, 2, "應讀到 2 題");
+    assert.equal(r.qs[0].q, "「（　）」心協力", "引用編號要清掉、全形空白要留著");
+    assert.equal(r.qs[0].ans, 0);
+    assert.equal(r.qs[1].kind, "tf");
+    assert.equal(r.qs[1].ans, 1);
+    assert.equal(B.cleanQ({ kind: "choice", q: "x", opts: ["a", "b"], ans: 5 }), null, "答案超出選項要丟掉");
+  }
+  // 第 2 階段：工作台存雲端 → 大屏用教室金鑰唯讀拿回來
+  assert.match(lineBotSource, /'prompt_get', 'battle_banks'[,\]]/, "教室金鑰只多開放 battle_banks（唯讀）");
+  assert.match(lineBotSource, /action === 'battle_bank_save'\) \{\s*if \(!isTeacher\)/, "存題庫要老師金鑰");
+  assert.match(lineBotSource, /action === 'battle_bank_delete'\) \{\s*if \(!isTeacher\)/, "刪題庫要老師金鑰");
+  assert.match(lineBotSource, /function cleanBattleQuestion_\(q\)/, "雲端存題目也要逐欄整理");
+  assert.match(lineBotSource, /lock\.waitLock\(10000\);\s*try \{\s*var sheet = battleSheet_\(\);/, "存、刪題庫要上鎖");
+  assert.match(lineBotSource, /sheetText_\(name\)/, "題庫名稱寫進試算表要防公式");
+  assert.match(indexHtml, /data-toolbox-target="battleBankSection" data-line-only/, "工作台工具箱要有答題對戰題庫（要連雲端才顯示）");
+  assert.match(indexHtml, /cloudCall\('battle_bank_save'/, "工作台存題庫走 battle_bank_save");
+  assert.match(indexHtml, /window\.confirm\(`確定要刪除雲端題庫/, "刪雲端題庫要先確認");
+  assert.match(morningHtml, /window\.battleCloudSync = function/, "大屏要把工作台題庫交給答題對戰");
+  assert.match(morningHtml, /callGas\(\{ action: 'battle_banks', token: state\.settings\.classroomToken \}\)/, "大屏用教室金鑰讀題庫");
+  assert.match(battle, /function setCloudBanks\(list, meta = \{\}\)/, "答題對戰要能收工作台題庫");
+  assert.match(battle, /const cleanCloud = b => \{ const c = cleanBank\(b\)/, "工作台題庫進來也要逐欄整理");
+  // 2026-11-18 錯題：大屏只新增、工作台老師金鑰才看得到；只記班級＋題目
+  assert.match(lineBotSource, /'battle_banks', 'battle_stats_submit'\]/, "教室金鑰只多開放錯題「新增」");
+  assert.match(lineBotSource, /action === 'battle_stats_get'\) \{\s*if \(!isTeacher\)/, "看錯題要老師金鑰");
+  assert.match(lineBotSource, /action === 'battle_stats_clear'\) \{\s*if \(!isTeacher\)/, "清除錯題要老師金鑰");
+  assert.match(lineBotSource, /date > today \|\| date < oldest/, "錯題只收近 14 天、不收未來日期");
+  assert.match(lineBotSource, /seen\.indexOf\(id\) !== -1/, "同一筆錯題重送不重複計算");
+  assert.match(lineBotSource, /BATTLE_STATS_HEADERS: \['日期', '班級', '題庫編號'/, "錯題表不記學生");
+  assert.doesNotMatch(lineBotSource.slice(lineBotSource.indexOf("function submitBattleStats_"), lineBotSource.indexOf("function battleStatsRange_")), /座號|姓名/, "錯題上傳不收座號姓名");
+  assert.match(battle, /function recordStat\(A\)/, "答題對戰每題要記錄對錯");
+  assert.match(battle, /選錯哪個答案（記選項文字，因為選項會打亂）/, "錯誤選項要記文字");
+  assert.match(battle, /function hardHtml\(hard\)/, "結束畫面要顯示這場最容易錯的題目");
+  assert.match(morningHtml, /callGas\(\{ action: 'battle_stats_submit', token: state\.settings\.classroomToken, records: batch \}\)/, "大屏用教室金鑰送錯題");
+  assert.match(indexHtml, /cloudCall\('battle_stats_get'/, "工作台讀錯題");
+  assert.match(indexHtml, /function saveRemedyBank\(\)/, "工作台可以把易錯題存成補救題庫");
+  assert.match(indexHtml, /window\.confirm\(`確定要清除「最近/, "清除錯題要先確認");
+  // 2026-11-18 Gemini 補救題＋解說稿：全部老師金鑰；AI 題目先當草稿，大屏（教室金鑰）拿不到
+  ['battle_bank_publish', 'battle_remedy_generate', 'battle_ai_status', 'battle_weekly_set'].forEach(action => {
+    assert.match(lineBotSource, new RegExp(`action === '${action}'\\) \\{\\s*if \\(!isTeacher\\)`), `${action} 要老師金鑰`);
+  });
+  assert.match(lineBotSource, /readBattleBanks_\(isTeacher\)/, "教室金鑰讀不到草稿題庫");
+  assert.match(lineBotSource, /if \(draft && !withDrafts\) return;/, "草稿不給大屏");
+  assert.match(lineBotSource, /draft: true \} \}\)/, "Gemini 出的題目一律先存草稿");
+  assert.doesNotMatch(lineBotSource.slice(lineBotSource.indexOf("function battleAskGemini_"), lineBotSource.indexOf("function battleEscape_")), /座號|seat/, "送 Gemini 不帶座號");
+  assert.match(lineBotSource, /headers: \{ 'x-goog-api-key': apiKey \}/, "Gemini 金鑰放標頭");
+  assert.match(lineBotSource, /ScriptApp\.newTrigger\('weeklyBattleRemedy'\)/, "易錯題週報要有每週排程");
+  assert.match(lineBotSource, /key: 'battleWeekly', name: '易錯題週報'/, "易錯題週報可以在推播設定關掉");
+  assert.match(indexHtml, /cloudCall\('battle_remedy_generate'/, "工作台一鍵用 Gemini 出補救題");
+  assert.match(indexHtml, /function bbsSafeDocUrl\(url\)/, "解說稿連結只接受 Google 文件／雲端硬碟網址");
+  assert.doesNotMatch(battle, /\bconfirm\(/, "不可用瀏覽器 confirm（內建瀏覽器會擋），改用自己的確認視窗");
+  assert.doesNotMatch(battle, /<audio|\.mp3|\.wav/, "音效用程式合成，不放外部音檔");
+  assert.match(morningHtml, /\['battle', '🎮', '答題對戰'\]/, "大屏上方選單可以放答題對戰");
+  assert.match(morningHtml, /\$\('battleFrame'\)\.src = 'Battle\.html'/, "答題對戰第一次點才載入");
+  assert.match(morningHtml, /data-tool="battle"/, "班級工具要有答題對戰");
+}
+{
+  // 2026-11-19 早自修練習卡：學生掃 QR 做題 → 個人錯題（班級＋座號）→ 週五個人錯題分析 PDF
+  const practice = fs.readFileSync(path.join(projectRoot, "Practice.html"), "utf8");
+  const between = (a, b) => lineBotSource.slice(lineBotSource.indexOf(a), lineBotSource.indexOf(b));
+  // 卡號只開兩個動作，而且在金鑰檢查之前、只回 practiceGet_／practiceSubmit_
+  assert.match(lineBotSource, /if \(action === 'practice_get' \|\| action === 'practice_submit'\) \{\s*try \{\s*return lineBotJson_\(action === 'practice_get' \? practiceGet_\(body\) : practiceSubmit_\(body\)\);/, "練習卡只能拿題目和交卷");
+  ['practice_cards', 'practice_assign', 'practice_status', 'battle_weekly_run'].forEach(action => {
+    assert.match(lineBotSource, new RegExp(`action === '${action}'\\) \\{\\s*if \\(!isTeacher\\)`), `${action} 要老師金鑰`);
+  });
+  assert.doesNotMatch(lineBotSource, /var classroomActions = \[[^\]]*practice_/, "教室金鑰不能管練習卡");
+  assert.match(lineBotSource, /if \(!\/\^p\[0-9a-f\]\{20\}\$\/\.test\(card\)\) return null;/, "卡號格式先檢查");
+  assert.match(lineBotSource, /Utilities\.getUuid\(\)/, "卡號用隨機 UUID 產生");
+  assert.match(between("function practiceGet_", "function practiceTodayCount_"), /readBattleBanks_\(false\)/, "學生拿不到草稿題庫");
+  assert.match(between("function practiceSubmit_", "function practiceClearRange_"), /pick === q\.ans/, "交卷由雲端重新批改");
+  assert.doesNotMatch(between("function practiceSubmit_", "function practiceClearRange_"), /a\.ok|body\.correct/, "不信任學生端說的對錯");
+  assert.match(between("function practiceSubmit_", "function practiceClearRange_"), /PRACTICE_DAILY_LIMIT/, "每天交卷有上限");
+  assert.match(lineBotSource, /PRACTICE_LOG_HEADERS: \['日期', '班級', '座號'/, "個人紀錄只記班級＋座號");
+  assert.doesNotMatch(lineBotSource.match(/PRACTICE_LOG_HEADERS: \[[^\]]*\]/)[0], /姓名/, "個人紀錄不記姓名");
+  assert.doesNotMatch(between("function battlePersonalGemini_", "function battlePersonalHtml_"), /st\.seat \+|座號/, "送 Gemini 只用代號，不送座號");
+  assert.match(between("function battlePersonalHtml_", "function battleClassFolder_"), /e\(talk\.comment\)/, "Gemini 寫的話要跳脫");
+  assert.match(lineBotSource, /var practiceDeleted = practiceClearRange_\(range\);/, "清除錯題時個人紀錄一起清");
+  assert.match(lineBotSource, /newTrigger\('weeklyBattleRemedyContinue'\)\.timeBased\(\)\.after\(ms\)/, "週報做不完要分段接著做");
+  assert.match(lineBotSource, /'weeklyBattleRemedy', 'weeklyBattleRemedyContinue'\]/, "重設觸發器時接續排程也要清掉");
+  assert.match(lineBotSource, /\/\^啟用\\s\*\(本週\)\?補救題\?\$\/\.test\(text\)/, "LINE 可以一鍵啟用補救題");
+  assert.match(lineBotSource, /label: '✅ 啟用補救題', text: '啟用補救題'/, "週報附啟用按鈕");
+  // 學生頁：卡號不留在網址列、題目只當文字
+  assert.match(practice, /history\.replaceState\(null, '', location\.pathname\)/, "卡號讀完就從網址列拿掉");
+  assert.match(practice, /\^s\\\/\[A-Za-z0-9_-\]\{20,120\}\\\/exec\$/, "GAS 網址只收 macros/s/…/exec");
+  assert.doesNotMatch(practice, /innerHTML/, "學生頁不用 innerHTML");
+  assert.match(practice, /<meta name="referrer" content="no-referrer">/, "學生頁不送 referrer");
+  // 工作台
+  assert.match(indexHtml, /data-bb-view="practice" aria-selected="false" hidden>/, "早自修練習分頁先藏起來（2026-11-20 老師決定）");
+  assert.match(indexHtml.slice(indexHtml.indexOf('id="bbStatsView"'), indexHtml.indexOf('id="bbStatsView"') + 8000), /id="bpRunNowButton"/, "「現在就跑一次」在易錯題分頁，不跟著藏");
+  assert.match(indexHtml, /assets\/studio\/qr-encode\.js\?v=/, "工作台載入 QR 編碼器");
+  assert.match(indexHtml, /cloudCall\('practice_cards'/, "工作台可產生學生卡");
+  assert.match(indexHtml, /const PRACTICE_SITE = 'https:\/\/t-borad2026\.netlify\.app\/';/, "本機測試時卡片指向正式網站");
+  assert.match(indexHtml, /body\.bp-printing > \*:not\(#bpPrintSheet\)/, "列印只印學生卡");
+}

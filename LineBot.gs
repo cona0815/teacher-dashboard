@@ -1,5 +1,5 @@
 /**
- * LINE 小幫手（選用雲端模組）　版本 2026-11-12 23:40
+ * LINE 小幫手（選用雲端模組）　版本 2026-11-20 22:23
  *
  * 這是教師工作台的「選用」LINE Bot 後端：每位老師部署到自己的 Google Apps Script，
  * 搭配自己的 Google 試算表與 LINE 官方帳號。試算表只作為「雲端轉運信箱」：
@@ -23,6 +23,14 @@ var LINE_BOT_CONFIG = {
   FILES_HEADERS: ['日期', '類型', '分類', '標題', '檔名', '雲端連結'],
   BACKUP_SHEET: '工作台備份',
   BACKUP_HEADERS: ['備份編號', '序號', '總段數', '更新時間', '裝置', '摘要', '內容'],
+  BATTLE_SHEET: '答題題庫',   // 2026-11-17 大屏答題對戰
+  BATTLE_HEADERS: ['題庫編號', '名稱', '題數', '更新時間', '題目JSON', '狀態'],   // 狀態：空白＝大屏看得到；「草稿」＝AI 出的題目等老師確認
+  BATTLE_STATS_SHEET: '答題錯題',   // 2026-11-18 答題對戰錯題（只記班級＋題目，不記學生）
+  BATTLE_STATS_HEADERS: ['日期', '班級', '題庫編號', '題庫名稱', '題目', '題型', '正確答案', '解說', '出題次數', '作答次數', '答錯次數', '選錯的答案', '更新時間'],
+  PRACTICE_CARD_SHEET: '練習卡',   // 2026-11-19 早自修練習：每位學生一張 QR 卡（卡號隨機，補發就換新）
+  PRACTICE_CARD_HEADERS: ['班級', '座號', '卡號', '建立時間'],
+  PRACTICE_LOG_SHEET: '練習紀錄',   // 每次交卷一列：班級＋座號（不記姓名）、答對幾題、錯了哪些
+  PRACTICE_LOG_HEADERS: ['日期', '班級', '座號', '題庫編號', '題庫名稱', '答對', '題數', '錯題JSON', '交卷時間', '交卷編號'],
   INBOX_HEADERS: ['編號', '建立時間', '類型', '原文', '整理標題', '到期日', '工作主軸', '狀態', '來源使用者', '補充JSON'],
   ROLLCALL_HEADERS: ['日期', '班級', '座號', '狀態'],
   HOMEWORK_HEADERS: ['日期', '班級', '科目', '作業名稱', '座號', '狀態'],
@@ -428,7 +436,7 @@ function ensureLineBotSheets_(spreadsheet) {
  * 3. sendWeeklyHomeworkAlerts　每週五 15–16 點：缺交達門檻的家長訊息草稿
  */
 function setupTriggers() {
-  var handlers = ['sendLineDailyBriefing', 'sendRollcallReminder', 'sendWeeklyHomeworkAlerts', 'sendAfternoonBriefing'];
+  var handlers = ['sendLineDailyBriefing', 'sendRollcallReminder', 'sendWeeklyHomeworkAlerts', 'sendAfternoonBriefing', 'weeklyBattleRemedy', 'weeklyBattleRemedyContinue'];
   ScriptApp.getProjectTriggers().forEach(function (trigger) {
     if (handlers.indexOf(trigger.getHandlerFunction()) !== -1) ScriptApp.deleteTrigger(trigger);
   });
@@ -436,12 +444,15 @@ function setupTriggers() {
   ScriptApp.newTrigger('sendRollcallReminder').timeBased().everyDays(1).atHour(8).create();
   ScriptApp.newTrigger('sendAfternoonBriefing').timeBased().everyDays(1).atHour(16).create();
   ScriptApp.newTrigger('sendWeeklyHomeworkAlerts').timeBased().onWeekDay(ScriptApp.WeekDay.FRIDAY).atHour(15).create();
+  ScriptApp.newTrigger('weeklyBattleRemedy').timeBased().onWeekDay(ScriptApp.WeekDay.FRIDAY).atHour(17).create();
+  PropertiesService.getScriptProperties().setProperty(BATTLE_WEEKLY_TRIGGER_KEY, '1');
   var summary = [
-    '✅ 已設定 4 個自動觸發器（實際會不會發送，由「推播設定」決定）：',
+    '✅ 已設定 5 個自動觸發器（實際會不會發送，由「推播設定」決定）：',
     '・每日簡報備援（每天 8–9 點）— 預設關閉，因為點名推播已含相同內容',
     '・未點名提醒（8:20 起智慧檢查，僅在當天沒回報時發送）— 預設開啟',
     '・下午整合推播（16–17 點：放學小結／早期缺交預警／到期前提醒）— 三項皆預設關閉，開幾項都只用 1 則額度',
     '・每週家長關懷（每週五下午 3–4 點）— 預設開啟',
+    '・易錯題週報（每週五下午 5–6 點，要 Gemini 金鑰；含學生早自修練習的個人錯題分析，班級多會分段接著做）— 預設開啟',
     '',
     '在 LINE 傳「推播設定」可查看目前開關與本月用量，傳「開啟 放學小結」「關閉 作業推播」即可切換。',
     '有開大屏的日子，08:08 點名推播會一併帶上今日課程、任務、記事與逾期；08:40 再補一則作業繳交情況。'
@@ -483,6 +494,7 @@ var PUSH_ITEMS = [
   { key: 'homework', name: '作業推播', desc: '收完作業後的點名＋各科繳交情況', def: true },
   { key: 'reminder', name: '未點名提醒', desc: '當天沒收到大屏回報才發', def: true },
   { key: 'weekly', name: '週五家長關懷', desc: '缺交達門檻的家長訊息草稿', def: true },
+  { key: 'battleWeekly', name: '易錯題週報', desc: '每週五用 Gemini 把易錯題出成補救題草稿＋解說稿，早自修練習的學生各一份個人錯題分析（要 Gemini 金鑰）', def: true },
   { key: 'dailyBrief', name: '每日簡報備援', desc: '沒在用大屏的人才需要；點名推播已含相同內容', def: false },
   { key: 'missingAlert', name: '早期缺交預警', desc: '同一科連續缺交就提早通知', def: false },
   { key: 'dueTomorrow', name: '到期前一天提醒', desc: '明天到期的任務先提醒', def: false },
@@ -608,7 +620,7 @@ function doGet() {
 }
 
 // 程式版本（每次發布都要更新；試算表選單「ℹ️ 程式版本」、LINE 傳「版本」、工作台連線檢查都會顯示）
-var BOT_VERSION = '2026-11-12 23:40';
+var BOT_VERSION = '2026-11-20 22:23';
 
 function lineBotJson_(payload) {
   return ContentService.createTextOutput(JSON.stringify(payload)).setMimeType(ContentService.MimeType.JSON);
@@ -620,13 +632,21 @@ function lineBotJson_(payload) {
 
 function handleLineSyncApi_(body) {
   var action = String(body.action || '');
+  // 🌅 學生早自修練習卡（2026-11-19）：不用金鑰，靠卡號；只能拿這班指定的題庫、交卷（見 practiceGet_／practiceSubmit_）
+  if (action === 'practice_get' || action === 'practice_submit') {
+    try {
+      return lineBotJson_(action === 'practice_get' ? practiceGet_(body) : practiceSubmit_(body));
+    } catch (error) {
+      return lineBotJson_({ ok: false, error: String(error && error.message ? error.message : error) });
+    }
+  }
   var provided = String(body.token || '');
   var teacherToken = lineBotProperty_('LINE_SYNC_TOKEN');
   var classroomToken = lineBotProperty_('CLASSROOM_TOKEN');
   var isTeacher = Boolean(teacherToken) && provided === teacherToken;
   var isClassroom = Boolean(classroomToken) && provided === classroomToken;
   // 教室金鑰權限受限：只能回報與讀取「當日」的點名與作業；歷史查詢需要老師金鑰。聯絡本例外：可以看今天以前（contactbook_month，唯讀），看不到未來。
-  var classroomActions = ['ping', 'rollcall_submit', 'classroom_today', 'classroom_missing', 'homework_resubmit', 'contactbook_get', 'contactbook_save', 'contactbook_month', 'prompt_get'];
+  var classroomActions = ['ping', 'rollcall_submit', 'classroom_today', 'classroom_missing', 'homework_resubmit', 'contactbook_get', 'contactbook_save', 'contactbook_month', 'prompt_get', 'battle_banks', 'battle_stats_submit'];
   if (!isTeacher && !(isClassroom && classroomActions.indexOf(action) !== -1)) {
     return lineBotJson_({ ok: false, error: '金鑰不正確或權限不足' });
   }
@@ -668,6 +688,65 @@ function handleLineSyncApi_(body) {
       return lineBotJson_(listContactBook_(body));
     }
     if (action === 'prompt_get') return lineBotJson_(getScreenPrompt_());
+    // 🎮 答題對戰題庫：大屏（教室金鑰）只能讀；存、刪要老師金鑰
+    // 教室金鑰拿不到「草稿」（AI 出的題目要老師按啟用才給學生玩）
+    if (action === 'battle_banks') return lineBotJson_({ ok: true, banks: readBattleBanks_(isTeacher) });
+    if (action === 'battle_bank_publish') {
+      if (!isTeacher) return lineBotJson_({ ok: false, error: '啟用題庫需要老師金鑰' });
+      return lineBotJson_(publishBattleBank_(body));
+    }
+    // 🤖 易錯題 → Gemini 補救題＋解說稿（全部要老師金鑰）
+    if (action === 'battle_remedy_generate') {
+      if (!isTeacher) return lineBotJson_({ ok: false, error: '用 Gemini 出題需要老師金鑰' });
+      return lineBotJson_(generateBattleRemedy_(body));
+    }
+    if (action === 'battle_ai_status') {
+      if (!isTeacher) return lineBotJson_({ ok: false, error: '需要老師金鑰' });
+      return lineBotJson_(battleAiStatus_());
+    }
+    if (action === 'battle_weekly_set') {
+      if (!isTeacher) return lineBotJson_({ ok: false, error: '需要老師金鑰' });
+      var weeklySettings = pushSettings_();
+      weeklySettings.battleWeekly = body.on === true;
+      savePushSettings_(weeklySettings);
+      if (body.on === true) ensureBattleWeeklyTrigger_(true);
+      return lineBotJson_(battleAiStatus_());
+    }
+    if (action === 'battle_weekly_run') {
+      if (!isTeacher) return lineBotJson_({ ok: false, error: '需要老師金鑰' });
+      return lineBotJson_(battleWeeklyRunNow_());
+    }
+    // 🌅 早自修練習：學生卡、指定題庫、狀況（全部要老師金鑰）
+    if (action === 'practice_cards') {
+      if (!isTeacher) return lineBotJson_({ ok: false, error: '產生練習卡需要老師金鑰' });
+      return lineBotJson_(practiceCardsApi_(body));
+    }
+    if (action === 'practice_assign') {
+      if (!isTeacher) return lineBotJson_({ ok: false, error: '指定練習題目需要老師金鑰' });
+      return lineBotJson_(practiceAssignApi_(body));
+    }
+    if (action === 'practice_status') {
+      if (!isTeacher) return lineBotJson_({ ok: false, error: '需要老師金鑰' });
+      return lineBotJson_(practiceStatus_());
+    }
+    if (action === 'battle_bank_save') {
+      if (!isTeacher) return lineBotJson_({ ok: false, error: '存題庫需要老師金鑰' });
+      return lineBotJson_(saveBattleBank_(body));
+    }
+    if (action === 'battle_bank_delete') {
+      if (!isTeacher) return lineBotJson_({ ok: false, error: '刪題庫需要老師金鑰' });
+      return lineBotJson_(deleteBattleBank_(body));
+    }
+    // 📉 答題對戰錯題：大屏（教室金鑰）只能新增；看、清除要老師金鑰
+    if (action === 'battle_stats_submit') return lineBotJson_(submitBattleStats_(body));
+    if (action === 'battle_stats_get') {
+      if (!isTeacher) return lineBotJson_({ ok: false, error: '看錯題統計需要老師金鑰' });
+      return lineBotJson_(getBattleStats_(body));
+    }
+    if (action === 'battle_stats_clear') {
+      if (!isTeacher) return lineBotJson_({ ok: false, error: '清除錯題統計需要老師金鑰' });
+      return lineBotJson_(clearBattleStats_(body));
+    }
     if (action === 'snapshot_get') {
       // 桌面小助手 v2.0 直連：讀回工作台最近一次上傳的快照（今日/逾期/今日課程）
       if (!isTeacher) return lineBotJson_({ ok: false, error: '讀取快照需要老師金鑰' });
@@ -796,6 +875,1277 @@ function handleScreenPromptCommand_(input) {
   if (preset) { saveScreenPrompt_(preset.text, preset.img); return '📣 大屏已切換：' + preset.text; }
   saveScreenPrompt_(input, 'class_focus.png');
   return '📣 大屏已切換為自訂提示：' + input.slice(0, 60) + '\n（大屏約 20 秒內更新）';
+}
+
+// ---------------------------------------------------------------------------
+// 🎮 答題對戰題庫（2026-11-17）：老師在工作台貼 NotebookLM 表格整理好 → 存這裡；
+// 大屏打開「答題對戰」時用教室金鑰唯讀拿回去玩。一個題庫一列，題目存成整理過的 JSON。
+// 教室金鑰放在教室電腦，學生拿得到 → 只開放讀（題目本來就要給全班看），存、刪限老師金鑰。
+// ---------------------------------------------------------------------------
+var BATTLE_MAX_BANKS = 50;
+var BATTLE_MAX_QUESTIONS = 300;
+var BATTLE_MAX_JSON = 45000;   // 單一儲存格上限 5 萬字
+
+function battleSheet_() {
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = spreadsheet.getSheetByName(LINE_BOT_CONFIG.BATTLE_SHEET);
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(LINE_BOT_CONFIG.BATTLE_SHEET);
+    sheet.getRange(1, 1, 1, LINE_BOT_CONFIG.BATTLE_HEADERS.length).setValues([LINE_BOT_CONFIG.BATTLE_HEADERS]);
+    sheet.setFrozenRows(1);
+  } else if (!String(sheet.getRange(1, 6).getValue())) {
+    sheet.getRange(1, 6).setValue(LINE_BOT_CONFIG.BATTLE_HEADERS[5]);   // 11-18 前建的分頁補上「狀態」欄
+  }
+  return sheet;
+}
+
+function battleText_(value, max) {
+  return String(value == null ? '' : value).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').slice(0, max);
+}
+
+/** 逐欄整理一題（和 assets/battle-bank.js 的 cleanQ 同規則）；不合格就丟掉。 */
+function cleanBattleQuestion_(q) {
+  if (!q || typeof q !== 'object') return null;
+  var text = battleText_(q.q, 300).trim();
+  if (!text) return null;
+  var exp = battleText_(q.exp, 300);
+  if (q.kind === 'open') return { kind: 'open', q: text, answer: battleText_(q.answer, 200) || '（老師判斷）', exp: exp };
+  if (q.kind === 'tf') return { kind: 'tf', q: text, opts: ['○ 對', '✕ 錯'], ans: q.ans === 1 ? 1 : 0, exp: exp };
+  var opts = Array.isArray(q.opts) ? q.opts.slice(0, 6).map(function (o) { return battleText_(o, 120); }) : [];
+  var ans = Number(q.ans);
+  if (opts.length < 2 || Math.floor(ans) !== ans || ans < 0 || ans >= opts.length) return null;
+  return { kind: 'choice', q: text, opts: opts, ans: ans, exp: exp };
+}
+
+function readBattleBanks_(withDrafts) {
+  var sheet = battleSheet_();
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return [];
+  var values = sheet.getRange(2, 1, lastRow - 1, LINE_BOT_CONFIG.BATTLE_HEADERS.length).getValues();
+  var banks = [];
+  values.forEach(function (row) {
+    var id = String(row[0] || '');
+    if (!id) return;
+    var draft = String(row[5] || '') === '草稿';
+    if (draft && !withDrafts) return;
+    var questions = [];
+    try { questions = JSON.parse(String(row[4] || '[]')); } catch (error) { questions = []; }
+    questions = (Array.isArray(questions) ? questions : []).slice(0, BATTLE_MAX_QUESTIONS).map(cleanBattleQuestion_).filter(Boolean);
+    banks.push({
+      id: id,
+      name: String(row[1] || '').slice(0, 30),
+      updatedAt: row[3] instanceof Date ? row[3].toISOString() : String(row[3] || ''),
+      draft: draft,
+      questions: questions
+    });
+  });
+  banks.sort(function (a, b) { return a.updatedAt < b.updatedAt ? 1 : a.updatedAt > b.updatedAt ? -1 : 0; });
+  return banks.slice(0, BATTLE_MAX_BANKS);
+}
+
+function battleBankRowIndex_(sheet, id) {
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return { index: -1, count: 0 };
+  var ids = sheet.getRange(2, 1, lastRow - 1, 1).getValues().map(function (row) { return String(row[0]); });
+  return { index: ids.indexOf(id), count: ids.filter(String).length };
+}
+
+function saveBattleBank_(body) {
+  var bank = body.bank && typeof body.bank === 'object' ? body.bank : {};
+  var name = battleText_(bank.name, 30).trim();
+  if (!name) throw new Error('請幫題庫取個名字');
+  var questions = (Array.isArray(bank.questions) ? bank.questions.slice(0, BATTLE_MAX_QUESTIONS) : [])
+    .map(cleanBattleQuestion_).filter(Boolean);
+  if (!questions.length) throw new Error('題庫裡沒有讀得到的題目');
+  var json = JSON.stringify(questions);
+  if (json.length > BATTLE_MAX_JSON) throw new Error('題庫太大（' + json.length + ' 字），請分成兩個題庫再存');
+  // 編號要英文字母開頭：避免試算表把 1e5 這類編號自動變成數字
+  var id = String(bank.id || '');
+  if (!/^[A-Za-z][A-Za-z0-9_-]{0,39}$/.test(id)) id = 'q' + new Date().getTime().toString(36);
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var sheet = battleSheet_();
+    var found = battleBankRowIndex_(sheet, id);
+    if (found.index === -1 && found.count >= BATTLE_MAX_BANKS) {
+      throw new Error('雲端最多放 ' + BATTLE_MAX_BANKS + ' 個題庫，請先刪掉用不到的');
+    }
+    var row = found.index === -1 ? sheet.getLastRow() + 1 : found.index + 2;
+    sheet.getRange(row, 1, 1, LINE_BOT_CONFIG.BATTLE_HEADERS.length)
+      .setValues([[id, sheetText_(name), questions.length, new Date(), json, bank.draft === true ? '草稿' : '']]);
+    return { ok: true, id: id, name: name, count: questions.length, draft: bank.draft === true };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/** 草稿 ⇄ 啟用：啟用後大屏下次同步就拿得到。 */
+function publishBattleBank_(body) {
+  var id = String(body.id || '');
+  if (!id) throw new Error('缺少題庫編號');
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var sheet = battleSheet_();
+    var found = battleBankRowIndex_(sheet, id);
+    if (found.index === -1) throw new Error('找不到這個題庫，請重新讀取');
+    var draft = body.draft === true;
+    sheet.getRange(found.index + 2, 6).setValue(draft ? '草稿' : '');
+    sheet.getRange(found.index + 2, 4).setValue(new Date());
+    return { ok: true, id: id, draft: draft };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function deleteBattleBank_(body) {
+  var id = String(body.id || '');
+  if (!id) throw new Error('缺少題庫編號');
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var sheet = battleSheet_();
+    var found = battleBankRowIndex_(sheet, id);
+    if (found.index === -1) return { ok: true, deleted: 0 };
+    sheet.deleteRow(found.index + 2);
+    return { ok: true, deleted: 1 };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 📉 答題對戰錯題（2026-11-18）：大屏每場比賽結束送一筆（哪班、哪個題庫、每題出幾次／幾隊作答／幾隊答錯／選錯哪個答案），
+// 同一天、同一班、同一題庫、同一題合併成一列。工作台用老師金鑰讀，拿去做筆記、心智圖、影片、補救題庫。
+// 資安：教室金鑰學生拿得到 → 只能新增、不能讀；只收近 14 天、數字有上限、文字逐欄截斷並防公式；
+// 同一筆紀錄重送不會重複計算（記住最近 400 筆編號）。
+// ---------------------------------------------------------------------------
+var BATTLE_STATS_MAX_ROWS = 30000;
+var BATTLE_STATS_SEEN_KEY = 'BATTLE_STATS_SEEN';
+
+function battleStatsSheet_() {
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = spreadsheet.getSheetByName(LINE_BOT_CONFIG.BATTLE_STATS_SHEET);
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(LINE_BOT_CONFIG.BATTLE_STATS_SHEET);
+    sheet.getRange(1, 1, 1, LINE_BOT_CONFIG.BATTLE_STATS_HEADERS.length).setValues([LINE_BOT_CONFIG.BATTLE_STATS_HEADERS]);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function battleCount_(value) {
+  var n = Math.floor(Number(value));
+  return n > 0 ? Math.min(n, 50) : 0;
+}
+
+function battlePicks_(value) {
+  var out = {};
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return out;
+  Object.keys(value).slice(0, 6).forEach(function (key) {
+    var text = battleText_(key, 120).trim();
+    var n = battleCount_(value[key]);
+    if (text && n) out[text] = (out[text] || 0) + n;
+  });
+  return out;
+}
+
+function battleDateShift_(days) {
+  return Utilities.formatDate(new Date(new Date().getTime() + days * 24 * 3600 * 1000), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+}
+
+function submitBattleStats_(body) {
+  var records = Array.isArray(body.records) ? body.records.slice(0, 10) : [];
+  var today = lineBotToday_();
+  var oldest = battleDateShift_(-14);
+  var accepted = [];
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var props = PropertiesService.getScriptProperties();
+    var seen = [];
+    try { seen = JSON.parse(props.getProperty(BATTLE_STATS_SEEN_KEY) || '[]'); } catch (error) { seen = []; }
+    if (!Array.isArray(seen)) seen = [];
+    var sheet = battleStatsSheet_();
+    var width = LINE_BOT_CONFIG.BATTLE_STATS_HEADERS.length;
+    // 只拿最後 3000 列來合併（同一天的紀錄都在最後面）；更早的不合併也沒關係，工作台會再加總
+    var lastRow = sheet.getLastRow();
+    var start = Math.max(2, lastRow - 2999);
+    var tail = lastRow >= start ? sheet.getRange(start, 1, lastRow - start + 1, width).getValues() : [];
+    var index = {};
+    tail.forEach(function (row, i) { index[[cellDate_(row[0]), String(row[1]), String(row[2]), String(row[4])].join('\u0001')] = i; });
+    var changed = {};
+    var added = [];
+    records.forEach(function (rec) {
+      if (!rec || typeof rec !== 'object') return;
+      var id = String(rec.id || '');
+      if (!/^[A-Za-z0-9_-]{6,40}$/.test(id)) return;
+      accepted.push(id);   // 格式不對的也回報「收到」，免得大屏一直重送
+      if (seen.indexOf(id) !== -1) return;
+      seen.push(id);
+      var date = String(rec.date || '');
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date > today || date < oldest) return;
+      var className = battleText_(rec.className, 20).trim() || '未指定班級';
+      var bankId = battleText_(rec.bankId, 40).replace(/[^A-Za-z0-9_-]/g, '') || 'unknown';
+      var bankName = battleText_(rec.bankName, 30).trim() || '（未命名題庫）';
+      (Array.isArray(rec.items) ? rec.items.slice(0, 80) : []).forEach(function (it) {
+        if (!it || typeof it !== 'object') return;
+        var q = battleText_(it.q, 300).trim();
+        if (!q) return;
+        var kind = ['choice', 'tf', 'open'].indexOf(it.kind) !== -1 ? it.kind : 'choice';
+        var asked = battleCount_(it.asked);
+        var answers = battleCount_(it.answers);
+        var wrong = Math.min(battleCount_(it.wrong), answers);
+        if (!asked && !answers) return;
+        var picks = battlePicks_(it.picks);
+        var key = [date, className, bankId, q].join('\u0001');
+        var row;
+        if (index.hasOwnProperty(key)) {
+          row = tail[index[key]];
+          changed[index[key]] = true;
+        } else {
+          row = [date, sheetText_(className), bankId, sheetText_(bankName), sheetText_(q), kind,
+            sheetText_(battleText_(it.answer, 200)), sheetText_(battleText_(it.exp, 300)), 0, 0, 0, '{}', new Date()];
+          tail.push(row);
+          index[key] = tail.length - 1;
+          added.push(tail.length - 1);
+        }
+        var old = {};
+        try { old = JSON.parse(String(row[11] || '{}')); } catch (error) { old = {}; }
+        Object.keys(picks).forEach(function (text) { old[text] = (Number(old[text]) || 0) + picks[text]; });
+        row[3] = sheetText_(bankName);
+        row[8] = (Number(row[8]) || 0) + asked;
+        row[9] = (Number(row[9]) || 0) + answers;
+        row[10] = (Number(row[10]) || 0) + wrong;
+        row[11] = JSON.stringify(old);
+        row[12] = new Date();
+      });
+    });
+    Object.keys(changed).forEach(function (i) {
+      i = Number(i);
+      if (added.indexOf(i) !== -1) return;
+      // 讀回來的文字已經沒有防公式的單引號，寫回前再加一次
+      sheet.getRange(start + i, 1, 1, width).setValues([tail[i].map(function (cell, j) { return [1, 3, 4, 6, 7].indexOf(j) !== -1 ? sheetText_(cell) : cell; })]);
+    });
+    if (added.length) {
+      sheet.getRange(lastRow + 1, 1, added.length, width).setValues(added.map(function (i) { return tail[i]; }));
+    }
+    props.setProperty(BATTLE_STATS_SEEN_KEY, JSON.stringify(seen.slice(-400)));
+    var total = sheet.getLastRow() - 1;
+    if (total > BATTLE_STATS_MAX_ROWS) sheet.deleteRows(2, total - BATTLE_STATS_MAX_ROWS);   // 太多就刪最舊的
+    return { ok: true, accepted: accepted, added: added.length };
+  } finally {
+    lock.releaseLock();
+    if (records.length) { try { ensureBattleWeeklyTrigger_(false); } catch (error) {} }   // 有錯題了就確保週報排程在（只第一次真的去查）
+  }
+}
+
+function battleStatsRange_(body) {
+  var from = String(body.from || battleDateShift_(-30));
+  var to = String(body.to || lineBotToday_());
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) throw new Error('日期格式須為 YYYY-MM-DD');
+  return { from: from, to: to, className: String(body.className || '').trim() };
+}
+
+function getBattleStats_(body) {
+  var range = battleStatsRange_(body);
+  var sheet = battleStatsSheet_();
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return { ok: true, from: range.from, to: range.to, rows: [] };
+  var values = sheet.getRange(2, 1, lastRow - 1, LINE_BOT_CONFIG.BATTLE_STATS_HEADERS.length).getValues();
+  var rows = [];
+  values.forEach(function (row) {
+    var date = cellDate_(row[0]);
+    if (date < range.from || date > range.to) return;
+    if (range.className && String(row[1]) !== range.className) return;
+    var picks = {};
+    try { picks = JSON.parse(String(row[11] || '{}')); } catch (error) { picks = {}; }
+    rows.push({
+      date: date, className: String(row[1]), bankId: String(row[2]), bankName: String(row[3]),
+      q: String(row[4]), kind: String(row[5]), answer: String(row[6]), exp: String(row[7]),
+      asked: Number(row[8]) || 0, answers: Number(row[9]) || 0, wrong: Number(row[10]) || 0, picks: picks
+    });
+  });
+  return { ok: true, from: range.from, to: range.to, rows: rows.slice(-5000) };
+}
+
+function clearBattleStats_(body) {
+  var range = battleStatsRange_(body);
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var practiceDeleted = practiceClearRange_(range);   // 同一期間的個人練習紀錄一起清
+    var sheet = battleStatsSheet_();
+    var width = LINE_BOT_CONFIG.BATTLE_STATS_HEADERS.length;
+    var lastRow = sheet.getLastRow();
+    if (lastRow <= 1) return { ok: true, deleted: 0, practiceDeleted: practiceDeleted };
+    var values = sheet.getRange(2, 1, lastRow - 1, width).getValues();
+    var keep = values.filter(function (row) {
+      var date = cellDate_(row[0]);
+      var hit = date >= range.from && date <= range.to && (!range.className || String(row[1]) === range.className);
+      return !hit;
+    });
+    var deleted = values.length - keep.length;
+    if (!deleted) return { ok: true, deleted: 0, practiceDeleted: practiceDeleted };
+    // 文字欄位重寫前再防一次公式（讀回來時前導單引號已經不見）
+    keep = keep.map(function (row) { return row.map(function (cell, i) { return [1, 3, 4, 6, 7].indexOf(i) !== -1 ? sheetText_(cell) : cell; }); });
+    sheet.getRange(2, 1, values.length, width).clearContent();
+    if (keep.length) sheet.getRange(2, 1, keep.length, width).setValues(keep);
+    return { ok: true, deleted: deleted, practiceDeleted: practiceDeleted };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 🤖 易錯題 → Gemini 補救題＋解說稿（2026-11-18）
+// 每週五 17 點（weeklyBattleRemedy）或工作台按鈕（battle_remedy_generate）：
+// 把全班最容易錯的題目交給 Gemini（只送班級＋題目統計，沒有學生資料）→
+//   ① 類似但不一樣的補救題 → 存成「草稿」題庫（大屏看不到，老師在工作台按啟用才上大屏）
+//   ② 易錯題解說稿 → 雲端硬碟「答題對戰・易錯題」資料夾的 Google 文件（可加進 Gemini Notebook 做影片摘要）
+//   ③ 週報用 LINE 通知老師（1 則；推播設定「易錯題週報」可關；附「✅ 啟用補救題」按鈕）
+//   ④ 2026-11-19：有早自修練習（練習卡）的班，每位學生再做一份個人錯題分析 PDF（只放老師的雲端硬碟）
+// 解說稿用 Drive API 轉成 Google 文件：沿用備份已有的雲端硬碟權限，不用再多授權一次。
+// ---------------------------------------------------------------------------
+var BATTLE_AI_MAX_ITEMS = 12;
+var BATTLE_WEEKLY_LAST_KEY = 'BATTLE_WEEKLY_LAST';
+var BATTLE_WEEKLY_TRIGGER_KEY = 'BATTLE_WEEKLY_TRIGGER';
+var BATTLE_DOC_FOLDER_KEY = 'BATTLE_DOC_FOLDER_ID';
+
+function battleHash_(text) {
+  var h = 5381;
+  var s = String(text);
+  for (var i = 0; i < s.length; i += 1) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
+  return h.toString(36);
+}
+
+function battleNum_(value) {
+  var n = Math.floor(Number(value));
+  return n > 0 ? Math.min(n, 100000) : 0;
+}
+
+/** 工作台送來的勾選題目（老師金鑰）逐欄整理。 */
+function battleAiItems_(list) {
+  return (Array.isArray(list) ? list : []).slice(0, BATTLE_AI_MAX_ITEMS).map(function (it) {
+    if (!it || typeof it !== 'object') return null;
+    var q = battleText_(it.q, 300).trim();
+    if (!q) return null;
+    var picks = {};
+    if (it.picks && typeof it.picks === 'object' && !Array.isArray(it.picks)) {
+      Object.keys(it.picks).slice(0, 6).forEach(function (key) {
+        var text = battleText_(key, 120).trim();
+        var n = battleNum_(it.picks[key]);
+        if (text && n) picks[text] = n;
+      });
+    }
+    var answers = battleNum_(it.answers);
+    return { q: q, answer: battleText_(it.answer, 200), exp: battleText_(it.exp, 300), bankName: battleText_(it.bankName, 30),
+      answers: answers, wrong: Math.min(battleNum_(it.wrong), answers), picks: picks };
+  }).filter(Boolean);
+}
+
+/** 錯題列（getBattleStats_ 的 rows）合併成題目，挑錯誤率高的：至少 2 隊次作答、錯 30% 以上。 */
+function battleHardItems_(rows, limit) {
+  var map = {};
+  rows.forEach(function (row) {
+    var key = row.bankId + '\u0001' + row.q;
+    var it = map[key];
+    if (!it) it = map[key] = { q: row.q, answer: row.answer, exp: row.exp, bankName: row.bankName, answers: 0, wrong: 0, picks: {} };
+    it.answers += row.answers;
+    it.wrong += row.wrong;
+    Object.keys(row.picks || {}).forEach(function (text) { it.picks[text] = (it.picks[text] || 0) + (Number(row.picks[text]) || 0); });
+  });
+  return Object.keys(map).map(function (key) { return map[key]; })
+    .filter(function (it) { return it.answers >= 2 && it.wrong >= 1 && it.wrong / it.answers >= 0.3; })
+    .sort(function (a, b) { return b.wrong / b.answers - a.wrong / a.answers || b.wrong - a.wrong; })
+    .slice(0, limit);
+}
+
+function battleTopPicks_(picks, n) {
+  return Object.keys(picks || {}).map(function (text) { return [text, picks[text]]; })
+    .filter(function (pair) { return pair[1] > 0; })
+    .sort(function (a, b) { return b[1] - a[1]; }).slice(0, n);
+}
+
+function battleAskGemini_(apiKey, className, items) {
+  var count = Math.max(4, Math.min(20, items.length * 2));
+  var list = items.map(function (it, i) {
+    var top = battleTopPicks_(it.picks, 2).map(function (p) { return '「' + p[0] + '」（' + p[1] + ' 次）'; }).join('、');
+    return (i + 1) + '. ' + it.q + '\n   正確答案：' + it.answer +
+      (top ? '\n   學生常選錯：' + top : '') + (it.exp ? '\n   原本的解說：' + it.exp : '') +
+      (it.answers ? '\n   答錯 ' + it.wrong + '／作答 ' + it.answers + ' 隊次' : '');
+  }).join('\n');
+  var prompt = [
+    '你是臺灣國小老師的教學助手。下面是「' + (className || '全部班級') + '」學生玩課堂答題遊戲時最常答錯的題目（全班分隊作答，只有班級統計，沒有個別學生）。',
+    '請依班級名稱判斷年級（看不出來就當國小高年級），全部用繁體中文、該年級學生看得懂的用語。',
+    '',
+    list,
+    '',
+    '只回傳 JSON，不要其他文字。格式：',
+    '{"summary":"60字內：這批錯題背後共同的迷思","items":[{"q":"原題目（照抄）","why":"學生為什麼會選錯，40字內","idea":"正確觀念，40字內","tip":"生活例子或記憶小技巧，40字內"}],"questions":[{"q":"題目","opts":["選項","選項","選項","選項"],"ans":0,"exp":"一句話解說，30字內"}]}',
+    '規則：',
+    '1. items 依上面的順序，每題一筆。',
+    '2. questions 出 ' + count + ' 題「觀念相同、題目不一樣」的四選一選擇題；錯誤選項用學生常見的錯誤想法設計；ans 是正確選項的位置（0～3），正確答案的位置要平均分散。',
+    '3. 不要出「以上皆是」「以上皆非」；題目裡不要出現真實人名；沒把握的事實不要出題。'
+  ].join('\n');
+  var parsed = battleGeminiJson_(apiKey, prompt);
+  var questions = (Array.isArray(parsed.questions) ? parsed.questions : []).slice(0, 30).map(function (q) {
+    return q && typeof q === 'object' ? cleanBattleQuestion_({ kind: 'choice', q: q.q, opts: q.opts, ans: Number(q.ans), exp: q.exp }) : null;
+  }).filter(Boolean);
+  var notes = (Array.isArray(parsed.items) ? parsed.items : []).slice(0, items.length).map(function (n) {
+    n = n && typeof n === 'object' ? n : {};
+    return { why: battleText_(n.why, 120), idea: battleText_(n.idea, 120), tip: battleText_(n.tip, 120) };
+  });
+  return { summary: battleText_(parsed.summary, 200), notes: notes, questions: questions };
+}
+
+/** 問 Gemini、拿回 JSON 物件（錯誤訊息給老師看得懂）。 */
+function battleGeminiJson_(apiKey, prompt) {
+  var response = fetchGemini_(apiKey, {
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: { temperature: 0.4, responseMimeType: 'application/json' }
+  });
+  var code = response ? response.getResponseCode() : 0;
+  if (code === 429) throw new Error('Gemini 今天的免費額度用完了，明天再試');
+  if (code !== 200) throw new Error('Gemini 沒有回應（' + code + '），請稍後再試');
+  var data = JSON.parse(response.getContentText());
+  var candidate = (data.candidates || [])[0] || {};
+  var text = String(((candidate.content || {}).parts || []).map(function (part) { return part.text || ''; }).join(''));
+  var match = text.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error('Gemini 回的格式看不懂，請再試一次');
+  var parsed;
+  try { parsed = JSON.parse(match[0]); } catch (error) { throw new Error('Gemini 回的格式看不懂，請再試一次'); }
+  if (!parsed || typeof parsed !== 'object') throw new Error('Gemini 回的格式看不懂，請再試一次');
+  return parsed;
+}
+
+function battleEscape_(value) {
+  return String(value == null ? '' : value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function battleDocHtml_(title, className, items, ai, bankName) {
+  var e = battleEscape_;
+  var html = ['<html><head><meta charset="utf-8"><title>' + e(title) + '</title></head><body>',
+    '<h1>' + e(title) + '</h1>',
+    '<p>這份是「' + e(className || '全部班級') + '」玩課堂答題遊戲時全班最容易錯的題目整理（只有班級統計，沒有個別學生）。',
+    '可以加進 Gemini Notebook 當來源，按「影片摘要」就能做一支針對易錯觀念的解說影片。</p>'];
+  if (ai.summary) html.push('<h2>這批錯題背後的共同迷思</h2><p>' + e(ai.summary) + '</p>');
+  html.push('<h2>逐題解說</h2>');
+  items.forEach(function (it, i) {
+    var note = ai.notes[i] || {};
+    var top = battleTopPicks_(it.picks, 2).map(function (p) { return '「' + e(p[0]) + '」' + p[1] + ' 次'; }).join('、');
+    html.push('<h3>' + (i + 1) + '. ' + e(it.q) + '</h3><ul>');
+    html.push('<li>正確答案：' + e(it.answer) + '</li>');
+    if (it.answers) html.push('<li>答錯 ' + it.wrong + '／作答 ' + it.answers + ' 隊次（錯 ' + Math.round(it.wrong / it.answers * 100) + '%）</li>');
+    if (top) html.push('<li>學生常選錯：' + top + '</li>');
+    if (note.why) html.push('<li>為什麼會錯：' + e(note.why) + '</li>');
+    if (note.idea) html.push('<li>正確觀念：' + e(note.idea) + '</li>');
+    if (note.tip) html.push('<li>小技巧：' + e(note.tip) + '</li>');
+    if (it.exp) html.push('<li>原本的解說：' + e(it.exp) + '</li>');
+    html.push('</ul>');
+  });
+  if (ai.questions.length) {
+    html.push('<h2>補救練習題（已存成題庫草稿「' + e(bankName) + '」）</h2><ol>');
+    ai.questions.forEach(function (q) {
+      html.push('<li>' + e(q.q) + '<br>' + q.opts.map(function (o, i) { return '(' + 'ABCDEF'.charAt(i) + ') ' + e(o); }).join('　') +
+        '<br>答案：' + 'ABCDEF'.charAt(q.ans) + (q.exp ? '　' + e(q.exp) : '') + '</li>');
+    });
+    html.push('</ol>');
+  }
+  html.push('</body></html>');
+  return html.join('\n');
+}
+
+function battleDocFolder_() {
+  var props = PropertiesService.getScriptProperties();
+  var savedId = String(props.getProperty(BATTLE_DOC_FOLDER_KEY) || '').trim();
+  if (savedId) {
+    try { return DriveApp.getFolderById(savedId); } catch (error) {}   // 資料夾被刪掉就重建
+  }
+  var name = '答題對戰・易錯題';
+  var existing = DriveApp.getFoldersByName(name);
+  var folder = existing.hasNext() ? existing.next() : DriveApp.createFolder(name);
+  props.setProperty(BATTLE_DOC_FOLDER_KEY, folder.getId());
+  return folder;
+}
+
+/** HTML 上傳成 Google 文件（Drive API 轉檔：沿用備份已有的雲端硬碟權限）。失敗回 null。 */
+function battleUploadDoc_(title, html, folder) {
+  try {
+    var boundary = 'battle' + new Date().getTime();
+    var meta = { name: title, mimeType: 'application/vnd.google-apps.document', parents: [folder.getId()] };
+    var payload = '--' + boundary + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(meta) +
+      '\r\n--' + boundary + '\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n' + html + '\r\n--' + boundary + '--';
+    var res = UrlFetchApp.fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink', {
+      method: 'post',
+      contentType: 'multipart/related; boundary=' + boundary,
+      payload: Utilities.newBlob(payload).getBytes(),
+      headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() },
+      muteHttpExceptions: true
+    });
+    if (res.getResponseCode() < 300) {
+      var file = JSON.parse(res.getContentText());
+      if (file && file.id) return { id: String(file.id), url: file.webViewLink || ('https://docs.google.com/document/d/' + file.id + '/edit') };
+    }
+  } catch (error) {}
+  return null;
+}
+
+/**
+ * 存成 Google 文件；轉不成就存 HTML 檔，至少內容在。
+ * folder 沒給就放「答題對戰・易錯題」；pdf＝另外存一份 PDF；replace＝先把同名舊檔丟垃圾桶（週報重跑不會越堆越多）。
+ */
+function battleSaveDoc_(title, html, folder, pdf, replace) {
+  folder = folder || battleDocFolder_();
+  if (replace) battleTrashSameName_(folder, title);
+  var doc = battleUploadDoc_(title, html, folder);
+  if (!doc) {
+    if (replace) battleTrashSameName_(folder, title + '.html');
+    var fallback = folder.createFile(title + '.html', html, MimeType.HTML);
+    return { url: fallback.getUrl(), kind: 'html', pdfUrl: '' };
+  }
+  var pdfUrl = '';
+  if (pdf) {
+    try {
+      if (replace) battleTrashSameName_(folder, title + '.pdf');
+      pdfUrl = folder.createFile(DriveApp.getFileById(doc.id).getAs(MimeType.PDF).setName(title + '.pdf')).getUrl();
+    } catch (error) { pdfUrl = ''; }
+  }
+  return { url: doc.url, kind: 'doc', pdfUrl: pdfUrl };
+}
+
+/** 出補救題（草稿題庫）＋解說稿。opts.id／opts.name 決定題庫；週報用固定編號，每週蓋掉同一班上週那份。 */
+function battleRemedyBuild_(className, items, opts) {
+  var apiKey = lineBotProperty_('GEMINI_API_KEY');
+  if (!apiKey) throw new Error('雲端還沒填 Gemini 金鑰（🔑D）：到試算表選單「🤖 LINE 小幫手 → ④ 填入 Gemini 金鑰」');
+  if (!items.length) throw new Error('沒有要處理的錯題');
+  var ai = battleAskGemini_(apiKey, className, items);
+  if (!ai.questions.length) throw new Error('Gemini 這次沒出成題目，請再按一次');
+  var saved = saveBattleBank_({ bank: { id: opts.id || '', name: opts.name, questions: ai.questions, draft: true } });
+  var doc = null;
+  if (opts.doc !== false) {
+    var title = '易錯題解說稿｜' + (className || '全部班級') + '｜' + lineBotToday_();
+    try { doc = battleSaveDoc_(title, battleDocHtml_(title, className, items, ai, saved.name), opts.folder, opts.pdf === true, opts.replace === true); } catch (error) { doc = null; }
+  }
+  return { ok: true, bank: saved, docUrl: doc ? doc.url : '', docKind: doc ? doc.kind : '', pdfUrl: doc ? doc.pdfUrl : '', summary: ai.summary, items: items.length };
+}
+
+/** 工作台「🤖 用 Gemini 出補救題」：老師勾的題目。 */
+function generateBattleRemedy_(body) {
+  var className = battleText_(body.className, 20).trim();
+  var items = battleAiItems_(body.items);
+  var d = lineBotToday_().slice(5).replace('-', '/');
+  var name = ('補救・' + (className || battleText_(body.bankName, 16).trim() || '易錯題')).slice(0, 24) + ' ' + d;
+  return battleRemedyBuild_(className, items, { name: name, doc: body.doc !== false });
+}
+
+function ensureBattleWeeklyTrigger_(force) {
+  var props = PropertiesService.getScriptProperties();
+  if (!force && props.getProperty(BATTLE_WEEKLY_TRIGGER_KEY) === '1') return true;
+  var exists = ScriptApp.getProjectTriggers().some(function (trigger) { return trigger.getHandlerFunction() === 'weeklyBattleRemedy'; });
+  if (!exists) ScriptApp.newTrigger('weeklyBattleRemedy').timeBased().onWeekDay(ScriptApp.WeekDay.FRIDAY).atHour(17).create();
+  props.setProperty(BATTLE_WEEKLY_TRIGGER_KEY, '1');
+  return true;
+}
+
+function battleAiStatus_() {
+  var last = null;
+  try { last = JSON.parse(lineBotProperty_(BATTLE_WEEKLY_LAST_KEY) || 'null'); } catch (error) { last = null; }
+  var trigger = false;
+  try { trigger = ensureBattleWeeklyTrigger_(true); } catch (error) { trigger = false; }
+  return { ok: true, weekly: pushSettings_().battleWeekly === true, hasKey: Boolean(lineBotProperty_('GEMINI_API_KEY')), trigger: trigger, last: last };
+}
+
+// ---------------------------------------------------------------------------
+// 🌅 早自修練習（2026-11-19）：學生掃自己的「練習卡」QR → 學生練習頁（Practice.html）作答 →
+//   每個人錯哪幾題記在「練習紀錄」（班級＋座號，不記姓名），同時併進全班「答題錯題」統計。
+//   每週五的自動流程另外幫有練習的學生各做一份「個人錯題分析」PDF，放在老師自己的雲端硬碟（不分享給任何人）。
+// 資安：練習卡是一串隨機卡號（約 76 位元），不是金鑰，只能做兩件事：
+//   ① 拿這班老師指定的題庫（只有已啟用的，草稿拿不到）② 交卷（每天最多 5 次；答案由雲端對題庫重新批改，不信任學生端）。
+//   拿不到點名、聯絡本、別班或別人的資料；卡弄丟了老師按「補發」，舊卡立刻作廢。
+//   送給 Gemini 的只有題目和「學生1、學生2」這種代號，座號由程式自己對回去。
+// ---------------------------------------------------------------------------
+var PRACTICE_ASSIGN_KEY = 'PRACTICE_ASSIGN';
+var PRACTICE_MAX_SEATS = 40;
+var PRACTICE_MAX_CLASSES = 30;
+var PRACTICE_DAILY_LIMIT = 5;
+var PRACTICE_LOG_MAX_ROWS = 20000;
+
+function practiceSheet_(name, headers) {
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = spreadsheet.getSheetByName(name);
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(name);
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+function practiceCardSheet_() { return practiceSheet_(LINE_BOT_CONFIG.PRACTICE_CARD_SHEET, LINE_BOT_CONFIG.PRACTICE_CARD_HEADERS); }
+function practiceLogSheet_() { return practiceSheet_(LINE_BOT_CONFIG.PRACTICE_LOG_SHEET, LINE_BOT_CONFIG.PRACTICE_LOG_HEADERS); }
+
+function practiceClassName_(value) {
+  return battleText_(value, 20).replace(/[\r\n\t]/g, ' ').trim();
+}
+
+function practiceNewCard_() {
+  return 'p' + Utilities.getUuid().replace(/-/g, '').toLowerCase().slice(0, 20);
+}
+
+/** 讀全部練習卡：[{ row, className, seat, card }] */
+function practiceCards_() {
+  var sheet = practiceCardSheet_();
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return [];
+  return sheet.getRange(2, 1, lastRow - 1, 3).getValues().map(function (row, i) {
+    return { row: i + 2, className: String(row[0] || ''), seat: Math.floor(Number(row[1]) || 0), card: String(row[2] || '') };
+  }).filter(function (c) { return c.className && c.seat > 0 && c.card; });
+}
+
+function practiceFindCard_(card) {
+  card = String(card || '');
+  if (!/^p[0-9a-f]{20}$/.test(card)) return null;
+  var cards = practiceCards_();
+  for (var i = 0; i < cards.length; i += 1) if (cards[i].card === card) return cards[i];
+  return null;
+}
+
+function practiceAssign_() {
+  try {
+    var saved = JSON.parse(lineBotProperty_(PRACTICE_ASSIGN_KEY) || '{}');
+    return saved && typeof saved === 'object' && !Array.isArray(saved) ? saved : {};
+  } catch (error) { return {}; }
+}
+
+function practiceRightText_(q) {
+  return q.kind === 'tf' ? (q.ans === 0 ? '○' : '✕') : q.opts[q.ans];
+}
+function practicePickText_(q, pick) {
+  return q.kind === 'tf' ? (pick === 0 ? '○' : '✕') : q.opts[pick];
+}
+
+/** 老師：產生這班 1～N 號的練習卡（已經有的不會變）；regenSeat 補發一張（舊卡作廢）。 */
+function practiceCardsApi_(body) {
+  var className = practiceClassName_(body.className);
+  if (!className) throw new Error('請填班級名稱');
+  var count = Math.floor(Number(body.count) || 0);
+  if (count < 0 || count > PRACTICE_MAX_SEATS) throw new Error('人數要在 1～' + PRACTICE_MAX_SEATS + ' 之間');
+  var regen = Math.floor(Number(body.regenSeat) || 0);
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var sheet = practiceCardSheet_();
+    var cards = practiceCards_();
+    var have = {};
+    var classes = {};
+    cards.forEach(function (c) {
+      classes[c.className] = true;
+      if (c.className === className) have[c.seat] = c;
+    });
+    if (!classes[className] && (count || regen) && Object.keys(classes).length >= PRACTICE_MAX_CLASSES) {
+      throw new Error('練習卡最多 ' + PRACTICE_MAX_CLASSES + ' 個班');
+    }
+    if (regen) {
+      if (regen > PRACTICE_MAX_SEATS) throw new Error('座號超過 ' + PRACTICE_MAX_SEATS);
+      if (have[regen]) {
+        sheet.getRange(have[regen].row, 3, 1, 2).setValues([[practiceNewCard_(), new Date()]]);
+      } else {
+        sheet.getRange(sheet.getLastRow() + 1, 1, 1, 4).setValues([[sheetText_(className), regen, practiceNewCard_(), new Date()]]);
+      }
+    }
+    var added = [];
+    for (var seat = 1; seat <= count; seat += 1) {
+      if (!have[seat] && seat !== regen) added.push([sheetText_(className), seat, practiceNewCard_(), new Date()]);
+    }
+    if (added.length) sheet.getRange(sheet.getLastRow() + 1, 1, added.length, 4).setValues(added);
+  } finally {
+    lock.releaseLock();
+  }
+  var list = practiceCards_().filter(function (c) { return c.className === className; })
+    .map(function (c) { return { seat: c.seat, card: c.card }; })
+    .sort(function (a, b) { return a.seat - b.seat; });
+  return { ok: true, className: className, cards: list };
+}
+
+/** 老師：指定這班早自修練習哪個題庫、一次幾題（0＝全部）。bankId 空白＝取消。 */
+function practiceAssignApi_(body) {
+  var className = practiceClassName_(body.className);
+  if (!className) throw new Error('請填班級名稱');
+  var bankId = String(body.bankId || '');
+  var count = Math.floor(Number(body.count) || 0);
+  if (count < 0 || count > 50) count = 10;
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var assign = practiceAssign_();
+    if (!bankId) {
+      delete assign[className];
+    } else {
+      if (!/^[A-Za-z][A-Za-z0-9_-]{0,39}$/.test(bankId)) throw new Error('題庫編號不對');
+      var bank = readBattleBanks_(true).filter(function (b) { return b.id === bankId; })[0];
+      if (!bank) throw new Error('找不到這個題庫，請重新讀取');
+      if (!assign[className] && Object.keys(assign).length >= 60) throw new Error('指定的班級太多了');
+      assign[className] = { bankId: bankId, count: count, at: lineBotToday_() };
+    }
+    PropertiesService.getScriptProperties().setProperty(PRACTICE_ASSIGN_KEY, JSON.stringify(assign));
+  } finally {
+    lock.releaseLock();
+  }
+  return practiceStatus_();
+}
+
+/** 練習紀錄（from～to）：[{ date, className, seat, bankId, bankName, correct, total, wrong:[…] }] */
+function practiceLogRows_(from, to, className) {
+  var sheet = practiceLogSheet_();
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return [];
+  var width = LINE_BOT_CONFIG.PRACTICE_LOG_HEADERS.length;
+  var out = [];
+  sheet.getRange(2, 1, lastRow - 1, width).getValues().forEach(function (row) {
+    var date = cellDate_(row[0]);
+    if (date < from || date > to) return;
+    if (className && String(row[1]) !== className) return;
+    var wrong = [];
+    try { wrong = JSON.parse(String(row[7] || '[]')); } catch (error) { wrong = []; }
+    out.push({ date: date, className: String(row[1]), seat: Math.floor(Number(row[2]) || 0), bankId: String(row[3]), bankName: String(row[4]),
+      correct: Number(row[5]) || 0, total: Number(row[6]) || 0, wrong: Array.isArray(wrong) ? wrong : [] });
+  });
+  return out;
+}
+
+/** 老師：每班有幾張卡、指定哪個題庫、近 7 天交卷狀況（只有人數與答對率，不列個人）。 */
+function practiceStatus_() {
+  var assign = practiceAssign_();
+  var classes = {};
+  var ensure = function (name) {
+    return classes[name] = classes[name] || { className: name, cards: 0, bankId: '', bankName: '', count: 10, submits: 0, students: {}, correct: 0, total: 0 };
+  };
+  practiceCards_().forEach(function (c) { ensure(c.className).cards += 1; });
+  var banks = {};
+  readBattleBanks_(true).forEach(function (b) { banks[b.id] = b; });
+  Object.keys(assign).forEach(function (name) {
+    var c = ensure(name);
+    var a = assign[name] || {};
+    c.bankId = String(a.bankId || '');
+    c.count = Math.floor(Number(a.count) || 0);
+    var bank = banks[c.bankId];
+    c.bankName = bank ? bank.name : '（題庫已刪除）';
+    c.bankDraft = bank ? bank.draft === true : false;
+  });
+  practiceLogRows_(battleDateShift_(-6), lineBotToday_()).forEach(function (r) {
+    var c = ensure(r.className);
+    c.submits += 1;
+    c.students[r.seat] = true;
+    c.correct += r.correct;
+    c.total += r.total;
+  });
+  var list = Object.keys(classes).sort().map(function (name) {
+    var c = classes[name];
+    c.students = Object.keys(c.students).length;
+    c.rate = c.total ? Math.round(c.correct / c.total * 100) : null;
+    delete c.correct;
+    return c;
+  });
+  var folderUrl = '';
+  try {
+    var savedId = lineBotProperty_(BATTLE_DOC_FOLDER_KEY);
+    if (savedId) folderUrl = DriveApp.getFolderById(savedId).getUrl();
+  } catch (error) { folderUrl = ''; }
+  return { ok: true, classes: list, limit: PRACTICE_DAILY_LIMIT, folderUrl: folderUrl };
+}
+
+/** 學生（練習卡）：拿這班指定的題庫。只有已啟用的題庫；問答題不能自動批改，不出。 */
+function practiceGet_(body) {
+  var me = practiceFindCard_(body.card);
+  if (!me) throw new Error('這張練習卡不能用了，請跟老師拿新的卡');
+  var base = { ok: true, className: me.className, seat: me.seat, limit: PRACTICE_DAILY_LIMIT };
+  var a = practiceAssign_()[me.className];
+  if (!a || !a.bankId) { base.bank = null; base.message = '老師還沒指定這班要練習的題目，等一下再掃一次'; return base; }
+  var bank = readBattleBanks_(false).filter(function (b) { return b.id === a.bankId; })[0];
+  if (!bank) { base.bank = null; base.message = '老師指定的題目還在準備中，等一下再掃一次'; return base; }
+  var qs = bank.questions.filter(function (q) { return q.kind !== 'open'; });
+  for (var i = qs.length - 1; i > 0; i -= 1) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = qs[i]; qs[i] = qs[j]; qs[j] = t;
+  }
+  var count = Math.floor(Number(a.count) || 0);
+  if (count > 0) qs = qs.slice(0, count);
+  if (!qs.length) { base.bank = null; base.message = '這份題目都是問答題，沒辦法自己練習，請跟老師說'; return base; }
+  base.bank = { id: bank.id, name: bank.name, questions: qs };
+  base.used = practiceTodayCount_(me);
+  return base;
+}
+
+function practiceTodayCount_(me) {
+  var today = lineBotToday_();
+  var sheet = practiceLogSheet_();
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return 0;
+  var start = Math.max(2, lastRow - 1999);
+  return sheet.getRange(start, 1, lastRow - start + 1, 3).getValues().filter(function (row) {
+    return cellDate_(row[0]) === today && String(row[1]) === me.className && Math.floor(Number(row[2])) === me.seat;
+  }).length;
+}
+
+/** 學生（練習卡）：交卷。雲端用題庫重新批改，學生端說對錯都不算數。 */
+function practiceSubmit_(body) {
+  var me = practiceFindCard_(body.card);
+  if (!me) throw new Error('這張練習卡不能用了，請跟老師拿新的卡');
+  var id = String(body.id || '');
+  if (!/^[A-Za-z0-9_-]{6,40}$/.test(id)) throw new Error('交卷編號不對，請重新整理再做一次');
+  var bankId = String(body.bankId || '');
+  var bank = readBattleBanks_(false).filter(function (b) { return b.id === bankId; })[0];
+  if (!bank) throw new Error('這份題目老師已經收起來了，請重新掃卡');
+  var byQ = {};
+  bank.questions.forEach(function (q) { if (q.kind !== 'open' && !byQ.hasOwnProperty(q.q)) byQ[q.q] = q; });
+  var done = {};
+  var graded = [];
+  (Array.isArray(body.answers) ? body.answers.slice(0, 60) : []).forEach(function (a) {
+    if (!a || typeof a !== 'object') return;
+    var text = String(a.q || '');
+    if (!byQ.hasOwnProperty(text) || done[text]) return;
+    var q = byQ[text];
+    var pick = Number(a.pick);
+    if (Math.floor(pick) !== pick || pick < 0 || pick >= q.opts.length) return;
+    done[text] = true;
+    graded.push({ q: q, pick: pick, ok: pick === q.ans });
+  });
+  if (!graded.length) throw new Error('沒有收到答案，請再做一次');
+  var today = lineBotToday_();
+  var wrong = graded.filter(function (g) { return !g.ok; }).map(function (g) {
+    return { q: g.q.q, answer: practiceRightText_(g.q), pick: practicePickText_(g.q, g.pick), exp: g.q.exp || '' };
+  });
+  var correct = graded.length - wrong.length;
+  var used = 0;
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var sheet = practiceLogSheet_();
+    var width = LINE_BOT_CONFIG.PRACTICE_LOG_HEADERS.length;
+    var lastRow = sheet.getLastRow();
+    var start = Math.max(2, lastRow - 1999);
+    var tail = lastRow >= start ? sheet.getRange(start, 1, lastRow - start + 1, width).getValues() : [];
+    for (var i = 0; i < tail.length; i += 1) {
+      var row = tail[i];
+      if (String(row[9]) === id) return { ok: true, duplicate: true, correct: Number(row[5]) || 0, total: Number(row[6]) || 0 };
+      if (cellDate_(row[0]) === today && String(row[1]) === me.className && Math.floor(Number(row[2])) === me.seat) used += 1;
+    }
+    if (used >= PRACTICE_DAILY_LIMIT) throw new Error('今天已經交了 ' + PRACTICE_DAILY_LIMIT + ' 次，明天再來挑戰！');
+    sheet.getRange(lastRow + 1, 1, 1, width).setValues([[today, sheetText_(me.className), me.seat, bank.id, sheetText_(bank.name),
+      correct, graded.length, JSON.stringify(wrong), new Date(), id]]);
+    var total = sheet.getLastRow() - 1;
+    if (total > PRACTICE_LOG_MAX_ROWS) sheet.deleteRows(2, total - PRACTICE_LOG_MAX_ROWS);
+  } finally {
+    lock.releaseLock();
+  }
+  // 併進全班易錯題（和大屏對戰同一張表；每位學生算 1 次作答）
+  try {
+    submitBattleStats_({ records: [{ id: ('pr' + id).slice(0, 40), date: today, className: me.className, bankId: bank.id, bankName: bank.name,
+      items: graded.map(function (g) {
+        var picks = {};
+        if (!g.ok) picks[practicePickText_(g.q, g.pick)] = 1;
+        return { q: g.q.q, kind: g.q.kind, answer: practiceRightText_(g.q), exp: g.q.exp, asked: 1, answers: 1, wrong: g.ok ? 0 : 1, picks: picks };
+      }) }] });
+  } catch (error) {}
+  return { ok: true, correct: correct, total: graded.length, used: used + 1, limit: PRACTICE_DAILY_LIMIT };
+}
+
+/** 清除錯題統計時，同一期間（同一班）的個人練習紀錄一起清掉。 */
+function practiceClearRange_(range) {
+  var sheet = practiceLogSheet_();
+  var width = LINE_BOT_CONFIG.PRACTICE_LOG_HEADERS.length;
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return 0;
+  var values = sheet.getRange(2, 1, lastRow - 1, width).getValues();
+  var keep = values.filter(function (row) {
+    var date = cellDate_(row[0]);
+    return !(date >= range.from && date <= range.to && (!range.className || String(row[1]) === range.className));
+  });
+  var deleted = values.length - keep.length;
+  if (!deleted) return 0;
+  keep = keep.map(function (row) { return row.map(function (cell, i) { return i === 1 || i === 4 ? sheetText_(cell) : cell; }); });
+  sheet.getRange(2, 1, values.length, width).clearContent();
+  if (keep.length) sheet.getRange(2, 1, keep.length, width).setValues(keep);
+  return deleted;
+}
+
+// ---- 個人錯題分析（每週五自動流程的第二步） ----
+
+/** 這班近一週每位學生：練習幾次、答對率、錯了哪些題（同一題合併，記選錯的答案）。 */
+function practiceStudents_(className, from, to) {
+  var map = {};
+  practiceLogRows_(from, to, className).forEach(function (r) {
+    if (!r.seat) return;
+    var st = map[r.seat] = map[r.seat] || { seat: r.seat, submits: 0, correct: 0, total: 0, wrong: {} };
+    st.submits += 1;
+    st.correct += r.correct;
+    st.total += r.total;
+    r.wrong.forEach(function (w) {
+      if (!w || typeof w !== 'object') return;
+      var q = battleText_(w.q, 300);
+      if (!q) return;
+      var it = st.wrong[q] = st.wrong[q] || { q: q, answer: battleText_(w.answer, 200), exp: battleText_(w.exp, 300), picks: {}, times: 0 };
+      it.times += 1;
+      var pick = battleText_(w.pick, 120);
+      if (pick) it.picks[pick] = (it.picks[pick] || 0) + 1;
+    });
+  });
+  return Object.keys(map).map(function (seat) {
+    var st = map[seat];
+    st.wrong = Object.keys(st.wrong).map(function (q) { return st.wrong[q]; })
+      .sort(function (a, b) { return b.times - a.times; }).slice(0, 10);
+    return st;
+  }).sort(function (a, b) { return a.seat - b.seat; }).slice(0, PRACTICE_MAX_SEATS);
+}
+
+/**
+ * 一次問 Gemini 一整班：每題錯題的解說（全班共用）＋每位學生一段話。
+ * 學生只用「學生1、學生2」代號，不送座號、姓名。回傳 { notes: {題目: {why, idea, tip}}, students: {座號: {focus, comment}} }
+ */
+function battlePersonalGemini_(apiKey, className, students) {
+  var pool = {};
+  students.forEach(function (st) {
+    st.wrong.forEach(function (w) {
+      var it = pool[w.q] = pool[w.q] || { q: w.q, answer: w.answer, exp: w.exp, picks: {}, people: 0 };
+      it.people += 1;
+      Object.keys(w.picks).forEach(function (p) { it.picks[p] = (it.picks[p] || 0) + w.picks[p]; });
+    });
+  });
+  var qs = Object.keys(pool).map(function (q) { return pool[q]; })
+    .sort(function (a, b) { return b.people - a.people; }).slice(0, 20);
+  var number = {};
+  qs.forEach(function (it, i) { number[it.q] = i + 1; });
+  var withWrong = students.filter(function (st) { return st.wrong.length; });
+  if (!qs.length || !withWrong.length) return { notes: {}, students: {} };
+  var codes = {};
+  var studentLines = withWrong.map(function (st, i) {
+    var code = '學生' + (i + 1);
+    codes[code] = st.seat;
+    var parts = st.wrong.filter(function (w) { return number[w.q]; }).map(function (w) {
+      var top = battleTopPicks_(w.picks, 1)[0];
+      return '第' + number[w.q] + '題' + (top ? '（選了「' + top[0] + '」）' : '') + (w.times > 1 ? '錯' + w.times + '次' : '');
+    });
+    return code + '：答對率 ' + (st.total ? Math.round(st.correct / st.total * 100) : 0) + '%，錯了 ' + parts.join('、');
+  });
+  var prompt = [
+    '你是臺灣國小老師的教學助手。下面是「' + (className || '某班') + '」學生這週早自修自己練習時答錯的題目，以及每位學生（只用代號）錯了哪幾題。',
+    '請依班級名稱判斷年級（看不出來就當國小高年級），全部用繁體中文、該年級學生看得懂的用語。',
+    '',
+    '【題目】',
+    qs.map(function (it, i) {
+      var top = battleTopPicks_(it.picks, 2).map(function (p) { return '「' + p[0] + '」'; }).join('、');
+      return (i + 1) + '. ' + it.q + '\n   正確答案：' + it.answer + (top ? '\n   學生選錯的答案：' + top : '') + (it.exp ? '\n   原本的解說：' + it.exp : '');
+    }).join('\n'),
+    '',
+    '【學生】',
+    studentLines.join('\n'),
+    '',
+    '只回傳 JSON，不要其他文字。格式：',
+    '{"items":[{"n":1,"why":"學生為什麼會選錯，40字內","idea":"正確觀念，40字內","tip":"生活例子或記憶小技巧，40字內"}],"students":[{"id":"學生1","focus":"這週最需要加強的觀念，20字內","comment":"直接對這位學生說的話，60字內：先肯定做得好的地方，再具體提醒一個觀念，語氣溫暖"}]}',
+    '規則：items 每題一筆（n 是上面的題號）；students 每位學生一筆；不要提到分數排名、不要和別人比較、不要出現真實人名。'
+  ].join('\n');
+  var parsed = battleGeminiJson_(apiKey, prompt);
+  var notes = {};
+  (Array.isArray(parsed.items) ? parsed.items : []).slice(0, 30).forEach(function (n) {
+    if (!n || typeof n !== 'object') return;
+    var it = qs[Math.floor(Number(n.n)) - 1];
+    if (!it) return;
+    notes[it.q] = { why: battleText_(n.why, 120), idea: battleText_(n.idea, 120), tip: battleText_(n.tip, 120) };
+  });
+  var out = {};
+  (Array.isArray(parsed.students) ? parsed.students : []).slice(0, 60).forEach(function (s) {
+    if (!s || typeof s !== 'object') return;
+    var seat = codes[String(s.id || '').trim()];
+    if (!seat) return;
+    out[seat] = { focus: battleText_(s.focus, 60), comment: battleText_(s.comment, 160) };
+  });
+  return { notes: notes, students: out };
+}
+
+function battlePersonalHtml_(title, className, st, ai, from, to) {
+  var e = battleEscape_;
+  var rate = st.total ? Math.round(st.correct / st.total * 100) : 0;
+  var talk = (ai.students || {})[st.seat] || {};
+  var html = ['<html><head><meta charset="utf-8"><title>' + e(title) + '</title></head><body>',
+    '<h1>' + e(className) + ' ' + st.seat + ' 號・本週練習錯題分析</h1>',
+    '<p>期間：' + e(from.slice(5).replace('-', '/')) + '～' + e(to.slice(5).replace('-', '/')) + '｜練習 ' + st.submits + ' 次｜答對 ' + st.correct + '／' + st.total + ' 題（' + rate + '%）</p>'];
+  if (talk.comment || talk.focus) {
+    html.push('<h2>學習小提醒</h2>');
+    if (talk.comment) html.push('<p>' + e(talk.comment) + '</p>');
+    if (talk.focus) html.push('<p>這週要加強：' + e(talk.focus) + '</p>');
+  }
+  if (!st.wrong.length) {
+    html.push('<h2>🎉 這週練習全部答對，太厲害了！</h2>');
+  } else {
+    html.push('<h2>這週錯的題目</h2>');
+    st.wrong.forEach(function (w, i) {
+      var note = (ai.notes || {})[w.q] || {};
+      var picks = battleTopPicks_(w.picks, 2).map(function (p) { return '「' + e(p[0]) + '」'; }).join('、');
+      html.push('<h3>' + (i + 1) + '. ' + e(w.q) + '</h3><ul>');
+      if (picks) html.push('<li>你選的答案：' + picks + (w.times > 1 ? '（錯了 ' + w.times + ' 次）' : '') + '</li>');
+      html.push('<li>正確答案：' + e(w.answer) + '</li>');
+      if (note.why) html.push('<li>為什麼會錯：' + e(note.why) + '</li>');
+      if (note.idea) html.push('<li>正確觀念：' + e(note.idea) + '</li>');
+      if (note.tip) html.push('<li>小技巧：' + e(note.tip) + '</li>');
+      if (w.exp) html.push('<li>解說：' + e(w.exp) + '</li>');
+      html.push('</ul>');
+    });
+  }
+  html.push('<p><small>這份由程式整理；「學習小提醒」和解說由 Gemini 協助撰寫，Gemini 只看到題目和代號，沒有看到姓名和座號。</small></p>');
+  html.push('</body></html>');
+  return html.join('\n');
+}
+
+function battleClassFolder_(className) {
+  var root = battleDocFolder_();
+  return battleChildFolder_(root, driveSafeName_(className || '全部班級') || '未指定班級');
+}
+function battleChildFolder_(parent, name) {
+  var found = parent.getFoldersByName(name);
+  return found.hasNext() ? found.next() : parent.createFolder(name);
+}
+function battleTrashSameName_(folder, name) {
+  try {
+    var old = folder.getFilesByName(name);
+    while (old.hasNext()) old.next().setTrashed(true);
+  } catch (error) {}
+}
+
+/** HTML → Google 文件 → PDF（中文字型由 Google 文件處理），暫存的文件丟垃圾桶。轉不成就存 HTML。 */
+function battleSavePdf_(title, html, folder) {
+  battleTrashSameName_(folder, title + '.pdf');
+  var doc = battleUploadDoc_(title, html, folder);
+  if (doc) {
+    try {
+      var file = DriveApp.getFileById(doc.id);
+      var pdf = folder.createFile(file.getAs(MimeType.PDF).setName(title + '.pdf'));
+      file.setTrashed(true);
+      return { url: pdf.getUrl(), kind: 'pdf' };
+    } catch (error) {}
+  }
+  battleTrashSameName_(folder, title + '.html');
+  var fallback = folder.createFile(title + '.html', html, MimeType.HTML);
+  return { url: fallback.getUrl(), kind: 'html' };
+}
+
+// ---- 每週五自動流程：一班一班做，超過 4.5 分鐘就先存進度，1 分鐘後接著做（Apps Script 一次最多 6 分鐘） ----
+var BATTLE_WEEKLY_JOB_KEY = 'BATTLE_WEEKLY_JOB';
+var BATTLE_WEEKLY_BUDGET_MS = 270000;
+
+function battleWeeklyLoad_() {
+  try { return JSON.parse(lineBotProperty_(BATTLE_WEEKLY_JOB_KEY) || 'null'); } catch (error) { return null; }
+}
+function battleWeeklySave_(job) {
+  var props = PropertiesService.getScriptProperties();
+  if (job) props.setProperty(BATTLE_WEEKLY_JOB_KEY, JSON.stringify(job)); else props.deleteProperty(BATTLE_WEEKLY_JOB_KEY);
+}
+function battleWeeklyRunning_() {
+  var job = battleWeeklyLoad_();
+  return Boolean(job && job.date >= battleDateShift_(-1));
+}
+
+/** 排好這週要做的班級（對戰錯題或個人練習有紀錄的班），存成工作清單。 */
+function battleWeeklyPlan_() {
+  var today = lineBotToday_();
+  var from = battleDateShift_(-6);
+  var classes = {};
+  getBattleStats_({ from: from, to: today }).rows.forEach(function (row) { classes[row.className] = true; });
+  practiceLogRows_(from, today).forEach(function (row) { classes[row.className] = true; });
+  var job = { date: today, from: from, classes: Object.keys(classes).sort().slice(0, 10), ci: 0, phase: 'class', si: 0, results: [], runningAt: 0 };
+  battleWeeklySave_(job);
+  return job;
+}
+
+/** 接續觸發器只留一個：ms 毫秒後接著做；ms 為 0 就只刪掉。 */
+function battleWeeklyScheduleContinue_(ms) {
+  ScriptApp.getProjectTriggers().forEach(function (trigger) {
+    if (trigger.getHandlerFunction() === 'weeklyBattleRemedyContinue') ScriptApp.deleteTrigger(trigger);
+  });
+  if (ms) ScriptApp.newTrigger('weeklyBattleRemedyContinue').timeBased().after(ms).create();
+}
+
+/** 時間觸發器（每週五 17–18 點）。 */
+function weeklyBattleRemedy() {
+  if (!pushSettings_().battleWeekly) return;
+  if (!lineBotProperty_('GEMINI_API_KEY')) return;
+  battleWeeklyPlan_();
+  battleWeeklyRun_();
+}
+
+/** 接續觸發器（battleWeeklyRun_ 會自己重排下一次）。 */
+function weeklyBattleRemedyContinue() {
+  battleWeeklyRun_();
+}
+
+/** 老師在工作台按「現在就跑一次」：排好工作，幾秒後在背景開始做，做好一樣 LINE 通知。 */
+function battleWeeklyRunNow_() {
+  if (!lineBotProperty_('GEMINI_API_KEY')) throw new Error('雲端還沒填 Gemini 金鑰（🔑D）');
+  var job = battleWeeklyLoad_();
+  if (job && job.date >= battleDateShift_(-1) && job.runningAt && new Date().getTime() - job.runningAt < 400000) {
+    return { ok: true, started: false, message: '正在做了，做好會 LINE 通知你' };
+  }
+  job = battleWeeklyPlan_();
+  if (!job.classes.length) return { ok: true, started: false, message: '這 7 天還沒有錯題或練習紀錄' };
+  battleWeeklyScheduleContinue_(1000);
+  return { ok: true, started: true, classes: job.classes.length, message: '開始做了（' + job.classes.length + ' 個班），大約幾分鐘，做好會 LINE 通知你' };
+}
+
+function battleWeeklyRun_() {
+  var started = new Date().getTime();
+  var job = battleWeeklyLoad_();
+  if (!job) return;
+  if (job.date < battleDateShift_(-2)) { battleWeeklySave_(null); return; }   // 放太久的工作就不做了
+  if (job.runningAt && started - job.runningAt < 400000) return;   // 另一個還在跑
+  job.runningAt = started;
+  battleWeeklySave_(job);
+  battleWeeklyScheduleContinue_(420000);   // 保險：這次萬一超時被中斷，7 分鐘後接著做
+  var apiKey = lineBotProperty_('GEMINI_API_KEY');
+  while (job.ci < job.classes.length) {
+    if (new Date().getTime() - started > BATTLE_WEEKLY_BUDGET_MS) {
+      job.runningAt = 0;
+      battleWeeklySave_(job);
+      battleWeeklyScheduleContinue_(60000);
+      return;
+    }
+    var className = job.classes[job.ci];
+    var entry = job.results[job.ci] = job.results[job.ci] || { className: className };
+    if (job.phase === 'class') {
+      battleWeeklyClass_(job, entry);
+      job.phase = 'personal';
+      job.si = 0;
+    } else if (battleWeeklyPersonal_(job, entry, started, apiKey)) {
+      job.ci += 1;
+      job.phase = 'class';
+      job.si = 0;
+    }
+    battleWeeklySave_(job);
+  }
+  var results = job.results.filter(function (r) { return r && (r.top || r.students || r.error); });
+  PropertiesService.getScriptProperties().setProperty(BATTLE_WEEKLY_LAST_KEY, JSON.stringify({ date: job.date, classes: results }));
+  battleWeeklySave_(null);
+  battleWeeklyScheduleContinue_(0);
+  battleWeeklyNotify_(results);
+}
+
+/** 第一步：全班易錯題 → 補救題草稿＋全班解說稿（Google 文件＋PDF，放班級資料夾）。 */
+function battleWeeklyClass_(job, entry) {
+  var className = entry.className;
+  try {
+    var items = battleHardItems_(getBattleStats_({ from: job.from, to: job.date, className: className }).rows, 8);
+    if (!items.length) return;
+    var top = items[0];
+    entry.top = top.q.slice(0, 40);
+    entry.rate = Math.round(top.wrong / top.answers * 100);
+    entry.items = items.length;
+    var folder = battleClassFolder_(className);
+    entry.folderUrl = folder.getUrl();
+    var built = battleRemedyBuild_(className, items, { id: 'wk' + battleHash_(className), name: ('本週補救・' + className).slice(0, 30), folder: folder, pdf: true, replace: true });
+    entry.bankId = built.bank.id;
+    entry.bank = built.bank.name;
+    entry.count = built.bank.count;
+    entry.docUrl = built.docUrl;
+    entry.pdfUrl = built.pdfUrl || '';
+  } catch (error) {
+    entry.error = String(error && error.message || error).slice(0, 80);
+  }
+}
+
+/** 第二步：有練習的學生每人一份個人錯題分析 PDF（班級資料夾／個人／NN號）。做完回 true；時間不夠回 false 下次接著做。 */
+function battleWeeklyPersonal_(job, entry, started, apiKey) {
+  var className = entry.className;
+  var students = practiceStudents_(className, job.from, job.date);
+  if (!students.length) return true;
+  entry.students = students.length;
+  var cache = CacheService.getScriptCache();
+  var cacheKey = 'bwp_' + job.date + '_' + battleHash_(className);
+  var ai = null;
+  try { ai = JSON.parse(cache.get(cacheKey) || 'null'); } catch (error) { ai = null; }
+  if (!ai) {
+    try {
+      ai = battlePersonalGemini_(apiKey, className, students);
+    } catch (error) {
+      ai = { notes: {}, students: {} };
+      entry.personalError = String(error && error.message || error).slice(0, 60);
+    }
+    try { cache.put(cacheKey, JSON.stringify(ai), 21600); } catch (error) {}
+  }
+  var classFolder;
+  var personalFolder;
+  try {
+    classFolder = battleClassFolder_(className);
+    personalFolder = battleChildFolder_(classFolder, '個人');
+    entry.folderUrl = classFolder.getUrl();
+  } catch (error) {
+    entry.personalError = '雲端硬碟資料夾建不起來';
+    return true;
+  }
+  while (job.si < students.length) {
+    if (new Date().getTime() - started > BATTLE_WEEKLY_BUDGET_MS) return false;
+    var st = students[job.si];
+    var name = (st.seat < 10 ? '0' : '') + st.seat + '號';
+    var title = job.date + '｜' + className + ' ' + st.seat + '號｜個人錯題分析';
+    try {
+      battleSavePdf_(title, battlePersonalHtml_(title, className, st, ai, job.from, job.date), battleChildFolder_(personalFolder, name));
+      entry.pdfs = (entry.pdfs || 0) + 1;
+    } catch (error) {
+      entry.pdfFail = (entry.pdfFail || 0) + 1;
+    }
+    job.si += 1;
+    if (job.si % 5 === 0) battleWeeklySave_(job);
+  }
+  return true;
+}
+
+function battleWeeklyNotify_(results) {
+  if (!results.length || !pushAllowed_('battleWeekly')) return;
+  var lines = ['📉 本週易錯題＋個人錯題分析'];
+  var canEnable = false;
+  results.forEach(function (r) {
+    lines.push('');
+    lines.push('【' + r.className + '】' + (r.top ? '最常錯：「' + r.top + '」（錯 ' + r.rate + '%）' : ''));
+    if (r.error) lines.push('⚠️ 補救題沒出成：' + r.error);
+    else if (r.bank) {
+      canEnable = true;
+      lines.push('🎯 補救題草稿「' + r.bank + '」' + r.count + ' 題');
+      if (r.pdfUrl || r.docUrl) lines.push('📄 全班解說' + (r.pdfUrl ? ' PDF' : '') + '：' + (r.pdfUrl || r.docUrl));
+    }
+    if (r.students) lines.push('👤 個人錯題分析 ' + (r.pdfs || 0) + ' 份' + (r.pdfFail ? '（' + r.pdfFail + ' 份沒做成）' : '') + (r.personalError ? '（⚠️ ' + r.personalError + '）' : ''));
+    if (r.folderUrl) lines.push('📂 ' + r.folderUrl);
+  });
+  lines.push('');
+  if (canEnable) lines.push('題目看過沒問題，按下面「✅ 啟用補救題」：大屏答題對戰和學生的早自修練習卡都會換成補救題。');
+  lines.push('📂 資料夾裡也有全班解說的 Google 文件，可以加進 Gemini Notebook 按「影片摘要」做解說影片。（不想收：傳「關閉 易錯題週報」）');
+  var quick = canEnable ? { items: [{ type: 'action', action: { type: 'message', label: '✅ 啟用補救題', text: '啟用補救題' } }] } : null;
+  var users = lineBotProperty_('LINE_ALLOWED_USER_IDS').split(',').map(function (value) { return value.trim(); }).filter(String);
+  users.forEach(function (userId) { pushLineMessage_(userId, lines.join('\n'), quick); });
+}
+
+/** LINE「啟用補救題」：把上次週報的補救題草稿全部啟用，並設成那幾班早自修練習的題目。 */
+function enableWeeklyRemedy_() {
+  var last = null;
+  try { last = JSON.parse(lineBotProperty_(BATTLE_WEEKLY_LAST_KEY) || 'null'); } catch (error) { last = null; }
+  var list = last && Array.isArray(last.classes) ? last.classes.filter(function (c) { return c && c.bankId; }) : [];
+  if (!list.length) return '目前沒有要啟用的補救題（每週五下午 5 點的週報做好之後才會有）。';
+  var done = [];
+  var lock = LockService.getScriptLock();
+  list.forEach(function (c) {
+    try {
+      publishBattleBank_({ id: c.bankId, draft: false });
+      lock.waitLock(10000);
+      try {
+        var assign = practiceAssign_();
+        var old = assign[c.className] || {};
+        assign[c.className] = { bankId: c.bankId, count: Math.floor(Number(old.count) || 0) || 10, at: lineBotToday_() };
+        PropertiesService.getScriptProperties().setProperty(PRACTICE_ASSIGN_KEY, JSON.stringify(assign));
+      } finally {
+        lock.releaseLock();
+      }
+      done.push('・' + c.className + '「' + c.bank + '」');
+    } catch (error) {}
+  });
+  if (!done.length) return '補救題庫找不到了（可能被刪掉），請到工作台「🎮 答題對戰題庫」看看。';
+  return ['✅ 已啟用 ' + done.length + ' 份補救題：'].concat(done)
+    .concat(['', '大屏答題對戰下次打開就有；學生掃早自修練習卡也會換成補救題。要換別的題目，到工作台「🌅 早自修練習」。']).join('\n');
 }
 
 // ---------------------------------------------------------------------------
@@ -1753,6 +3103,10 @@ function handleLineEvent_(event, allowedUsers) {
     replyLineMessage_(event.replyToken, handleScreenPromptCommand_(promptMatch[2]));
     return;
   }
+  if (/^啟用\s*(本週)?補救題?$/.test(text)) {
+    replyLineMessage_(event.replyToken, enableWeeklyRemedy_());
+    return;
+  }
   var toggleMatch = text.match(/^(開啟|關閉)\s*(.+)$/);
   if (toggleMatch) {
     replyLineMessage_(event.replyToken, togglePushSetting_(toggleMatch[1], toggleMatch[2]));
@@ -2521,6 +3875,7 @@ function lineBotHelpText_() {
     '・「找檔案 通知單」→ 從備份索引找出檔案並附連結（不加關鍵字就看最近幾筆）',
     '・「雲端資料夾」→ 回傳備份資料夾連結，一次看全部存檔',
     '・「推播設定」→ 查看本月用量與各項推播開關；「開啟 放學小結」「關閉 作業推播」可切換',
+    '・「啟用補救題」→ 把週五易錯題週報做的補救題全部啟用（大屏和學生早自修練習卡都換成補救題）',
     '・「撤回」→ 作廢剛剛那一筆；「刪除 關鍵字」→ 作廢含關鍵字的最新一筆',
     '・「我的ID」→ 查詢自己的 LINE userId（安裝設定用）',
     '・「版本」→ 看目前程式版本日期（跟網站比對要不要更新）',
@@ -2849,15 +4204,17 @@ function replyLineMessages_(replyToken, texts, quickReply) {
   });
 }
 
-function pushLineMessage_(userId, text) {
+function pushLineMessage_(userId, text, quickReply) {
   var accessToken = lineBotProperty_('LINE_CHANNEL_ACCESS_TOKEN');
   if (!accessToken || !userId || !text) return;
+  var message = { type: 'text', text: String(text).slice(0, 4900) };
+  if (quickReply) message.quickReply = quickReply;
   UrlFetchApp.fetch(LINE_BOT_CONFIG.PUSH_ENDPOINT, {
     method: 'post',
     contentType: 'application/json',
     muteHttpExceptions: true,
     headers: { Authorization: 'Bearer ' + accessToken },
-    payload: JSON.stringify({ to: userId, messages: [{ type: 'text', text: String(text).slice(0, 4900) }] })
+    payload: JSON.stringify({ to: userId, messages: [message] })
   });
 }
 

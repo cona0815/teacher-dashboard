@@ -414,7 +414,7 @@
       border: 3px solid var(--cozy-wood); border-radius: 16px; background: var(--cozy-paper); color: var(--ink); }
     html[data-board-style="cozy"] .submit-bar { background: var(--surface); border-top: 0; box-shadow: 0 -4px 0 var(--cozy-wood), 0 -10px 18px -12px rgba(91,70,54,.35); }
   </style>
-  <script src="assets/attendance-term.js?v=2026-11-12-2340"></script>
+  <script src="assets/attendance-term.js?v=2026-11-20-2223"></script>
 </head>
 <body>
   <header>
@@ -869,6 +869,7 @@
         .top-tool-options input { width: auto; }
         .tool-tab[data-tool="screen"] { --tc: #0f7d8c; --tc-soft: #e2f3f5; }
         .tool-tab[data-tool="mind"] { --tc: #c2477a; --tc-soft: #fbe6ef; }
+        .tool-tab[data-tool="battle"] { --tc: #d9480f; --tc-soft: #fdeee6; }
         .screen-board { height: max(420px, calc(100vh - 430px)); margin-top: 8px; }   /* 要留給上方工具列，內嵌的工具列才不會被蓋住 */
         .screen-board iframe { display: block; width: 100%; height: 100%; border: 2px solid var(--line); border-radius: 14px; background: var(--bg); }
         .screen-board:is(:fullscreen, .fake-fs) { height: 100vh; margin-top: 0 !important; }
@@ -1122,6 +1123,7 @@
           <button class="tool-tab" type="button" data-tool="prompt"><span class="tt-ico">📣</span><span>大屏提示</span></button>
           <button class="tool-tab" type="button" data-tool="screen"><span class="tt-ico">📺</span><span>螢幕公告</span></button>
           <button class="tool-tab" type="button" data-tool="mind"><span class="tt-ico">🧠</span><span>心智圖</span></button>
+          <button class="tool-tab" type="button" data-tool="battle"><span class="tt-ico">🎮</span><span>答題對戰</span></button>
           <span class="status-text">全部只存這台電腦、不進雲端統計；抽籤與分組的座號池自動沿用「設定」（略過空號）。</span>
         </div>
 
@@ -1391,6 +1393,14 @@
             <span class="status-text" title="8 種圖型：心智圖、邏輯圖、樹狀圖、括號圖、流程圖、時間軸、魚骨圖、泡泡圖（左上角換）。可加圖示、圖片、換顏色、匯出 PNG。只存在這台電腦。">8 種圖型（左上角換）・只存在這台電腦</span>
           </div>
           <div class="screen-board" id="mindBoard"><iframe id="mindFrame" title="心智圖"></iframe></div>
+        </div>
+        <div class="tool-panel" data-tool-panel="battle" hidden>
+          <div class="tool-opts">
+            <button class="ghost-button" type="button" id="battleFullscreenButton">⛶ 全螢幕</button>
+            <a class="ghost-button" href="Battle.html" target="_blank" rel="noopener" style="text-decoration:none">↗ 開新分頁</a>
+            <span class="status-text" title="怪獸大對決（兩隊輪流、各派一隻怪獸出招）、合力打魔獸、守護城堡、雙鑰匙大逃脫（兩隊合作）、拔河、搶答、賽跑、火箭、翻牌寶箱、圈圈叉叉、燙手山芋、全班合作逗笑雷雲怪。題庫可以貼 NotebookLM 的表格。">左右兩隊 12 種玩法・題庫存在這台電腦（各班共用）</span>
+          </div>
+          <div class="screen-board" id="battleBoard"><iframe id="battleFrame" title="答題對戰" allow="fullscreen; autoplay; clipboard-write"></iframe></div>
         </div>
       </div>
     </section>
@@ -4451,7 +4461,7 @@
   applyToolsTabIcon();
   document.addEventListener('boardstylechange', applyToolsTabIcon);
   // 班級工具可以放到上面選單（老師自己勾）：開的是班級工具裡同一個面板（資料共用），只是把工具列收起來
-  const SOLO_TOOLS = [['lottery', '🎡', '抽籤機'], ['check', '✅', '檢核板'], ['tooth', '🦷', '潔牙點名'], ['score', '🏆', '計分板'], ['group', '👥', '隨機分組'], ['exam', '📝', '定評小幫手'], ['tomato', '🍅', '番茄鐘'], ['prompt', '📣', '大屏提示'], ['screen', '📺', '螢幕公告'], ['mind', '🧠', '心智圖']];
+  const SOLO_TOOLS = [['lottery', '🎡', '抽籤機'], ['check', '✅', '檢核板'], ['tooth', '🦷', '潔牙點名'], ['score', '🏆', '計分板'], ['group', '👥', '隨機分組'], ['exam', '📝', '定評小幫手'], ['tomato', '🍅', '番茄鐘'], ['prompt', '📣', '大屏提示'], ['screen', '📺', '螢幕公告'], ['mind', '🧠', '心智圖'], ['battle', '🎮', '答題對戰']];
   const TOP_TOOLS_DEFAULT = ['check', 'tooth', 'screen', 'mind'];
   const TOP_TOOLS_SUBJECT = ['check', 'score', 'group', 'screen', 'mind'];   // 科任預設：不要潔牙，加計分板、隨機分組
   const topTools = () => (Array.isArray(config.topTools) ? config.topTools : (isSubjectMode() ? TOP_TOOLS_SUBJECT : TOP_TOOLS_DEFAULT))
@@ -4542,6 +4552,59 @@
   document.addEventListener('click', () => requestAnimationFrame(fitScreenBoards));
   requestAnimationFrame(fitScreenBoards);
   $('mindFullscreenButton').addEventListener('click', () => fsToggle($('mindBoard')));
+  // 🎮 答題對戰（2026-11-17）：第一次點才載入；鍵盤要先點一下畫面才收得到
+  // ☁️ 工作台題庫（2026-11-17 第 2 階段）：老師在工作台存到自己的 GAS，這裡用教室金鑰唯讀 battle_banks 拿回來交給答題對戰。
+  // 只在打開答題對戰時讀（不輪詢）；讀到的題庫由 Battle 頁逐欄整理後存一份在這台電腦，斷網也能玩。
+  let battleSyncAt = 0, battleSyncing = null;
+  window.battleCloudSync = function (manual) {
+    const frame = $('battleFrame');
+    let B = null; try { B = frame.contentWindow && frame.contentWindow.Battle; } catch (e) {}
+    if (!B || typeof B.setCloudBanks !== 'function') return Promise.resolve(null);
+    if (typeof hasCloud !== 'function' || !hasCloud()) {
+      if (manual) B.setCloudBanks(null, { error: '大屏還沒連雲端（設定裡要有雲端網址和教室金鑰），只能用這台電腦的題庫' });
+      return Promise.resolve(null);
+    }
+    if (battleSyncing) return battleSyncing;
+    battleSyncing = (async () => {
+      try {
+        const result = await callGas({ action: 'battle_banks', token: state.settings.classroomToken });
+        battleSyncAt = Date.now();
+        return B.setCloudBanks(Array.isArray(result.banks) ? result.banks : []);
+      } catch (e) {
+        const msg = String(e && e.message || e);
+        B.setCloudBanks(null, { error: /權限不足|未知的動作/.test(msg) ? '讀不到工作台題庫：雲端程式是舊版（請更新 LineBot.gs）或教室金鑰不對' : '同步失敗，先用上次拿到的題庫：' + msg });
+        return null;
+      } finally { battleSyncing = null; }
+    })();
+    return battleSyncing;
+  };
+  // 📉 錯題（2026-11-18）：答題對戰每場結束把錯題統計排隊，這裡用教室金鑰「只新增」送到老師的 GAS（battle_stats_submit），
+  // 工作台用老師金鑰才看得到。沒接雲端就留在這台電腦，下次有網路再送。只記班級＋題目，不記學生。
+  window.battleClassName = () => (typeof currentClass === 'function' ? currentClass() : '') || '';
+  let battleStatsSending = false;
+  window.battleStatsFlush = async function () {
+    const frame = $('battleFrame');
+    let B = null; try { B = frame.contentWindow && frame.contentWindow.Battle; } catch (e) {}
+    if (!B || typeof B.statsQueue !== 'function' || battleStatsSending) return;
+    if (typeof hasCloud !== 'function' || !hasCloud()) return;
+    battleStatsSending = true;
+    try {
+      for (let round = 0; round < 10; round++) {
+        const batch = B.statsQueue().slice(0, 10);
+        if (!batch.length) break;
+        const result = await callGas({ action: 'battle_stats_submit', token: state.settings.classroomToken, records: batch });
+        const ids = Array.isArray(result.accepted) ? result.accepted : [];
+        if (!ids.length) break;
+        B.statsAck(ids);
+      }
+    } catch (e) {} finally { battleStatsSending = false; }
+  };
+  $('battleFrame').addEventListener('load', () => { window.battleCloudSync(false); window.battleStatsFlush(); });
+  document.querySelector('.tool-tab[data-tool="battle"]').addEventListener('click', () => {
+    if (!$('battleFrame').getAttribute('src')) $('battleFrame').src = 'Battle.html';
+    else if (Date.now() - battleSyncAt > 60000) window.battleCloudSync(false);
+  });
+  $('battleFullscreenButton').addEventListener('click', () => fsToggle($('battleBoard')));
   document.addEventListener('fullscreenchange', () => {
     $('mindFullscreenButton').textContent = fsCurrent() === $('mindBoard') ? '⛶ 離開全螢幕' : '⛶ 全螢幕';
   });

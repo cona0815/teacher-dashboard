@@ -884,6 +884,82 @@
     .cb-layout-panel .cb-seg { display: inline-flex; align-items: center; gap: 4px; }
     .cb-layout-panel .cb-val { min-width: 28px; text-align: center; font-variant-numeric: tabular-nums; }
     /* 用 #contactBookSection 提高權重：可愛溫暖風的 .mini-button 樣式與 :hover 都不能蓋掉「選中」 */
+    /* 🎮 答題對戰題庫（2026-11-17） */
+    .battle-bank .bb-emoji { font-size: 30px; line-height: 1; }
+    .bb-layout { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 18px; align-items: start; }
+    @media (max-width: 860px) { .bb-layout { grid-template-columns: 1fr; } }
+    .bb-h { margin: 0 0 8px; font-size: 15px; color: var(--primary-strong); }
+    .bb-nlm { border: 1px dashed var(--line); border-radius: 10px; padding: 8px 10px; margin-bottom: 10px; }
+    .bb-nlm summary { cursor: pointer; font-weight: 700; font-size: 13px; }
+    .bb-nlm .secretary-note-actions { margin-top: 8px; gap: 6px; }
+    .bb-nlm .select, .bb-nlm .input { width: auto; min-width: 0; flex: 0 1 auto; padding-top: 6px; padding-bottom: 6px; }
+    .bb-nlm .input { flex: 1 1 160px; max-width: 220px; }
+    .bb-prompt { white-space: pre-wrap; font-size: 12.5px; background: var(--surface-soft, #f6f7f9); border-radius: 8px; padding: 8px 10px; margin: 8px 0; max-height: 180px; overflow: auto; }
+    .bb-field { display: grid; gap: 4px; font-size: 13px; font-weight: 700; margin-bottom: 10px; }
+    .bb-field .input, .bb-field .textarea { font-weight: 400; }
+    .bb-file { cursor: pointer; }
+    .bb-parse { font-size: 13px; margin: 6px 0 10px; }
+    .bb-parse .good { color: #1f7a3d; font-weight: 700; }
+    .bb-parse .warn { color: #b3261e; }
+    .bb-parse ol { max-height: 220px; overflow: auto; margin: 6px 0 0; padding-left: 22px; }
+    .bb-parse small { color: var(--muted); }
+    .bb-list { display: grid; gap: 8px; margin: 8px 0; }
+    .bb-item { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; display: grid; gap: 4px; }
+    .bb-item b { font-size: 14px; }
+    .bb-item .bb-sub { font-size: 12px; color: var(--muted); }
+    .bb-item .bb-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+    .bb-tabs { display: flex; gap: 6px; padding: 10px 18px 0; }
+    #battleBankSection .bb-tabs .mini-button.on { background: var(--primary-strong); border-color: var(--primary-strong); color: #fff; }
+    .bb-stats .select { width: auto; min-width: 0; flex: 0 1 auto; padding-top: 6px; padding-bottom: 6px; }
+    .bb-stats-list { display: grid; gap: 8px; margin: 10px 0; max-height: 520px; overflow: auto; }
+    .bbs-item { display: grid; grid-template-columns: auto minmax(0, 1fr) 150px; gap: 10px; align-items: start; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+    .bbs-item input { margin-top: 4px; width: 18px; height: 18px; }
+    .bbs-item b { font-size: 14px; }
+    .bbs-item .bbs-sub { display: block; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+    .bbs-item .bbs-wrongpick { color: #b3261e; }
+    .bbs-rate { font-size: 12px; text-align: right; }
+    .bbs-rate .bar { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; margin: 3px 0; }
+    .bbs-rate .bar i { display: block; height: 100%; background: #e5534b; }
+    .bb-stats-use { border-top: 1px dashed var(--line); padding-top: 10px; }
+    .bb-ai { border: 1px solid color-mix(in srgb, var(--primary-strong) 35%, var(--line)); border-radius: 12px; padding: 10px 12px; margin: 0 0 12px; background: color-mix(in srgb, var(--primary-strong) 5%, transparent); }
+    .bb-ai .bb-h { margin-top: 0; }
+    .bb-ai-result { font-size: 13.5px; margin: 8px 0; line-height: 1.6; }
+    .bb-ai-result a { font-weight: 700; }
+    .bb-weekly { display: flex; gap: 8px; align-items: center; font-size: 13.5px; margin-top: 8px; cursor: pointer; }
+    .bb-weekly input { width: 18px; height: 18px; }
+    .bb-item.draft { border-style: dashed; border-color: #d9a400; background: color-mix(in srgb, #ffd54a 10%, transparent); }
+    .bp-lead { margin: 0 0 10px; line-height: 1.6; }
+    .bp-row { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin: 0 0 8px; }
+    .bp-row label { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; white-space: nowrap; }
+    #bpBank { max-width: min(340px, 70vw); }
+    .bp-sep { width: 1px; height: 22px; background: var(--line); margin: 0 4px; }
+    .bp-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin: 6px 0 14px; }
+    .bp-card { border: 1px dashed #c9b8a3; border-radius: 12px; padding: 8px; text-align: center; background: #fff; color: #222; }
+    .bp-card-head { font-size: 12px; font-weight: 700; color: #b5541a; }
+    .bp-card-who { font-size: 14px; margin: 2px 0 4px; }
+    .bp-card-who b { font-size: 22px; }
+    .bp-qr { width: 100%; max-width: 140px; height: auto; display: block; margin: 0 auto; }
+    .bp-card-foot { font-size: 11px; color: #666; line-height: 1.4; margin-top: 4px; }
+    .bp-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    .bp-table th, .bp-table td { border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; }
+    .bp-table th { font-weight: 700; color: var(--muted); font-size: 12.5px; }
+    #bpPrintSheet { display: none; }
+    @media print {
+      body.bp-printing { background: #fff !important; }
+      body.bp-printing > *:not(#bpPrintSheet) { display: none !important; }
+      body.bp-printing #bpPrintSheet { display: block; color: #000; font-family: "Microsoft JhengHei", "Noto Sans TC", sans-serif; }
+      .bp-page { box-sizing: border-box; width: 210mm; height: 296.5mm; padding: 10mm; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); break-after: page; overflow: hidden; }
+      .bp-page:last-child { break-after: auto; }
+      .bp-page .bp-card { border: .3mm dashed #888; border-radius: 0; padding: 4mm; display: flex; flex-direction: column; justify-content: center; }
+      .bp-page .bp-card-head { font-size: 12pt; }
+      .bp-page .bp-card-who { font-size: 14pt; margin: 1mm 0 2mm; }
+      .bp-page .bp-card-who b { font-size: 26pt; }
+      .bp-page .bp-qr { max-width: 46mm; }
+      .bp-page .bp-card-foot { font-size: 9.5pt; margin-top: 2mm; }
+    }
+    .bb-badge { display: inline-block; font-size: 11.5px; font-weight: 700; padding: 1px 7px; border-radius: 999px; background: #fff1bf; color: #7a5a00; margin-left: 6px; vertical-align: 1px; }
+    @media (max-width: 700px) { .bbs-item { grid-template-columns: auto minmax(0, 1fr); } .bbs-rate { grid-column: 2; text-align: left; } }
+    .bb-item.editing { border-color: var(--primary-strong); box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-strong) 20%, transparent); }
     #contactBookSection .mini-button.on, #contactBookSection .mini-button.on:hover { background: var(--primary-strong); border-color: var(--primary-strong); color: #fff; }
     /* 聯絡本：編輯／日曆切換 */
     .cb-mode { display: inline-flex; gap: 4px; flex: 0 0 auto; padding-right: 8px; margin-right: 2px; border-right: 1.5px solid var(--line); }
@@ -1292,7 +1368,9 @@
       .calendar-controls { align-items: flex-start; flex-direction: column; }
     }
   </style>
-  <script src="assets/attendance-term.js?v=2026-11-12-2340"></script>
+  <script src="assets/attendance-term.js?v=2026-11-20-2223"></script>
+  <script src="assets/studio/qr-encode.js?v=2026-11-20-2223"></script>
+  <script src="assets/battle-bank.js?v=2026-11-20-2223"></script>
 </head>
 <body>
   <div class="help-overlay" id="helpOverlay" hidden>
@@ -1659,6 +1737,7 @@
           </div>
           <div class="toolbox-group"><span class="toolbox-group-label">備課</span>
             <a class="toolbox-button" href="Studio.html" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center">🎨 教材工作坊</a>
+            <button class="toolbox-button" type="button" data-toolbox-target="battleBankSection" data-line-only aria-expanded="false" hidden title="把 NotebookLM 整理的題目存上雲端，教室大屏的「答題對戰」就有題目">🎮 答題對戰題庫</button>
           </div>
           <div class="toolbox-group"><span class="toolbox-group-label">溝通</span>
             <button class="toolbox-button" type="button" id="inboxHubButton" data-toolbox-hub aria-expanded="false">📥 收件與 AI</button>
@@ -2219,6 +2298,128 @@
           <span class="secretary-note-meta" id="contactBookListMeta"></span>
         </div>
         <div class="secretary-note-list" id="contactBookHistoryList"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="secretary-notes battle-bank" id="battleBankSection" aria-labelledby="battleBankTitle" style="display:none">
+      <div class="secretary-notes-head">
+        <div class="secretary-notes-title">
+          <span class="bb-emoji" aria-hidden="true">🎮</span>
+          <div>
+            <h2 id="battleBankTitle">答題對戰題庫</h2>
+            <p>把 NotebookLM 整理好的題目存上雲端；教室大屏打開「班級工具 → 🎮 答題對戰」就會自動拿到（題庫前面有 ☁️）。學生玩的時候會自動記下全班最容易錯的題目（只記班級和題目，不記學生）。</p>
+          </div>
+        </div>
+      </div>
+      <div class="bb-tabs" role="tablist" aria-label="答題對戰題庫">
+        <button class="mini-button on" type="button" role="tab" data-bb-view="bank" aria-selected="true">📚 題庫</button>
+        <button class="mini-button" type="button" role="tab" data-bb-view="stats" aria-selected="false">📉 易錯題</button>
+        <!-- 🌅 早自修練習（平板練習卡）2026-11-20 老師決定先藏起來：重心放大屏對戰。程式、Practice.html、雲端都留著，要再開拿掉 hidden 即可 -->
+        <button class="mini-button" type="button" role="tab" data-bb-view="practice" aria-selected="false" hidden>🌅 早自修練習</button>
+      </div>
+      <div class="secretary-notes-body bb-practice" id="bbPracticeView" hidden>
+        <p class="secretary-note-meta bp-lead">學生每人一張<b>練習卡</b>（QR Code）：早自修用平板掃卡 → 做你指定的題目、馬上看對錯 → 錯的題目記到雲端（只記班級＋座號，不記姓名）。每週五下午 5 點的自動流程會再幫有練習的學生各做一份<b>個人錯題分析 PDF</b>，只放在你自己的雲端硬碟「答題對戰・易錯題／班級／個人」。</p>
+        <h3 class="bb-h">① 這班練習什麼</h3>
+        <div class="bp-row">
+          <label>班級 <input class="input" id="bpClass" list="bpClassList" maxlength="20" placeholder="例：五年甲班" style="width:140px"></label>
+          <datalist id="bpClassList"></datalist>
+          <label>題目 <select class="select" id="bpBank" aria-label="練習題目"></select></label>
+          <label>一次 <select class="select" id="bpCount" aria-label="一次幾題"><option value="5">5 題</option><option value="10" selected>10 題</option><option value="15">15 題</option><option value="20">20 題</option><option value="0">全部</option></select></label>
+          <button class="button button-dark" type="button" id="bpAssignButton">💾 設定這班的練習題目</button>
+        </div>
+        <p class="secretary-note-meta">題目每次隨機抽；問答題沒辦法自動批改，不會出。週五 LINE 週報按「✅ 啟用補救題」，有練習卡的班會自動換成那班的補救題。</p>
+        <h3 class="bb-h">② 學生練習卡</h3>
+        <div class="bp-row">
+          <label>這班人數 <input class="input" id="bpSeats" type="number" min="1" max="40" value="28" style="width:76px"></label>
+          <button class="mini-button" type="button" id="bpCardsButton">🪪 產生／顯示學生卡</button>
+          <button class="mini-button" type="button" id="bpPrintButton" disabled>🖨 列印（一張 A4 印 9 張）</button>
+          <span class="bp-sep" aria-hidden="true"></span>
+          <label>卡弄丟了 <input class="input" id="bpRegenSeat" type="number" min="1" max="40" placeholder="座號" style="width:70px"></label>
+          <button class="mini-button" type="button" id="bpRegenButton">🔁 補發（舊卡立刻不能用）</button>
+        </div>
+        <p class="secretary-note-meta" id="bpCardsMeta"></p>
+        <div class="bp-cards" id="bpCards"></div>
+        <h3 class="bb-h">③ 各班狀況（最近 7 天）</h3>
+        <div id="bpStatus"></div>
+        <div class="bp-row" style="margin-top:8px">
+          <button class="mini-button" type="button" id="bpReloadButton">🔄 重新讀取</button>
+        </div>
+        <p class="secretary-note-meta">資安：練習卡不是金鑰，只能拿這班指定的題目和交卷（每天最多 5 次），看不到點名、聯絡本或別人的資料；答案由雲端重新批改。送給 Gemini 的只有題目和「學生1、學生2」這種代號。個人分析只在你的雲端硬碟，沒有分享給任何人。清除「📉 易錯題」的紀錄時，同一期間的個人練習紀錄也會一起清掉。</p>
+      </div>
+      <div class="secretary-notes-body bb-stats" id="bbStatsView" hidden>
+        <div class="secretary-note-actions" style="align-items:center;flex-wrap:wrap">
+          <select class="select" id="bbsDays" aria-label="期間"><option value="7">最近 7 天</option><option value="30" selected>最近 30 天</option><option value="90">最近 90 天</option><option value="180">最近半年</option></select>
+          <select class="select" id="bbsClass" aria-label="班級"><option value="">全部班級</option></select>
+          <select class="select" id="bbsBank" aria-label="題庫"><option value="">全部題庫</option></select>
+          <button class="mini-button" type="button" id="bbsReloadButton">🔄 重新讀取</button>
+          <span class="secretary-note-meta" id="bbsMeta"></span>
+        </div>
+        <div class="bb-stats-list" id="bbsList"></div>
+        <div class="bb-ai" id="bbsAi">
+          <h3 class="bb-h">🤖 交給 Gemini 自動做（不用複製貼上）</h3>
+          <div class="secretary-note-actions" style="align-items:center;flex-wrap:wrap">
+            <button class="button button-dark" type="button" id="bbsAiButton" disabled>🤖 用勾選的題目出補救題＋解說稿</button>
+            <span class="secretary-note-meta" id="bbsAiMeta"></span>
+          </div>
+          <div class="bb-ai-result" id="bbsAiResult" hidden></div>
+          <label class="bb-weekly"><input type="checkbox" id="bbsWeekly" disabled> 📅 每週五下午 5 點自動做：每班一份「本週補救」題庫草稿＋解說稿，LINE 通知我</label>
+          <p class="secretary-note-meta" id="bbsWeeklyMeta"></p>
+          <div class="bp-row"><button class="mini-button" type="button" id="bpRunNowButton" title="不用等週五：每班補救題草稿＋全班解說稿">▶ 現在就跑一次自動流程</button><span class="secretary-note-meta" id="bpMeta"></span></div>
+          <p class="secretary-note-meta">用的是雲端 LINE 小幫手裡的 Gemini 金鑰（🔑D），只送班級和題目統計，不送學生資料。AI 出的題目先存成「📝 草稿」，大屏看不到；到「📚 題庫」看過、按「✅ 啟用」才會給學生玩。解說稿存在你的雲端硬碟「答題對戰・易錯題」資料夾，可以加進 Gemini Notebook（原 NotebookLM），按「影片摘要」做解說影片。</p>
+        </div>
+        <div class="bb-stats-use" id="bbsUse" hidden>
+          <h3 class="bb-h">拿勾選的題目去做教材（已勾 <span id="bbsPicked">0</span> 題）</h3>
+          <div class="secretary-note-actions" style="align-items:center;flex-wrap:wrap">
+            <select class="select" id="bbsPurpose" aria-label="要做什麼"><option value="notes">📝 重點筆記</option><option value="mind">🧠 心智圖</option><option value="video">🎬 解說影片</option><option value="practice">✏️ 再出一份類似的練習題</option></select>
+            <select class="select" id="bbsGrade" aria-label="年級"><option>國小一年級</option><option>國小二年級</option><option>國小三年級</option><option>國小四年級</option><option selected>國小五年級</option><option>國小六年級</option><option>國中</option></select>
+            <button class="mini-button" type="button" id="bbsCopyButton">📋 複製給 NotebookLM</button>
+            <button class="mini-button" type="button" id="bbsRemedyButton" title="把勾選的題目存成新題庫，下次上課再對戰一次">🎯 存成補救題庫</button>
+          </div>
+          <pre class="bb-prompt" id="bbsPrompt"></pre>
+          <p class="secretary-note-meta" id="bbsHint"></p>
+          <div class="secretary-note-actions" style="align-items:center;flex-wrap:wrap;margin-top:6px">
+            <button class="mini-button" type="button" id="bbsClearButton">🗑 清除目前篩選期間的紀錄</button>
+          </div>
+        </div>
+      </div>
+      <div class="secretary-notes-body bb-layout" id="bbBankView">
+        <div class="bb-form">
+          <h3 class="bb-h" id="bbFormTitle">新增題庫</h3>
+          <details class="bb-nlm" open>
+            <summary>① 先到 NotebookLM 出題：複製這段指令，貼到 NotebookLM 的對話框</summary>
+            <div class="secretary-note-actions" style="align-items:center;flex-wrap:wrap">
+              <select class="select" id="bbType" aria-label="題型"><option value="choice">選擇題</option><option value="tf">是非題</option><option value="open">搶答問答題</option></select>
+              <select class="select" id="bbGrade" aria-label="年級"><option>國小一年級</option><option>國小二年級</option><option>國小三年級</option><option>國小四年級</option><option selected>國小五年級</option><option>國小六年級</option><option>國中</option></select>
+              <select class="select" id="bbCount" aria-label="題數"><option>10</option><option selected>20</option><option>30</option></select>
+              <input class="input" id="bbTopic" maxlength="40" placeholder="主題（可空白，例：成語）" style="max-width:200px">
+            </div>
+            <pre class="bb-prompt" id="bbPrompt"></pre>
+            <button class="mini-button" type="button" id="bbCopyButton">📋 複製指令</button>
+          </details>
+          <label class="bb-field">② 題庫名稱
+            <input class="input" id="bbName" maxlength="30" placeholder="例：五上國語 成語">
+          </label>
+          <label class="bb-field">③ 把 NotebookLM 回答的表格整段貼進來（Excel／Google 試算表、「1. 題目 (A)…(B)… 答案：B」的文字也可以）
+            <textarea class="textarea" id="bbText" rows="8" placeholder="| 題目 | A | B | C | D | 答案 | 解說 |&#10;| 臺灣最高的山是？ | 雪山 | 玉山 | 合歡山 | 阿里山 | B | 玉山約 3952 公尺 |"></textarea>
+          </label>
+          <div class="secretary-note-actions" style="align-items:center;flex-wrap:wrap">
+            <label class="mini-button bb-file">📄 或選檔案（CSV／TXT）<input type="file" id="bbFile" accept=".csv,.tsv,.txt,text/plain,text/csv" hidden></label>
+          </div>
+          <div class="bb-parse" id="bbParse"></div>
+          <div class="secretary-note-actions" style="align-items:center;flex-wrap:wrap">
+            <button class="button button-dark" type="button" id="bbSaveButton" disabled>☁️ 存到雲端（大屏答題對戰就有）</button>
+            <button class="mini-button" type="button" id="bbCancelButton" hidden>取消編輯</button>
+          </div>
+        </div>
+        <div class="bb-cloud">
+          <div class="secretary-note-actions" style="align-items:center;flex-wrap:wrap">
+            <strong style="font-size:13px;color:var(--primary-strong)">☁️ 雲端題庫</strong>
+            <button class="mini-button" type="button" id="bbReloadButton">🔄 重新讀取</button>
+            <span class="secretary-note-meta" id="bbMeta"></span>
+          </div>
+          <div class="bb-list" id="bbList"></div>
+          <p class="secretary-note-meta">題目存在你自己的 Google 試算表「答題題庫」分頁。教室大屏用教室金鑰只能讀、不能改；要修改或刪除請在這裡。</p>
         </div>
       </div>
     </section>
@@ -4707,20 +4908,20 @@
     }
 
     // 工作台雲端功能一律經 LINE 小幫手 GAS；未設定時明確告知，不再回傳假成功
-    async function cloudCall(action, extra = {}, featureName = '這個雲端功能') {
+    async function cloudCall(action, extra = {}, featureName = '這個雲端功能', timeoutMs = 20000) {
       if (!lineBridgeReady()) {
         throw new Error(`${featureName}需要 LINE 小幫手：請到「⚙ 設定 → LINE 小幫手」填好 GAS 網址與 🔑C 並啟用。`);
       }
-      return callLineBridge(action, extra);
+      return callLineBridge(action, extra, timeoutMs);
     }
 
-    async function callLineBridge(action, extra = {}) {
+    async function callLineBridge(action, extra = {}, timeoutMs = 20000) {
       const gasUrl = lineBridgeState.settings.gasUrl.trim();
       const token = lineSyncToken();
       if (!gasUrl || !token) throw new Error('請先在「系統設定 → LINE 小幫手」填入 GAS 網址與同步金鑰。');
       if (!/^https:\/\/script\.google\.com\/macros\//.test(gasUrl)) throw new Error('GAS 網址格式不正確，應為 https://script.google.com/macros/…/exec');
       const controller = new AbortController();
-      const timeout = window.setTimeout(() => controller.abort(), 20000);
+      const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
       try {
         const response = await fetch(gasUrl, {
           method: 'POST',
@@ -8702,7 +8903,7 @@ ${cleanBase}`;
     function setTeacherToolbox(targetId) {
       const content = $('teacherToolboxContent');
       const buttons = [...document.querySelectorAll('[data-toolbox-target]')];
-      const panels = ['teachingProgressPanel', 'aiAssistantSection', 'secretaryNotesSection', 'contactBookSection', 'homeworkReportSection', 'attendanceTermSection', 'messageHubSection', 'parentReplySection'];
+      const panels = ['teachingProgressPanel', 'aiAssistantSection', 'secretaryNotesSection', 'contactBookSection', 'homeworkReportSection', 'attendanceTermSection', 'messageHubSection', 'parentReplySection', 'battleBankSection'];
       const current = buttons.find(button => button.classList.contains('active'))?.dataset.toolboxTarget || '';
       // 三合一面板裡的分頁：點目前這頁不收起（要收起請按上面的「📥 收件與 AI」）
       const shouldCollapse = !targetId || (current === targetId && !content.hidden && !INBOX_HUB_TARGETS.includes(targetId));
@@ -8726,6 +8927,7 @@ ${cleanBase}`;
 
       if (targetId === 'homeworkReportSection') loadHomeworkReport();
       if (targetId === 'attendanceTermSection') openAttendanceTerm();
+      if (targetId === 'battleBankSection') openBattleBank();
       if (targetId === 'teachingProgressPanel') {
         $('teachingProgressBody').hidden = false;
         $('toggleTeachingProgressButton').textContent = '收合';
@@ -9096,6 +9298,619 @@ ${cleanBase}`;
     const CLOUD_BACKUP_LAST_KEY = 'grade6CloudBackupLastDate';
 
     // LINE 小幫手（GAS）是否已設定：雲端備份、日曆、Drive、表單等雲端功能共用
+    // =====================================================================
+    // 🎮 答題對戰題庫（2026-11-17）：貼 NotebookLM 表格 → 解析（assets/battle-bank.js，和大屏同一套）
+    // → battle_bank_save 存老師自己的 GAS；大屏用教室金鑰 battle_banks 唯讀拿回去玩。
+    // =====================================================================
+    const battleBankState = { banks: [], loaded: false, editingId: '', editingDraft: false, parsed: null };
+    const practiceState = { status: null, loaded: false, shown: [], shownClass: '' };   // 🌅 早自修練習（宣告放這裡，loadBattleBanks 會用到）
+    function bbPromptText() {
+      return window.BattleBank.nlmPrompt($('bbType').value, $('bbGrade').value, $('bbCount').value, $('bbTopic').value);
+    }
+    function renderBbPrompt() { $('bbPrompt').textContent = bbPromptText(); }
+    function bbResetForm() {
+      battleBankState.editingId = ''; battleBankState.editingDraft = false; battleBankState.parsed = null;
+      $('bbFormTitle').textContent = '新增題庫'; $('bbName').value = ''; $('bbText').value = '';
+      $('bbParse').innerHTML = ''; $('bbSaveButton').disabled = true; $('bbCancelButton').hidden = true;
+      renderBattleBankList();
+    }
+    function bbParse(asCSV) {
+      const B = window.BattleBank;
+      const text = $('bbText').value;
+      if (!text.trim()) { battleBankState.parsed = null; $('bbParse').innerHTML = ''; $('bbSaveButton').disabled = true; return; }
+      const p = battleBankState.parsed = B.parseBankText(text, asCSV);
+      $('bbParse').innerHTML = (p.qs.length
+        ? `<div class="good">✔ 讀到 ${p.qs.length} 題（${escapeHtml(B.kindText(p.qs))}）</div>`
+        : '<div class="warn">⚠ 還讀不到題目。請貼 NotebookLM 的表格，或「1. 題目 (A)… (B)… 答案：B」這種格式。</div>')
+        + (p.errs.length ? `<div class="warn">⚠ 有 ${p.errs.length} 題沒讀到，請檢查：<br>${p.errs.slice(0, 6).map(escapeHtml).join('<br>')}${p.errs.length > 6 ? '<br>…' : ''}</div>` : '')
+        + (p.qs.length > 300 ? '<div class="warn">⚠ 一個題庫最多 300 題，超過的不會存；建議分成兩個題庫。</div>' : '')
+        + (p.qs.length ? `<ol>${p.qs.slice(0, 60).map(q => `<li>${escapeHtml(q.q)} <small>→ ${escapeHtml(B.answerText(q))}</small></li>`).join('')}${p.qs.length > 60 ? '<li>…</li>' : ''}</ol>` : '');
+      $('bbSaveButton').disabled = !p.qs.length;
+    }
+    function bbTime(iso) {
+      const d = new Date(iso);
+      return isNaN(d) ? '' : d.toLocaleString('zh-TW', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
+    }
+    function renderBattleBankList() {
+      const list = $('bbList');
+      if (!list) return;
+      const B = window.BattleBank;
+      if (!battleBankState.banks.length) {
+        list.innerHTML = `<div class="secretary-note-meta">${battleBankState.loaded ? '雲端還沒有題庫。左邊貼好題目按「存到雲端」就會出現在這裡。' : '讀取中……'}</div>`;
+        return;
+      }
+      // 草稿（AI 出的題目）排最前面，提醒老師確認
+      const banks = [...battleBankState.banks].sort((a, b) => Number(b.draft) - Number(a.draft));
+      list.innerHTML = banks.map(b => `<div class="bb-item${b.id === battleBankState.editingId ? ' editing' : ''}${b.draft ? ' draft' : ''}">
+        <b>${b.draft ? '📝' : '☁️'} ${escapeHtml(b.name)}${b.draft ? '<span class="bb-badge">草稿・大屏看不到</span>' : ''}</b>
+        <span class="bb-sub">${b.questions.length} 題・${escapeHtml(B.kindText(b.questions) || '—')}${b.updatedAt ? `・${escapeHtml(bbTime(b.updatedAt))} 更新` : ''}</span>
+        <span class="bb-btns">${b.draft
+          ? `<button class="mini-button" type="button" data-bb-publish="${escapeHtml(b.id)}">✅ 啟用（大屏就有）</button>`
+          : `<button class="mini-button" type="button" data-bb-unpublish="${escapeHtml(b.id)}" title="先從大屏收起來，題目還在">⏸ 改回草稿</button>`}<button class="mini-button" type="button" data-bb-edit="${escapeHtml(b.id)}">✏️ 編輯</button><button class="mini-button" type="button" data-bb-del="${escapeHtml(b.id)}">🗑 刪除</button></span>
+      </div>`).join('');
+    }
+    async function loadBattleBanks() {
+      $('bbMeta').textContent = '讀取中……';
+      try {
+        const result = await cloudCall('battle_banks', {}, '答題對戰題庫');
+        const B = window.BattleBank;
+        battleBankState.banks = (Array.isArray(result.banks) ? result.banks : []).map(b => {
+          const c = B.cleanBank(b);
+          return c ? { ...c, id: String(b.id || '').replace(/[^\w-]/g, '').slice(0, 40), updatedAt: String(b.updatedAt || ''), draft: b.draft === true } : null;
+        }).filter(b => b && b.id);
+        battleBankState.loaded = true;
+        $('bbMeta').textContent = `共 ${battleBankState.banks.length} 個`;
+        if (practiceState.loaded) fillPracticeBanks();
+      } catch (error) {
+        battleBankState.loaded = true;
+        const msg = String(error && error.message || error);
+        $('bbMeta').textContent = /未知的動作/.test(msg) ? '雲端程式是舊版：請到「⚙ 設定 → LINE 小幫手」更新 LineBot.gs 再試。' : '讀取失敗：' + msg;
+      }
+      renderBattleBankList();
+    }
+    function openBattleBank() {
+      renderBbPrompt();
+      if (!battleBankState.loaded) loadBattleBanks();
+    }
+    async function saveBattleBankFromForm() {
+      const p = battleBankState.parsed;
+      if (!p || !p.qs.length) return;
+      const B = window.BattleBank;
+      const name = $('bbName').value.trim() || `題庫 ${new Date().toLocaleDateString('zh-TW')}`;
+      const questions = p.qs.map(B.cleanQ).filter(Boolean).slice(0, 300);
+      const button = $('bbSaveButton');
+      button.disabled = true; button.textContent = '存檔中……';
+      try {
+        const draft = Boolean(battleBankState.editingId && battleBankState.editingDraft);
+        const result = await cloudCall('battle_bank_save', { bank: { id: battleBankState.editingId || '', name, questions, draft } }, '答題對戰題庫');
+        showToast(draft ? `已存好草稿「${result.name}」${result.count} 題；確認沒問題按「✅ 啟用」大屏才會有。` : `已存到雲端：「${result.name}」${result.count} 題。教室大屏打開答題對戰就有了。`);
+        bbResetForm();
+        await loadBattleBanks();
+      } catch (error) {
+        const msg = String(error && error.message || error);
+        showToast(/未知的動作/.test(msg) ? '雲端程式是舊版：請先更新 LineBot.gs（設定 → LINE 小幫手）' : '存檔失敗：' + msg, true);
+        button.disabled = false;
+      } finally {
+        button.textContent = '☁️ 存到雲端（大屏答題對戰就有）';
+      }
+    }
+    // ---- 📉 易錯題（2026-11-18）：大屏送上來的錯題統計，老師金鑰才讀得到 ----
+    const battleStatsState = { rows: [], items: [], picked: new Set(), loaded: false };
+    const battleAiState = { status: null, busy: false, loaded: false };
+    function bbsKey(it) { return it.bankId + '\u0001' + it.q; }
+    function bbsTopPicks(picks, n) {
+      return Object.entries(picks || {}).filter(([, c]) => Number(c) > 0).sort((a, b) => b[1] - a[1]).slice(0, n);
+    }
+    function aggregateBattleStats() {
+      const cls = $('bbsClass').value, bank = $('bbsBank').value;
+      const map = new Map();
+      battleStatsState.rows.forEach(row => {
+        if (cls && row.className !== cls) return;
+        if (bank && row.bankId !== bank) return;
+        const key = row.bankId + '\u0001' + row.q;
+        let it = map.get(key);
+        if (!it) { it = { bankId: row.bankId, bankName: row.bankName, q: row.q, kind: row.kind, answer: row.answer, exp: row.exp, asked: 0, answers: 0, wrong: 0, picks: {}, classes: new Set(), last: '' }; map.set(key, it); }
+        it.asked += row.asked; it.answers += row.answers; it.wrong += row.wrong;
+        Object.entries(row.picks || {}).forEach(([text, count]) => { it.picks[text] = (it.picks[text] || 0) + (Number(count) || 0); });
+        it.classes.add(row.className);
+        if (row.date > it.last) { it.last = row.date; it.bankName = row.bankName || it.bankName; }
+      });
+      const rate = it => it.answers ? it.wrong / it.answers : 0;
+      battleStatsState.items = [...map.values()].filter(it => it.answers)
+        .sort((a, b) => rate(b) - rate(a) || b.wrong - a.wrong || b.answers - a.answers);
+    }
+    function fillBbsSelect(id, pairs, allLabel) {
+      const select = $(id), current = select.value;
+      select.innerHTML = `<option value="">${allLabel}</option>` + pairs.map(([value, label]) => `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`).join('');
+      if (pairs.some(([value]) => value === current)) select.value = current;
+    }
+    function renderBattleStats() {
+      aggregateBattleStats();
+      const items = battleStatsState.items;
+      const keys = new Set(items.map(bbsKey));
+      [...battleStatsState.picked].forEach(key => { if (!keys.has(key)) battleStatsState.picked.delete(key); });
+      const list = $('bbsList');
+      if (!items.length) {
+        list.innerHTML = `<div class="secretary-note-meta">${battleStatsState.loaded ? '這段期間還沒有對戰紀錄。教室大屏玩過「答題對戰」，每場結束就會自動送上來。' : '讀取中……'}</div>`;
+      } else {
+        list.innerHTML = items.slice(0, 200).map((it, index) => {
+          const key = bbsKey(it), pct = Math.round(it.wrong / it.answers * 100);
+          const top = bbsTopPicks(it.picks, 2).map(([text, count]) => `「${escapeHtml(text)}」${count} 次`).join('、');
+          return `<label class="bbs-item"><input type="checkbox" data-bbs-key="${escapeHtml(key)}"${battleStatsState.picked.has(key) ? ' checked' : ''}>
+            <span><b>${index + 1}. ${escapeHtml(it.q)}</b>
+              <span class="bbs-sub">正確答案：${escapeHtml(it.answer)}${top ? `　<span class="bbs-wrongpick">常選錯：${top}</span>` : ''}</span>
+              <span class="bbs-sub">${escapeHtml(it.bankName)}・${escapeHtml([...it.classes].join('、'))}・最近 ${escapeHtml(it.last.slice(5).replace('-', '/'))}</span></span>
+            <span class="bbs-rate">錯 ${pct}%<span class="bar"><i style="width:${pct}%"></i></span>答錯 ${it.wrong}／作答 ${it.answers}</span></label>`;
+        }).join('');
+      }
+      $('bbsUse').hidden = !items.length;
+      renderBbsPrompt();
+    }
+    function pickedBattleItems() { return battleStatsState.items.filter(it => battleStatsState.picked.has(bbsKey(it))); }
+    function bbsPromptText() {
+      const items = pickedBattleItems();
+      if (!items.length) return '';
+      const grade = $('bbsGrade').value;
+      const list = items.map((it, i) => {
+        const top = bbsTopPicks(it.picks, 2).map(([text, count]) => `「${text}」（${count} 次）`).join('、');
+        return `${i + 1}. ${it.q}\n   正確答案：${it.answer}${top ? `\n   學生常選錯：${top}` : ''}${it.exp ? `\n   原本的解說：${it.exp}` : ''}`;
+      }).join('\n');
+      const head = `下面是我班上${grade}學生玩答題遊戲時，最常答錯的題目（含學生最常選的錯誤答案）：\n${list}\n\n`;
+      const tail = '請根據來源內容回答，不要加引用編號。';
+      const purpose = $('bbsPurpose').value;
+      if (purpose === 'mind') return head + `請把這些易錯題整理成心智圖的大綱：中心是「易錯觀念」，第一層依觀念分類，第二層寫「正確觀念」「常見錯誤」「記憶小技巧」。每個節點 15 字以內，用 Markdown 標題（# ## ###）輸出。${tail}`;
+      if (purpose === 'video') return `請做一段 3 分鐘以內、給${grade}學生看的解說影片。重點放在下面這些學生最容易答錯的題目：先說正確觀念，再說為什麼常見的錯誤答案不對，語氣親切、多用生活例子。\n\n${list}`;
+      if (purpose === 'practice') return head + `請針對這些易錯觀念，再出 ${Math.min(30, items.length * 2)} 題類似但不一樣的選擇題，用「表格」輸出。\n表格欄位依序是：題目｜A｜B｜C｜D｜答案｜解說\n規則：\n1. 答案欄只寫一個英文字母（A、B、C 或 D），正確答案的位置要平均分散\n2. 錯誤選項要用學生常見的錯誤想法來設計\n3. 解說用一句話說明為什麼，20 字左右\n4. 不要出「以上皆是」「以上皆非」這種選項\n5. ${tail}表格前後不要有其他文字。`;
+      return head + `請幫我整理一份「易錯觀念重點筆記」給學生：每一題用一句話講清楚正確觀念，再用一句話說明學生為什麼會選錯（錯誤答案背後的迷思），最後附一個生活中的例子或記憶小技巧。用條列，${tail}`;
+    }
+    function renderBbsPrompt() {
+      $('bbsPicked').textContent = String(battleStatsState.picked.size);
+      if ($('bbsAiButton')) renderBattleAi();
+      const text = bbsPromptText();
+      $('bbsPrompt').textContent = text || '先在上面勾選題目（錯最多的已經幫你勾好前 10 題）。';
+      const hints = {
+        notes: '貼到 NotebookLM 的對話框送出，就是一份易錯觀念筆記；可以按「儲存為記事」留著，或印給學生。',
+        mind: '貼到 NotebookLM 對話框得到大綱；也可以在 NotebookLM 右邊「心智圖」直接產生，再截圖給學生看。',
+        video: '在 NotebookLM 右邊「影片摘要」旁的 ✏️（自訂）貼上這段，再按產生，就是一支針對易錯題的解說影片。',
+        practice: '貼到 NotebookLM，把它回答的表格整段複製，回到「📚 題庫」分頁貼上存檔，大屏就能再對戰一次。'
+      };
+      $('bbsHint').textContent = hints[$('bbsPurpose').value] || '';
+    }
+    async function loadBattleStats() {
+      $('bbsMeta').textContent = '讀取中……';
+      try {
+        const days = Number($('bbsDays').value) || 30;
+        const from = calendarDateKey(new Date(Date.now() - (days - 1) * 86400000));
+        const result = await cloudCall('battle_stats_get', { from, to: calendarDateKey(new Date()) }, '答題對戰易錯題');
+        const num = value => Math.max(0, Math.floor(Number(value) || 0));
+        battleStatsState.rows = (Array.isArray(result.rows) ? result.rows : []).map(row => ({
+          date: String(row.date || '').slice(0, 10), className: String(row.className || '').slice(0, 20),
+          bankId: String(row.bankId || '').slice(0, 40), bankName: String(row.bankName || '').slice(0, 30),
+          q: String(row.q || '').slice(0, 300), kind: String(row.kind || ''), answer: String(row.answer || '').slice(0, 200), exp: String(row.exp || '').slice(0, 300),
+          asked: num(row.asked), answers: num(row.answers), wrong: num(row.wrong),
+          picks: row.picks && typeof row.picks === 'object' ? row.picks : {}
+        })).filter(row => row.q);
+        battleStatsState.loaded = true;
+        const classes = [...new Set(battleStatsState.rows.map(row => row.className))].sort();
+        const banks = new Map(); battleStatsState.rows.forEach(row => banks.set(row.bankId, row.bankName));
+        fillBbsSelect('bbsClass', classes.map(c => [c, c]), '全部班級');
+        fillBbsSelect('bbsBank', [...banks.entries()], '全部題庫');
+        aggregateBattleStats();
+        battleStatsState.picked = new Set(battleStatsState.items.filter(it => it.wrong).slice(0, 10).map(bbsKey));
+        $('bbsMeta').textContent = `${battleStatsState.rows.length ? `共 ${new Set(battleStatsState.items.map(bbsKey)).size} 題有紀錄` : ''}`;
+      } catch (error) {
+        battleStatsState.loaded = true;
+        const msg = String(error && error.message || error);
+        $('bbsMeta').textContent = /未知的動作/.test(msg) ? '雲端程式是舊版：請到「⚙ 設定 → LINE 小幫手」更新 LineBot.gs 再試。' : '讀取失敗：' + msg;
+      }
+      renderBattleStats();
+    }
+    // 補救題庫：雲端題庫還在就用原本的題目（含選項），找不到就改成問答題
+    async function saveRemedyBank() {
+      const items = pickedBattleItems();
+      if (!items.length) { showToast('先勾選要放進補救題庫的題目', true); return; }
+      if (!battleBankState.loaded) await loadBattleBanks();
+      const B = window.BattleBank;
+      const questions = items.map(it => {
+        const bank = battleBankState.banks.find(b => b.id === it.bankId);
+        const original = bank && bank.questions.find(q => q.q === it.q);
+        if (original) return original;
+        if (it.kind === 'tf' && (it.answer === '○' || it.answer === '✕')) return { kind: 'tf', q: it.q, opts: ['○ 對', '✕ 錯'], ans: it.answer === '○' ? 0 : 1, exp: it.exp };
+        return { kind: 'open', q: it.q, answer: it.answer, exp: it.exp };
+      }).map(B.cleanQ).filter(Boolean).slice(0, 300);
+      const names = [...new Set(items.map(it => it.bankName))];
+      const today = new Date();
+      const name = `補救：${names.length === 1 ? names[0] : '易錯題'}`.slice(0, 24) + ` ${today.getMonth() + 1}/${today.getDate()}`;
+      try {
+        const result = await cloudCall('battle_bank_save', { bank: { name, questions } }, '答題對戰題庫');
+        showToast(`已存成「${result.name}」${result.count} 題，大屏答題對戰下次打開就有。`);
+        battleBankState.loaded = false;
+      } catch (error) { showToast('存檔失敗：' + (error && error.message || error), true); }
+    }
+    // ---- 🤖 交給 Gemini（2026-11-18）：補救題草稿＋解說稿；每週五自動 ----
+    function bbsSafeDocUrl(url) {
+      return /^https:\/\/(docs|drive)\.google\.com\//.test(String(url || '')) ? String(url) : '';
+    }
+    function renderBattleAi() {
+      const st = battleAiState.status;
+      const picked = battleStatsState.picked.size;
+      const button = $('bbsAiButton');
+      button.disabled = battleAiState.busy || !picked || !(st && st.hasKey);
+      if (!battleAiState.busy) button.textContent = picked ? `🤖 用勾選的 ${Math.min(picked, 12)} 題出補救題＋解說稿` : '🤖 先勾選題目';
+      const weekly = $('bbsWeekly');
+      weekly.disabled = !st || !!st.error;
+      weekly.checked = !!(st && st.weekly);
+      let meta = '';
+      if (!st) meta = '讀取中……';
+      else if (st.error) meta = st.error;
+      else if (!st.hasKey) meta = '⚠ 雲端還沒填 Gemini 金鑰（🔑D）：到試算表選單「🤖 LINE 小幫手 → ④ 填入 Gemini 金鑰」，填好按「🔄 重新讀取」。';
+      else if (picked > 12) meta = '一次最多處理 12 題（錯最多的前 12 題）。';
+      if (!battleAiState.busy) $('bbsAiMeta').textContent = meta;
+      const last = st && st.last;
+      let weeklyText = '';
+      if (st && st.weekly && !st.hasKey) weeklyText = '要先填 Gemini 金鑰才會自動做。';
+      else if (last && Array.isArray(last.classes)) {
+        weeklyText = `上次自動做：${escapeHtml(String(last.date || '').slice(5).replace('-', '/'))}　` + (last.classes.length
+          ? last.classes.map(c => {
+            const url = bbsSafeDocUrl(c.docUrl);
+            return `${escapeHtml(c.className)}${c.error ? `（⚠ ${escapeHtml(c.error)}）` : `「${escapeHtml(c.bank || '')}」${Number(c.count) || 0} 題${url ? `・<a href="${escapeHtml(url)}" target="_blank" rel="noopener">📄 解說稿</a>` : ''}`}`;
+          }).join('；')
+          : '那週沒有夠多的錯題（每題至少 2 隊次作答、錯 30% 以上才算）');
+      } else if (st && st.weekly) weeklyText = '還沒跑過；第一次會在這週五下午 5 點後。';
+      $('bbsWeeklyMeta').innerHTML = weeklyText;
+    }
+    async function loadBattleAiStatus() {
+      battleAiState.status = null; renderBattleAi();
+      try {
+        battleAiState.status = await cloudCall('battle_ai_status', {}, '易錯題週報');
+      } catch (error) {
+        const msg = String(error && error.message || error);
+        battleAiState.status = { error: /未知的動作/.test(msg) ? '雲端程式是舊版：請到「⚙ 設定 → LINE 小幫手」更新 LineBot.gs 才能用 Gemini 自動出題。' : '讀取失敗：' + msg };
+      }
+      battleAiState.loaded = true;
+      renderBattleAi();
+    }
+    async function generateBattleRemedyAi() {
+      const items = pickedBattleItems().slice(0, 12);
+      if (!items.length || battleAiState.busy) return;
+      const cls = $('bbsClass').value;
+      const banks = [...new Set(items.map(it => it.bankName))];
+      battleAiState.busy = true;
+      const button = $('bbsAiButton');
+      button.disabled = true; button.textContent = '🤖 Gemini 出題中……（約 20～40 秒）';
+      $('bbsAiMeta').textContent = '';
+      $('bbsAiResult').hidden = true;
+      try {
+        const payload = items.map(it => ({ q: it.q, answer: it.answer, exp: it.exp, bankName: it.bankName, answers: it.answers, wrong: it.wrong, picks: it.picks }));
+        const result = await cloudCall('battle_remedy_generate', { className: cls, bankName: banks.length === 1 ? banks[0] : '', items: payload }, '用 Gemini 出補救題', 120000);
+        const url = bbsSafeDocUrl(result.docUrl);
+        const bank = result.bank || {};
+        $('bbsAiResult').innerHTML = `✅ 已存成草稿題庫「<b>${escapeHtml(bank.name || '')}</b>」${Number(bank.count) || 0} 題　<button class="mini-button" type="button" id="bbsAiGoBank">📚 去看題目、按啟用</button>`
+          + (url ? `<br>📄 <a href="${escapeHtml(url)}" target="_blank" rel="noopener">打開易錯題解說稿</a>（${result.docKind === 'doc' ? 'Google 文件' : '網頁檔'}，在雲端硬碟「答題對戰・易錯題」）→ 加進 Gemini Notebook 按「影片摘要」就是解說影片` : '<br>⚠ 解說稿沒存成（題庫已經存好）')
+          + (result.summary ? `<br>💡 Gemini 看到的共同迷思：${escapeHtml(result.summary)}` : '');
+        $('bbsAiResult').hidden = false;
+        battleBankState.loaded = false;
+        showToast('Gemini 出好了：補救題庫先存成草稿，確認後按「✅ 啟用」。');
+      } catch (error) {
+        const msg = String(error && error.message || error);
+        $('bbsAiMeta').textContent = /abort/i.test(msg)
+          ? '等太久先停了；Gemini 可能還在做，過一分鐘到「📚 題庫」按重新讀取看看有沒有草稿。'
+          : /未知的動作/.test(msg) ? '雲端程式是舊版：請先更新 LineBot.gs（設定 → LINE 小幫手）' : '沒做成：' + msg;
+      } finally {
+        battleAiState.busy = false;
+        renderBattleAi();
+      }
+    }
+    async function setBattleWeekly(on) {
+      const box = $('bbsWeekly');
+      box.disabled = true;
+      try {
+        battleAiState.status = await cloudCall('battle_weekly_set', { on }, '易錯題週報');
+        showToast(on ? '已開啟：每週五下午 5 點自動出補救題草稿＋解說稿，做好用 LINE 通知你。' : '已關閉每週自動。');
+      } catch (error) {
+        showToast('設定失敗：' + (error && error.message || error), true);
+      }
+      renderBattleAi();
+    }
+
+    // ---- 🌅 早自修練習（2026-11-19）：學生練習卡（QR）→ Practice.html → 個人錯題；週五自動做個人錯題分析 PDF ----
+    const PRACTICE_SITE = 'https://t-borad2026.netlify.app/';
+    function practiceGasPath() {
+      const m = String(lineBridgeState.settings.gasUrl || '').trim().match(/^https:\/\/script\.google\.com\/macros\/(s\/[A-Za-z0-9_-]{20,120}\/exec)$/);
+      return m ? m[1] : '';
+    }
+    // 卡上的網址：在正式網站開就用這個網站；在本機測試時改用正式網站（學生的平板連不到老師的電腦）
+    function practicePageUrl() {
+      const online = location.protocol === 'https:' && !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+      return online ? new URL('Practice.html', location.href).href.split(/[?#]/)[0] : PRACTICE_SITE + 'Practice.html';
+    }
+    function practiceCardUrl(card) { return `${practicePageUrl()}#g=${practiceGasPath()}&c=${card}`; }
+    function qrSvg(text) {
+      const code = window.QREncode ? window.QREncode.encode(text) : null;
+      if (!code) return '<div class="secretary-note-meta">QR Code 做不出來</div>';
+      const q = 4, n = code.size + q * 2;
+      let d = '';
+      code.modules.forEach((row, r) => row.forEach((dark, c) => { if (dark) d += `M${c + q} ${r + q}h1v1h-1z`; }));
+      return `<svg class="bp-qr" viewBox="0 0 ${n} ${n}" shape-rendering="crispEdges" role="img" aria-label="練習卡 QR Code"><rect width="${n}" height="${n}" fill="#fff"/><path d="${d}" fill="#000"/></svg>`;
+    }
+    function practiceCardHtml(className, seat, card) {
+      return `<div class="bp-card"><div class="bp-card-head">🌅 早自修練習卡</div><div class="bp-card-who">${escapeHtml(className)}　<b>${Number(seat) || 0}</b> 號</div>${qrSvg(practiceCardUrl(card))}<div class="bp-card-foot">用平板相機掃我開始練習<br>這張卡只給自己用，不要借別人</div></div>`;
+    }
+    function practiceClassInfo(name) {
+      const st = practiceState.status;
+      return st && Array.isArray(st.classes) ? st.classes.find(c => c.className === name) : null;
+    }
+    function fillPracticeBanks() {
+      const select = $('bpBank');
+      const current = select.value;
+      select.innerHTML = '<option value="">（不指定）</option>' + battleBankState.banks.map(b => {
+        const n = b.questions.filter(q => q.kind !== 'open').length;
+        return `<option value="${escapeHtml(b.id)}">${b.draft ? '📝 ' : ''}${escapeHtml(b.name)}（${n} 題${b.draft ? '・草稿' : ''}）</option>`;
+      }).join('');
+      const info = practiceClassInfo($('bpClass').value.trim());
+      const want = info && info.bankId ? info.bankId : current;
+      if ([...select.options].some(o => o.value === want)) select.value = want;
+    }
+    function syncPracticeForm() {
+      const info = practiceClassInfo($('bpClass').value.trim());
+      if (info) {
+        if (info.bankId && [...$('bpBank').options].some(o => o.value === info.bankId)) $('bpBank').value = info.bankId;
+        const count = String(Number(info.count) || 0);
+        $('bpCount').value = [...$('bpCount').options].some(o => o.value === count) ? count : '10';
+        if (info.cards) $('bpSeats').value = String(info.cards);
+      }
+      if (practiceState.shownClass !== $('bpClass').value.trim()) {
+        practiceState.shown = []; practiceState.shownClass = '';
+        $('bpCards').innerHTML = ''; $('bpCardsMeta').textContent = ''; $('bpPrintButton').disabled = true;
+      }
+    }
+    function renderPracticeStatus() {
+      const st = practiceState.status;
+      const box = $('bpStatus');
+      if (!st) { box.innerHTML = '<div class="secretary-note-meta">讀取中……</div>'; return; }
+      if (st.error) { box.innerHTML = `<div class="secretary-note-meta">${escapeHtml(st.error)}</div>`; return; }
+      const names = new Set((st.classes || []).map(c => c.className));
+      battleStatsState.rows.forEach(row => names.add(row.className));
+      $('bpClassList').innerHTML = [...names].filter(Boolean).sort().map(n => `<option value="${escapeHtml(n)}"></option>`).join('');
+      if (!$('bpClass').value.trim() && st.classes && st.classes.length) { $('bpClass').value = st.classes[0].className; syncPracticeForm(); }
+      const folder = bbsSafeDocUrl(st.folderUrl);
+      box.innerHTML = (st.classes && st.classes.length
+        ? `<table class="bp-table"><thead><tr><th>班級</th><th>學生卡</th><th>練習題目</th><th>這週交卷</th><th>練過的人</th><th>平均答對</th></tr></thead><tbody>${st.classes.map(c => `<tr>
+            <td><b>${escapeHtml(c.className)}</b></td><td>${Number(c.cards) || 0} 張</td>
+            <td>${c.bankId ? `${c.bankDraft ? '📝 ' : ''}${escapeHtml(c.bankName || '')}${c.bankDraft ? '（草稿，學生拿不到，請先啟用）' : ''}・${Number(c.count) ? `${Number(c.count)} 題` : '全部'}` : '<span class="secretary-note-meta">還沒指定</span>'}</td>
+            <td>${Number(c.submits) || 0} 次</td><td>${Number(c.students) || 0} 人</td><td>${c.rate == null ? '—' : `${Number(c.rate)}%`}</td></tr>`).join('')}</tbody></table>`
+        : '<div class="secretary-note-meta">還沒有班級。上面填班級、選題目按「💾 設定」，再產生學生卡。</div>')
+        + (folder ? `<p class="secretary-note-meta">📂 <a href="${escapeHtml(folder)}" target="_blank" rel="noopener">打開雲端硬碟「答題對戰・易錯題」</a>（全班解說稿、每位學生的個人錯題分析都在這裡）</p>` : '');
+    }
+    async function loadPracticeStatus() {
+      practiceState.status = null; renderPracticeStatus();
+      try {
+        if (!battleBankState.loaded) await loadBattleBanks();
+        practiceState.status = await cloudCall('practice_status', {}, '早自修練習');
+      } catch (error) {
+        const msg = String(error && error.message || error);
+        practiceState.status = { error: /未知的動作/.test(msg) ? '雲端程式是舊版：請到「⚙ 設定 → LINE 小幫手」更新 LineBot.gs 才能用早自修練習。' : '讀取失敗：' + msg };
+      }
+      practiceState.loaded = true;
+      fillPracticeBanks();
+      renderPracticeStatus();
+    }
+    async function savePracticeAssign() {
+      const className = $('bpClass').value.trim();
+      if (!className) { showToast('先填班級名稱', true); $('bpClass').focus(); return; }
+      const bankId = $('bpBank').value;
+      const bank = battleBankState.banks.find(b => b.id === bankId);
+      const button = $('bpAssignButton');
+      button.disabled = true;
+      try {
+        if (bank && bank.draft) {
+          if (!window.confirm(`「${bank.name}」還是草稿，學生拿不到。要先啟用嗎？（大屏答題對戰也會看到這份）`)) return;
+          await cloudCall('battle_bank_publish', { id: bank.id, draft: false }, '答題對戰題庫');
+          await loadBattleBanks();
+        }
+        practiceState.status = await cloudCall('practice_assign', { className, bankId, count: Number($('bpCount').value) || 0 }, '早自修練習');
+        showToast(bankId ? `${className} 的早自修練習設定好了：學生掃卡就是「${bank ? bank.name : ''}」。` : `${className} 已取消指定練習題目。`);
+        renderPracticeStatus();
+      } catch (error) {
+        showToast('設定失敗：' + (error && error.message || error), true);
+      } finally {
+        button.disabled = false;
+      }
+    }
+    function showPracticeCards(className, cards, note) {
+      practiceState.shown = cards; practiceState.shownClass = className;
+      $('bpCards').innerHTML = cards.map(c => practiceCardHtml(className, c.seat, c.card)).join('');
+      $('bpCardsMeta').textContent = note || '';
+      $('bpPrintButton').disabled = !cards.length;
+    }
+    async function makePracticeCards(regenSeat) {
+      const className = $('bpClass').value.trim();
+      if (!className) { showToast('先填班級名稱', true); $('bpClass').focus(); return; }
+      if (!practiceGasPath()) { showToast('LINE 小幫手的 GAS 網址格式不對（要是 https://script.google.com/macros/s/…/exec），學生卡做不出來', true); return; }
+      const count = Math.floor(Number($('bpSeats').value) || 0);
+      if (!regenSeat && (count < 1 || count > 40)) { showToast('人數要在 1～40 之間', true); return; }
+      if (regenSeat && !window.confirm(`補發 ${className} ${regenSeat} 號的練習卡？舊卡會立刻不能用。`)) return;
+      try {
+        const result = await cloudCall('practice_cards', { className, count: regenSeat ? 0 : count, regenSeat: regenSeat || 0 }, '早自修練習');
+        const cards = (Array.isArray(result.cards) ? result.cards : [])
+          .map(c => ({ seat: Math.floor(Number(c.seat) || 0), card: String(c.card || '') }))
+          .filter(c => c.seat > 0 && /^p[0-9a-f]{20}$/.test(c.card));
+        if (regenSeat) {
+          showPracticeCards(className, cards.filter(c => c.seat === regenSeat), `${regenSeat} 號的新卡做好了，舊卡已經不能用。按「🖨 列印」只會印這一張。`);
+          showToast(`${regenSeat} 號的新卡做好了`);
+        } else {
+          showPracticeCards(className, cards, `${className} 共 ${cards.length} 張。已經發過的卡不會變，可以放心重印。`);
+        }
+        loadPracticeStatus();
+      } catch (error) {
+        const msg = String(error && error.message || error);
+        showToast(/未知的動作/.test(msg) ? '雲端程式是舊版：請先更新 LineBot.gs（設定 → LINE 小幫手）' : '學生卡沒做成：' + msg, true);
+      }
+    }
+    function printPracticeCards() {
+      const cards = practiceState.shown;
+      if (!cards.length) return;
+      const pages = [];
+      for (let i = 0; i < cards.length; i += 9) pages.push(cards.slice(i, i + 9));
+      document.getElementById('bpPrintSheet')?.remove();
+      const sheet = document.createElement('div');
+      sheet.id = 'bpPrintSheet';
+      sheet.innerHTML = pages.map(page => `<div class="bp-page">${page.map(c => practiceCardHtml(practiceState.shownClass, c.seat, c.card)).join('')}</div>`).join('');
+      document.body.appendChild(sheet);
+      document.body.classList.add('bp-printing');
+      window.addEventListener('afterprint', () => { document.body.classList.remove('bp-printing'); sheet.remove(); }, { once: true });
+      window.print();
+    }
+    async function runBattleWeeklyNow() {
+      if (!window.confirm('現在就跑一次自動流程？\n會用最近 7 天的紀錄：每班補救題草稿＋全班解說稿。\n會用到 Gemini 額度，大約幾分鐘，做好用 LINE 通知你。')) return;
+      const button = $('bpRunNowButton');
+      button.disabled = true;
+      try {
+        const result = await cloudCall('battle_weekly_run', {}, '易錯題週報', 60000);
+        $('bpMeta').textContent = String(result.message || '');
+        showToast(String(result.message || '開始做了'));
+      } catch (error) {
+        const msg = String(error && error.message || error);
+        $('bpMeta').textContent = /未知的動作/.test(msg) ? '雲端程式是舊版：請先更新 LineBot.gs' : '沒有開始：' + msg;
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    function setBattleBankView(view) {
+      document.querySelectorAll('[data-bb-view]').forEach(button => {
+        const on = button.dataset.bbView === view;
+        button.classList.toggle('on', on); button.setAttribute('aria-selected', String(on));
+      });
+      $('bbBankView').hidden = view !== 'bank';
+      $('bbStatsView').hidden = view !== 'stats';
+      $('bbPracticeView').hidden = view !== 'practice';
+      if (view === 'practice' && !practiceState.loaded) loadPracticeStatus();
+      if (view === 'stats' && !battleStatsState.loaded) loadBattleStats();
+      if (view === 'stats' && !battleAiState.loaded) loadBattleAiStatus();
+      if (view === 'bank' && !battleBankState.loaded) loadBattleBanks();
+    }
+
+    function wireBattleBankUi() {
+      if (!$('battleBankSection') || !window.BattleBank) return;
+      ['bbType', 'bbGrade', 'bbCount'].forEach(id => $(id).addEventListener('change', renderBbPrompt));
+      $('bbTopic').addEventListener('input', renderBbPrompt);
+      $('bbCopyButton').addEventListener('click', async () => {
+        const text = bbPromptText();
+        try { await navigator.clipboard.writeText(text); }
+        catch (error) { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
+        showToast('已複製！貼到 NotebookLM 的對話框送出，再把它回答的表格整段複製回來。');
+      });
+      $('bbText').addEventListener('input', () => bbParse(false));
+      $('bbFile').addEventListener('change', async event => {
+        const file = event.target.files[0];
+        if (!file) return;
+        $('bbText').value = window.BattleBank.decodeFile(await file.arrayBuffer());
+        if (!$('bbName').value.trim()) $('bbName').value = file.name.replace(/\.[^.]+$/, '').slice(0, 30);
+        bbParse(/\.csv$/i.test(file.name));
+        event.target.value = '';
+      });
+      $('bbSaveButton').addEventListener('click', saveBattleBankFromForm);
+      $('bbCancelButton').addEventListener('click', bbResetForm);
+      $('bbReloadButton').addEventListener('click', loadBattleBanks);
+      $('bbList').addEventListener('click', async event => {
+        const edit = event.target.closest('[data-bb-edit]');
+        const del = event.target.closest('[data-bb-del]');
+        const pub = event.target.closest('[data-bb-publish], [data-bb-unpublish]');
+        if (pub) {
+          const id = pub.dataset.bbPublish || pub.dataset.bbUnpublish;
+          const bank = battleBankState.banks.find(b => b.id === id);
+          if (!bank) return;
+          const draft = !!pub.dataset.bbUnpublish;
+          pub.disabled = true;
+          try {
+            await cloudCall('battle_bank_publish', { id, draft }, '答題對戰題庫');
+            showToast(draft ? `「${bank.name}」已改回草稿，大屏下次同步就收起來` : `「${bank.name}」已啟用，大屏打開答題對戰就有（☁️）`);
+            await loadBattleBanks();
+          } catch (error) {
+            const msg = String(error && error.message || error);
+            showToast(/未知的動作/.test(msg) ? '雲端程式是舊版：請先更新 LineBot.gs（設定 → LINE 小幫手）' : '失敗：' + msg, true);
+            pub.disabled = false;
+          }
+          return;
+        }
+        if (edit) {
+          const bank = battleBankState.banks.find(b => b.id === edit.dataset.bbEdit);
+          if (!bank) return;
+          battleBankState.editingId = bank.id;
+          battleBankState.editingDraft = bank.draft === true;
+          $('bbFormTitle').textContent = `編輯「${bank.name}」（存檔會蓋掉雲端那份${bank.draft ? '，存完仍是草稿' : ''}）`;
+          $('bbName').value = bank.name;
+          $('bbText').value = window.BattleBank.bankToText(bank);
+          $('bbCancelButton').hidden = false;
+          bbParse(false);
+          renderBattleBankList();
+          $('bbText').focus();
+        }
+        if (del) {
+          const bank = battleBankState.banks.find(b => b.id === del.dataset.bbDel);
+          if (!bank) return;
+          if (!window.confirm(`確定要刪除雲端題庫「${bank.name}」（${bank.questions.length} 題）嗎？\n教室大屏下次同步後也會不見，刪了救不回來。`)) return;
+          try {
+            await cloudCall('battle_bank_delete', { id: bank.id }, '答題對戰題庫');
+            if (battleBankState.editingId === bank.id) bbResetForm();
+            showToast(`已刪除「${bank.name}」`);
+            await loadBattleBanks();
+          } catch (error) { showToast('刪除失敗：' + (error && error.message || error), true); }
+        }
+      });
+      renderBbPrompt();
+      // 📉 易錯題
+      document.querySelectorAll('[data-bb-view]').forEach(button => button.addEventListener('click', () => setBattleBankView(button.dataset.bbView)));
+      $('bbsDays').addEventListener('change', loadBattleStats);
+      $('bbsReloadButton').addEventListener('click', () => { loadBattleStats(); loadBattleAiStatus(); });
+      $('bbsAiButton').addEventListener('click', generateBattleRemedyAi);
+      // 🌅 早自修練習
+      $('bpClass').addEventListener('change', syncPracticeForm);
+      $('bpAssignButton').addEventListener('click', savePracticeAssign);
+      $('bpCardsButton').addEventListener('click', () => makePracticeCards(0));
+      $('bpRegenButton').addEventListener('click', () => {
+        const seat = Math.floor(Number($('bpRegenSeat').value) || 0);
+        if (seat < 1 || seat > 40) { showToast('補發要填座號（1～40）', true); return; }
+        makePracticeCards(seat);
+      });
+      $('bpPrintButton').addEventListener('click', printPracticeCards);
+      $('bpReloadButton').addEventListener('click', loadPracticeStatus);
+      $('bpRunNowButton').addEventListener('click', runBattleWeeklyNow);
+      $('bbsWeekly').addEventListener('change', event => setBattleWeekly(event.target.checked));
+      $('bbsAiResult').addEventListener('click', event => { if (event.target.closest('#bbsAiGoBank')) setBattleBankView('bank'); });
+      ['bbsClass', 'bbsBank'].forEach(id => $(id).addEventListener('change', () => {
+        aggregateBattleStats();
+        battleStatsState.picked = new Set(battleStatsState.items.filter(it => it.wrong).slice(0, 10).map(bbsKey));
+        renderBattleStats();
+      }));
+      $('bbsList').addEventListener('change', event => {
+        const box = event.target.closest('[data-bbs-key]');
+        if (!box) return;
+        if (box.checked) battleStatsState.picked.add(box.dataset.bbsKey); else battleStatsState.picked.delete(box.dataset.bbsKey);
+        renderBbsPrompt();
+      });
+      ['bbsPurpose', 'bbsGrade'].forEach(id => $(id).addEventListener('change', renderBbsPrompt));
+      $('bbsCopyButton').addEventListener('click', async () => {
+        const text = bbsPromptText();
+        if (!text) { showToast('先勾選題目', true); return; }
+        try { await navigator.clipboard.writeText(text); }
+        catch (error) { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
+        showToast('已複製！' + $('bbsHint').textContent);
+      });
+      $('bbsRemedyButton').addEventListener('click', saveRemedyBank);
+      $('bbsClearButton').addEventListener('click', async () => {
+        const days = Number($('bbsDays').value) || 30, cls = $('bbsClass').value;
+        if (!window.confirm(`確定要清除「最近 ${days} 天${cls ? `、${cls}` : '、全部班級'}」的對戰錯題紀錄嗎？\n清掉就救不回來（題庫不會受影響）。`)) return;
+        try {
+          const from = calendarDateKey(new Date(Date.now() - (days - 1) * 86400000));
+          const result = await cloudCall('battle_stats_clear', { from, to: calendarDateKey(new Date()), className: cls }, '答題對戰易錯題');
+          showToast(`已清除 ${result.deleted} 筆紀錄`);
+          await loadBattleStats();
+        } catch (error) { showToast('清除失敗：' + (error && error.message || error), true); }
+      });
+    }
+
     function lineBridgeReady() {
       return lineBridgeState.settings.enabled && !!lineBridgeState.settings.gasUrl && !!lineSyncToken();
     }
@@ -11172,6 +11987,7 @@ ${cleanBase}`;
     applyConnectLink();
     loadRollcallStats();
     wireLineBridgeUi();
+    wireBattleBankUi();
     maybeAutoCloudBackup();
     renderLineInbox();
     updateLocalStorageStatus();
