@@ -1359,7 +1359,9 @@ assert.match(morningHtml, /id="groupToScoreButton"/, "隨機分組可以帶到�
 assert.match(morningHtml, /data-score-mode="reward"/, "計分板要有兌換模式");
 assert.match(morningHtml, /const personScore = seat => Math\.max\(0, ownScore\(seat\) \+ fromTeamScore\(seat\) - spentScore\(seat\)\)/, "目前點數＝加的－兌換用掉的");
 assert.match(morningHtml, /'prizes', 'personSpent', 'redeemLog'/, "禮物與兌換紀錄要跟著班級");
-assert.match(morningHtml, /const TOP_TOOLS_SUBJECT = \['check', 'score', 'group', 'screen', 'mind'\]/, "科任上方選單預設有計分板、隨機分組");
+assert.match(morningHtml, /const TOP_TOOLS_SUBJECT = \['check', 'score', 'group', 'screen', 'mind', 'battle'\]/, "科任上方選單預設有計分板、隨機分組");
+assert.match(morningHtml, /const TOP_TOOLS_DEFAULT = \[[^\]]*'battle'\]/, "答題對戰預設在大屏上方選單（2026-11-20）");
+assert.match(morningHtml, /config\.topToolsBattleAdded = true; saveConfig\(\);/, "自訂過上方選單的老師也補一次答題對戰");
 assert.match(morningHtml, /data-se-name="\$\{i\}"/, "編組視窗可以改組名");
 assert.match(morningHtml, /#page-setup \.sb-fold:not\(\.open\) > :not\(\.sb-head\) \{ display: none !important; \}/, "設定頁每一類預設收起");
 assert.match(morningHtml, /data-se-act="random">🎲 隨機分/, "計分板編組要有隨機分");

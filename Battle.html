@@ -429,7 +429,7 @@ details.nlm summary { cursor: pointer; font-weight: 900; }
 .mb-pk b { display: block; font-size: clamp(16px, 1.6vw, 22px); }
 .mb-pk small { display: block; font-size: clamp(12px, 1vw, 14px); color: #d8dcff; font-weight: 800; }
 .mb-boss .bb-c, .mb-boss .bb-b { transition: fill .6s; }
-.mb-boss.rage .bb-c { fill: #d23a6e; }
+.mb-boss.rage .bb-c { fill: url(#vold23a6e); }
 .mb-boss.rage .bb-b { fill: #ffa8c5; }
 .mb-boss.rage .mb-idle { animation-duration: .9s; }
 .mb-boss.hit, .mb-boss.rage.hit { filter: brightness(2.2) saturate(.3); }
@@ -458,11 +458,36 @@ details.nlm summary { cursor: pointer; font-weight: 900; }
 #exLight { transition: opacity .6s; }
 .ex-ghost { transition: transform .9s cubic-bezier(.3,1.3,.5,1); }
 .ex-ghost .float-y { animation: floaty 2.2s ease-in-out infinite alternate; }
-.ex-ghost.near .float-y > path:first-child { fill: #6a3fb5; }
+.ex-ghost.near .float-y > path:first-child { fill: url(#vol6a3fb5); }
 .ex-ghost.near .float-y { animation-duration: .5s; }
 .ex-torch { transform-box: fill-box; transform-origin: 50% 100%; animation: exTorch .22s ease-in-out infinite alternate; }
 @keyframes exTorch { to { transform: scaleY(1.05) skewX(2deg); } }
 .ex-no { font-size: 22px; fill: #ffe9b0; }
+.mbx-tw { animation: twinkle 1.6s ease-in-out infinite alternate; }
+.mbx-spin { transform-box: fill-box; transform-origin: center; animation: spin 40s linear infinite; }
+.mbx-fly { animation: mbxFly 4s ease-in-out infinite alternate; }
+@keyframes mbxFly { 0% { transform: translate(0, 0); opacity: .15; } 50% { opacity: 1; } 100% { transform: translate(16px, -20px); opacity: .3; } }
+.mbx-beam { animation: mbxBeam 3s ease-in-out infinite alternate; }
+@keyframes mbxBeam { to { opacity: .4; } }
+.mbx-glow { transform-box: fill-box; transform-origin: center; animation: mbxGlow 1.3s ease-in-out infinite alternate; }
+@keyframes mbxGlow { to { transform: scale(1.12); opacity: .7; } }
+.mb-shadow { pointer-events: none; }
+/* 手繪精靈圖的表情切換（2026-11-22） */
+.spr .sp { display: none; }
+.spr .sp-normal { display: inline; }
+.mon:is(.happy, .hurt, .sleep, .roar) .spr .sp-normal { display: none; }
+.mon.happy .spr :is(.sp-happy, .sp-friend), .mon.hurt .spr .sp-hurt, .mon.sleep .spr :is(.sp-sleep, .sp-sleepy), .mon.roar .spr :is(.sp-roar, .sp-dash) { display: inline; }
+.mb-boss.rage .mon:not(:is(.happy, .hurt, .sleep, .roar)) .spr .sp-normal { display: none; }
+.mb-boss.rage .mon:not(:is(.happy, .hurt, .sleep, .roar)) .spr .sp-angry { display: inline; }
+.mb-boss.friend .mon .spr .sp { display: none; }
+.mb-boss.friend .mon .spr .sp-friend { display: inline; }
+.mb-mon.win .mon .spr .sp { display: none; }
+.mb-mon.win .mon .spr .sp-win { display: inline; }
+.mb-mon.ko:has(.spr) { transform: none; }
+.ex-ghost.near .spr .sp-normal { display: none; }
+.ex-ghost.near .spr .sp-near { display: inline; }
+.ex-ghost.laugh .spr .sp { display: none; }
+.ex-ghost.laugh .spr .sp-laugh { display: inline; }
 .mb-hint { padding: 4px 12px; border-radius: 999px; background: rgba(10,12,40,.6); color: #ffe9b0; font-weight: 900; font-size: clamp(13px, 1.2vw, 16px); animation: mbBlink .9s ease-in-out infinite alternate; }
 </style>
 </head>
@@ -615,7 +640,7 @@ details.nlm summary { cursor: pointer; font-weight: 900; }
   </div>
 </dialog>
 
-<script src="assets/battle-bank.js?v=2026-11-20-2223"></script>
+<script src="assets/battle-bank.js?v=2026-11-23-2117"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
@@ -806,13 +831,189 @@ function floatAt(el, text, color = '#fff') {
 function shake(el) { el.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-10px)' }, { transform: 'translateX(10px)' }, { transform: 'translateX(-6px)' }, { transform: 'translateX(0)' }], { duration: 380 }); }
 function svgEl(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
 
+// ================= 美術加強（2026-11-20）：角色立體光影、地面影子、場景背景 =================
+// 角色身體改用「左上亮、右下暗」的放射漸層（volFill），看起來圓滾滾有份量；漸層統一放在頁面上看不見的 #volDefs。
+// 全部是向量，不載圖片、不吃效能（不用 filter），投影機舊電腦也跑得動。
+const VOL = new Set();
+function volDefs() {
+  let d = document.getElementById('volDefs');
+  if (d) return d;
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('aria-hidden', 'true'); svg.setAttribute('focusable', 'false');
+  svg.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden;pointer-events:none';
+  d = svgEl('defs', { id: 'volDefs' }, svg);
+  d.innerHTML = `<radialGradient id="volShadow"><stop offset="0" stop-color="#000" stop-opacity=".46"/><stop offset=".55" stop-color="#000" stop-opacity=".22"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>`;
+  document.body.appendChild(svg);
+  return d;
+}
+function volFill(hex) {
+  const h = String(hex).toLowerCase();
+  if (!/^#[0-9a-f]{6}$/.test(h)) return hex;
+  const id = 'vol' + h.slice(1);
+  if (!VOL.has(h)) {
+    VOL.add(h);
+    volDefs().insertAdjacentHTML('beforeend', `<radialGradient id="${id}" cx=".42" cy=".36" r=".78" fx=".34" fy=".24"><stop offset="0" stop-color="${shade(h, 0.62)}"/><stop offset=".26" stop-color="${shade(h, 0.24)}"/><stop offset=".64" stop-color="${h}"/><stop offset="1" stop-color="${shade(h, -0.34)}"/></radialGradient>`);
+  }
+  return `url(#${id})`;
+}
+// 把一個 SVG 群組裡所有純色（#rrggbb）的形狀換成立體漸層
+function volDom(root) {
+  if (!root) return;
+  root.querySelectorAll('ellipse, circle, path, rect, polygon').forEach(e => {
+    const f = e.getAttribute('fill');
+    if (f && /^#[0-9a-fA-F]{6}$/.test(f)) e.setAttribute('fill', volFill(f));
+  });
+}
+// 角色腳下的柔和影子（放在會動的角色外面，角色跳、出招時影子留在地上）
+function mbShadow(el, rx = 48, ry = 9) {
+  if (!el || !el.parentNode) return;
+  const p = el.previousElementSibling;
+  if (p && p.classList && p.classList.contains('mb-shadow')) return;
+  volDefs();
+  el.parentNode.insertBefore(svgEl('ellipse', { class: 'mb-shadow', cx: 0, cy: 2, rx, ry, fill: 'url(#volShadow)' }), el);
+}
+const mbxF = n => n.toFixed(1);
+function mbxStars(n, y1 = 200) {
+  let s = '';
+  for (let i = 0; i < n; i++) s += `<circle cx="${rand(-60, 860).toFixed(0)}" cy="${rand(4, y1).toFixed(0)}" r="${mbxF(rand(0.7, 2.2))}" fill="#fff" opacity="${rand(0.35, 0.95).toFixed(2)}"${i % 3 ? '' : ` class="mbx-tw" style="animation-delay:${mbxF(rand(0, 2))}s"`}/>`;
+  return s;
+}
+function mbxFlies(n, col, x0, x1, y0, y1) {
+  let s = '';
+  for (let i = 0; i < n; i++) s += `<circle cx="${rand(x0, x1).toFixed(0)}" cy="${rand(y0, y1).toFixed(0)}" r="${mbxF(rand(1.3, 2.6))}" fill="${col}" class="mbx-fly" style="animation-delay:${mbxF(rand(0, 4))}s;animation-duration:${mbxF(rand(3, 6))}s"/>`;
+  return s;
+}
+function mbxPines(x0, x1, y, col) {
+  let s = '';
+  for (let x = x0; x < x1; x += rand(16, 30)) { const h = rand(20, 40), w = h * 0.42; s += `<path d="M${mbxF(x)} ${mbxF(y - h)} L${mbxF(x + w)} ${y} L${mbxF(x - w)} ${y}Z" fill="${col}"/>`; }
+  return s;
+}
+function mbxCloud(x, y, k, top = '#fff', bot = '#dbeefa') {
+  return `<g transform="translate(${x} ${y}) scale(${k})"><ellipse cx="0" cy="6" rx="58" ry="14" fill="${bot}"/><circle cx="-30" cy="-2" r="18" fill="${top}"/><circle cx="-6" cy="-14" r="24" fill="${top}"/><circle cx="22" cy="-6" r="20" fill="${top}"/><ellipse cx="0" cy="2" rx="52" ry="12" fill="${top}"/></g>`;
+}
+// 夜晚競技場（怪獸大對決）／魔獸王座（合力打魔獸）
+function mbxNight(kind) {
+  const boss = kind === 'boss';
+  if (SPR_OK.has(boss ? 'bg_boss' : 'bg_monster')) return `<defs><linearGradient id="mbxBeam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".2"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>${bgArt(boss ? 'bg_boss' : 'bg_monster')}`
+    + (boss ? '' : `<path d="M186 -40 L214 -40 L290 300 L110 300Z" fill="url(#mbxBeam)" class="mbx-beam"/><path d="M586 -40 L614 -40 L690 300 L510 300Z" fill="url(#mbxBeam)" class="mbx-beam" style="animation-delay:1.5s"/>`)
+    + mbxFlies(12, boss ? '#ffb3f0' : '#fff6a8', -40, 840, 150, 290);
+  const sky = boss ? ['#120a30', '#3b1858', '#82356f'] : ['#0d1140', '#2c2a7a', '#6b4aa8'];
+  const peaks = [[-60, 170], [150, 150], [380, 160], [590, 146], [820, 168]];
+  const snow = peaks.map(([x, y]) => `<path d="M${x} ${y} L${x - 14} ${y + 14} L${x - 4} ${y + 10} L${x + 4} ${y + 16} L${x + 15} ${y + 13}Z" fill="#cfc4ff" opacity=".45"/>`).join('');
+  const runes = Array.from({ length: 20 }, (_, i) => { const a = i / 20 * Math.PI * 2; return `<circle cx="${mbxF(400 + Math.cos(a) * 340)}" cy="${mbxF(302 + Math.sin(a) * 31)}" r="2.6" fill="#ffd23f" class="mbx-tw" style="animation-delay:${(i * 0.12).toFixed(2)}s"/>`; }).join('');
+  const castle = `<g fill="#241b58"><rect x="676" y="178" width="58" height="34"/><rect x="668" y="160" width="16" height="52"/><rect x="726" y="166" width="14" height="46"/><rect x="694" y="150" width="20" height="62"/>
+    <path d="M668 160 L676 146 L684 160Z M726 166 L733 154 L740 166Z M694 150 L704 132 L714 150Z"/></g>
+    <g fill="#ffe08a"><rect x="700" y="164" width="5" height="7" class="mbx-tw"/><rect x="673" y="174" width="4" height="6"/><rect x="730" y="178" width="4" height="6" class="mbx-tw" style="animation-delay:.8s"/></g>`;
+  const storm = `<g class="drift" opacity=".9">${mbxCloud(140, 70, 1.3, '#4a2a6e', '#2d1747')}${mbxCloud(250, 40, 0.9, '#55327c', '#341b52')}</g>
+    <g class="drift2" opacity=".9">${mbxCloud(660, 64, 1.35, '#4a2a6e', '#2d1747')}${mbxCloud(560, 34, 0.85, '#55327c', '#341b52')}</g>`;
+  const moon = `<circle cx="400" cy="112" r="80" fill="url(#mbxHalo)" class="pulse"/><circle cx="400" cy="112" r="32" fill="url(#mbxMoon)"/>
+    <circle cx="389" cy="104" r="6.5" fill="#e8d48e" opacity=".75"/><circle cx="413" cy="121" r="4.5" fill="#e8d48e" opacity=".75"/><circle cx="406" cy="97" r="2.6" fill="#e8d48e" opacity=".75"/>`;
+  const magic = `<g transform="translate(400 302) scale(1 .2)"><g class="mbx-spin">
+    <circle r="160" fill="none" stroke="#c77dff" stroke-width="3" stroke-dasharray="16 10" vector-effect="non-scaling-stroke" opacity=".8"/>
+    <circle r="128" fill="none" stroke="#ffd23f" stroke-width="2" vector-effect="non-scaling-stroke" opacity=".55"/>
+    <polygon points="${mbStar(126, 52)}" fill="none" stroke="#e0a8ff" stroke-width="2" vector-effect="non-scaling-stroke" opacity=".55"/></g></g>`;
+  const beams = boss ? '' : `<path d="M182 -40 L218 -40 L300 300 L100 300Z" fill="url(#mbxBeam)" class="mbx-beam"/><path d="M582 -40 L618 -40 L700 300 L500 300Z" fill="url(#mbxBeam)" class="mbx-beam" style="animation-delay:1.5s"/>`;
+  return `<defs>
+    <linearGradient id="mbxSky" gradientUnits="userSpaceOnUse" x1="0" y1="-60" x2="0" y2="290"><stop offset="0" stop-color="${sky[0]}"/><stop offset=".62" stop-color="${sky[1]}"/><stop offset="1" stop-color="${sky[2]}"/></linearGradient>
+    <linearGradient id="mbxAur" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5ef2d0" stop-opacity="0"/><stop offset=".45" stop-color="#5ef2d0" stop-opacity=".5"/><stop offset=".75" stop-color="#b48cff" stop-opacity=".4"/><stop offset="1" stop-color="#b48cff" stop-opacity="0"/></linearGradient>
+    <radialGradient id="mbxMoon" cx=".4" cy=".36" r=".72"><stop offset="0" stop-color="#fffdf0"/><stop offset=".7" stop-color="#ffefb8"/><stop offset="1" stop-color="#efd58a"/></radialGradient>
+    <radialGradient id="mbxHalo"><stop offset="0" stop-color="#fff4c2" stop-opacity=".55"/><stop offset="1" stop-color="#fff4c2" stop-opacity="0"/></radialGradient>
+    <radialGradient id="mbxAura"><stop offset="0" stop-color="#ff7ad9" stop-opacity=".35"/><stop offset="1" stop-color="#ff7ad9" stop-opacity="0"/></radialGradient>
+    <linearGradient id="mbxFar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${boss ? '#5b3486' : '#5a4aa8'}"/><stop offset="1" stop-color="${boss ? '#3a1f5e' : '#382d78'}"/></linearGradient>
+    <linearGradient id="mbxNear" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${boss ? '#2e1850' : '#2c2466'}"/><stop offset="1" stop-color="${boss ? '#1c0e34' : '#1b1546'}"/></linearGradient>
+    <linearGradient id="mbxGround" gradientUnits="userSpaceOnUse" x1="0" y1="262" x2="0" y2="360"><stop offset="0" stop-color="${boss ? '#3a2168' : '#3b2e74'}"/><stop offset="1" stop-color="#130e30"/></linearGradient>
+    <radialGradient id="mbxFloor" cx=".5" cy=".4" r=".62"><stop offset="0" stop-color="${boss ? '#9a62c9' : '#8471d0'}"/><stop offset=".7" stop-color="${boss ? '#5a3290' : '#4a3a92'}"/><stop offset="1" stop-color="#2a1d62"/></radialGradient>
+    <linearGradient id="mbxBeam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>
+    <rect x="-2000" y="-2000" width="4800" height="2290" fill="url(#mbxSky)"/>
+    ${mbxStars(boss ? 34 : 54)}
+    ${boss ? `<ellipse cx="400" cy="190" rx="250" ry="150" fill="url(#mbxAura)" class="pulse"/>${storm}` : `<g class="drift" opacity=".75"><path d="M-160 96 Q100 30 300 82 T700 58 T1000 92 L1000 116 Q780 92 650 112 T300 112 T-160 126Z" fill="url(#mbxAur)"/></g>${moon}`}
+    <path d="M-200 250 L-60 170 L40 214 L150 150 L260 206 L380 160 L470 200 L590 146 L700 204 L820 168 L1000 220 L1000 290 L-200 290Z" fill="url(#mbxFar)" opacity=".8"/>${snow}
+    ${boss ? '' : castle}
+    <path d="M-200 266 L-40 206 L60 244 L170 192 L290 242 L400 214 L520 244 L640 196 L760 242 L1000 210 L1000 290 L-200 290Z" fill="url(#mbxNear)"/>
+    ${mbxPines(-200, 150, 272, boss ? '#1a0d30' : '#161040')}${mbxPines(650, 1000, 272, boss ? '#1a0d30' : '#161040')}
+    <rect x="-2000" y="268" width="4800" height="2000" fill="url(#mbxGround)"/>
+    ${beams}
+    <ellipse cx="400" cy="302" rx="392" ry="38" fill="url(#mbxFloor)" stroke="rgba(255,255,255,.24)" stroke-width="3"/>
+    <ellipse cx="400" cy="300" rx="300" ry="27" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="2"/>
+    <ellipse cx="400" cy="299" rx="190" ry="17" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="2"/>
+    ${boss ? magic : '<ellipse cx="400" cy="300" rx="70" ry="10" fill="none" stroke="rgba(255,210,63,.45)" stroke-width="3"/>'}
+    ${runes}
+    ${mbxFlies(14, boss ? '#ffb3f0' : '#fff6a8', -40, 840, 150, 290)}`;
+}
+// 晴天草原（守護城堡）
+function mbxMeadow() {
+  if (SPR_OK.has('bg_castle')) return bgArt('bg_castle') + mbxFlies(8, '#ffffff', -40, 840, 180, 280);
+  const rays = Array.from({ length: 12 }, (_, i) => `<path d="M-6 -36 L0 -62 L6 -36Z" fill="#fff3a6" transform="rotate(${i * 30})"/>`).join('');
+  const tree = (x, y, k) => `<g transform="translate(${x} ${y}) scale(${k})"><rect x="-4" y="-14" width="8" height="16" rx="2" fill="${volFill('#8a5a3c')}"/>
+    <circle cx="-10" cy="-22" r="13" fill="${volFill('#3fa856')}"/><circle cx="10" cy="-22" r="13" fill="${volFill('#3fa856')}"/><circle cx="0" cy="-34" r="15" fill="${volFill('#4cb85a')}"/></g>`;
+  const trees = [[-30, 262, 1.1], [24, 254, 0.9], [70, 262, 1.15], [148, 250, 0.8], [652, 252, 0.85], [708, 262, 1.1], [760, 254, 0.9], [826, 262, 1.15]].map(t => tree(...t)).join('');
+  const cols = ['#ff7ab0', '#ffd23f', '#ffffff', '#c9a6ff', '#ff9b5a'];
+  let flowers = '';
+  for (let i = 0; i < 34; i++) {
+    const x = rand(-80, 880), y = rand(300, 340), c = cols[i % cols.length];
+    if (x > 320 && x < 480) continue;
+    flowers += `<g transform="translate(${x.toFixed(0)} ${y.toFixed(0)})"><circle cx="-2.6" r="2.4" fill="${c}"/><circle cx="2.6" r="2.4" fill="${c}"/><circle cy="-2.6" r="2.4" fill="${c}"/><circle cy="2.6" r="2.4" fill="${c}"/><circle r="1.6" fill="#ffb300"/></g>`;
+  }
+  let tufts = '';
+  for (let i = 0; i < 26; i++) { const x = rand(-100, 900).toFixed(0), y = rand(284, 336).toFixed(0); tufts += `<path d="M${x} ${y} l-4 -8 M${x} ${y} l0 -10 M${x} ${y} l4 -8" stroke="#2f8a3e" stroke-width="2" stroke-linecap="round"/>`; }
+  return `<defs>
+    <linearGradient id="mbxSkyD" gradientUnits="userSpaceOnUse" x1="0" y1="-60" x2="0" y2="280"><stop offset="0" stop-color="#3aa4f2"/><stop offset=".6" stop-color="#9edbff"/><stop offset="1" stop-color="#fff1cf"/></linearGradient>
+    <radialGradient id="mbxSunG"><stop offset="0" stop-color="#fff7c2" stop-opacity=".9"/><stop offset="1" stop-color="#fff7c2" stop-opacity="0"/></radialGradient>
+    <radialGradient id="mbxSun" cx=".4" cy=".36" r=".7"><stop offset="0" stop-color="#fffbe0"/><stop offset=".6" stop-color="#ffe14d"/><stop offset="1" stop-color="#ffbe2e"/></radialGradient>
+    <linearGradient id="mbxMtn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9cc3e8"/><stop offset="1" stop-color="#bcdcf2"/></linearGradient>
+    <linearGradient id="mbxHill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9be68f"/><stop offset="1" stop-color="#5fbf5f"/></linearGradient>
+    <linearGradient id="mbxGrass" gradientUnits="userSpaceOnUse" x1="0" y1="270" x2="0" y2="360"><stop offset="0" stop-color="#72d46a"/><stop offset="1" stop-color="#2c8f42"/></linearGradient>
+    <linearGradient id="cqWallG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fffaf0"/><stop offset=".55" stop-color="#f1e5cf"/><stop offset="1" stop-color="#d9c6a4"/></linearGradient>
+    <pattern id="cqStone" patternUnits="userSpaceOnUse" width="28" height="16"><path d="M0 15.5 H28 M14 0 V8 M0 8 H28 M0 8 V16" stroke="#a88e68" stroke-width="1.2" opacity=".45" fill="none"/></pattern></defs>
+    <rect x="-2000" y="-2000" width="4800" height="2290" fill="url(#mbxSkyD)"/>
+    <g transform="translate(92 62)"><circle r="78" fill="url(#mbxSunG)"/><g class="mbx-spin" style="animation-duration:36s">${rays}</g><circle r="27" fill="url(#mbxSun)"/></g>
+    <g class="drift" opacity=".95">${mbxCloud(250, 66, 0.8)}${mbxCloud(-40, 110, 0.6)}</g>
+    <g class="drift2" opacity=".92">${mbxCloud(640, 52, 0.9)}${mbxCloud(820, 100, 0.65)}</g>
+    <path d="M-200 236 L-90 170 L0 214 L110 160 L230 222 L340 176 L430 214 L540 156 L650 210 L760 168 L880 214 L1000 190 L1000 280 L-200 280Z" fill="url(#mbxMtn)"/>
+    <path d="M110 160 L96 174 L106 171 L113 178 L124 172Z M540 156 L526 170 L536 167 L543 174 L554 168Z M760 168 L748 180 L757 177 L764 183 L773 178Z M-90 170 L-102 182 L-93 179 L-86 185 L-77 180Z" fill="#fff" opacity=".9"/>
+    <path d="M-200 270 Q60 200 240 262 Q400 214 560 262 Q740 200 1000 270 L1000 290 L-200 290Z" fill="url(#mbxHill)"/>
+    ${trees}
+    <rect x="-2000" y="276" width="4800" height="2000" fill="url(#mbxGrass)"/>
+    <path d="M-300 296 H300 M500 296 H1100" stroke="#ead2a0" stroke-width="18" stroke-linecap="round" opacity=".9"/>
+    <path d="M-300 300 H300 M500 300 H1100" stroke="#cdb07a" stroke-width="3" stroke-dasharray="2 22" stroke-linecap="round" opacity=".8"/>
+    ${tufts}${flowers}
+    ${mbxFlies(8, '#ffffff', -40, 840, 180, 280)}`;
+}
+// 地下迷宮城（雙鑰匙大逃脫）
+function mbxDungeon() {
+  if (SPR_OK.has('bg_dungeon')) return bgArt('bg_dungeon') + mbxFlies(10, '#ffe9b0', -40, 840, 120, 280);
+  const bc = ['#4b3f6b', '#463a66', '#524575', '#43375f'];
+  let bricks = '';
+  for (let y = 0, r = 0; y < 280; y += 28, r++) for (let x = r % 2 ? -40 : -80; x < 880; x += 80) {
+    bricks += `<rect x="${x}" y="${y}" width="76" height="24" rx="4" fill="${bc[(x / 40 + r * 3 + 4) & 3]}"/><rect x="${x + 3}" y="${y + 1.5}" width="70" height="3" rx="1.5" fill="#fff" opacity=".07"/><rect x="${x + 2}" y="${y + 20}" width="72" height="4" rx="2" fill="#000" opacity=".16"/>`;
+    if (Math.random() < 0.12) bricks += `<ellipse cx="${x + rand(14, 62).toFixed(0)}" cy="${y + 22}" rx="${rand(9, 16).toFixed(0)}" ry="4" fill="#5c9a62" opacity=".55"/>`;
+  }
+  const chain = x => Array.from({ length: 9 }, (_, i) => `<ellipse cx="${x}" cy="${-10 + i * 13}" rx="${i % 2 ? 2.4 : 4.6}" ry="7.5" fill="none" stroke="#8d88ad" stroke-width="2.6"/>`).join('');
+  const flag = x => `<g transform="translate(${x} 22)"><rect x="-30" y="-4" width="60" height="6" rx="3" fill="#8a6d4b"/><path d="M-24 0 H24 V70 L0 56 L-24 70Z" fill="${volFill('#6a3fb5')}" stroke="#ffd23f" stroke-width="2.5" stroke-linejoin="round"/>
+    <polygon points="${mbStar(11, 5)}" transform="translate(0 28)" fill="#ffd23f"/></g>`;
+  const tiles = Array.from({ length: 15 }, (_, i) => { const k = i - 7; return `<path d="M${400 + k * 52} 284 L${400 + k * 150} 400" stroke="#fff" stroke-width="1.5" opacity=".06"/>`; }).join('');
+  return `<defs>
+    <linearGradient id="mbxWall" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="290"><stop offset="0" stop-color="#2a2148"/><stop offset="1" stop-color="#3a2f60"/></linearGradient>
+    <linearGradient id="mbxFloorD" gradientUnits="userSpaceOnUse" x1="0" y1="280" x2="0" y2="370"><stop offset="0" stop-color="#3a2f62"/><stop offset="1" stop-color="#140f2c"/></linearGradient>
+    <radialGradient id="mbxTorch"><stop offset="0" stop-color="#ffcf6b" stop-opacity=".55"/><stop offset=".5" stop-color="#ff9a3d" stop-opacity=".2"/><stop offset="1" stop-color="#ff9a3d" stop-opacity="0"/></radialGradient></defs>
+    <rect x="-2000" y="-2000" width="4800" height="2290" fill="url(#mbxWall)"/>${bricks}
+    ${chain(70)}${chain(730)}${flag(170)}${flag(630)}
+    <circle cx="304" cy="114" r="86" fill="url(#mbxTorch)" class="mbx-glow"/><circle cx="496" cy="114" r="86" fill="url(#mbxTorch)" class="mbx-glow" style="animation-delay:.4s"/>
+    <rect x="-2000" y="280" width="4800" height="2000" fill="url(#mbxFloorD)"/>${tiles}
+    <path d="M-300 296 H1100 M-300 316 H1100" stroke="#fff" stroke-width="1.5" opacity=".05"/>
+    <path d="M-300 282 H1100" stroke="#6a5a9a" stroke-width="4"/>
+    ${mbxFlies(10, '#ffe9b0', -40, 840, 120, 280)}`;
+}
+// 四周暗角，讓視線集中在中間（放在角色上面、文字下面）
+const mbxVignette = () => `<defs><radialGradient id="mbxVig" gradientUnits="userSpaceOnUse" cx="400" cy="175" r="560"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".5"/></radialGradient></defs><rect x="-400" y="-300" width="1600" height="930" fill="url(#mbxVig)" pointer-events="none"/>`;
+
 // ================= 角色（原創圓滾滾小豆） =================
 function blob(c, face = 'front') {
   const ex = face === 'right' ? 3 : face === 'left' ? -3 : 0, dk = shade(c, -0.28);
   return `<g class="blob">
     <ellipse cx="0" cy="27" rx="22" ry="4.5" fill="rgba(0,0,0,.22)"/>
-    <ellipse cx="-9" cy="23" rx="8" ry="5" fill="${dk}"/><ellipse cx="9" cy="23" rx="8" ry="5" fill="${dk}"/>
-    <ellipse cx="0" cy="0" rx="22" ry="24" fill="${c}"/>
+    <ellipse cx="-9" cy="23" rx="8" ry="5" fill="${volFill(dk)}"/><ellipse cx="9" cy="23" rx="8" ry="5" fill="${volFill(dk)}"/>
+    <ellipse cx="0" cy="0" rx="22" ry="24" fill="${volFill(c)}"/>
     <ellipse cx="-7" cy="-12" rx="8" ry="5" fill="#fff" opacity=".35"/>
     <g class="e-n"><ellipse cx="${-7 + ex}" cy="-2" rx="3.6" ry="4.4" fill="#1d2340"/><ellipse cx="${7 + ex}" cy="-2" rx="3.6" ry="4.4" fill="#1d2340"/><circle cx="${-6 + ex}" cy="-3.6" r="1.3" fill="#fff"/><circle cx="${8 + ex}" cy="-3.6" r="1.3" fill="#fff"/></g>
     <g class="e-x" stroke="#1d2340" stroke-width="2.4" stroke-linecap="round" fill="none"><path d="M${-10 + ex} -5 L${-5 + ex} -2 L${-10 + ex} 1"/><path d="M${10 + ex} -5 L${5 + ex} -2 L${10 + ex} 1"/></g>
@@ -1835,14 +2036,10 @@ MODES.monster = {
       <defs><linearGradient id="mbSky" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="280"><stop offset="0" stop-color="#1c1446"/><stop offset="1" stop-color="#5a3c8e"/></linearGradient>
       <radialGradient id="mbGlowL"><stop offset="0" stop-color="${tc('L')}" stop-opacity=".85"/><stop offset="1" stop-color="${tc('L')}" stop-opacity="0"/></radialGradient>
       <radialGradient id="mbGlowR"><stop offset="0" stop-color="${tc('R')}" stop-opacity=".85"/><stop offset="1" stop-color="${tc('R')}" stop-opacity="0"/></radialGradient></defs>
-      <rect x="-2000" y="-2000" width="4800" height="2290" fill="url(#mbSky)"/>${stars}
-      <circle cx="400" cy="118" r="44" fill="#fff4c2" opacity=".18" class="pulse"/><circle cx="400" cy="118" r="30" fill="#fff4c2" opacity=".9"/><circle cx="388" cy="110" r="6" fill="#efe2a6"/><circle cx="410" cy="128" r="4" fill="#efe2a6"/>
-      <path d="M-200 262 L-40 196 L60 240 L170 178 L290 236 L400 200 L520 240 L640 182 L760 236 L1000 200 L1000 290 L-200 290Z" fill="#2c2160" opacity=".9"/>
-      <rect x="-2000" y="270" width="4800" height="2000" fill="#3a2d6e"/>
-      <ellipse cx="400" cy="300" rx="380" ry="30" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="3"/><ellipse cx="400" cy="300" rx="70" ry="10" fill="none" stroke="rgba(255,210,63,.35)" stroke-width="3"/>
+      ${mbxNight('monster')}
       <ellipse cx="200" cy="294" rx="110" ry="22" fill="url(#mbGlowL)" class="mb-pad" id="mbPadL"/><ellipse cx="600" cy="294" rx="110" ry="22" fill="url(#mbGlowR)" class="mb-pad" id="mbPadR"/>
       ${mon('L')}${mon('R')}
-      <g id="mbFx"></g>
+      ${mbxVignette()}<g id="mbFx"></g>
       ${panel('L')}${panel('R')}
       <text x="400" y="32" text-anchor="middle" class="mb-round" id="mbRound"></text>
       <text x="400" y="62" text-anchor="middle" class="mb-vs">VS</text>
@@ -1862,9 +2059,11 @@ MODES.monster = {
   renderMon(s) {
     const M = monById(this.mon[s]);
     $('mbMon' + s).innerHTML = `<g class="mb-idle"><g class="mon" id="mbFace${s}">${M.draw()}</g></g>`;
+    volDom($('mbMon' + s)); mbShadow($('mbMon' + s), 50, 9);
     $('mbName' + s).textContent = `${tn(s)}・${M.name}`;
     $('mbPk' + s).innerHTML = `<b>${esc(M.name)}</b><small>${esc(M.type)}・${esc(M.kind)}</small>`;
     $('art' + s).innerHTML = `<svg viewBox="-82 -130 164 138"><g class="blob"><g ${s === 'R' ? 'transform="scale(-1 1)"' : ''}><g class="mon">${M.draw()}</g></g></g></svg>`;
+    volDom($('art' + s));
   },
   roarBrief(s) { this.mood(s, 'roar'); Sound.play('roar'); $('mbMon' + s).animate([{ transform: 'none' }, { transform: 'scale(1.08,.92)' }, { transform: 'scale(.96,1.06) translateY(-8px)' }, { transform: 'none' }], { duration: 520 }); clearTimeout(this.rt); this.rt = setTimeout(() => this.mood(s, ''), 620); },
   mood(s, m) { const a = $('art' + s); [$('mbFace' + s), a && a.querySelector('.mon')].forEach(f => { if (f) f.setAttribute('class', 'mon' + (m ? ' ' + m : '')); }); },
@@ -2054,15 +2253,12 @@ MODES.boss = {
       <radialGradient id="mbGlowL"><stop offset="0" stop-color="${tc('L')}" stop-opacity=".85"/><stop offset="1" stop-color="${tc('L')}" stop-opacity="0"/></radialGradient>
       <radialGradient id="mbGlowR"><stop offset="0" stop-color="${tc('R')}" stop-opacity=".85"/><stop offset="1" stop-color="${tc('R')}" stop-opacity="0"/></radialGradient>
       <radialGradient id="mbGlowB"><stop offset="0" stop-color="#c77dff" stop-opacity=".8"/><stop offset="1" stop-color="#c77dff" stop-opacity="0"/></radialGradient></defs>
-      <rect x="-2000" y="-2000" width="4800" height="2290" fill="url(#mbSky)"/>${stars}
-      <path d="M-200 262 L-40 200 L80 236 L200 170 L320 230 L400 196 L480 230 L600 170 L720 236 L1000 200 L1000 290 L-200 290Z" fill="#2a1f5c" opacity=".9"/>
-      <rect x="-2000" y="270" width="4800" height="2000" fill="#35286a"/>
-      <ellipse cx="400" cy="300" rx="380" ry="30" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="3"/>
+      ${mbxNight('boss')}
       <ellipse cx="120" cy="294" rx="90" ry="18" fill="url(#mbGlowL)" class="mb-pad on" id="mbPadL"/><ellipse cx="680" cy="294" rx="90" ry="18" fill="url(#mbGlowR)" class="mb-pad on" id="mbPadR"/>
       <ellipse cx="400" cy="298" rx="140" ry="24" fill="url(#mbGlowB)" class="mb-pad" id="mbPadB"/>
       <g transform="translate(${this.BX} ${this.BB}) scale(${this.BS})"><g class="mb-mon mb-boss" id="mbMonB"><g class="mb-idle"><g class="mon" id="mbFaceB"></g></g></g></g>
       ${mon('L')}${mon('R')}
-      <g id="mbFx"></g>
+      ${mbxVignette()}<g id="mbFx"></g>
       <g class="mb-panel"><rect x="210" y="6" width="380" height="68" rx="14" fill="rgba(10,12,40,.66)" stroke="#c77dff" stroke-width="3"/>
         <text x="226" y="28" class="mb-name" id="mbBossName"></text><text x="574" y="28" text-anchor="end" class="mb-small" id="mbHpTB"></text>
         <rect x="226" y="35" width="348" height="14" rx="7" fill="rgba(255,255,255,.16)"/>
@@ -2226,7 +2422,7 @@ Object.assign(MODES.boss, {
   B() { return BOSSES.find(x => x.id === this.boss) || BOSSES[0]; },
   renderBoss() {
     const B = this.B();
-    $('mbFaceB').innerHTML = B.draw();
+    $('mbFaceB').innerHTML = B.draw(); volDom($('mbFaceB')); mbShadow($('mbMonB'), 80, 12); volFill('#d23a6e');
     $('mbBossName').textContent = `👑 ${B.name}`;
     $('mbPkB').innerHTML = `<b>${esc(B.name)}</b><small>${esc(B.kind)}</small>`;
   },
@@ -2276,37 +2472,34 @@ MODES.castle = Object.assign(mbShare(), {
     this.mon = { L: monById(S.monsters.L, 'fire').id, R: monById(S.monsters.R, 'ice').id };
     const cols = ['#7ee07e', '#ff8fd0', '#5bd1ff', '#ffb13d', '#c9a6ff'];
     this.q = {}; ['L', 'R'].forEach((s, k) => { this.q[s] = Array.from({ length: n }, (_, i) => ({ id: `cq${s}${i}`, c: cols[(i + k * 2) % cols.length], step: 0 })); });
-    const merl = Array.from({ length: 6 }, (_, i) => `<rect x="${-80 + i * 29}" y="-124" width="17" height="16" fill="#efe4d0" stroke="#8a6d4b" stroke-width="2.5"/>`).join('');
-    const tower = (x, c) => `<rect x="${x - 22}" y="-150" width="44" height="150" fill="#f4ead8" stroke="#8a6d4b" stroke-width="3"/>
-      <path d="M${x - 28} -150 L${x} -198 L${x + 28} -150Z" fill="${c}" stroke="${shade(c, -0.35)}" stroke-width="3" stroke-linejoin="round"/>
+    const merl = Array.from({ length: 6 }, (_, i) => `<rect x="${-80 + i * 29}" y="-124" width="17" height="16" fill="url(#cqWallG)" stroke="#8a6d4b" stroke-width="2.5"/>`).join('');
+    const tower = (x, c) => `<rect x="${x - 22}" y="-150" width="44" height="150" fill="url(#cqWallG)" stroke="#8a6d4b" stroke-width="3"/><rect x="${x - 20}" y="-148" width="40" height="146" fill="url(#cqStone)"/>
+      <path d="M${x - 28} -150 L${x} -198 L${x + 28} -150Z" fill="${volFill(c)}" stroke="${shade(c, -0.35)}" stroke-width="3" stroke-linejoin="round"/>
       <line x1="${x}" y1="-198" x2="${x}" y2="-222" stroke="#6b4a2b" stroke-width="3"/><path class="cq-flag" d="M${x} -222 L${x + 22} -215 L${x} -208Z" fill="${c}"/>
-      <path d="M${x - 8} -96 V-112 Q${x} -122 ${x + 8} -112 V-96Z" fill="#4a3a6a"/>`;
+      <path d="M${x - 8} -96 V-112 Q${x} -122 ${x + 8} -112 V-96Z" fill="#4a3a6a"/><path d="M${x - 5} -100 V-110 Q${x - 3} -115 ${x} -116" stroke="#fff" stroke-width="2" fill="none" opacity=".45" stroke-linecap="round"/>`;
     $('arena').innerHTML = `<div class="mb"><svg class="mb-svg" viewBox="0 0 800 330" preserveAspectRatio="xMidYMid meet">
       <defs><linearGradient id="cqSky" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="280"><stop offset="0" stop-color="#5fc0ff"/><stop offset="1" stop-color="#d6f4ff"/></linearGradient>
       <linearGradient id="cqGrass" gradientUnits="userSpaceOnUse" x1="0" y1="262" x2="0" y2="330"><stop offset="0" stop-color="#78dc72"/><stop offset="1" stop-color="#3aa64c"/></linearGradient></defs>
-      <rect x="-2000" y="-2000" width="4800" height="2290" fill="url(#cqSky)"/>
-      <g class="drift" opacity=".9"><ellipse cx="120" cy="70" rx="46" ry="16" fill="#fff"/><ellipse cx="150" cy="60" rx="30" ry="16" fill="#fff"/></g>
-      <g class="drift2" opacity=".85"><ellipse cx="640" cy="54" rx="50" ry="15" fill="#fff"/><ellipse cx="610" cy="46" rx="28" ry="14" fill="#fff"/></g>
-      <path d="M-200 270 Q60 200 240 262 Q400 214 560 262 Q740 200 1000 270 L1000 290 L-200 290Z" fill="#8fd88a"/>
-      <rect x="-2000" y="276" width="4800" height="2000" fill="url(#cqGrass)"/>
-      <path d="M-300 296 H300 M500 296 H1100" stroke="#e0c58f" stroke-width="16" stroke-linecap="round" opacity=".8"/>
+      ${mbxMeadow()}
       <g transform="translate(400 292)" id="cqCastle">
-        <rect x="-80" y="-108" width="160" height="108" fill="#efe4d0" stroke="#8a6d4b" stroke-width="3"/>${merl}
+        ${SPR_OK.has('bg_castle') ? '<g id="cqPaint"></g>' : `        <rect x="-80" y="-108" width="160" height="108" fill="url(#cqWallG)" stroke="#8a6d4b" stroke-width="3"/><rect x="-78" y="-106" width="156" height="104" fill="url(#cqStone)"/>${merl}
         <g id="cqPaint"></g>
         ${tower(-84, tc('L'))}${tower(84, tc('R'))}
-        <path d="M-26 0 V-48 Q0 -76 26 -48 V0Z" fill="#6b4a2b" stroke="#3e2a16" stroke-width="3"/><path d="M0 -70 V0 M-13 -58 V0 M13 -58 V0" stroke="#3e2a16" stroke-width="2"/>
+        <path d="M-26 0 V-48 Q0 -76 26 -48 V0Z" fill="${volFill('#7a5433')}" stroke="#3e2a16" stroke-width="3"/><path d="M0 -70 V0 M-13 -58 V0 M13 -58 V0" stroke="#3e2a16" stroke-width="2"/>
         <path d="M-10 -86 a6 6 0 0 1 10 -4 a6 6 0 0 1 10 4 q0 7 -10 14 q-10 -7 -10 -14z" fill="#ff6f91" stroke="#b03a5a" stroke-width="2"/>
+      `}
       </g>
       ${['L', 'R'].map(s => `<g transform="translate(${this.X[s]} ${this.BASE}) scale(${s === 'L' ? '-' : ''}${this.SC} ${this.SC})"><g class="mb-mon" id="mbMon${s}"></g></g>
         <text x="${this.X[s]}" y="${this.BASE - 120}" text-anchor="middle" class="mb-name mb-tag" id="mbName${s}"></text>`).join('')}
-      <g id="cqImps">${['L', 'R'].map(s => this.q[s].map(e => `<g class="cq-imp" id="${e.id}"><g class="cq-in"><g class="mon">${drawImp(e.c)}</g></g></g>`).join('')).join('')}</g>
-      <g id="mbFx"></g>
+      <g id="cqImps">${['L', 'R'].map(s => this.q[s].map(e => `<g class="cq-imp" id="${e.id}"><ellipse class="mb-shadow" cx="0" cy="1" rx="22" ry="5" fill="url(#volShadow)"/><g class="cq-in"><g class="mon">${impArt(e.c)}</g></g></g>`).join('')).join('')}</g>
+      ${mbxVignette()}<g id="mbFx"></g>
       <g class="mb-panel"><rect x="246" y="6" width="308" height="58" rx="14" fill="rgba(10,12,40,.66)" stroke="#2fbf71" stroke-width="3"/>
         <text x="262" y="29" class="mb-name" id="cqShield"></text><text x="538" y="29" text-anchor="end" class="mb-small" id="mbRound"></text>
         <text x="262" y="52" class="mb-small" id="cqLeft"></text></g>
       <text x="400" y="322" text-anchor="middle" class="mb-say" id="mbSay"></text></svg>
       <div class="mb-pick" id="mbPick">${mbPk('L')}<div class="mb-hint">點 ◀ ▶ 選守衛</div>${mbPk('R')}</div></div>`;
     this.svg = $('arena').querySelector('svg'); this.fx = $('mbFx');
+    volDom($('cqImps'));
     mbPickBind(this);
     ['L', 'R'].forEach(s => { this.renderMon(s); this.layout(s, true); });
     this.hud();
@@ -2362,7 +2555,7 @@ MODES.castle = Object.assign(mbShare(), {
     const el = $(e.id), [x, y] = to;
     el.querySelector('.mon').setAttribute('class', 'mon happy');
     svgEl('circle', { cx: 0, cy: -24, r: 30, class: 'cq-bub' }, el.querySelector('.cq-in'));
-    Sound.play('pop'); el.classList.add('float');
+    Sound.play('pop'); el.classList.add('float'); el.querySelectorAll('.mb-shadow').forEach(x => x.remove());
     el.style.transition = 'transform 1.6s ease-in, opacity 1.6s ease-in';
     el.style.transform = `translate(${x + (side === 'L' ? -30 : 30)}px, ${y - 260}px) scale(1.1)`; el.style.opacity = 0;
     const [sx, sy] = this.scr(x, y - 30); floatXY(sx, sy, '🫧 送走了！', '#fff');
@@ -2413,41 +2606,42 @@ MODES.escape = Object.assign(mbShare(), {
     this.doors = [3, 5, 7][LEN()]; this.limit = [10, 16, 22][LEN()]; this.chaseMax = 4;
     this.door = 1; this.keys = { L: false, R: false }; this.chase = 0; this.used = 0; this.locked = false; this.got = { L: 0, R: 0 };
     this.mon = { L: monById(S.monsters.L, 'fire').id, R: monById(S.monsters.R, 'ice').id };
-    let bricks = ''; for (let y = 0; y < 280; y += 28) for (let x = (y / 28) % 2 ? -40 : -80; x < 880; x += 80) bricks += `<rect x="${x}" y="${y}" width="76" height="24" rx="4" fill="#4b3f6b"/>`;
     const half = s => {
       const k = s === 'L' ? -1 : 1, c = tc(s);
-      return `<g class="ex-door ex-door${s}" id="exD${s}"><path class="ex-wood" d="M${k * 74} 0 V-146 Q${k * 40} -200 0 -206 V0Z" stroke="#3e2a16" stroke-width="3" stroke-linejoin="round"/>
-        <path d="M${k * 50} -10 V-170 M${k * 26} -10 V-196" stroke="rgba(0,0,0,.25)" stroke-width="3"/>
+      const wood = SPR_OK.has('door_left') && SPR_OK.has('door_right')
+        ? `<image class="ex-doorimg" href="${ART}door_${s === 'L' ? 'left' : 'right'}.webp" x="${s === 'L' ? -74 : 0}" y="-214" width="74" height="214" preserveAspectRatio="none"/>`
+        : `<path class="ex-wood" d="M${k * 74} 0 V-146 Q${k * 40} -200 0 -206 V0Z" stroke="#3e2a16" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M${k * 50} -10 V-170 M${k * 26} -10 V-196" stroke="rgba(0,0,0,.25)" stroke-width="3"/>`;
+      return `<g class="ex-door ex-door${s}" id="exD${s}">${wood}
         <g id="exKh${s}"><circle cx="${k * 30}" cy="-92" r="21" fill="none" stroke="${c}" stroke-width="5" class="ex-ring"/><circle cx="${k * 30}" cy="-92" r="15" fill="#ffe08a" stroke="#8a6d00" stroke-width="3"/>
         <circle cx="${k * 30}" cy="-96" r="4.5" fill="#3a2a00"/><path d="M${k * 30 - 3} -94 h6 l1.5 11 h-9z" fill="#3a2a00"/></g></g>`;
     };
     $('arena').innerHTML = `<div class="mb"><svg class="mb-svg" viewBox="0 0 800 330" preserveAspectRatio="xMidYMid meet">
       <defs><radialGradient id="exGlow"><stop offset="0" stop-color="#fff7c2"/><stop offset="1" stop-color="#ffd23f" stop-opacity="0"/></radialGradient></defs>
-      <rect x="-2000" y="-2000" width="4800" height="2290" fill="#352b55"/>${bricks}
-      <rect x="-2000" y="280" width="4800" height="2000" fill="#2a2244"/><path d="M-300 282 H1100" stroke="#5a4c86" stroke-width="4"/>
+      ${mbxDungeon()}
       <g class="ex-torch"><rect x="300" y="120" width="8" height="30" fill="#6b4a2b"/><ellipse cx="304" cy="112" rx="9" ry="14" fill="#ffb13d"/><ellipse cx="304" cy="115" rx="5" ry="8" fill="#ffe36b"/></g>
       <g class="ex-torch" style="animation-delay:.2s"><rect x="492" y="120" width="8" height="30" fill="#6b4a2b"/><ellipse cx="496" cy="112" rx="9" ry="14" fill="#ffb13d"/><ellipse cx="496" cy="115" rx="5" ry="8" fill="#ffe36b"/></g>
       <g transform="translate(400 292)" id="exGate">
-        <path d="M-92 0 V-150 Q0 -236 92 -150 V0Z" fill="#6f6390" stroke="#2a2244" stroke-width="4"/>
-        <path d="M-74 0 V-146 Q0 -214 74 -146 V0Z" fill="#1c1636"/>
+        ${SPR_OK.has('bg_dungeon') ? '' : `<path d="M-92 0 V-150 Q0 -236 92 -150 V0Z" fill="${volFill('#7a6d9c')}" stroke="#2a2244" stroke-width="4"/>
+        <path d="M-74 0 V-146 Q0 -214 74 -146 V0Z" fill="#1c1636"/>`}
         <ellipse cx="0" cy="-90" rx="120" ry="110" fill="url(#exGlow)" opacity="0" id="exLight"/>
         ${half('L')}${half('R')}
         <text x="0" y="-216" text-anchor="middle" class="mb-name ex-no" id="exNo"></text>
       </g>
-      <g transform="translate(${this.GX} ${this.GY})"><g id="exGhost" class="ex-ghost"><g class="float-y">
+      <g transform="translate(${this.GX} ${this.GY})"><g id="exGhost" class="ex-ghost"><g class="float-y">${sprOr('ghost', () => `
         <path d="M-34 -8 Q-52 -28 -38 -50 Q-42 -78 -12 -80 Q4 -96 24 -78 Q50 -76 44 -50 Q58 -28 38 -10 Q34 6 14 0 Q4 16 -8 2 Q-24 10 -34 -8Z" fill="#43307d" stroke="#1c1446" stroke-width="3" opacity=".92"/>
         <ellipse cx="-50" cy="-36" rx="9" ry="7" fill="#43307d" stroke="#1c1446" stroke-width="2.5"/><ellipse cx="54" cy="-40" rx="9" ry="7" fill="#43307d" stroke="#1c1446" stroke-width="2.5"/>
         <path d="M-24 -52 Q-14 -60 -4 -52" stroke="#ffe14d" stroke-width="4.5" fill="none" stroke-linecap="round"/><path d="M8 -52 Q18 -60 28 -52" stroke="#ffe14d" stroke-width="4.5" fill="none" stroke-linecap="round"/>
-        <path d="M-14 -34 Q2 -20 18 -34" stroke="#ffe14d" stroke-width="3.5" fill="none" stroke-linecap="round"/><path d="M4 -29 Q8 -20 12 -30Z" fill="#ff8fab"/></g></g></g>
+        <path d="M-14 -34 Q2 -20 18 -34" stroke="#ffe14d" stroke-width="3.5" fill="none" stroke-linecap="round"/><path d="M4 -29 Q8 -20 12 -30Z" fill="#ff8fab"/>`)}</g></g></g>
       ${['L', 'R'].map(s => `<g transform="translate(${this.X[s]} ${this.BASE}) scale(${s === 'L' ? '' : '-'}${this.SC} ${this.SC})"><g class="mb-mon" id="mbMon${s}"></g></g>
         <text x="${this.X[s]}" y="${this.BASE - 128}" text-anchor="middle" class="mb-name mb-tag" id="mbName${s}"></text>`).join('')}
-      <g id="mbFx"></g>
+      ${mbxVignette()}<g id="mbFx"></g>
       <g class="mb-panel"><rect x="530" y="6" width="262" height="58" rx="14" fill="rgba(10,12,40,.7)" stroke="#ffb703" stroke-width="3"/>
         <text x="546" y="29" class="mb-name" id="exDoorT"></text><text x="776" y="29" text-anchor="end" class="mb-small" id="mbRound"></text>
         <text x="546" y="52" class="mb-small" id="exChase"></text></g>
       <text x="400" y="322" text-anchor="middle" class="mb-say" id="mbSay"></text></svg>
       <div class="mb-pick" id="mbPick">${mbPk('L')}<div class="mb-hint">點 ◀ ▶ 選怪獸</div>${mbPk('R')}</div></div>`;
-    this.svg = $('arena').querySelector('svg'); this.fx = $('mbFx');
+    volDom($('exGhost')); volFill('#6a3fb5'); this.svg = $('arena').querySelector('svg'); this.fx = $('mbFx');
     mbPickBind(this);
     ['L', 'R'].forEach(s => this.renderMon(s));
     this.newDoor(true); this.ghost(); this.hud();
@@ -2463,7 +2657,8 @@ MODES.escape = Object.assign(mbShare(), {
   },
   newDoor(first) {
     const wood = this.WOODS[(this.door - 1) % this.WOODS.length];
-    this.svg.querySelectorAll('.ex-wood').forEach(p => p.setAttribute('fill', wood));
+    this.svg.querySelectorAll('.ex-wood').forEach(p => p.setAttribute('fill', volFill(wood)));
+    this.svg.querySelectorAll('.ex-doorimg').forEach(p => { p.style.filter = (this.door - 1) % 4 ? `hue-rotate(${[0, 150, 250, 320][(this.door - 1) % 4]}deg) saturate(1.2)` : ''; });
     ['L', 'R'].forEach(s => { $('exD' + s).classList.remove('open'); $('exKh' + s).classList.remove('in'); });
     $('exLight').setAttribute('opacity', 0);
     this.fx.querySelectorAll('.ex-key').forEach(k => k.remove());
@@ -2527,7 +2722,7 @@ MODES.escape = Object.assign(mbShare(), {
     ['L', 'R'].forEach(s => { this.mood(s, 'hurt'); this.hurt(s, false); });
     await sleep(900);
     if (this.chase >= this.chaseMax) {
-      ['L', 'R'].forEach(s => this.mood(s, 'happy'));
+      ['L', 'R'].forEach(s => this.mood(s, 'happy')); $('exGhost').classList.add('laugh');
       this.say('被影子怪搔癢，笑到走不動了！', '#e0c3ff'); Sound.play('ko');
       ['L', 'R'].forEach(s => $('mbMon' + s).animate([{ transform: 'rotate(-8deg)' }, { transform: 'rotate(8deg)' }], { duration: 160, iterations: 8, direction: 'alternate' }));
       await sleep(1200);
@@ -2561,6 +2756,47 @@ MODES.escape = Object.assign(mbShare(), {
     return this.chase >= this.chaseMax ? `打開了 ${this.door - 1} 道門，被影子怪搔癢搔到笑翻了。下次再一起逃！` : `題目用完了，打開 ${this.door - 1} / ${this.doors} 道門，差一點點！`;
   },
 });
+
+// ================= 手繪精靈圖（2026-11-22，交接站 BAT-01 由 Codex 繪製、Claude 驗收）=================
+// 有圖就用手繪圖；圖還沒載好或載不到，就自動退回上面的向量畫法（SVG 備援），遊戲照樣能玩。
+// 表情：每個表情一張圖，CSS 依 .mon 上的 class（happy／hurt／sleep／roar）只顯示一張。
+const ART = 'assets/battle/';
+const SPR = {
+  fire: 'mon', zap: 'mon', rock: 'mon', pumpkin: 'mon', imp: 'mon', ice: 'mon',
+  gulu: 'boss', turtle: 'boss', octo: 'boss',
+  imp0: 'minion', imp1: 'minion', imp2: 'minion', imp3: 'minion', imp4: 'minion', ghost: 'ghost',
+};
+const SPR_MOODS = {
+  mon: ['normal', 'happy', 'roar', 'hurt', 'sleep', 'win'],
+  boss: ['normal', 'angry', 'roar', 'hurt', 'friend', 'sleepy'],
+  minion: ['normal', 'happy', 'dash'],
+  ghost: ['normal', 'near', 'laugh'],
+};
+// 圖是 512 的方格、腳底在 92% 高的地方；S＝方格在遊戲座標裡多大，dy＝腳底要往下移多少（影子怪是飄著的）
+const SPR_SIZE = { mon: { S: 168, dy: 0 }, boss: { S: 176, dy: 2 }, minion: { S: 100, dy: 0 }, ghost: { S: 140, dy: 16 } };
+const SPR_BG = ['bg_monster', 'bg_boss', 'bg_castle', 'bg_dungeon', 'door_left', 'door_right'];
+const SPR_OK = new Set();
+const sprUrl = (id, m) => `${ART}spr/${id}/${m}.webp`;
+function sprPreload() {
+  const load = (url, ok) => { const im = new Image(); im.onload = ok; im.src = url; };
+  Object.entries(SPR).forEach(([id, kind]) => load(sprUrl(id, 'normal'), () => {
+    SPR_MOODS[kind].slice(1).forEach(m => load(sprUrl(id, m), () => {}));
+    SPR_OK.add(id);
+  }));
+  SPR_BG.forEach(n => load(`${ART}${n}.webp`, () => SPR_OK.add(n)));
+}
+sprPreload();
+function sprSvg(id) {
+  const kind = SPR[id], { S, dy } = SPR_SIZE[kind];
+  return `<g class="spr spr-${kind}">${SPR_MOODS[kind].map(m => `<image class="sp sp-${m}" href="${sprUrl(id, m)}" x="${-S / 2}" y="${(dy - S * 0.92).toFixed(1)}" width="${S}" height="${S}"/>`).join('')}</g>`;
+}
+const sprOr = (id, fallback) => SPR_OK.has(id) ? sprSvg(id) : fallback();
+MONSTERS.forEach(m => { const v = m.draw; m.svgDraw = v; m.draw = () => sprOr(m.id, v); });
+BOSSES.forEach(b => { const v = b.draw; b.svgDraw = v; b.draw = () => sprOr(b.id, v); });
+const IMP_COLS = ['#7ee07e', '#ff8fd0', '#5bd1ff', '#ffb13d', '#c9a6ff'];
+const impArt = c => sprOr('imp' + IMP_COLS.indexOf(c), () => drawImp(c));
+// 場景背景圖：對應遊戲座標 x -100～900、y -60～390（圖 2400×1080）
+const bgArt = name => `<rect x="-2000" y="-2000" width="4800" height="4400" fill="#17123a"/><image href="${ART}${name}.webp" x="-100" y="-60" width="1000" height="450" preserveAspectRatio="none"/>`;
 
 const MODE_FIRST = { monster: 0, boss: 1, castle: 2, escape: 3 };
 // ================= 流程 =================

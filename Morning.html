@@ -414,7 +414,7 @@
       border: 3px solid var(--cozy-wood); border-radius: 16px; background: var(--cozy-paper); color: var(--ink); }
     html[data-board-style="cozy"] .submit-bar { background: var(--surface); border-top: 0; box-shadow: 0 -4px 0 var(--cozy-wood), 0 -10px 18px -12px rgba(91,70,54,.35); }
   </style>
-  <script src="assets/attendance-term.js?v=2026-11-20-2223"></script>
+  <script src="assets/attendance-term.js?v=2026-11-23-2117"></script>
 </head>
 <body>
   <header>
@@ -4462,8 +4462,13 @@
   document.addEventListener('boardstylechange', applyToolsTabIcon);
   // 班級工具可以放到上面選單（老師自己勾）：開的是班級工具裡同一個面板（資料共用），只是把工具列收起來
   const SOLO_TOOLS = [['lottery', '🎡', '抽籤機'], ['check', '✅', '檢核板'], ['tooth', '🦷', '潔牙點名'], ['score', '🏆', '計分板'], ['group', '👥', '隨機分組'], ['exam', '📝', '定評小幫手'], ['tomato', '🍅', '番茄鐘'], ['prompt', '📣', '大屏提示'], ['screen', '📺', '螢幕公告'], ['mind', '🧠', '心智圖'], ['battle', '🎮', '答題對戰']];
-  const TOP_TOOLS_DEFAULT = ['check', 'tooth', 'screen', 'mind'];
-  const TOP_TOOLS_SUBJECT = ['check', 'score', 'group', 'screen', 'mind'];   // 科任預設：不要潔牙，加計分板、隨機分組
+  const TOP_TOOLS_DEFAULT = ['check', 'tooth', 'screen', 'mind', 'battle'];
+  const TOP_TOOLS_SUBJECT = ['check', 'score', 'group', 'screen', 'mind', 'battle'];   // 科任預設：不要潔牙，加計分板、隨機分組
+  // 2026-11-20 老師：答題對戰要在上方選單就看得到。自己勾過上方選單的老師也幫他加一次（之後取消勾選就尊重他的選擇）
+  if (Array.isArray(config.topTools) && !config.topToolsBattleAdded) {
+    if (!config.topTools.includes('battle')) config.topTools.push('battle');
+    config.topToolsBattleAdded = true; saveConfig();
+  }
   const topTools = () => (Array.isArray(config.topTools) ? config.topTools : (isSubjectMode() ? TOP_TOOLS_SUBJECT : TOP_TOOLS_DEFAULT))
     .filter(tool => SOLO_TOOLS.some(([id]) => id === tool));
   const soloTabs = {};
